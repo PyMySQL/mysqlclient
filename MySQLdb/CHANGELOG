@@ -1,4 +1,10 @@
-post-0.9.1
+0.9.1a1
+
+  * Added a number of DB-API extensions.
+
+  * Unicode instances can now be used as parameters to cursor.execute().
+    It attempts to use whatever character set MySQL is using. If that
+    can't be determined, then latin1 is used.
 
   * Mac OS X configuration linkage fix (Dan Grassi)
 

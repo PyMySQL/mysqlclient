@@ -7,7 +7,16 @@ override Connection.default_cursor with a non-standard Cursor class.
 
 """
 import cursors
-from _mysql_exceptions import NotSupportedError, ProgrammingError
+from _mysql_exceptions import Warning, Error, InterfaceError, DataError, \
+     DatabaseError, OperationalError, IntegrityError, InternalError, \
+     NotSupportedError, ProgrammingError
+
+def defaulterrorhandler(connection, cursor, errorclass, errorvalue):
+    if cursor:
+        cursor.messages.append(errorvalue)
+    else:
+        connection.messages.append(errorvalue)
+    raise errorclass, errorvalue
 
 class Connection:
 
@@ -57,8 +66,11 @@ class Connection:
             self.cursorclass = self.default_cursor
         self._db = apply(connect, args, kwargs2)
         self._db.converter[types.StringType] = self._db.string_literal
+        if hasattr(types, 'UnicodeType'):
+            self._db.converter[types.UnicodeType] = self.unicode_literal
         self._transactional = self._db.server_capabilities & CLIENT.TRANSACTIONS
-
+        self.messages = []
+        
     def __del__(self):
         if hasattr(self, '_db'): self.close()
         
@@ -102,6 +114,14 @@ class Connection:
         import _mysql
         return _mysql.escape(o, self._db.converter)
 
+    def unicode_literal(self, u, dummy=None):
+        """Convert a unicode object u to a string using the current
+        character set as the encoding. If that's not available,
+        use latin1."""
+        try: charset = self.character_set_name()
+        except: charset = 'latin1'
+        return self.literal(u.encode(charset))
+    
     def affected_rows(self): return self._db.affected_rows()
     def dump_debug_info(self): return self._db.dump_debug_info()
     def escape_string(self, s): return self._db.escape_string(s)
@@ -124,8 +144,24 @@ class Connection:
         try:
             return apply(getattr(self._db, feature), args, kwargs)
         except AttributeError:
-            raise NotSupportedError, "not supported by MySQL library"
+            self.errorhandler(self, None, NotSupportedError,
+                              "not supported by MySQL library")
     def character_set_name(self):
         return self._try_feature('character_set_name')
     def change_user(self, *args, **kwargs):
         return apply(self._try_feature, ('change_user',)+args, kwargs)
+
+    Warning = Warning
+    Error = Error
+    InterfaceError = InterfaceError
+    DatabaseError = DatabaseError
+    DataError = DataError
+    OperationalError = OperationalError
+    IntegrityError = IntegrityError
+    InternalError = InternalError
+    ProgrammingError = ProgrammingError
+    NotSupportedError = NotSupportedError
+
+    errorhandler = defaulterrorhandler
+
+    

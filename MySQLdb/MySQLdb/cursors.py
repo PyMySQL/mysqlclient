@@ -7,7 +7,16 @@ default, MySQLdb uses the Cursor class.
 
 import re
 insert_values = re.compile(r'values\s*(\(.+\))', re.IGNORECASE)
-from _mysql import escape, ProgrammingError, Warning
+from _mysql_exceptions import Warning, Error, InterfaceError, DataError, \
+     DatabaseError, OperationalError, IntegrityError, InternalError, \
+     NotSupportedError, ProgrammingError
+
+import exceptions
+if hasattr(exceptions, "StopIteration"):
+    _EndOfData = exceptions.StopIteration
+else:
+    _EndOfData = exceptions.IndexError
+
 
 class BaseCursor:
     
@@ -18,10 +27,9 @@ class BaseCursor:
     
     See the MySQL docs for more information."""
 
-    from _mysql import MySQLError, Warning, Error, InterfaceError, \
-                       DatabaseError, DataError, OperationalError, \
-                       IntegrityError, InternalError, ProgrammingError, \
-                       NotSupportedError
+    from _mysql_exceptions import MySQLError, Warning, Error, InterfaceError, \
+         DatabaseError, DataError, OperationalError, IntegrityError, \
+         InternalError, ProgrammingError, NotSupportedError
 
     def __init__(self, connection):
         self.connection = connection
@@ -30,6 +38,8 @@ class BaseCursor:
         self.arraysize = 100
         self._executed = None
         self.lastrowid = None
+        self.messages = []
+        self.errorhandler = connection.errorhandler
 
     def __del__(self):
         self.close()
@@ -41,7 +51,8 @@ class BaseCursor:
 
     def _check_executed(self):
         if not self._executed:
-            raise ProgrammingError, "execute() first"
+            self.errorhandler(self.connection, self,
+                              ProgrammingError, "execute() first")
         
     def setinputsizes(self, *args):
         """Does nothing, required by DB API."""
@@ -51,7 +62,8 @@ class BaseCursor:
 
     def _get_db(self):
         if not self.connection:
-            raise ProgrammingError, "cursor closed"
+            self.errorhandler(self.connection, self,
+                              ProgrammingError, "cursor closed")
         return self.connection._db
     
     def execute(self, query, args=None):
@@ -73,7 +85,8 @@ class BaseCursor:
 	    except TypeError, m:
                 if m.args[0] in ("not enough arguments for format string",
                                  "not all arguments converted"):
-                    raise ProgrammingError, m.args[0]
+                    self.errorhandler(self.connection, self,
+                                      ProgrammingError, m.args[0])
                 else:
                     raise
         self._executed = query
@@ -104,7 +117,8 @@ class BaseCursor:
 	except TypeError, msg:
             if msg.args[0] in ("not enough arguments for format string",
                                "not all arguments converted"):
-                raise ProgrammingError, msg.args[0]
+                self.errorhandler(self.connection, self,
+                                  ProgrammingError, msg.args[0])
             else:
                 raise
         r = self._query(join(q,',\n'))
@@ -118,9 +132,11 @@ class BaseCursor:
         db.query(q)
         self._result = self._get_result()
         self.rowcount = db.affected_rows()
+        self.rownumber = 0
         self.description = self._result and self._result.describe() or None
         self.lastrowid = db.insert_id()
-        self._info = db.info()
+        message = db.info()
+        if message: self.messages.append(message)
         self._check_for_warnings()
         return self.rowcount
 
@@ -129,18 +145,45 @@ class BaseCursor:
     _query = __do_query
 
     def info(self):
-        """Return some information about the last query (db.info())"""
+        """Return some information about the last query (db.info())
+        DEPRECATED: Use messages attribute"""
         self._check_executed()
-        return self._info
-    
+        if self.messages:
+            return self.messages[0]
+        else:
+            return ''
+        
     def insert_id(self):
-        """Return the last inserted ID on an AUTO_INCREMENT columns."""
+        """Return the last inserted ID on an AUTO_INCREMENT columns.
+        DEPRECATED: use lastrowid attribute"""
         self._check_executed()
         return self.lastrowid
     
     def _fetch_row(self, size=1):
         return self._result.fetch_row(size, self._fetch_type)
 
+    def next(self):
+        """Fetches the next row. If using Python 2.1 or newer,
+        StopIteration is raised when there are no more rows.
+        Otherwise, IndexError is raised."""
+        result = self.fetchone()
+        if result is None:
+            raise _EndOfData
+        return result
+
+    def __iter__(self): return self # XXX
+
+    Warning = Warning
+    Error = Error
+    InterfaceError = InterfaceError
+    DatabaseError = DatabaseError
+    DataError = DataError
+    OperationalError = OperationalError
+    IntegrityError = IntegrityError
+    InternalError = InternalError
+    ProgrammingError = ProgrammingError
+    NotSupportedError = NotSupportedError
+   
         
 class CursorWarningMixIn:
 
@@ -150,10 +193,10 @@ class CursorWarningMixIn:
 
     def _check_for_warnings(self):
         from string import atoi, split
-        if self._info:
-            warnings = atoi(split(self._info)[-1])
+        if self.messages:
+            warnings = atoi(split(self.messages[0])[-1])
     	    if warnings:
-     	        raise Warning, self._info
+     	        raise Warning, self.messages[0]
 
 
 class CursorStoreResultMixIn:
@@ -173,7 +216,6 @@ class CursorStoreResultMixIn:
     def _query(self, q):
         rowcount = self._BaseCursor__do_query(q)
         self._rows = self._result and self._fetch_row(0) or ()
-        self.rownumber = 0
         del self._result
         return rowcount
             
@@ -203,7 +245,7 @@ class CursorStoreResultMixIn:
     
     def seek(self, row, whence=0):
         """seek to a given row of the result set analogously to file.seek().
-        This is non-standard extension."""
+        This is non-standard extension. DEPRECATED: Use scroll method"""
         self._check_executed()
         if whence == 0:
             self.rownumber = row
@@ -214,10 +256,29 @@ class CursorStoreResultMixIn:
      
     def tell(self):
         """Return the current position in the result set analogously to
-        file.tell(). This is a non-standard extension."""
+        file.tell(). This is a non-standard extension. DEPRECATED:
+        use rownumber attribute"""
         self._check_executed()
         return self.rownumber
 
+    def scroll(self, value, mode='relative'):
+        """Scroll the cursor in the result set to a new position according
+        to mode.
+        
+        If mode is 'relative' (default), value is taken as offset to
+        the current position in the result set, if set to 'absolute',
+        value states an absolute target position."""
+        self._check_executed()
+        if mode == 'relative':
+            r = self.rownumber + value
+        elif mode == 'absolute':
+            r = value
+        else:
+            raise ProgrammingError, "unknown scroll mode %s" % `mode`
+        if r < 0 or r >= len(self._rows):
+            raise IndexError, "out of range"
+        self.rownumber = r
+        
 
 class CursorUseResultMixIn:
 

@@ -56,7 +56,7 @@ elif sys.platform == "win32": # Ugh
     libraries = [mysqlclient, 'zlib', 'msvcrt', 'libcmt',
                  'wsock32', 'advapi32']
     extra_objects = [r'c:\mysql\lib\opt\mysqlclient.lib']
-elif sys.platform == "darwin1": # Mac OS X
+elif sys.platform[:6] == "darwin": # Mac OS X
     include_dirs = ['/usr/local/mysql/include/mysql']
     library_dirs = ['/usr/local/mysql/lib/mysql']
     extra_link_args = ['-flat_namespace']
@@ -88,7 +88,7 @@ MySQLdb. MySQLdb is free software.
 
 setup (# Distribution meta-data
         name = "MySQL-python",
-        version = "0.9.1",
+        version = "0.9.2",
         description = "An interface to MySQL",
         long_description=long_description,
         author = "Andy Dustman",
