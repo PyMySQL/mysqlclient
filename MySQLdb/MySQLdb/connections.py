@@ -73,7 +73,6 @@ class Connection:
         
     def __del__(self):
         if hasattr(self, '_db'): self.close()
-        print "Alas! I die!"
         
     def close(self):
         """Close the connection. No further activity possible."""
