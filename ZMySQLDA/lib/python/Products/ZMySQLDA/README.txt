@@ -3,12 +3,12 @@ Z MySQL DA
   This is the Z MySQL database adapter product for the 
   Z Object Publishing Environment.
   
-  ***** NOTE *****
+  ** NOTE **
 
   Note that the Z MySQL database adapter is compatible with MySQL
   versions 3.22 and later (including MySQL 3.23).
   
-  ***** IMPORTANT *****
+  ** IMPORTANT **
   
   This product is distributed as a NON-BINARY release!
   
@@ -21,9 +21,10 @@ Z MySQL DA
 
     The Z MySQL database adapter uses the MySQLdb package.  
     This must be installed before you can use the Z MySQL DA.
+    You can find this at::
 
-    Instructions on building the extension modules are given in the
-    the README.txt file in the source directory.
+        http://dustman.net/andy/python/MySQLdb
+        http://sourceforge.net/projects/mysql-python
 
   Connection Strings
   
