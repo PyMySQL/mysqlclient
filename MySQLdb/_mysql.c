@@ -977,77 +977,6 @@ _mysql_ConnectionObject_kill(
 }
 
 static PyObject *
-_mysql_ConnectionObject_list_dbs(
-	_mysql_ConnectionObject *self,
-	PyObject *args)
-{
-	MYSQL_RES *result;
-	char *wild = NULL;
-
-	if (!PyArg_ParseTuple(args, "|s:list_dbs", &wild)) return NULL;
-	check_connection(self);
-	Py_BEGIN_ALLOW_THREADS
-        result = mysql_list_dbs(&(self->connection), wild);
-	Py_END_ALLOW_THREADS
-        if (!result) return _mysql_Exception(self);
-	return (PyObject *) _mysql_ResultObject_New(self, result, 0,
-                                                    self->converter);
-}
-
-static PyObject *
-_mysql_ConnectionObject_list_fields(
-	_mysql_ConnectionObject *self,
-	PyObject *args)
-{
-	MYSQL_RES *result;
-	char *wild = NULL, *table;
-
-	if (!PyArg_ParseTuple(args, "s|s:list_fields", &table, &wild)) return NULL;
-	check_connection(self);
-	Py_BEGIN_ALLOW_THREADS
-        result = mysql_list_fields(&(self->connection), table, wild);
-	Py_END_ALLOW_THREADS
-        if (!result) return _mysql_Exception(self);
-	return (PyObject *) _mysql_ResultObject_New(self, result, 0,
-                                                    self->converter);
-}
-
-static PyObject *
-_mysql_ConnectionObject_list_processes(
-	_mysql_ConnectionObject *self,
-	PyObject *args)
-{
-	MYSQL_RES *result;
-
-	if (!PyArg_NoArgs(args)) return NULL;
-	check_connection(self);
-	Py_BEGIN_ALLOW_THREADS
-        result = mysql_list_processes(&(self->connection));
-	Py_END_ALLOW_THREADS
-        if (!result) return _mysql_Exception(self);
-	return (PyObject *) _mysql_ResultObject_New(self, result, 0,
-                                                    self->converter);
-}
-
-static PyObject *
-_mysql_ConnectionObject_list_tables(
-	_mysql_ConnectionObject *self,
-	PyObject *args)
-{
-	MYSQL_RES *result;
-	char *wild = NULL;
-
-	if (!PyArg_ParseTuple(args, "|s:list_tables", &wild)) return NULL;
-	check_connection(self);
-	Py_BEGIN_ALLOW_THREADS
-        result = mysql_list_tables(&(self->connection), wild);
-	Py_END_ALLOW_THREADS
-        if (!result) return _mysql_Exception(self);
-	return (PyObject *) _mysql_ResultObject_New(self, result, 0,
-                                                    self->converter);
-}
-
-static PyObject *
 _mysql_ConnectionObject_field_count(
 	_mysql_ConnectionObject *self,
 	PyObject *args)
@@ -1332,10 +1261,6 @@ static PyMethodDef _mysql_ConnectionObject_methods[] = {
 	{"info",            (PyCFunction)_mysql_ConnectionObject_info, 0},
 	{"insert_id",       (PyCFunction)_mysql_ConnectionObject_insert_id, 0},
 	{"kill",            (PyCFunction)_mysql_ConnectionObject_kill, 1},
-	{"list_dbs",        (PyCFunction)_mysql_ConnectionObject_list_dbs, 1},
-	{"list_fields",     (PyCFunction)_mysql_ConnectionObject_list_fields, 1},
-	{"list_processes",  (PyCFunction)_mysql_ConnectionObject_list_processes, 0},
-	{"list_tables",     (PyCFunction)_mysql_ConnectionObject_list_tables, 1},
 	{"ping",            (PyCFunction)_mysql_ConnectionObject_ping, 0},
 	{"query",           (PyCFunction)_mysql_ConnectionObject_query, 1},
 	{"select_db",       (PyCFunction)_mysql_ConnectionObject_select_db, 1},

@@ -170,10 +170,6 @@ object methods. Their use is non-portable.
 @ <tt>mysql_get_server_info()</tt> | <tt>conn.get_server_info()</tt>
 @ <tt>mysql_info()</tt> | <tt>conn.info()</tt>
 @ <tt>mysql_insert_id()</tt> | <tt>conn.insert_id()</tt>
-@ <tt>mysql_list_dbs()</tt> | <tt>conn.list_dbs()</tt>
-@ <tt>mysql_list_fields()</tt> | <tt>conn.list_fields()</tt>
-@ <tt>mysql_list_processes()</tt> | <tt>conn.list_processes()</tt>
-@ <tt>mysql_list_tables()</tt> | <tt>conn.list_tables()</tt>
 @ <tt>mysql_num_fields()</tt> | <tt>result.num_fields()</tt>
 @ <tt>mysql_num_rows()</tt> | <tt>result.num_rows()</tt>
 @ <tt>mysql_options()</tt> | <tt>_mysql.connect()</tt>

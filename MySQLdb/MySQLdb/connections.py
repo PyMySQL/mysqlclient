@@ -103,10 +103,6 @@ class Connection:
     def get_server_info(self): return self._db.get_server_info()
     def info(self): return self._db.info()
     def kill(self, p): return self._db.kill(p)
-    def list_dbs(self): return self._db.list_dbs().fetch_row(0)
-    def list_fields(self, table): return self._db.list_fields(table).fetch_row(0)
-    def list_processes(self): return self._db.list_processes().fetch_row(0)
-    def list_tables(self, db): return self._db.list_tables(db).fetch_row(0)
     def field_count(self): return self._db.field_count()
     num_fields = field_count # used prior to MySQL-3.22.24
     def ping(self): return self._db.ping()
