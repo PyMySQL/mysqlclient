@@ -61,7 +61,11 @@ class Connection(_mysql.connection):
             default encoding is used. If not set at all, character
             columns are returned as normal strings.
     client_flag -- integer, flags to use or 0 (see MySQL docs or constants/CLIENTS.py)
-
+    ssl -- dictionary or mapping, contains SSL connection parameters; see
+           the MySQL documentation for more details (mysql_ssl_set()).
+           If this is set, and the client does not support SSL,
+           UnsupportedError will be raised.
+           
     There are a number of undocumented, non-standard methods. See the
     documentation for the MySQL C API for some hints on what they do.
 

@@ -5,20 +5,20 @@
 import os, sys
 from distutils.core import setup
 from distutils.extension import Extension
-import string
 
 YES = 1
 NO = 0
 
 mysqlclient = os.getenv('mysqlclient', 'mysqlclient')
-mysqlversion = tuple(map(int, string.split(os.getenv('mysqlversion', '4.0.20'), '.')))
-mysqloptlibs = string.split(os.getenv('mysqloptlibs', ''))
+mysqlversion = tuple([ int(n)
+                       for n in os.getenv('mysqlversion','4.0.20').split('.')])
+mysqloptlibs = os.getenv('mysqloptlibs', '').split()
 embedded_server = (mysqlclient == 'mysqld')
 
 name = "MySQL-%s" % os.path.basename(sys.executable)
 if embedded_server:
     name = name + "-embedded"
-version = "1.1.4"
+version = "1.1.5"
 
 # include files and library locations should cover most platforms
 include_dirs = [
