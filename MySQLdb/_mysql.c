@@ -47,6 +47,12 @@ PERFORMANCE OF THIS SOFTWARE.
 # define PyObject_New(x,y) PyObject_NEW(x,y)
 #endif 
 
+#if PY_VERSION_HEX < 0x02020000
+# define MyTuple_Resize(t,n,d) _PyTuple_Resize(t, n, d)
+#else
+# define MyTuple_Resize(t,n,d) _PyTuple_Resize(t, n)
+#endif
+
 static PyObject *_mysql_MySQLError;
 static PyObject *_mysql_Warning;
 static PyObject *_mysql_Error;
@@ -68,7 +74,7 @@ typedef struct {
 
 #define check_connection(c) if (!(c->open)) _mysql_Exception(c)
 #define result_connection(r) ((_mysql_ConnectionObject *)r->conn)
-#define check_result_connection(r) if (!(result_connection(r)->open)) _mysql_Exception(result_connection(r))
+#define check_result_connection(r) check_connection(result_connection(r))
 
 extern PyTypeObject _mysql_ConnectionObject_Type;
 
@@ -799,11 +805,7 @@ _mysql__fetch_row(
 			goto error;
 		}
 		if (!row) {
-#if PY_VERSION_HEX < 0x02020000
-			if (_PyTuple_Resize(r, i, 0) == -1) goto error;
-#else
-			if (_PyTuple_Resize(r, i) == -1) goto error;
-#endif
+			if (MyTuple_Resize(r, i, 0) == -1) goto error;
 			break;
 		}
 		v = convert_row(self, row);
@@ -857,11 +859,7 @@ _mysql_ResultObject_fetch_row(
 				if (rowsadded == -1) goto error;
 				skiprows += rowsadded;
 				if (rowsadded < maxrows) break;
-#if PY_VERSION_HEX < 0x02020000
-				if (_PyTuple_Resize(&r, skiprows+maxrows, 0) == -1)
-#else
-				if (_PyTuple_Resize(&r, skiprows+maxrows) == -1)
-#endif
+				if (MyTuple_Resize(&r, skiprows+maxrows, 0) == -1)
 				        goto error;
 			}
 		} else {
