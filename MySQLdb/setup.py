@@ -5,6 +5,7 @@
 import os, sys
 from distutils.core import setup
 from distutils.extension import Extension
+import string
 
 YES = 1
 NO = 0
@@ -37,12 +38,12 @@ extra_link_args = []
 if sys.platform in ("linux-i386", "linux2"): # most Linux platforms
     include_dirs = ['/usr/include/mysql']
     library_dirs = ['/usr/lib/mysql']
-elif sys.platform in ("freebsd4", "openbsd2"): # *BSD
-    include_dirs = ['/usr/local/include/mysql']
-    library_dirs = ['/usr/local/lib/mysql']
-elif sys.platform == "netbsd1": # more *BSD
+elif sys.platform == "netbsd1":
     include_dirs = ['/usr/pkg/include/mysql']
     library_dirs = ['/usr/pkg/lib/mysql']
+elif string.find(sys.platform, "bsd")>-1: # *BSD
+    include_dirs = ['/usr/local/include/mysql']
+    library_dirs = ['/usr/local/lib/mysql']
 elif sys.platform == "sunos5": # Solaris 2.8 + gcc
     include_dirs = ['/usr/local/mysql/include/mysql'] 
     library_dirs = ['/usr/local/mysql/lib/mysql'] 
