@@ -31,13 +31,15 @@ from distutils.core import setup
 from distutils.extension import Extension
 
 mysqlclient = os.getenv('mysqlclient', 'mysqlclient_r')
-mysqloptlibs = os.getenv('mysqloptlibs', '').split()
+mysqlstatic = eval(os.getenv('mysqlstatic', 'False'))
 embedded_server = (mysqlclient == 'mysqld')
 
 name = "MySQL-%s" % os.path.basename(sys.executable)
 if embedded_server:
     name = name + "-embedded"
 version = "1.1.9"
+
+extra_objects = []
 
 if sys.platform == "win32":
     mysqlroot = os.getenv('mysqlroot', None)
@@ -49,7 +51,12 @@ if sys.platform == "win32":
 
     include_dirs = [os.path.join(mysqlroot, "include")]
     library_dirs = [os.path.join(mysqlroot, "libs")]
-    libraries.extend(['zlib', 'msvcrt', 'libcmt', 'wsock32', 'advapi32'])
+    libraries = ['zlib', 'msvcrt', 'libcmt', 'wsock32', 'advapi32']
+    if mysqlstatic:
+        extra_objects.append(os.path.join(
+            library_dirs[0], mysqlclient+'.lib'))
+    else:
+        libraries.append(mysqlclient)
 
 else:
     
@@ -73,6 +80,12 @@ else:
         libraries.append("z")
 
     extra_compile_args = config("cflags")
+
+    if mysqlstatic:
+        extra_objects.append(os.path.join(
+            library_dirs[0],'lib%s.a' % mysqlclient))
+    else:
+        libraries.append(mysqlclient)
 
 # avoid frightening noobs with warnings about missing directories
 include_dirs = [ d for d in include_dirs if os.path.isdir(d) ]
@@ -132,6 +145,7 @@ metadata = {
             library_dirs=library_dirs,
             libraries=libraries,
             extra_compile_args=extra_compile_args,
+            extra_objects=extra_objects,
             ),
         ],
     }
