@@ -56,7 +56,7 @@ cp MySQLdb.py{,c,o} $RPM_BUILD_ROOT/usr/lib/python1.5/site-packages
 %clean
 %files
 %defattr(-, root, root)
-%doc ZMySQLDA.patch license.py examples/README examples/dbtrainer0 examples/dbtrainer1 examples/dbtrainer2 examples/dbtrainer3 examples/dbtrainer4 examples/test.sql doc/*
+%doc license.py examples/* doc/*
 /usr/lib/python1.5/site-packages/MySQLdb.py
 /usr/lib/python1.5/site-packages/MySQLdb.pyc
 /usr/lib/python1.5/site-packages/MySQLdb.pyo

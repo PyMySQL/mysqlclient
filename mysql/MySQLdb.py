@@ -344,16 +344,32 @@ class CursorUseResultMixIn:
 
 class CursorTupleRowsMixIn:
 
-    def _fetch_row(self): return self._result.fetch_row()
-    def _fetch_rows(self, size): return self._result.fetch_rows(size)
-    def _fetch_all_rows(self): return self._result.fetch_all_rows()
-    
+    def _fetch_row(self): return self._result.fetch(1)[0]
+
+    def _fetch_rows(self, size): return self._result.fetch(size)
+
+    def _fetch_all_rows(self): 
+        r = list(self._result.fetch(self.arraysize))
+        while len(r) >= self.arraysize:
+            rows = self._result.fetch(self.arraysize)
+            if not rows: break
+            r.extend(list(rows))
+        return r
          
+
 class CursorDictRowsMixIn:
 
-    def _fetch_row(self): return self._result.fetch_row_as_dict()
-    def _fetch_rows(self, size): return self._result.fetch_rows_as_dict(size)
-    def _fetch_all_rows(self): return self._result.fetch_all_rows_as_dict()
+    def _fetch_row(self): return self._result.fetch(1, 1)[0]
+
+    def _fetch_rows(self, size): return self._result.fetch(size, 1)
+
+    def _fetch_all_rows(self):
+        r = list(self._result.fetch(self.arraysize, 1))
+        while len(r) >= self.arraysize:
+            rows = self._result.fetch(self.arraysize, 1)
+            if not rows: break
+            r.extend(list(rows))
+        return r
 
     ## XXX Deprecated
     
