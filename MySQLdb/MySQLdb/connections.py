@@ -80,7 +80,7 @@ class Connection:
         if self._transactional:
             self._db.query("ROLLBACK")
         else:
-            raise NotSupportedError, "XXX Not supported by server"
+            raise NotSupportedError, "Not supported by server"
             
     def cursor(self, cursorclass=None):
         
