@@ -160,7 +160,11 @@ _mysql_ResultObject_New(
 	MYSQL_FIELD *fields;
 	_mysql_ResultObject *r;
 
+#if PY_VERSION_HEX < 0x02000100
 	r = PyObject_NEW(_mysql_ResultObject, &_mysql_ResultObject_Type);
+#else
+	r = PyObject_New(_mysql_ResultObject, &_mysql_ResultObject_Type);
+#endif
 	if (!r) return NULL;
 	r->conn = (PyObject *) conn;
 	r->use = use;
@@ -236,8 +240,13 @@ _mysql_connect(
 	     *read_default_group=NULL;
 	_mysql_ConnectionObject *c=NULL;
 	
+#if PY_VERSION_HEX < 0x02000100
 	c = PyObject_NEW(_mysql_ConnectionObject,
 			 &_mysql_ConnectionObject_Type);
+#else
+	c = PyObject_New(_mysql_ConnectionObject,
+			 &_mysql_ConnectionObject_Type);
+#endif
 	if (c == NULL) return NULL;
 	c->converter = NULL;
 	c->open = 0;
