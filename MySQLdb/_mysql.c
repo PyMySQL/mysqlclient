@@ -28,7 +28,7 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#include "Python.h"
+#include "pymemcompat.h"
 
 #ifdef MS_WIN32
 #include <windows.h>
@@ -41,11 +41,6 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "mysql.h"
 #include "mysqld_error.h"
 #include "errmsg.h"
-
-#if PY_VERSION_HEX < 0x01060000
-# define PyObject_Del(x) PyMem_Free((char *) x) 
-# define PyObject_New(s,t) PyObject_NEW(s,t)
-#endif 
 
 #if PY_VERSION_HEX < 0x02020000
 # define MyTuple_Resize(t,n,d) _PyTuple_Resize(t, n, d)
@@ -206,7 +201,9 @@ _mysql_ResultObject_Initialize(
 
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|iO", kwlist,
 					  &conn, &use, &conv))
-		goto error;
+		return -1;
+	if (!conv) conv = PyDict_New();
+	if (!conv) return -1;
 	self->conn = (PyObject *) conn;
 	Py_INCREF(conn);
 	self->use = use;
@@ -223,12 +220,12 @@ _mysql_ResultObject_Initialize(
 	}
 	n = mysql_num_fields(result);
 	self->nfields = n;
-	if (!(self->converter = PyTuple_New(n))) goto error;
+	if (!(self->converter = PyTuple_New(n))) return -1;
 	fields = mysql_fetch_fields(result);
 	for (i=0; i<n; i++) {
 		PyObject *tmp, *fun;
 		tmp = PyInt_FromLong((long) fields[i].type);
-		if (!tmp) goto error;
+		if (!tmp) return -1;
 		fun = PyObject_GetItem(conv, tmp);
 		Py_DECREF(tmp);
 		if (!fun) {
@@ -239,8 +236,32 @@ _mysql_ResultObject_Initialize(
 		PyTuple_SET_ITEM(self->converter, i, fun);
 	}
 	return 0;
-  error:
-	return -1;
+}
+
+#if PY_VERSION_HEX >= 0x02020000
+static int _mysql_ResultObject_traverse(
+	_mysql_ResultObject *self,
+	visitproc visit,
+	void *arg)
+{
+	int r;
+	if (self->converter) {
+		if (!(r = visit(self->converter, arg))) return r;
+	}
+	if (self->conn)
+		return visit(self->conn, arg);
+	return 0;
+}
+#endif
+
+static int _mysql_ResultObject_clear(
+	_mysql_ResultObject *self)
+{
+	Py_XDECREF(self->converter);
+	self->converter = NULL;
+	Py_XDECREF(self->conn);
+	self->conn = NULL;
+	return 0;
 }
 
 static int
@@ -276,10 +297,8 @@ _mysql_ConnectionObject_Initialize(
 					 &connect_timeout,
 					 &compress, &named_pipe,
 					 &init_command, &read_default_file,
-					 &read_default_group)) {
-		Py_DECREF(self);
+					 &read_default_group))
 		return -1;
-	}
 
 	if (!conv) 
 		conv = PyDict_New();
@@ -287,9 +306,9 @@ _mysql_ConnectionObject_Initialize(
 	else
 		Py_INCREF(conv);
 #endif
-	self->converter = conv;
-	if (!(self->converter))
+	if (!conv)
 		return -1;
+	self->converter = conv;
 
 	self->open = 1;
 	Py_BEGIN_ALLOW_THREADS ;
@@ -319,6 +338,12 @@ _mysql_ConnectionObject_Initialize(
 		_mysql_Exception(self);
 		return -1;
 	}
+	/*
+	  PyType_GenericAlloc() automatically sets up GC allocation and
+	  tracking for GC objects, at least in 2.2.1, so it does not need to
+	  be done here. tp_dealloc still needs to call PyObject_GC_UnTrack(),
+	  however.
+	*/
 	return 0;
 }
 
@@ -352,14 +377,33 @@ _mysql_connect(
 {
 	_mysql_ConnectionObject *c=NULL;
 	
-	c = PyObject_New(_mysql_ConnectionObject,
-			 &_mysql_ConnectionObject_Type);
+	c = MyAlloc(_mysql_ConnectionObject, _mysql_ConnectionObject_Type);
 	if (c == NULL) return NULL;
 	if (_mysql_ConnectionObject_Initialize(c, args, kwargs)) {
 		Py_DECREF(c);
-		return NULL;
+		c = NULL;
 	}
 	return (PyObject *) c;
+}
+
+#if PY_VERSION_HEX >= 0x02020000
+static int _mysql_ConnectionObject_traverse(
+	_mysql_ConnectionObject *self,
+	visitproc visit,
+	void *arg)
+{
+	if (self->converter)
+		return visit(self->converter, arg);
+	return 0;
+}
+#endif
+
+static int _mysql_ConnectionObject_clear(
+	_mysql_ConnectionObject *self)
+{
+	Py_XDECREF(self->converter);
+	self->converter = NULL;
+	return 0;
 }
 
 static char _mysql_ConnectionObject_close__doc__[] =
@@ -377,8 +421,7 @@ _mysql_ConnectionObject_close(
 		Py_END_ALLOW_THREADS
 		self->open = 0;
 	}
-	Py_XDECREF(self->converter);
-	self->converter = NULL;
+	_mysql_ConnectionObject_clear(self);
 	Py_INCREF(Py_None);
 	return Py_None;
 }
@@ -1442,6 +1485,7 @@ _mysql_ConnectionObject_dealloc(
 {
 	PyObject *o;
 
+	PyObject_GC_UnTrack(self);
 	if (self->open) {
 		o = _mysql_ConnectionObject_close(self, NULL);
 		Py_XDECREF(o);
@@ -1455,11 +1499,11 @@ _mysql_ConnectionObject_repr(
 {
 	char buf[300];
 	if (self->open)
-		sprintf(buf, "<open connection to '%.256s' at %lx>",
+		sprintf(buf, "<_mysql.connection open to '%.256s' at %lx>",
 			self->connection.host,
 			(long)self);
 	else
-		sprintf(buf, "<closed connection at %lx>",
+		sprintf(buf, "<_mysql.connection closed at %lx>",
 			(long)self);
 	return PyString_FromString(buf);
 }
@@ -1514,9 +1558,9 @@ static void
 _mysql_ResultObject_dealloc(
 	_mysql_ResultObject *self)
 {
+	PyObject_GC_UnTrack((PyObject *)self);
 	mysql_free_result(self->result);
-	Py_DECREF(self->conn);
-	Py_XDECREF(self->converter);
+	_mysql_ResultObject_clear(self);
 	MyFree(self);
 }
 
@@ -1525,7 +1569,7 @@ _mysql_ResultObject_repr(
 	_mysql_ResultObject *self)
 {
 	char buf[300];
-	sprintf(buf, "<result object at %lx>",
+	sprintf(buf, "<_mysql.result object at %lx>",
 		(long)self);
 	return PyString_FromString(buf);
 }
@@ -1919,16 +1963,16 @@ PyTypeObject _mysql_ConnectionObject_Type = {
 #if PY_VERSION_HEX < 0x02020000
 	Py_TPFLAGS_DEFAULT, /* (long) tp_flags */
 #else
-	Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE,
+	Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC | Py_TPFLAGS_BASETYPE,
 #endif
 	_mysql_connect__doc__, /* (char *) tp_doc Documentation string */
 #if PY_VERSION_HEX >= 0x02000000	
 	/* Assigned meaning in release 2.0 */
 	/* call function for all accessible objects */
-	0, /* (traverseproc) tp_traverse */
+	(traverseproc) _mysql_ConnectionObject_traverse, /* tp_traverse */
 	
 	/* delete references to contained objects */
-	0, /* (inquiry) tp_clear */
+	(inquiry) _mysql_ConnectionObject_clear, /* tp_clear */
 #if PY_VERSION_HEX >= 0x02010000	
 	/* Assigned meaning in release 2.1 */
 	/* rich comparisons */
@@ -1954,7 +1998,7 @@ PyTypeObject _mysql_ConnectionObject_Type = {
 	(initproc)_mysql_ConnectionObject_Initialize, /* tp_init */
 	(allocfunc)PyType_GenericAlloc, /* tp_alloc */
 	(newfunc)PyType_GenericNew, /* tp_new */
-	(destructor)_PyObject_Del, /* tp_free Low-level free-memory routine */
+	(destructor)_PyObject_GC_Del, /* tp_free Low-level free-memory routine */
 	0, /* (PyObject *) tp_bases */
 	0, /* (PyObject *) tp_mro method resolution order */
 	0, /* (PyObject *) tp_defined */
@@ -1998,16 +2042,20 @@ PyTypeObject _mysql_ResultObject_Type = {
 	0, /* (PyBufferProcs *) tp_as_buffer */
 	
 	/* Flags to define presence of optional/expanded features */
-	0, /* (long) tp_flags */
+#if PY_VERSION_HEX < 0x02020000
+	Py_TPFLAGS_DEFAULT, /* (long) tp_flags */
+#else
+	Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC | Py_TPFLAGS_BASETYPE,
+#endif
 	
 	_mysql_ResultObject__doc__, /* (char *) tp_doc Documentation string */
 #if PY_VERSION_HEX >= 0x02000000	
 	/* Assigned meaning in release 2.0 */
 	/* call function for all accessible objects */
-	0, /* (traverseproc) tp_traverse */
+	(traverseproc) _mysql_ResultObject_traverse, /* tp_traverse */
 	
 	/* delete references to contained objects */
-	0, /* (inquiry) tp_clear */
+	(inquiry) _mysql_ResultObject_clear, /* tp_clear */
 #if PY_VERSION_HEX >= 0x02010000	
 	/* Assigned meaning in release 2.1 */
 	/* rich comparisons */
@@ -2033,7 +2081,7 @@ PyTypeObject _mysql_ResultObject_Type = {
 	(initproc)_mysql_ResultObject_Initialize, /* tp_init */
 	(allocfunc)PyType_GenericAlloc, /* tp_alloc */
 	(newfunc)PyType_GenericNew, /* tp_new */
-	(destructor)_PyObject_Del, /* tp_free Low-level free-memory routine */
+	(destructor)_PyObject_GC_Del, /* tp_free Low-level free-memory routine */
 	0, /* (PyObject *) tp_bases */
 	0, /* (PyObject *) tp_mro method resolution order */
 	0, /* (PyObject *) tp_defined */
