@@ -1,23 +1,25 @@
+Python-2.0:
+
+Edit setup.py and make sure the paths are right for your system. This
+uses Distutils, so it should work on all platforms.
+
+$ python setup.py build
+# python setup.py install
+
+Python-1.6:
+
+The previous method should work, else use the classic method.
+
+Python-1.5.2:
+
+Get Distutils from www.pythonlabs.com and install it. Then do as above.
+Else, use the classic method.
+
+Classic method:
+
 Check Setup.in and make sure it has the right paths for your system.
 
 To build:	python build.py
 To install: 	follow additional instructions after build.
 
-Got windows? Read README.windows.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-Uh, that's it.
+Got windows? Try compile.py instead.
