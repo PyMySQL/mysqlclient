@@ -20,7 +20,7 @@ version_info = (
     9,
     0,
     "candidate",
-    1)
+    2)
 if version_info[3] == "final": __version__ = "%d.%d.%d" % version_info[:3]
 else: __version__ = "%d.%d.%d%1.1s%d" % version_info[:5]
 
@@ -37,8 +37,7 @@ apilevel = "2.0"
 paramstyle = "format"
 
 from _mysql import *
-from connections import Connection
-from converters import *
+from sets import DBAPISet
 from constants import FIELD_TYPE
 
 STRING    = DBAPISet(FIELD_TYPE.CHAR, FIELD_TYPE.ENUM, FIELD_TYPE.STRING,
@@ -57,9 +56,10 @@ def Binary(x): return str(x)
 
 def Connect(*args, **kwargs):
     """Factory function for connections.Connection."""
+    from connections import Connection
     return apply(Connection, args, kwargs)
 
-connect = Connect
+connect = Connection = Connect
 
 __all__ = [ 'BINARY', 'Binary', 'Connect', 'Connection', 'DATE',
     'Date', 'Time', 'Timestamp', 'DateFromTicks', 'TimeFromTicks',
