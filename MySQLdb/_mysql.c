@@ -159,7 +159,7 @@ _mysql_ResultObject_New(
 	int n, i;
 	MYSQL_FIELD *fields;
 	_mysql_ResultObject *r;
-	if (!(r = PyObject_NEW(_mysql_ResultObject, &_mysql_ResultObject_Type)))
+	if (!(r = PyObject_New(_mysql_ResultObject, &_mysql_ResultObject_Type)))
 		return NULL;
 	r->conn = (PyObject *) conn;
 	r->converter = NULL;
@@ -195,7 +195,7 @@ _mysql_ResultObject_New(
 
 static char _mysql_connect__doc__[] =
 "connect() -- returns a MYSQL connection object. Exclusive use of\n\
-              keyword parameters strongly recommended. Consult the
+              keyword parameters strongly recommended. Consult the\n\
               MySQL C API documentation for more details.\n\
 \n\
 host -- string, host to connect to or NULL pointer (localhost)\n\
@@ -238,8 +238,10 @@ _mysql_connect(
 	char *init_command=NULL,
 	     *read_default_file=NULL,
 	     *read_default_group=NULL;
-	_mysql_ConnectionObject *c = PyObject_NEW(_mysql_ConnectionObject,
-					      &_mysql_ConnectionObject_Type);
+	_mysql_ConnectionObject *c=NULL;
+	
+	c = PyObject_New(_mysql_ConnectionObject,
+			 &_mysql_ConnectionObject_Type);
 	if (c == NULL) return NULL;
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|ssssisOiiisss:connect",
 					 kwlist,
@@ -1160,7 +1162,7 @@ _mysql_ConnectionObject_dealloc(
 		Py_XDECREF(o);
 	}
 	Py_XDECREF(self->converter);
-	PyMem_Free((char *) self);
+	PyObject_Del(self);
 }
 
 static PyObject *
@@ -1231,7 +1233,7 @@ _mysql_ResultObject_dealloc(
 	mysql_free_result(self->result);
 	Py_DECREF(self->conn);
 	Py_DECREF(self->converter);
-	PyMem_Free((char *) self);
+	PyObject_Del(self);
 }
 
 static PyObject *
