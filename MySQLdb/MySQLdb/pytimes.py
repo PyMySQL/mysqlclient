@@ -26,7 +26,10 @@ def TimestampFromTicks(ticks):
     """Convert UNIX ticks into a datetime instance."""
     return apply(datetime, localtime(ticks)[:6])
 
-format_TIME = format_TIMESTAMP = format_DATE = str
+format_TIME = format_DATE = str
+
+def format_TIMESTAMP(d):
+    return d.strftime("%Y-%m-%d %H:%M:%S")
 
 def DateTime_or_None(s):
     if ' ' in s:
