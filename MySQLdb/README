@@ -4,6 +4,12 @@ Warning:
   already answered, I reserve the right to verbally abuse you.
 
 
+Binary Packages:
+
+  I don't plan to make binary packages any more. However, if someone
+  contributes one, I will make it available.
+
+
 Prerequisites:
 
   Python 1.5.2 or higher
@@ -13,25 +19,12 @@ Prerequisites:
    * Versions lower than 1.5.2 WON'T WORK.
 
    * All versions from 1.5.2 should work. 1.6.x versions have not been
-     tested. 2.1.3 and 2.2.3 have both been tested. 2.0.x has not been
-     recently tested. 2.3 (alpha) support is coming summer 2003.
+     tested. All of the recent testing has been done with 2.3.x.
 
    * Red Hat Linux:
 
      o Make sure you have the Python development headers
        and libraries (python-devel).
-
-     o For Python-2.x versions, this is python2-devel.
-
-     o Note that Red Hat Linux, up to version 7.3, installs
-       Python-1.5.2 as the python package. Starting sometime with 7.x,
-       Python-2.x is available as the python2 package.
-
-     o It appears that the next Red Hat release (probably 8.0) will
-       install Python-2.2.1 as the python package and drop 1.5.2.
-
-   * The python.org RPM packages follow the Red Hat 7.x conventions.
-     Python-2.1.3 RPMS install as the python2.1 package.
 
 
   Distutils 1.0.2 or higher
@@ -51,21 +44,18 @@ Prerequisites:
 
     * Versions lower than 3.22.19 might not work.
 
-    * MySQL-4.1 is not yet supported, but should be by summer 2003.
-      Current release 4.1.0 (alpha).
+    * MySQL-4.1 is not yet supported, and probably won't be until
+      MySQLdb-1.3 or 2.0. Current release 4.1.2 (alpha).
       
-    * MySQL-4.0 is supported. Current release 4.0.12.
+    * MySQL-4.0 is supported, and all recent testing is with 4.0.x.
 
-    * MySQL-3.23 is supported. Current release: 3.23.56.
+    * MySQL-3.23 is supported, but slightly deprecated.
 
     * MySQL-3.22 is deprecated in favor of 3.23, but still supported.
 
     * Red Hat Linux packages:
 
-      o XXX May be out of date for Red Hat 8.0 and newer
-      
-      o mysql-devel to compile; doesn't seem to come with the
-	    thread-safe client library
+      o mysql-devel to compile
 
       o mysql and/or mysql-devel to run
 
@@ -78,8 +68,6 @@ Prerequisites:
         which may or may not be what you want.
 
       o MySQL-shared to run if you compiled with MySQL-shared installed
-
-    * I prefer the MySQL.com packages to the Red Hat packages.
 
     * Transactions (particularly InnoDB tables) are supported for
       MySQL-3.23 and up. You may need a special package from your
@@ -101,7 +89,11 @@ Prerequisites:
 
     * Most free software-based systems already have this, usually gcc.
 
-    * If you have some Windows flavor, you have to pay extra for this.
+    * Most commercial UNIX platforms also come with a C compiler, or
+      you can also use gcc.
+
+    * If you have some Windows flavor, you usually have to pay extra
+      for this, or you can use Cygwin.
 
 
 Building and installing
@@ -158,15 +150,19 @@ Building and installing
 
   Finally, putting it together:
 
-  $ tar xfz MySQL-python-0.9.3.tar.gz
-  $ cd MySQL-python-0.9.3
-  $ export mysqlversion="4.0.12"
+  $ tar xfz MySQL-python-1.0.0.tar.gz
+  $ cd MySQL-python-1.0.0
+  $ export mysqlversion="4.0.20"
   $ export mysqlclient="mysqlclient_r"
   $ export mysqloptlibs="ssl crypto"
   $ python setup.py build
   $ su
   # python setup.py install
 
+  NOTE: You must export environment variables for setup.py to see
+  them.  Depending on what shell you prefer, you may need to use
+  "export" or "set -x" (bash and other Bourne-like shells) or "setenv"
+  (csh-like shells).
   
   Windows
 
@@ -214,14 +210,11 @@ Building and installing
 
   Gentoo Linux
 
-    It's in the portage tree.
+    It's in the portage tree. Gentoo is also my development platform.
 
       # emerge sync
       # emerge mysql-python
       # emerge zmysqlda # if you use Zope
-
-    Note that zmysqlda will pull in mysql-python-py2.1 automatically
-    as Zope still officially requires Python-2.1.3.
 
   *BSD
 
@@ -242,4 +235,4 @@ License
 
 
   Andy Dustman <andy@dustman.net>
-  2003-04-19
+  2004-06-06 (D-Day + 60)

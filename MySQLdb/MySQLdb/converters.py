@@ -130,7 +130,7 @@ conversions = {
     FIELD_TYPE.SET: Str2Set,
     FIELD_TYPE.TIMESTAMP: mysql_timestamp_converter,
     FIELD_TYPE.DATETIME: DateTime_or_None,
-    FIELD_TYPE.TIME: Time_or_None,
+    FIELD_TYPE.TIME: TimeDelta_or_None,
     FIELD_TYPE.DATE: Date_or_None,
     FIELD_TYPE.BLOB: [
         (FLAG.BINARY, char_array),

@@ -26,7 +26,10 @@ def TimestampFromTicks(ticks):
     """Convert UNIX ticks into a datetime instance."""
     return apply(datetime, localtime(ticks)[:6])
 
-format_TIME = format_TIMESTAMP = format_DATE = str
+format_TIME = format_DATE = str
+
+def format_TIMESTAMP(d):
+    return d.strftime("%Y-%m-%d %H:%M:%S")
 
 def DateTime_or_None(s):
     if ' ' in s:
@@ -47,7 +50,7 @@ def TimeDelta_or_None(s):
     try:
         h, m, s = s.split(':')
         td = timedelta(hours=int(h), minutes=int(m), seconds=int(s),
-                       microseconds=int(modf(float(s)[0]))*1000000)
+                       microseconds=int(modf(float(s))[0])*1000000)
         if h < 0:
             return -td
         else:

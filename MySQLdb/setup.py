@@ -10,7 +10,7 @@ import string
 YES = 1
 NO = 0
 
-mysqlclient = os.getenv('mysqlclient', 'mysqlclient')
+mysqlclient = os.environ.get('mysqlclient', 'mysqlclient')
 mysqlversion = tuple(map(int, string.split(os.getenv('mysqlversion', '3.23.32'), '.')))
 mysqloptlibs = string.split(os.getenv('mysqloptlibs', ''))
 embedded_server = (mysqlclient == 'mysqld')
@@ -18,15 +18,17 @@ embedded_server = (mysqlclient == 'mysqld')
 name = "MySQL-%s" % os.path.basename(sys.executable)
 if embedded_server:
     name = name + "-embedded"
-version = "0.9.3b3"
+version = "1.0.1c1"
 
 # include files and library locations should cover most platforms
 include_dirs = [
     '/usr/include/mysql', '/usr/local/include/mysql',
+    '/usr/local/mysql/include',
     '/usr/local/mysql/include/mysql'
     ]
 library_dirs = [
     '/usr/lib/mysql', '/usr/local/lib/mysql',
+    '/usr/local/mysql/lib',
     '/usr/local/mysql/lib/mysql'
     ]
 
@@ -64,6 +66,8 @@ elif sys.platform == "sunos5": # Solaris 2.8 + gcc
 elif sys.platform == "win32": # Ugh
     include_dirs = [r'c:\mysql\include']
     library_dirs = [r'c:\mysql\lib\opt']
+    libraries.remove('z')
+    libraries.remove('crypt')
     libraries.extend(['zlib', 'msvcrt', 'libcmt', 'wsock32', 'advapi32'])
     extra_objects = [r'c:\mysql\lib\opt\mysqlclient.lib']
 elif sys.platform == "cygwin":
@@ -71,8 +75,8 @@ elif sys.platform == "cygwin":
     library_dirs = ['/c/mysql/lib']
     extra_compile_args.append('-DMS_WIN32')
 elif sys.platform[:6] == "darwin": # Mac OS X
-    include_dirs.append('/sw/include')
-    library_dirs.append('/sw/lib')
+    include_dirs.append('/sw/include/mysql')
+    library_dirs.append('/sw/lib/mysql')
     extra_link_args.append('-flat_namespace')
 elif sys.platform == 'linux2' and os.environ.get('HOSTTYPE') == 'alpha':
     libraries.extend(['ots', 'cpml'])

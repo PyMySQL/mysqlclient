@@ -29,7 +29,7 @@ def format_DATE(d):
 
 def format_TIME(d):
     """Format a DateTime object as a time value."""
-    return d.strftime("%H:%M:%S")
+    return d.strftime("%d %H:%M:%S")
 
 def format_TIMESTAMP(d):
     """Format a DateTime object as an ISO timestamp."""
