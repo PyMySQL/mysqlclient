@@ -23,7 +23,6 @@ if __version__ != getattr(_mysql, '__version__', None):
     raise ImportError, "this is MySQLdb version %s, but _mysql is version %s" %\
           (__version__, _mysql.__version__)
 
-from _mysql_const import converters
 from _mysql_const.converters import *
 import re, types
 from types import ListType, TupleType
