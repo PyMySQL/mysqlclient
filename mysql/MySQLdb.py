@@ -1,10 +1,16 @@
 import _mysql
 from _mysql import *
 from DateTime import Date, Time, Timestamp, ISO
-from types import StringType, ListType, TupleType
 
 threadsafety = 1
 apllevel = "1.1"
+paramstyle = "percent"
+
+def Binary(x): return str(x)
+
+def DATE(d):      return d.Format("%Y-%m-%d")
+def TIME(d):      return d.Format("%H:%M:%S")
+def TIMESTAMP(d): return d.Format("%Y-%m-%d %H:%M:%S")
 
 def mysql_timestamp_converter(s):
     parts = map(int, filter(None, (s[:4],s[4:6],s[6:8],s[8:10],s[10:12],s[12:14])))
@@ -15,43 +21,49 @@ type_conv[FIELD_TYPE.DATETIME] = ISO.ParseDateTime
 type_conv[FIELD_TYPE.TIME] = ISO.ParseTime
 type_conv[FIELD_TYPE.DATE] = ISO.ParseDate
 
+
 class Cursor:
 
-    def __init__(self, connection, name=''):
+    def __init__(self, connection, name='', use=0, warnings=1):
         self.connection = connection
         self.name = name
         self.description = None
         self.rowcount = -1
         self.result = None
         self.arraysize = None
-        self.warnings = 1
+        self.warnings = warnings
+	self.use = use
         
-##    def __del__(self):
-##        self.result = None
-##     
     def setinputsizes(self, size): pass
       
     def setoutputsizes(self, size): pass
          
     def execute(self, query, args=None):
-        from types import ListType, TupleType
+        from types import TupleType
         from string import rfind, join, split, atoi
-        db = self.connection.db
         if not args:
-            db.query(query)
-        elif type(args) is not ListType:
-            db.query(query % escape_row(args))
+            self._query(query)
+        elif type(args) is TupleType:
+            self._query(query % escape_row(args))
         else:
-            p = rfind(query, '(')
-            if p == -1: raise ProgrammingError, "can't find values"
-            n = len(args)-1
-            q = [query % escape_row(args[0])]
-            qv = query[p:]
-            for a in args[1:]: q.append(qv % escape_row(a))
-            q = join(q, ',\n')
-            print q
-            db.query(q)
-        self.result = db.store_result()
+	    self.executemany(query, args) # deprecated
+
+    def executemany(self, query, args=None):
+        from string import rfind, join
+        p = rfind(query, '(')
+        if p == -1: raise ProgrammingError, "can't find values"
+        n = len(args)-1
+        q = [query % escape_row(args[0])]
+        qv = query[p:]
+        for a in args[1:]: q.append(qv % escape_row(a))
+        self._query(join(q, ',\n'))
+
+    def _query(self, q):
+        from string import split, atoi
+        db = self.connection.db
+        db.query(q)
+        if self.use: self.result = db.use_result()
+        else:        self.result = db.store_result()
 	if self.result:
      	    self.description = self.result.describe()
      	    self.rowcount = self.result.num_rows()
@@ -65,7 +77,6 @@ class Cursor:
      	        if warnings:
      	            raise Warning, w
 
-
     def fetchone(self):
         try:
             return self.result.fetch_row()
@@ -74,32 +85,13 @@ class Cursor:
              
     def fetchmany(self, size=None):
         size = size or self.inputsizes or 1
-        rows = []
-        for i in range(size):
-            row = self.fetchone()
-            if not row: break
-            rows.append(row)
-        return rows
+        return self.result.fetch_rows(size)
          
-    def fetchall(self):
-        rows = []
-        while 1:
-            row = self.fetchone()
-            if not row: break
-            rows.append(row)
-        return rows
+    def fetchall(self): return self.result.fetch_all_rows()
          
     def nextset(self): pass
      
      
-def Raw(s): return s 
-
-STRING = FIELD_TYPE.STRING
-NUMBER = FIELD_TYPE.LONG
-TIME = FIELD_TYPE.TIME
-TIMESTAMP = FIELD_TYPE.TIMESTAMP
-ROW_ID = FIELD_TYPE.LONG
-            
 class Connection:
     
     CursorClass = Cursor
@@ -119,9 +111,10 @@ class Connection:
          
     def commit(self): pass
     
-    def rollback(self): raise OperationalError, "transactions not supported"
+    # def rollback(self): raise OperationalError, "transactions not supported"
      
     def cursor(self, name=''):
         return self.CursorClass(self, name)
- 
+
+
 Connect = connect = Connection
