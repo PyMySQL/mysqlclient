@@ -11,13 +11,23 @@ YES = 1
 NO = 0
 
 # set this to YES if you have the thread-safe mysqlclient library
-thread_safe_library = NO
+thread_safe_library = YES
 
 # You probably don't have to do anything past this point. If you
 # do, please mail me the configuration for your platform. Don't
 # forget to include the value of sys.platform and os.name.
 
 mysqlclient = thread_safe_library and "mysqlclient_r" or "mysqlclient"
+
+# include files and library locations should cover most platforms
+include_dirs = [
+    '/usr/include/mysql', '/usr/local/include/mysql',
+    '/usr/local/mysql/include/mysql'
+    ]
+library_dirs = [
+    '/usr/lib/mysql', '/usr/local/lib/mysql',
+    '/usr/local/mysql/lib/mysql'
+    ]
 
 # MySQL-3.23 and newer need libz
 libraries = [mysqlclient, "z"]
@@ -35,19 +45,10 @@ extra_objects = []
 extra_compile_args = []
 extra_link_args = []
 
-if sys.platform in ("linux-i386", "linux2"): # most Linux platforms
-    include_dirs = ['/usr/include/mysql']
-    library_dirs = ['/usr/lib/mysql']
-elif sys.platform == "netbsd1":
+if sys.platform == "netbsd1":
     include_dirs = ['/usr/pkg/include/mysql']
     library_dirs = ['/usr/pkg/lib/mysql']
-elif string.find(sys.platform, "bsd")>-1: # *BSD
-    include_dirs = ['/usr/local/include/mysql']
-    library_dirs = ['/usr/local/lib/mysql']
 elif sys.platform == "sunos5": # Solaris 2.8 + gcc
-    include_dirs = ['/usr/local/mysql/include/mysql'] 
-    library_dirs = ['/usr/local/mysql/lib/mysql'] 
-    libraries = [mysqlclient, "z"] 
     runtime_library_dirs = ['/usr/local/lib:/usr/openwin/lib:/usr/dt/lib'] 
     extra_compile_args = ["-fPIC"]
 elif sys.platform == "win32": # Ugh
@@ -56,13 +57,14 @@ elif sys.platform == "win32": # Ugh
     libraries = [mysqlclient, 'zlib', 'msvcrt', 'libcmt',
                  'wsock32', 'advapi32']
     extra_objects = [r'c:\mysql\lib\opt\mysqlclient.lib']
+elif sys.platform == "cygwin":
+    include_dirs = ['/c/mysql/include']
+    library_dirs = ['/c/mysql/lib']
+    extra_compile_args = ['-DMS_WIN32']
 elif sys.platform[:6] == "darwin": # Mac OS X
-    include_dirs = ['/usr/local/mysql/include/mysql']
-    library_dirs = ['/usr/local/mysql/lib/mysql']
     extra_link_args = ['-flat_namespace']
 elif os.name == "posix": # UNIX-ish platforms not covered above
-    include_dirs = ['/usr/include/mysql']
-    library_dirs = ['/usr/lib/mysql']
+    pass # default should work
 else:
     raise "UnknownPlatform", "sys.platform=%s, os.name=%s" % \
           (sys.platform, os.name)
@@ -88,7 +90,7 @@ MySQLdb. MySQLdb is free software.
 
 setup (# Distribution meta-data
         name = "MySQL-python",
-        version = "0.9.2a1",
+        version = "0.9.2a2",
         description = "An interface to MySQL",
         long_description=long_description,
         author = "Andy Dustman",
