@@ -37,7 +37,7 @@ embedded_server = (mysqlclient == 'mysqld')
 name = "MySQL-%s" % os.path.basename(sys.executable)
 if embedded_server:
     name = name + "-embedded"
-version = "1.1.10"
+version = "1.2.0"
 
 extra_objects = []
 
@@ -62,9 +62,12 @@ else:
     
     def config(what):
         from os import popen
-        return popen("mysql_config --%s" % what).read().strip().split()
+        f = popen("mysql_config --%s" % what)
+        data = f.read().strip().split()
+        if f.close(): data = []
+        return data
 
-    include_dirs = [ i[2:] for i in config('include') ]
+    include_dirs = [ i[2:] for i in config('include') if i.startswith('-i') ]
 
     if mysqlclient == "mysqlclient":
         libs = config("libs")

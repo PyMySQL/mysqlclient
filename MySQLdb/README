@@ -128,8 +128,8 @@ or you want to use the embedded server (mysqld).
 
 Finally, putting it together::
 
-  $ tar xfz MySQL-python-1.1.10.tar.gz
-  $ cd MySQL-python-1.1.10
+  $ tar xfz MySQL-python-1.2.0.tar.gz
+  $ cd MySQL-python-1.2.0
   $ python setup.py build
   $ su # or use sudo
   # python setup.py install

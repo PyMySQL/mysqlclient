@@ -147,3 +147,10 @@ try:
     conversions[FIELD_TYPE.DECIMAL] = Decimal
 except ImportError:
     pass
+
+try:
+    from types import BooleanType
+    def Bool2Str(s, d): return str(int(s))
+    conversions[BooleanType] = Bool2Str
+except ImportError:
+    pass
