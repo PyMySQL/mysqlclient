@@ -5,7 +5,7 @@ include README.MySQLmodule
 include license.py
 include MANIFEST.in
 include MANIFEST
-include CHANGELOG
+include ChangeLog
 include PKG-INFO
 include GPL
 include pymemcompat.h
