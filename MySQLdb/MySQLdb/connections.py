@@ -110,7 +110,6 @@ class Connection(ConnectionBase):
                 u = lambda s, c=charset: unicode(s, c)
             else:
                 u = unicode
-            conv[FIELD_TYPE.CHAR] = u
             conv[FIELD_TYPE.STRING] = u
             conv[FIELD_TYPE.VAR_STRING] = u
         self._make_connection(args, kwargs2)
