@@ -1,4 +1,10 @@
 /*
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2, or (at your option)
+any later version. Alternatively, you may use the original license
+reproduced below.
+
 Copyright 1999 by Comstar.net, Inc., Atlanta, GA, US.
 
                         All Rights Reserved
@@ -618,7 +624,6 @@ _escape_item(
 	PyObject *d)
 {
 	PyObject *quoted, *itemtype, *itemconv;
-	int i, n;
 	if (!(itemtype = PyObject_Type(item)))
 		goto error;
 	itemconv = PyObject_GetItem(d, itemtype);
@@ -646,9 +651,7 @@ _mysql_escape(
 	PyObject *self,
 	PyObject *args)
 {
-	PyObject *o=NULL, *d=NULL, *r=NULL, *item, *quoted, *pkey; 
-	int ppos = 0;
-	int i, n;
+	PyObject *o=NULL, *d=NULL;
 	if (!PyArg_ParseTuple(args, "OO:escape", &o, &d))
 		return NULL;
 	if (!PyMapping_Check(d)) {
@@ -694,7 +697,6 @@ _mysql_escape_dict(
 {
 	PyObject *o=NULL, *d=NULL, *r=NULL, *item, *quoted, *pkey; 
 	int ppos = 0;
-	int i, n;
 	if (!PyArg_ParseTuple(args, "O!O:escape_dict", &PyDict_Type, &o, &d))
 		goto error;
 	if (!PyMapping_Check(d)) {
