@@ -756,7 +756,18 @@ _mysql_ResultObject_fetch_row_as_dict(self, args)
 			Py_INCREF(Py_None);
 			v = Py_None;
 		}
-		PyMapping_SetItemString(r, fields[i].name, v);
+		if (!PyMapping_HasKeyString(r, fields[i].name)) {
+			PyMapping_SetItemString(r, fields[i].name, v);
+		} else {
+			int len;
+			char buf[256];
+			strncpy(buf, fields[i].table, 256);
+			len = strlen(buf);
+			strncat(buf, ".", 256-len);
+			len = strlen(buf);
+			strncat(buf, fields[i].name, 256-len);
+			PyMapping_SetItemString(r, buf, v);
+		}
 		Py_DECREF(v);
 	}
 	return r;
