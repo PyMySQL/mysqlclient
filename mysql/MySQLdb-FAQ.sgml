@@ -37,7 +37,11 @@ LD_LIBRARY_PATH=/path/to/mysql/libs python ... # Bourne-ish shell
 linking against an earlier version. You may also have more than one version
 installed. Get Python 1.5.2 from your vendor or python.org.
 
+<sect1>ImportError: ./_mysqlmodule.so: undefined symbol: uncompress
 <sect1>./_mysqlmodule.c:33: mysql.h: No such file or directory
+<P>
+It seems that MySQL-3.23 client libraries require libz for gzip
+compression. Add -lz to the link line in Setup.
 
 <P>The include path (-I) to your MySQL include files is wrong; modify
 Setup. OR: You don't have the MySQL development stuff loaded. If you

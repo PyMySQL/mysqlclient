@@ -4,6 +4,10 @@
 # If you have dynamic MySQL libraries, they will need to be on your
 # LD_LIBRARY_PATH at runtime.
 _mysql _mysqlmodule.c -L/usr/lib/mysql -I/usr/include/mysql -lmysqlclient
+
+# I find that 3.23 requires libz.
+_mysql _mysqlmodule.c -L/usr/lib/mysql -I/usr/include/mysql -lmysqlclient -lz
+
 # Uncomment for Windows
 #_mysql _mysqlmodule.c -L/mysql/lib/opt -I/mysql/include -lmysqlclient -lwsock32
 
