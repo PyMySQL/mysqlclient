@@ -8,3 +8,4 @@ include MANIFEST
 include CHANGELOG
 include PKG-INFO
 include GPL
+include pymemcompat.h
