@@ -38,7 +38,7 @@ def DateTime_or_None(s):
 
     try:
         d, t = s.split(sep, 1)
-        return apply(datetime, tuple(d.split('-')+t.split(':')))
+        return apply(datetime, tuple(map(int, d.split('-')+t.split(':'))))
     except:
         return None
 
@@ -53,5 +53,5 @@ def TimeDelta_or_None(s):
         return None
 
 def Date_or_None(s):
-    try: return apply(date, tuple(s.split('-',2)))
+    try: return apply(date, tuple(map(int, s.split('-',2))))
     except: return None
