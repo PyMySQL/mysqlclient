@@ -28,6 +28,8 @@
     objects. You don't normally need to use it, but it might be useful
     for debugging.
 
+  * Return DECIMAL/NUMERIC columns as floats.
+
   * A number of documentation updates.
 
 
@@ -41,6 +43,15 @@
     the MySQLdb package structure. Exceptions were moved to
     _mysql_exceptions.py, but these are imported into _mysql. This
     makes the binary (and source) significantly smaller.
+
+  * Reduced threadsafety to 1 (from 2), and ripped out a lot of the
+    crap that attempts to let you safely share a connection between
+    threads. If you are using transactions, you can only hand off the
+    connection from one thread to another after a commit or
+    rollback. Sharing a connection will hurt your performance anyway,
+    so give each thread it's own connection.
+
+  * A Set class was added for use with SET columns.
 
   * Loads of docstrings were added to take advantage of pydoc.
 
