@@ -34,6 +34,11 @@ except ImportError:
 
 def Long2Int(l): return str(l)[:-1] # drop the trailing L
 def None2NULL(d): return "NULL"
+
+# MySQL-3.23.xx now has a new escape_string function that uses
+# the connection to determine what character set is in use and
+# quote accordingly. So this will be overridden by the connect()
+# method.
 String2Literal = string_literal
 
 quote_conv = { types.IntType: str,
@@ -52,6 +57,8 @@ type_conv = { FIELD_TYPE.TINY: int,
               FIELD_TYPE.YEAR: int }
 
 try:
+    try: from mx import DateTime # new packaging
+    except ImportError: import DateTime # old packaging
     from DateTime import Date, Time, Timestamp, ISO, \
          DateTimeType, DateTimeDeltaType
 
@@ -268,7 +275,7 @@ class CursorStoreResultMixIn:
 
     def close(self):
         self.connection = None
-        del self._rows
+        self._rows = ()
 
     def _query(self, q):
         self.connection._acquire()
@@ -441,6 +448,7 @@ class Connection:
         else:
             self.cursorclass = Cursor
         self.db = apply(connect, (), kwargs)
+        self.quote_conv[types.StringType] = self.db.string_literal
         self._server_info = i = self.db.get_server_info()
         self._server_version = int(i[0])*10000 + int(i[2:4])*100 + int(i[5:7])
         if _threading: self.__lock = _threading.Lock()
@@ -475,6 +483,7 @@ class Connection:
 
     def affected_rows(self): return self.db.affected_rows()
     def dump_debug_info(self): return self.db.dump_debug_info()
+    def escape_string(self, s): return self.db.escape_string(s)
     def get_host_info(self): return self.db.get_host_info()
     def get_proto_info(self): return self.db.get_proto_info()
     def get_server_info(self): return self.db.get_server_info()
@@ -491,6 +500,7 @@ class Connection:
     def select_db(self, db): return self.db.select_db(db)
     def shutdown(self): return self.db.shutdown()
     def stat(self): return self.db.stat()
+    def string_literal(self, s): return self.db.string_literal(s)
     def thread_id(self): return self.db.thread_id()
 
     def change_user(self, *args, **kwargs):
