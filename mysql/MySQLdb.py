@@ -189,12 +189,8 @@ class _Cursor:
         db.query(q)
         if self.use: self.result = db.use_result()
         else:        self.result = db.store_result()
-	if self.result:
-     	    self.description = self.result.describe()
-     	    self.rowcount = db.affected_rows()
-     	else:
-     	    self.description = None
-     	    self.rowcount = -1
+     	self.rowcount = db.affected_rows()
+        self.description = self.result and self.result.describe() or None
      	if self.warnings:
      	    w = db.info()
      	    if w:
