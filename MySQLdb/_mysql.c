@@ -167,6 +167,20 @@ _mysql_Exception(_mysql_ConnectionObject *c)
 	return NULL;
 }
 
+#if MYSQL_VERSION_ID >= 32314
+static char _mysql_thread_safe__doc__[] =
+"Indicates whether the client is compiled as thread-safe.";
+
+static PyObject *_mysql_thread_safe(
+	PyObject *self,
+	PyObject *args) {
+	PyObject *flag;
+	if (!PyArg_NoArgs(args)) return NULL;
+	if (!(flag=PyInt_FromLong((long)mysql_thread_safe()))) return NULL;
+	return flag;
+}
+#endif
+
 static char _mysql_ResultObject__doc__[] =
 "result(connection, use=0, converter={}) -- Result set from a query.\n\
 \n\
@@ -2078,7 +2092,15 @@ _mysql_methods[] = {
 		0,
 		_mysql_get_client_info__doc__
 	},
+#if MYSQL_VERSION_ID >= 32314
+	{
+		"thread_safe",
+		(PyCFunction)_mysql_thread_safe,
+		0,
+		_mysql_thread_safe__doc__
+	},
 	{NULL, NULL} /* sentinel */
+#endif
 };
 
 static PyObject *
