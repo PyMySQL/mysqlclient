@@ -66,21 +66,33 @@ def Thing2Literal(o, d):
 
     return string_literal(o, d)
 
+
 def Instance2Str(o, d):
 
-    """Convert an Instance to a string representation.  If the
-    __str__() method produces acceptable output, then you don't need
-    to add the class to conversions; it will be handled by the default
-    converter. If the exact class is not found in d, it will use the
-    first class it can find for which o is an instance."""
+    """
 
-    if d.has_key(o.__class__): return d[o.__class__](o, d)
+    Convert an Instance to a string representation.  If the __str__()
+    method produces acceptable output, then you don't need to add the
+    class to conversions; it will be handled by the default
+    converter. If the exact class is not found in d, it will use the
+    first class it can find for which o is an instance.
+
+    """
+
+    if d.has_key(o.__class__):
+        return d[o.__class__](o, d)
     cl = filter(lambda x,o=o:
-                type(x)==types.ClassType and isinstance(o,x), d.keys())
+                type(x) is types.ClassType
+                and isinstance(o, x), d.keys())
+    if not cl and hasattr(types, 'ObjectType'):
+        cl = filter(lambda x,o=o:
+                    type(x) is types.TypeType
+                    and isinstance(o, x), d.keys())
     if not cl:
         return d[types.StringType](o,d)
     d[o.__class__] = d[cl[0]]
     return d[cl[0]](o, d)
+
 
 conversions = {
     types.IntType: Thing2Str,
@@ -110,6 +122,9 @@ conversions = {
     FIELD_TYPE.DATE: Date_or_None,
     }
 
+
 if hasattr(types, 'UnicodeType'):
     conversions[types.UnicodeType] = Unicode2Str
 
+if hasattr(types, 'ObjectType'):
+    conversions[types.ObjectType] = Instance2Str

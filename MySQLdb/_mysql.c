@@ -201,22 +201,22 @@ _mysql_ResultObject_New(
 }
 
 static char _mysql_connect__doc__[] =
-"connect() -- returns a MYSQL connection object. Exclusive use of\n\
-              keyword parameters strongly recommended. Consult the\n\
-              MySQL C API documentation for more details.\n\
+"Returns a MYSQL connection object. Exclusive use of\n\
+keyword parameters strongly recommended. Consult the\n\
+MySQL C API documentation for more details.\n\
 \n\
-host -- string, host to connect to or NULL pointer (localhost)\n\
-user -- string, user to connect as or NULL (your username)\n\
-passwd -- string, password to use or NULL (no password)\n\
-db -- string, database to use or NULL (no DB selected)\n\
-port -- integer, TCP/IP port to connect to or default MySQL port\n\
-unix_socket -- string, location of unix_socket to use or use TCP\n\
-client_flags -- integer, flags to use or 0 (see MySQL docs)\n\
-conv -- dictionary, maps MySQL FIELD_TYPE.* to Python functions which\n\
+host -- string, host to connect\n\
+user -- string, user to connect as\n\
+passwd -- string, password to use\n\
+db -- string, database to use\n\
+port -- integer, TCP/IP port to connect to\n\
+unix_socket -- string, location of unix_socket (UNIX-ish only)\n\
+conv -- mapping, maps MySQL FIELD_TYPE.* to Python functions which\n\
         convert a string to the appropriate Python type\n\
-connect_time -- number of seconds to wait before the connection\n\
+connect_timeout -- number of seconds to wait before the connection\n\
         attempt fails.\n\
-compress -- if set, compression is enabled\n\
+compress -- if set, gzip compression is enabled\n\
+named_pipe -- if set, connect to server via named pipe (Windows only)\n\
 init_command -- command which is run once the connection is created\n\
 read_default_file -- see the MySQL documentation for mysql_options()\n\
 read_default_group -- see the MySQL documentation for mysql_options()\n\
@@ -308,6 +308,9 @@ _mysql_connect(
 	return (PyObject *) c;
 }
 
+static char _mysql_ConnectionObject_close__doc__[] =
+"Close the connection. No further activity possible.";
+
 static PyObject *
 _mysql_ConnectionObject_close(
 	_mysql_ConnectionObject *self,
@@ -326,6 +329,11 @@ _mysql_ConnectionObject_close(
 	return Py_None;
 }
 
+static char _mysql_ConnectionObject_affected_rows__doc__ [] =
+"Return number of rows affected by the last query.\n\
+Non-standard. Use Cursor.rowcount.\n\
+";
+
 static PyObject *
 _mysql_ConnectionObject_affected_rows(
 	_mysql_ConnectionObject *self,
@@ -337,7 +345,7 @@ _mysql_ConnectionObject_affected_rows(
 }
 
 static char _mysql_debug__doc__[] =
-"debug(s) -- Does a DBUG_PUSH with the given string.\n\
+"Does a DBUG_PUSH with the given string.\n\
 mysql_debug() uses the Fred Fish debug library.\n\
 To use this function, you must compile the client library to\n\
 support debugging.\n\
@@ -353,6 +361,12 @@ _mysql_debug(
 	Py_INCREF(Py_None);
 	return Py_None;
 }
+
+static char _mysql_ConnectionObject_dump_debug_info__doc__[] =
+"Instructs the server to write some debug information to the\n\
+log. The connected user must have the process privilege for\n\
+this to work. Non-standard.\n\
+";
 
 static PyObject *
 _mysql_ConnectionObject_dump_debug_info(
@@ -370,6 +384,12 @@ _mysql_ConnectionObject_dump_debug_info(
 	return Py_None;
 }
 
+static char _mysql_ConnectionObject_errno__doc__[] =
+"Returns the error code for the most recently invoked API function\n\
+that can succeed or fail. A return value of zero means that no error\n\
+occurred.\n\
+";
+
 static PyObject *
 _mysql_ConnectionObject_errno(
 	_mysql_ConnectionObject *self,
@@ -379,6 +399,12 @@ _mysql_ConnectionObject_errno(
 	check_connection(self);
 	return PyInt_FromLong((long)mysql_errno(&(self->connection)));
 }
+
+static char _mysql_ConnectionObject_error__doc__[] =
+"Returns the error message for the most recently invoked API function\n\
+that can succeed or fail. An empty string ("") is returned if no error\n\
+occurred.\n\
+";
 
 static PyObject *
 _mysql_ConnectionObject_error(
@@ -878,6 +904,24 @@ _mysql_ResultObject_fetch_row(
 }
 
 #if MYSQL_VERSION_ID >= 32303
+
+static char _mysql_ConnectionObject_change_user__doc__[] =
+"Changes the user and causes the database specified by db to\n\
+become the default (current) database on the connection\n\
+specified by mysql. In subsequent queries, this database is\n\
+the default for table references that do not include an\n\
+explicit database specifier.\n\
+\n\
+This function was introduced in MySQL Version 3.23.3.\n\
+\n\
+Fails unless the connected user can be authenticated or if he\n\
+doesn't have permission to use the database. In this case the\n\
+user and database are not changed.\n\
+\n\
+The db parameter may be set to None if you don't want to have\n\
+a default database.\n\
+";
+
 static PyObject *
 _mysql_ConnectionObject_change_user(
 	_mysql_ConnectionObject *self,
@@ -893,7 +937,7 @@ _mysql_ConnectionObject_change_user(
 		return NULL;
 	check_connection(self);
 	Py_BEGIN_ALLOW_THREADS
-	r = mysql_change_user(&(self->connection), user, pwd, db);
+		r = mysql_change_user(&(self->connection), user, pwd, db);
 	Py_END_ALLOW_THREADS
 	if (r) 	return _mysql_Exception(self);
 	Py_INCREF(Py_None);
@@ -901,7 +945,11 @@ _mysql_ConnectionObject_change_user(
 }
 #endif
 
-#if MYSQL_VERSION_ID >= 32321
+static char _mysql_ConnectionObject_character_set_name__doc__[] =
+"Returns the default character set for the current connection.\n\
+Non-standard.\n\
+";
+
 static PyObject *
 _mysql_ConnectionObject_character_set_name(
 	_mysql_ConnectionObject *self,
@@ -910,10 +958,13 @@ _mysql_ConnectionObject_character_set_name(
 	const char *s;
 	if (!PyArg_NoArgs(args)) return NULL;
 	check_connection(self);
+#if MYSQL_VERSION_ID >= 32321
 	s = mysql_character_set_name(&(self->connection));
+#else
+	s = "latin1";
+#endif
 	return PyString_FromString(s);
 }
-#endif
 
 static char _mysql_get_client_info__doc__[] =
 "get_client_info() -- Returns a string that represents\n\
@@ -927,6 +978,11 @@ _mysql_get_client_info(
 	return PyString_FromString(mysql_get_client_info());
 }
 
+static char _mysql_ConnectionObject_get_host_info__doc__[] =
+"Returns a string that represents the MySQL client library\n\
+version. Non-standard.\n\
+";
+
 static PyObject *
 _mysql_ConnectionObject_get_host_info(
 	_mysql_ConnectionObject *self,
@@ -936,6 +992,11 @@ _mysql_ConnectionObject_get_host_info(
 	check_connection(self);
 	return PyString_FromString(mysql_get_host_info(&(self->connection)));
 }
+
+static char _mysql_ConnectionObject_get_proto_info__doc__[] =
+"Returns an unsigned integer representing the protocol version\n\
+used by the current connection. Non-standard.\n\
+";
 
 static PyObject *
 _mysql_ConnectionObject_get_proto_info(
@@ -947,6 +1008,11 @@ _mysql_ConnectionObject_get_proto_info(
 	return PyInt_FromLong((long)mysql_get_proto_info(&(self->connection)));
 }
 
+static char _mysql_ConnectionObject_get_server_info__doc__[] =
+"Returns a string that represents the server version number.\n\
+Non-standard.\n\
+";
+
 static PyObject *
 _mysql_ConnectionObject_get_server_info(
 	_mysql_ConnectionObject *self,
@@ -956,6 +1022,12 @@ _mysql_ConnectionObject_get_server_info(
 	check_connection(self);
 	return PyString_FromString(mysql_get_server_info(&(self->connection)));
 }
+
+static char _mysql_ConnectionObject_info__doc__[] =
+"Retrieves a string providing information about the most\n\
+recently executed query. Non-standard. Use messages or\n\
+Cursor.messages.\n\
+";
 
 static PyObject *
 _mysql_ConnectionObject_info(
@@ -971,6 +1043,27 @@ _mysql_ConnectionObject_info(
 	return Py_None;
 }
 
+static char _mysql_ConnectionObject_insert_id__doc__[] =
+"Returns the ID generated for an AUTO_INCREMENT column by the previous\n\
+query. Use this function after you have performed an INSERT query into a\n\
+table that contains an AUTO_INCREMENT field.\n\
+\n\
+Note that this returns 0 if the previous query does not\n\
+generate an AUTO_INCREMENT value. If you need to save the value for\n\
+later, be sure to call this immediately after the query\n\
+that generates the value.\n\
+\n\
+The ID is updated after INSERT and UPDATE statements that generate\n\
+an AUTO_INCREMENT value or that set a column value to\n\
+LAST_INSERT_ID(expr). See section 6.3.5.2 Miscellaneous Functions\n\
+in the MySQL documentation.\n\
+\n\
+Also note that the value of the SQL LAST_INSERT_ID() function always\n\
+contains the most recently generated AUTO_INCREMENT value, and is not\n\
+reset between queries because the value of that function is maintained\n\
+in the server.\n\
+" ;
+
 static PyObject *
 _mysql_ConnectionObject_insert_id(
 	_mysql_ConnectionObject *self,
@@ -984,6 +1077,9 @@ _mysql_ConnectionObject_insert_id(
 	Py_END_ALLOW_THREADS
 	return PyLong_FromUnsignedLongLong(r);
 }
+
+static char _mysql_ConnectionObject_kill__doc__[] =
+"Asks the server to kill the thread specified by pid.\n";
 
 static PyObject *
 _mysql_ConnectionObject_kill(
@@ -1001,6 +1097,12 @@ _mysql_ConnectionObject_kill(
 	Py_INCREF(Py_None);
 	return Py_None;
 }
+
+static char _mysql_ConnectionObject_field_count__doc__[] =
+"Returns the number of columns for the most recent query on the\n\
+connection. Non-standard. Will probably give you bogus results\n\
+on most cursor classes. Use Cursor.rowcount.\n\
+";
 
 static PyObject *
 _mysql_ConnectionObject_field_count(
@@ -1036,6 +1138,18 @@ _mysql_ResultObject_num_rows(
 	return PyLong_FromUnsignedLongLong(mysql_num_rows(self->result));
 }	
 
+static char _mysql_ConnectionObject_ping__doc__[] =
+"Checks whether or not the connection to the server is\n\
+working. If it has gone down, an automatic reconnection is\n\
+attempted.\n\
+\n\
+This function can be used by clients that remain idle for a\n\
+long while, to check whether or not the server has closed the\n\
+connection and reconnect if necessary.\n\
+\n\
+Non-standard.\n\
+";
+
 static PyObject *
 _mysql_ConnectionObject_ping(
 	_mysql_ConnectionObject *self,
@@ -1069,6 +1183,19 @@ _mysql_ConnectionObject_query(
 	return Py_None;
 }
 
+
+static char _mysql_ConnectionObject_select_db__doc__[] =
+"Causes the database specified by db to become the default\n\
+(current) database on the connection specified by mysql. In subsequent\n\
+queries, this database is the default for table references that do not\n\
+include an explicit database specifier.\n\
+\n\
+Fails unless the connected user can be authenticated as having\n\
+permission to use the database.\n\
+\n\
+Non-standard.\n\
+";
+
 static PyObject *
 _mysql_ConnectionObject_select_db(
 	_mysql_ConnectionObject *self,
@@ -1086,6 +1213,11 @@ _mysql_ConnectionObject_select_db(
 	return Py_None;
 }
 
+static char _mysql_ConnectionObject_shutdown__doc__[] =
+"Asks the database server to shut down. The connected user must\n\
+have shutdown privileges.\n\
+";
+
 static PyObject *
 _mysql_ConnectionObject_shutdown(
 	_mysql_ConnectionObject *self,
@@ -1101,6 +1233,13 @@ _mysql_ConnectionObject_shutdown(
 	Py_INCREF(Py_None);
 	return Py_None;
 }
+
+static char _mysql_ConnectionObject_stat__doc__[] =
+"Returns a character string containing information similar to\n\
+that provided by the mysqladmin status command. This includes\n\
+uptime in seconds and the number of running threads,\n\
+questions, reloads, and open tables. Non-standard.\n\
+";
 
 static PyObject *
 _mysql_ConnectionObject_stat(
@@ -1136,6 +1275,16 @@ _mysql_ConnectionObject_store_result(
 	return (PyObject *) _mysql_ResultObject_New(self, result, 0,
 						    self->converter);
 }
+
+static char _mysql_ConnectionObject_thread_id__doc__[] =
+"Returns the thread ID of the current connection. This value\n\
+can be used as an argument to kill() to kill the thread.\n\
+\n\
+If the connection is lost and you reconnect with ping(), the\n\
+thread ID will change. This means you should not get the\n\
+thread ID and store it for later. You should get it when you\n\
+need it.\n\
+";
 
 static PyObject *
 _mysql_ConnectionObject_thread_id(
@@ -1266,34 +1415,141 @@ _mysql_ResultObject_repr(
 }
 
 static PyMethodDef _mysql_ConnectionObject_methods[] = {
-	{"affected_rows",   (PyCFunction)_mysql_ConnectionObject_affected_rows, 0},
+	{
+		"affected_rows",
+		(PyCFunction)_mysql_ConnectionObject_affected_rows,
+		0,
+		_mysql_ConnectionObject_affected_rows__doc__
+	},
 #if MYSQL_VERSION_ID >= 32303
-	{"change_user",     (PyCFunction)_mysql_ConnectionObject_change_user, METH_VARARGS | METH_KEYWORDS},
+	{
+		"change_user",
+		(PyCFunction)_mysql_ConnectionObject_change_user,
+		METH_VARARGS | METH_KEYWORDS,
+		_mysql_ConnectionObject_change_user__doc__
+	},
 #endif
-#if MYSQL_VERSION_ID >= 32321
-	{"character_set_name", (PyCFunction)_mysql_ConnectionObject_character_set_name, 0},
-#endif
-	{"close",           (PyCFunction)_mysql_ConnectionObject_close, 0},
-	{"dump_debug_info", (PyCFunction)_mysql_ConnectionObject_dump_debug_info, 0},
-	{"escape",          (PyCFunction)_mysql_escape, 1},
-	{"escape_string",   (PyCFunction)_mysql_escape_string, 1},
-	{"error",           (PyCFunction)_mysql_ConnectionObject_error, 0},
-	{"errno",           (PyCFunction)_mysql_ConnectionObject_errno, 0},
-	{"field_count",     (PyCFunction)_mysql_ConnectionObject_field_count, 0}, 
-	{"get_host_info",   (PyCFunction)_mysql_ConnectionObject_get_host_info, 0},
-	{"get_proto_info",  (PyCFunction)_mysql_ConnectionObject_get_proto_info, 0},
-	{"get_server_info", (PyCFunction)_mysql_ConnectionObject_get_server_info, 0},
-	{"info",            (PyCFunction)_mysql_ConnectionObject_info, 0},
-	{"insert_id",       (PyCFunction)_mysql_ConnectionObject_insert_id, 0},
-	{"kill",            (PyCFunction)_mysql_ConnectionObject_kill, 1},
-	{"ping",            (PyCFunction)_mysql_ConnectionObject_ping, 0},
-	{"query",           (PyCFunction)_mysql_ConnectionObject_query, 1},
-	{"select_db",       (PyCFunction)_mysql_ConnectionObject_select_db, 1},
-	{"shutdown",        (PyCFunction)_mysql_ConnectionObject_shutdown, 0},
-	{"stat",            (PyCFunction)_mysql_ConnectionObject_stat, 0},
+	{
+		"character_set_name",
+		(PyCFunction)_mysql_ConnectionObject_character_set_name,
+		METH_VARARGS,
+		_mysql_ConnectionObject_character_set_name__doc__
+	},
+	{
+		"close",
+		(PyCFunction)_mysql_ConnectionObject_close,
+		METH_VARARGS,
+		_mysql_ConnectionObject_close__doc__
+	},
+	{
+		"dump_debug_info",
+		(PyCFunction)_mysql_ConnectionObject_dump_debug_info,
+		METH_VARARGS,
+		_mysql_ConnectionObject_dump_debug_info__doc__
+	},
+	{
+		"escape",
+		(PyCFunction)_mysql_escape,
+		METH_VARARGS,
+		_mysql_escape__doc__
+	},
+	{
+		"escape_string",
+		(PyCFunction)_mysql_escape_string,
+		METH_VARARGS,
+		_mysql_escape_string__doc__
+	},
+	{
+		"error",
+		(PyCFunction)_mysql_ConnectionObject_error,
+		METH_VARARGS,
+		_mysql_ConnectionObject_error__doc__
+	},
+	{
+		"errno",
+		(PyCFunction)_mysql_ConnectionObject_errno,
+		METH_VARARGS,
+		_mysql_ConnectionObject_errno__doc__
+	},
+	{
+		"field_count",
+		(PyCFunction)_mysql_ConnectionObject_field_count,
+		METH_VARARGS,
+		_mysql_ConnectionObject_field_count__doc__
+	}, 
+	{
+		"get_host_info",
+		(PyCFunction)_mysql_ConnectionObject_get_host_info,
+		METH_VARARGS,
+		_mysql_ConnectionObject_get_host_info__doc__
+	},
+	{
+		"get_proto_info",
+		(PyCFunction)_mysql_ConnectionObject_get_proto_info,
+		METH_VARARGS,
+		_mysql_ConnectionObject_get_proto_info__doc__
+	},
+	{
+		"get_server_info",
+		(PyCFunction)_mysql_ConnectionObject_get_server_info,
+		METH_VARARGS,
+		_mysql_ConnectionObject_get_server_info__doc__
+	},
+	{
+		"info",
+		(PyCFunction)_mysql_ConnectionObject_info,
+		METH_VARARGS,
+		_mysql_ConnectionObject_info__doc__
+	},
+	{
+		"insert_id",
+		(PyCFunction)_mysql_ConnectionObject_insert_id,
+		METH_VARARGS,
+		_mysql_ConnectionObject_insert_id__doc__
+	},
+	{
+		"kill",
+		(PyCFunction)_mysql_ConnectionObject_kill,
+		1,
+		_mysql_ConnectionObject_kill__doc__
+	},
+	{
+		"ping",
+		(PyCFunction)_mysql_ConnectionObject_ping,
+		0,
+		_mysql_ConnectionObject_ping__doc__
+	},
+	{
+		"query",
+		(PyCFunction)_mysql_ConnectionObject_query,
+		1,
+	},
+	{
+		"select_db",
+		(PyCFunction)_mysql_ConnectionObject_select_db,
+		1,
+		_mysql_ConnectionObject_select_db__doc__
+	},
+	{
+		"shutdown",
+		(PyCFunction)_mysql_ConnectionObject_shutdown,
+		0,
+		_mysql_ConnectionObject_shutdown__doc__
+	},
+	{
+		"stat",
+		(PyCFunction)_mysql_ConnectionObject_stat,
+		METH_VARARGS,
+		_mysql_ConnectionObject_stat__doc__
+	},
 	{"store_result",    (PyCFunction)_mysql_ConnectionObject_store_result, 0},
 	{"string_literal",  (PyCFunction)_mysql_string_literal, 1},
-	{"thread_id",       (PyCFunction)_mysql_ConnectionObject_thread_id, 0},
+	{
+		"thread_id",
+		(PyCFunction)_mysql_ConnectionObject_thread_id,
+		METH_VARARGS,
+		_mysql_ConnectionObject_thread_id__doc__
+	},
 	{"use_result",      (PyCFunction)_mysql_ConnectionObject_use_result, 0},
 	{NULL,              NULL} /* sentinel */
 };
@@ -1485,7 +1741,7 @@ _mysql_NewException(
 }
 
 static char _mysql___doc__[] =
-"_mysql: an adaptation of the MySQL C API (mostly)\n\
+"an adaptation of the MySQL C API (mostly)\n\
 \n\
 You probably are better off using MySQLdb instead of using this\n\
 module directly.\n\

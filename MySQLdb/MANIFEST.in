@@ -1,5 +1,5 @@
 prune CVS
-recursive-include doc *
+recursive-include doc *.html *.sgml
 recursive-include examples *
 include README.MySQLmodule
 include license.py
