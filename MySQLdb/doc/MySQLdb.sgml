@@ -1,0 +1,721 @@
+<!DOCTYPE linuxdoc system>
+<article>
+<title>MySQLdb: a Python interface for MySQL
+<author>Andy Dustman
+<date>$Id$
+
+<abstract>MySQLdb is an thread-compatible interface to the popular
+MySQL database server that provides the Python database API.
+
+<sect>Introduction 
+
+<P>This module should be <ref id="MySQLmodule" name="mostly
+compatible"> with an older interface written by Joe Skinner and
+others. However, the older version is a) not thread-friendly (database
+operations could cause all other threads to block), b) written for
+MySQL 3.21 (does not compile against newer versions without patches),
+c) apparently not actively maintained. MySQLdb is a completely new
+module, distributed free of charge under a license derived from the
+Python license.
+
+<p>
+<sect1>Platforms
+<p>
+<sect2>Linux/UNIX
+<p>
+This module is developed on RedHat Linux (currently 7.1) for Intel. It
+should build without much trouble on most platforms by using the
+<tt/setup.py/ script.  Supposedly it builds on MacOS X.  Be aware that
+you need the Distutils package which comes with Python 2.0. If you
+don't have it (i.e. you have Python 1.5.2), you can find it over at
+<htmlurl url="http://www.python.org/" name="www.python.org">.
+
+<sect2>Windows (3.11, 95, 98, NT, 2000, CE, BSOD, XYZ, etc.)
+<p>
+Windows is <em/not/ a supported platform.  However, the <tt/setup.py/
+script reportedly gets the job done.  There is probably a link on the
+web page for getting a precompiled Windows installer from someone or
+other.  Be aware that this is a user-contributed package; the author
+cannot help you with compiling and running under Windows.
+<sect1>Python
+<p>
+MySQLdb requires Python 1.5.2 or newer. Earlier versions will not
+work, because support for C <tt/long long/ is required by MySQL.  If
+you have an earlier version of Python, upgrade to 1.5.2 or beyond.
+Current development is done with Python 2.1, but Python 1.5.2 will be
+supported for the forseeable future.
+
+<sect1>MySQL
+<p>
+<sect2>MySQL-3.22
+<p>
+Only versions 3.22.32 and up are guaranteed to work. Some older
+versions may work; if you have an older version you should seriously
+consider upgrading to get the bug fixes and particularly the security
+updates.
+
+MySQL-3.22 seems to have a problem trying to insert <tt/TIME/ values
+with fractional seconds. Values like 12:56:13.00 are returned as
+344:13:00, apparently interpreting the original input as 12 days, 56
+hours, 13 minutes, 0 seconds. (12 days and 56 hours is 344 hours.) To
+avoid this problem, use the <tt/DateTimeDelta/ type.
+
+<sect2>MySQL-3.23
+<p>
+MySQL-3.23 is now stable (3.23.37 as of this writing). MySQLdb
+supports transactions if the <em/server/ supports them. Even then,
+this does not guarantee that transactions will work. For that, you
+must use a transaction-safe table (TST). Current TSTs are BDB and
+InnoDB. GEMINI tables are slated for MySQL-4.0.  Note that MySQL
+generally operates in <tt/AUTOCOMMIT/ mode by default, and MySQLdb
+assumes that <tt/AUTOCOMMIT/ is on by default. To change this, use the
+<tt/autocommit(n)/ method; otherwise MySQLdb will not know that that
+you have changed it, and this affects locking for transactions.
+
+<sect1>DateTime <p>If you have the <htmlurl
+url="http://www.lemburg.com/files/python/mxDateTime.html"
+name="mx.DateTime"> package installed (recommended), MySQLdb will use
+it for date-related objects. Otherwise, these will be returned to
+Python as strings. You can also modify the type conversion
+dictionaries to return these as other object classes, if you prefer.
+
+<sect1>MySQLmodule<label id="MySQLmodule">
+<p>
+MySQLmodule, the older MySQL interface by Joe Skinner and others, is
+also a split C/Python interface. <tt/MySQL/, the C portion, has an
+interface similar to perl's DBI internally. In addition, there is
+Python portion, <tt/Mysqldb/, which provides a DB API v1.0 interface,
+written by James Henstridge.  MySQLdb-0.2.2 and up include
+<tt/CompatMysqldb/, which is an adaptation of <tt/Mysqldb/ to
+<tt/_mysql/. It should be considered experimental.
+
+In contrast, MySQLdb's C portion, <tt><ref id="_mysql"></tt>, is
+designed to mimic the MySQL C API in an object-oriented way; you
+should not expect to move from <tt/MySQL/ to <tt/_mysql/ without a
+fair amount of work. <tt><ref id="MySQLdb"></tt> provides a DB API
+v2.0 interface, which has some changes from the v1.0 interface. Things
+to watch out for in particular:
+
+<table>
+<tabular ca="foo">
+Operation | Mysqldb | MySQLdb
+@ Connecting | <tt>db = Mysqldb.Mysqldb("db@host user pass")</tt>
+| <tt>db = MySQLdb.connect(db='db', host='host', user='user', passwd='pass')</tt>
+@ Implicit cursor | <tt>db.execute(SQL)</tt> |
+implicit cursors dropped from DB API v2.0; always use <tt>c = db.cursor()</tt>
+@ Fetch row as dictionary | <tt>c.fetchDict()</tt>,
+keys are "<em/table.column/" |
+not standard; alternate cursor class <tt>DictCursor</tt>
+provides a dictionary interface,
+keys are "<em/column/" or "<em/table.column/" if there are two columns
+with the same name; use SQL <tt/AS/ to rename fields.
+@ Transactions | <tt>db.commit()</tt> and <tt>db.rollback()</tt>
+both exist and silently do nothing <ref id="rollback" name="(danger!)">
+| <tt>db.commit()</tt> and <tt>db.rollback()</tt> work if the MySQL
+server can perform transactions; otherwise <tt>db.rollback()</tt>
+always fails
+<caption>Mysqldb to MySQLdb changes</tabular></table>
+
+<sect1>Zope and ZMySQLDA
+
+<p>I wrote a <htmlurl url="http://dustman.net/andy/python/ZMySQLDA"
+name="ZMySQLDA"> for use with MySQLdb. It's adapted from ZOracleDA
+from Digital Creations, makers of Zope.
+
+<sect1>Documentation
+
+<p>The web page documentation may be slightly ahead of the latest
+release and may reflect features of the next release.  <sect1>FAQs
+<p>A FAQ is available at <htmlurl
+url="http://dustman.net/andy/python/MySQLdb/faq/MySQLdb-FAQ.html">.
+
+<sect>_mysql module<label id="_mysql">
+<P>
+If you want to write applications which are portable across databases,
+avoid using this module directly. <tt>_mysql</tt> provides an
+interface which mostly implements the MySQL C API. For more
+information, see the MySQL documentation. The documentation for this
+module is intentionally weak because you probably should use the
+higher-level <ref id="MySQLdb"> module. If you really need it, use the
+standard MySQL docs and transliterate as necessary.
+
+<sect1>MySQL C API translation
+<p>
+The MySQL C API has been wrapped in an object-oriented way. The only
+MySQL data structures which are implemented are the <tt>MYSQL</tt>
+(database connection handle) and <tt>MYSQL_RES</tt> (result handle)
+types. In general, any function which takes <tt>MYSQL *mysql</tt> as
+an argument is now a method of the connection object, and any function
+which takes <tt>MYSQL_RES *result</tt> as an argument is a method of
+the result object. Functions requiring none of the MySQL data
+structures are implemented as functions in the module. Functions
+requiring one of the other MySQL data structures are generally not
+implemented.  Deprecated functions are not implemented. In all cases,
+the <tt>mysql_</tt> prefix is dropped from the name. Most of the
+<tt>conn</tt> methods listed are also available as MySQLdb Connection
+object methods. Their use is non-portable.
+
+<table>
+<tabular ca="MySQL C API function mapping">
+ C API | <tt>_mysql</tt>
+@ <tt>mysql_affected_rows()</tt> | <tt>conn.affected_rows()</tt>
+@ <tt>mysql_close()</tt> | <tt>conn.close()</tt>
+@ <tt>mysql_connect()</tt> | <tt>_mysql.connect()</tt>
+@ <tt>mysql_data_seek()</tt> | <tt>result.data_seek()</tt>
+@ <tt>mysql_debug()</tt> | <tt>_mysql.debug()</tt>
+@ <tt>mysql_dump_debug_info</tt> | <tt>conn.dump_debug_info()</tt>
+@ <tt>mysql_escape_string()</tt> | <tt>_mysql.escape_string()</tt>
+@ <tt>mysql_fetch_row()</tt> | <tt>result.fetch_row()</tt>
+@ <tt>mysql_get_client_info()</tt> | <tt>_mysql.get_client_info()</tt>
+@ <tt>mysql_get_host_info()</tt> | <tt>conn.get_host_info()</tt>
+@ <tt>mysql_get_proto_info()</tt> | <tt>conn.get_proto_info()</tt>
+@ <tt>mysql_get_server_info()</tt> | <tt>conn.get_server_info()</tt>
+@ <tt>mysql_info()</tt> | <tt>conn.info()</tt>
+@ <tt>mysql_insert_id()</tt> | <tt>conn.insert_id()</tt>
+@ <tt>mysql_list_dbs()</tt> | <tt>conn.list_dbs()</tt>
+@ <tt>mysql_list_fields()</tt> | <tt>conn.list_fields()</tt>
+@ <tt>mysql_list_processes()</tt> | <tt>conn.list_processes()</tt>
+@ <tt>mysql_list_tables()</tt> | <tt>conn.list_tables()</tt>
+@ <tt>mysql_num_fields()</tt> | <tt>result.num_fields()</tt>
+@ <tt>mysql_num_rows()</tt> | <tt>result.num_rows()</tt>
+@ <tt>mysql_options()</tt> | <tt>_mysql.connect()</tt>
+@ <tt>mysql_ping()</tt> | <tt>conn.ping()</tt>
+@ <tt>mysql_query()</tt> | <tt>conn.query()</tt>
+@ <tt>mysql_real_connect()</tt> | <tt>_mysql.connect()</tt>
+@ <tt>mysql_real_query()</tt> | <tt>conn.query()</tt>
+@ <tt>mysql_real_escape_string()</tt> | <tt>conn.escape_string()</tt>
+@ <tt>mysql_row_seek()</tt> | <tt>result.row_seek()</tt>
+@ <tt>mysql_row_tell()</tt> | <tt>result.row_tell()</tt>
+@ <tt>mysql_select_db()</tt> | <tt>conn.select_db()</tt>
+@ <tt>mysql_stat()</tt> | <tt>conn.stat()</tt>
+@ <tt>mysql_store_result()</tt> | <tt>conn.store_result()</tt>
+@ <tt>mysql_thread_id()</tt> | <tt>conn.thread_id()</tt>
+@ <tt>mysql_use_result()</tt> | <tt>conn.use_result()</tt>
+@ <tt>CLIENT_*</tt> | <tt>MySQLdb.constants.CLIENT.*</tt>
+@ <tt>CR_*</tt> | <tt>MySQLdb.constants.CR.*</tt>
+@ <tt>ER_*</tt> | <tt>MySQLdb.constants.ER.*</tt>
+@ <tt>FIELD_TYPE_*</tt> | <tt>MySQLdb.constants.FIELD_TYPE.*</tt>
+@ <tt>FLAG_*</tt> | <tt>MySQLdb.constants.FLAG.*</tt>
+<caption>MySQL C API function mapping
+</tabular>
+</table>
+
+<sect1>Some _mysql examples
+
+<P>Okay, so you want to use <tt/_mysql/ anyway. Here are some examples.
+
+<p>The simplest possible database connection is:
+
+<code>
+import _mysql
+db=_mysql.connect()
+</code>
+
+This creates a connection to the MySQL server running on the local
+machine using the standard UNIX socket, your login name (from the USER
+environment variable), no password, and does not <tt/USE/ a database.
+Maybe this will work for you, if you have set up a configuration file,
+i.e. (<tt>~/.my.cnf</tt>). Chances are you need to supply more
+information.
+
+<code>
+db=_mysql.connect("localhost","joebob","moonpie","thangs")
+</code>
+
+This creates a connection to the MySQL server running on the local
+machine <em/using TCP on the standard port (3306)/, the user name
+"joebob", the password "moonpie", and selects the initial database
+"thangs".
+
+<P>We haven't even begun to touch upon all the parameters <tt/connect()/
+can take, and you'll notice that if you use positional parameters, you
+basically are stuck with using TCP, which is not as quite as fast as
+using a UNIX socket. (Of course, you have to use TCP anyway if it's a
+remote host.) For this reason, I prefer to use keyword parameters:
+
+<code>
+db=_mysql.connect(host="localhost",user="joebob",
+                  passwd="moonpie",db="thangs")
+</code>
+This does exactly what the last example did, but is arguably easier
+to read. Now if you really did want to use that UNIX socket, and your
+login name really was "joebob", you could shorten it to this:
+<code>
+db=_mysql.connect(passwd="moonpie",db="thangs")
+</code>
+There are some other parameters you can use, and most of them aren't
+needed, except for one, which we'll get to momentarily. For the rest,
+read the built-in documentation. Python 2.1's <tt/pydoc/ module is
+great for this.
+
+<P>So now you have an open connection as <tt/db/ and want to do a
+query. Well, there are no cursors in MySQL, and no parameter
+substitution, so you have to pass a complete query string to
+<tt/db.query()/:
+<code>
+db.query("""SELECT spam, eggs, sausage FROM breakfast
+            WHERE price < 5""")
+</code>
+There's no return value from this, but exceptions can be raised. The
+exceptions are defined in a separate module, <tt/_mysql_exceptions/,
+but <tt/_mysql/ exports them. Read the <htmlurl
+url="http://www.python.org/topics/database/DatabaseAPI-2.0.html"
+name="DB API specification"> to find out what they are, or you can use
+the catch-all <tt/MySQLError/.
+
+<P>At this point your query has been executed and you need to get the
+results. You have two options:
+<code>
+r=db.store_result()
+# ...or...
+r=db.use_result()
+</code>
+Both methods return a result object. What's the difference?
+<tt/store_result()/ returns the entire result set to the client
+immediately. If your result set is really large, this could be a
+problem. One way around this is to add a <tt/LIMIT/ clause to your
+query, to limit the number of rows returned. The other is to use
+<tt/use_result()/, which keeps the result set in the server and sends
+it row-by-row when you fetch. This does, however, tie up server
+resources, and it ties up the connection: You cannot do any more
+queries until you have fetched <em/all/ the rows. Generally I
+recommend using <tt/store_result()/ unless your result set is really
+huge and you can't use <tt/LIMIT/ for some reason.
+
+<P>Now, for actually getting real results:
+<CODE>
+>>> r.fetch_row()
+(('3','2','0'),)
+</CODE>
+This might look a little odd. The first thing you should know is,
+<tt/fetch_row()/ takes some additional parameters. The first one is,
+how many rows (<tt/maxrows/) should be returned. By default, it
+returns one row. It may return fewer rows than you asked for, but
+never more. If you set <tt/maxrows=0/, it returns all rows of the
+result set. If you ever get an empty tuple back, you ran out of rows.
+
+
+<p>The second parameter (<tt/how/) tells it how the row should be
+represented. By default, it is zero which means, return as a tuple.
+<tt/how=1/ means, return it as a dictionary, where the keys are the
+column names, or <tt/table.column/ if there are two columns with the
+same name (say, from a join). <tt/how=2/ means the same as <tt/how=1/
+except that the keys are <em/always/ <tt/table.column/; this is for
+compatibility with the old <tt/Mysqldb/ module.
+
+<P>OK, so why did we get a 1-tuple with a tuple inside? Because we
+implicitly asked for one row, since we didn't specify <tt/maxrows/.
+
+<P>The other oddity is: Assuming these are numeric columns, why are
+they returned as strings? Because MySQL returns all data as strings
+and expects you to convert it yourself. This would be a real pain in
+the ass, but in fact, <tt/_mysql/ can do this for you. (And
+<tt/MySQLdb/ does do this for you.) To have automatic type conversion
+done, you need to create a type converter dictionary, and pass this
+to <tt/connect()/ as the <tt/conv/ keyword parameter.
+
+<p>The keys of <tt/conv/ should be MySQL column types, which in the
+C API are <tt/FIELD_TYPE_*/. You can get these values like this:
+
+<code>
+from MySQLdb.constants import FIELD_TYPE
+</code>
+
+By default, any column type that can't be found in <tt/conv/ is
+returned as a string, which works for a lot of stuff. For our
+purposes, we probably want this:
+
+<code>
+my_conv = { FIELD_TYPE.LONG: int }
+</code>
+This means, if it's a <tt/FIELD_TYPE_LONG/, call the builtin
+<tt/int()/ function on it.  Note that <tt/FIELD_TYPE_LONG/ is an
+<tt/INTEGER/ column, which corresponds to a C <tt/long/, which is also
+the type used for a normal Python integer. But beware: If it's really
+an <tt/UNSIGNED INTEGER/ column, this could cause overflows. For this
+reason, <tt/MySQLdb/ actually uses <tt/long()/ to do the
+conversion. But we'll ignore this potential problem for now.
+
+<P>Then if you use <tt/db=_mysql.connect(conv=my_conv...)/, the
+results will come back <tt/((3, 2, 0),)/, which is what you would
+expect.
+
+<sect>MySQLdb -- DB API interface<label id="MySQLdb">
+<p>
+MySQLdb is a thin Python wrapper around <tt><ref id="_mysql"></tt>
+which makes it compatible with the Python DB API interface (version
+2).  In reality, a fair amount of the code which implements the API is
+in <tt>_mysql</tt> for the sake of efficiency.
+<p>
+The <htmlurl
+url="http://www.python.org/topics/database/DatabaseAPI-2.0.html"
+name="DB API specification"> should be your primary guide for using
+this module. Only deviations from the spec and other
+database-dependent things will be documented here.
+
+<sect1>Functions and attributes 
+
+<P>Only a few top-level functions and attributes are defined within
+MySQLdb.
+
+<descrip>
+<tag><label id="connect()">connect(parameters...)</tag> Constructor
+      for creating a connection to the database. Returns a Connection
+      Object. Parameters are the same as for the MySQL C API.  In
+      addition, there are a few additional keywords that correspond to
+      what you would pass <tt/mysql_options()/ before connecting. Note
+      that some parameters must be specified as keyword arguments! The
+      default value for each parameter is NULL or zero, as
+      appropriate. Consult the MySQL documentation for more
+      details. The important parameters are:
+
+<descrip>
+      <tag>host</tag> 
+            name of host to connect to. Default: use local host 
+
+      <tag>user</tag> 
+            user to authenticate as. Default: current effective user.
+
+      <tag>passwd</tag> 
+            password to authenticate with. Default: no password.
+
+      <tag>db</tag> 
+            database to use. Default: no default database.
+
+      <tag>port</tag>
+	    TCP port of MySQL server. Default: standard port (3306).
+
+      <tag>unix_socket</tag>
+	    location of UNIX socket. Default: use TCP.
+
+      <tag>conv</tag> type conversion dictionary.
+            Default: a copy of <tt/MySQLdb.converters.conv/
+
+      <tag>compress</tag> Enable protocol compression. Default: no compression.
+
+      <tag>connect_timeout</tag> Abort if connect is not completed within
+            given number of seconds. Default: no timeout (?)
+
+      <tag>named_pipe</tag> Use a named pipe (Windows). Default: don't.
+
+      <tag>init_command</tag> Initial command to issue to server upon
+            connection. Default: Nothing.
+
+      <tag>read_default_file</tag> MySQL configuration file to read; see
+            the MySQL documentation for <tt/mysql_options()/.
+
+      <tag>read_default_group</tag> Default group to read; see the MySQL
+            documentation for <tt/mysql_options()/.
+
+      <tag>cursorclass</tag> cursor class that <tt/cursor()/ uses,
+            unless overridden. Default: <tt/MySQLdb.cursors.Cursor/.
+	    <em/This must be a keyword parameter./
+
+      <tag>threads</tag> boolean, to enable use of threading within
+            <tt/MySQLdb/. Default: 1 (enabled). Set this to 0 if you
+	    don't want to or can't use threads.
+	    <em/This must be a keyword parameter./
+
+</descrip>
+
+<tag>apilevel</tag> 
+      String constant stating the supported DB API level. '2.0'
+
+<tag>threadsafety</tag> Integer constant stating the level of thread
+      safety the interface supports. As of MySQLdb version 0.2.0, this
+      is set to 2, which means: Threads may share the module and
+      connections.  Cursors employ a lock in the connection object to
+      ensure that cursors do not use the connection at the same
+      time. Generally, sharing a connection probably reduces
+      performance; the MySQL server maintains a seperate thread for
+      each connection. It is recommended that connections not be
+      shared between threads. See the MySQL documentation for more
+      details. As of 0.9.0, there is an additional blocking lock that
+      is used if transactioning is available, to insure a connection
+      cannot be shared between two threads if a transaction is in
+      progress. Note that two cursors in the same thread cannot
+      attempt to acquire the connection lock at the same time; this
+      would produce deadlock, and <tt/ProgrammingError/ is
+      raised. However, multiple cursors in the same thread can acquire
+      the transaction lock. <tt/commit()/ and <tt/rollback()/ release
+      the transaction lock. The general rule here is, cursors acquire
+      locks, commit and rollback release them. Fortunately, you don't
+      need to think about this too much.
+
+<tag>paramstyle</tag> String constant stating the type of parameter
+      marker formatting expected by the interface. Set to 'format' =
+      ANSI C printf format codes, e.g. '...WHERE name=%s'. If a
+      mapping object is used for conn.execute(), then the interface
+      actually uses 'pyformat' = Python extended format codes,
+      e.g. '...WHERE name=%(name)s'. However, the API does not
+      presently allow the specification of more than one style in
+      paramstyle.
+
+      Compatibility note: The older MySQLmodule uses a similar
+      parameter scheme, but requires that quotes be placed around
+      format strings which will contain strings, dates, and similar
+      character data. This is not necessary for MySQLdb. It is
+      recommended that %s (and not '%s') be used for all parameters,
+      regardless of type. The interface performs all necessary
+      quoting.
+
+<tag><label id="type_conv">conv</tag> A dictionary mapping MySQL types
+      (from <TT>FIELD_TYPE.*</TT>) to callable Python objects (usually
+      functions) which convert from a string to the desired type; and
+      mapping Python types to callable Python objects which convert
+      values of this type to a SQL literal string value. This is
+      initialized with reasonable defaults for most types. When
+      creating a Connection object, you can pass your own type
+      converter dictionary as a keyword parameter. Otherwise, it uses
+      a copy of <tt>MySQLdb.converters.conv</tt>. The dictionary
+      includes some of the factory functions from the
+      <tt>DateTime</tt> module, if it is available. Several
+      non-standard types (<tt>SET, ENUM</tt>) are returned as strings,
+      which is how MySQL returns all columns. For more details, see
+      the built-in module documentation.
+
+<P>As of MySQL-3.23, MySQL supports different character sets in the
+server, and a new quoting function, <tt/mysql_real_escape_string()/.
+This requires the string quoting function to be a method bound to
+the connection object. MySQLdb handles this for you automatically.
+However, if you feel the need to do something goofy with your strings,
+you will have to modify the dictionary after opening the connection.
+In practice, you should never have to worry about this.
+
+</descrip>
+
+<sect1>Connection Objects
+<P>Connection objects are returned by the <tt>connect()</tt> function.
+<descrip>
+
+<tag>commit()</tag> If the database and the tables support
+      transactions, this commits the current transaction; otherwise
+      this method successfully does nothing.
+
+<tag><label id="rollback">rollback()</tag> If the database and tables
+      support transactions, this rolls back (cancels) the current
+      transaction; otherwise a <tt>NotSupportedError</tt> is raised.
+
+Compatibility note: The older <ref id="MySQLmodule"> defines this method,
+      which sucessfully does nothing. This is dangerous behavior, as a
+      successful rollback indicates that the current transaction was
+      backed out, which is not true, and fails to notify the
+      programmer that the database now needs to be cleaned up by other
+      means.
+
+<tag>cursor([cursorclass])</tag> MySQL does not support cursors;
+      however, cursors are easily emulated.  You can supply an
+      alternative cursor class as an optional parameter.  If this is
+      not present, it defaults to the value given when creating the
+      connection object, or the standard <tt/Cursor/ class. Also see
+      the additional supplied cursor classes in the <ref id="usage">
+      section.
+
+<tag>begin()</tag> Explicitly start a transactions. Normally you do
+      not need to use this: Executing a query implicitely starts a new
+      transaction if one is not in progress. If AUTOCOMMIT is on, you
+      can use <tt/begin()/ to temporarily turn it off. AUTOCOMMIT will
+      resume after the next <tt/commit()/ or <tt/rollback/.
+
+<tag>autocommit(n)</tag> Turns AUTOCOMMIT mode on or off. This affects
+      how transactions are handled. By default, MySQL operates in
+      AUTOCOMMIT mode.
+
+</descrip>
+
+<sect1>Cursor Objects
+<p>
+<descrip>
+<tag>callproc()</tag>
+      Not implemented.
+
+<tag>close()</tag>
+      Closes the cursor. Future operations raise <tt/ProgrammingError/.
+      If you are using <ref id="SSCursor" name="server-side cursors">,
+      it is very important to close the cursor when you are done with
+      it and before creating a new one.
+
+<tag/insert_id()/
+      Returns the last <tt/AUTO_INCREMENT/ field value inserted
+      into the database. (Non-standard)
+
+<tag/info()/ Returns some information about the last query. Normally
+      you don't need to check this. With the default cursor, any MySQL
+      warnings cause <tt/Warning/ to be raised. If you are using a
+      cursor class without warnings, then you might want to use
+      this. See the MySQL docs for <tt/mysql_info()/. (Non-standard)
+
+<tag>nextset()</tag>
+      Not implemented.
+
+<tag>setinputsizes()</tag>
+      Does nothing, successfully.
+
+<tag>setoutputsizes()</tag>
+      Does nothing, successfully.
+
+</descrip>
+<sect1>Some examples
+
+<p>The <tt/connect()/ method works nearly the same as with <tt/_mysql/:
+<code>
+import MySQLdb
+db=MySQLdb.connect(passwd="moonpie",db="thangs")
+</code>
+To perform a query, you first need a cursor, and then you can execute
+queries on it.
+<code>
+c=db.cursor()
+max_price=5
+c.execute("""SELECT spam, eggs, sausage FROM breakfast
+            WHERE price < %s""", (max_price,))
+</code>
+In this example, <tt/max_price=5/ Why, then, use <tt/%s/ in the
+string? Because MySQLdb will convert it to a SQL literal value, which
+is the string '5'. When it's finished, the query will actually say,
+"...WHERE price < 5".
+
+<p>Why the tuple? Because the DB API requires you to pass in any
+parameters as a sequence.
+
+<p>And now, the results:
+<CODE>
+>>> c.fetchone()
+(3L, 2L, 0L)
+</CODE>
+Quite unlike the <tt/_mysql/ example, this returns a single tuple,
+which is the row, and the values are properly converted by default...
+except... What's with the L's?
+
+<P>As mentioned earlier, while MySQL's INTEGER column translates
+perfectly into a Python integer, UNSIGNED INTEGER could overflow, so
+these values are converted to Python long integers instead. Prior to
+Python 1.6, long integers retained the L when converted to strings
+with <tt/str()/. In 1.6 and later, <tt/str()/ does not include the L.
+Of course, the L always prints when using <tt/repr()/, which is what
+has happened here.
+
+<P>When you are finished with a transaction, you should execute either
+<tt/db.commit()/ or <tt/db.rollback()/. If your server and tables
+don't support transactions, <tt/commit()/ will still work, but
+<tt/rollback()/ will raise an exception. Note carefully that these are
+methods of the <em/connection/ and not methods of the <em/cursor/,
+even though <tt/c.execute(...)/ is what started the transaction.
+
+<P>If you wanted more rows, you could use <tt/c.fetchmany(n)/ or
+<tt/c.fetchall()/. These do exactly what you think they do. On
+<tt/c.fetchmany(n)/, the <tt/n/ is optional and defaults to
+<tt/c.arraysize/, which is normally 100. Both of these methods return
+a sequence of rows, or an empty sequence if there are no more rows.
+If you use a weird cursor class, the rows themselves might not be
+tuples.
+
+<P>Note that in contrast to the above, <tt/c.fetchone()/ returns <tt/None/
+when there are no more rows to fetch.
+
+<P>The only other method you are very likely to use is when you have to
+do a multi-row insert:
+<CODE>
+c.execute("""INSERT INTO breakfast (name, spam, eggs, sausage, price)
+             VALUES (%s, %s, %s, %s, %s)""",
+	     [ ("Spam and Sausage Lover's Plate", 5, 1, 8, 7.95 ),
+               ("Not So Much Spam Plate", 3, 2, 0, 3.95 ),
+               ("Don't Wany ANY SPAM! Plate", 0, 4, 3, 5.95 )
+             ]
+         )
+</CODE>
+Here we are inserting three rows of five values. Notice that there is
+a mix of types (strings, ints, floats) though we still only use
+<tt/%s/. And also note that we only included format strings for one
+row. MySQLdb picks those out and duplicates them for each row.
+<footnote>Baked beans are off!</footnote>
+
+<sect>Using and extending<label id="usage">
+
+<P>In general, it is probably wise to not directly interact with the
+DB API except for small applicatons. Databases, even SQL databases,
+vary widely in capabilities and may have non-standard features. The DB
+API does a good job of providing a reasonably portable interface but
+some methods are non-portable. Specifically, the parameters accepted
+by <tt><ref id="connect()"></tt> are completely implementation-dependent.
+
+If you believe your application may need to run on several different
+databases, the author recommends the following approach, based on
+personal experience: Write a simplified API for your application which
+implements the specific queries and operations your application needs
+to perform. Implement this API as a base class which should be have
+few database dependencies, and then derive a subclass from this which
+implements the necessary dependencies. In this way, porting your
+application to a new database should be a relatively simple matter of
+creating a new subclass, assuming the new database is reasonably
+standard.
+
+For an example of this, see the author's
+<htmlurl url="http://dustman.net/andy/python"
+name="SQLDict module">, which allows standard queries to be
+defined and accessed using an object which looks like a
+dictionary, and reads/writes user-defined objects.
+
+Because MySQLdb's Connection and Cursor objects are written in Python,
+you can easily derive your own subclasses. There are several Cursor
+classes in MySQLdb.cursors:
+<p>
+<descrip>
+<tag>BaseCursor</tag> The base class for Cursor objects.
+This does not raise Warnings.
+
+<tag>CursorWarningMixIn</tag> Causes the Warning exception to be raised
+on queries which produce warnings.
+
+<tag>CursorStoreResultMixIn</tag> Causes the Cursor to use the
+<tt>mysql_store_result()</tt> function to get the query result. The
+entire result set is stored on the client side.
+
+<tag><label id="SSCursor">CursorUseResultMixIn</tag> Causes the cursor to use the
+<tt>mysql_use_result()</tt> function to get the query result. The
+result set is stored on the server side and is transferred row by row
+using fetch operations. Not recommended, particularly for threaded
+applications that share connections. Note that creating the cursor
+causes it to acquire a lock on the connection object, and this is
+not released until the cursor is deleted or <tt/cursor.close()/.
+If you aren't careful about this, it can result in deadlock, which
+is bad.
+
+<tag>CursorTupleRowsMixIn</tag> Causes the cursor to return rows
+as a tuple of the column values.
+
+<tag>CursorDictRowsMixIn</tag> Causes the cursor to return rows
+as a dictionary, where the keys are column names and the values
+are column values. Note that if the column names are not unique,
+i.e., you are selecting from two tables that share column names,
+some of them will be rewritten as <em/table.column/.
+This can be avoided by using
+the SQL <tt>AS</TT> keyword. (This is yet-another reason not to use
+<tt/*/ in SQL queries, particularly where <tt/JOIN/ is involved.
+
+<tag>Cursor</tag> The default cursor class. This class is composed
+of <tt>CursorWarningMixIn, CursorStoreResultMixIn, CursorTupleRowsMixIn,</tt>
+and <tt>BaseCursor</tt>, i.e. it raises <tt>Warning</tt>, uses
+<tt>mysql_store_result()</tt>, and returns rows as tuples.
+
+<tag>DictCursor</tag> Like <tt/Cursor/ except it returns rows as
+dictionaries.
+
+<tag>SSCursor</tag> A "server-side" cursor. Like <tt/Cursor/ but uses
+<tt/CursorUseResultMixIn/. Thread-safe, but not recommended for
+threaded applications which share connections.
+Use only if you are dealing with potentially large result sets.
+
+<tag/SSDictCursor/ Like <tt/SSCursor/ except it returns rows as
+dictionaries.
+
+<tag/XXXCursorNW/> Cursors with the "NW" suffix do not raise Warnings.
+
+</descrip>
+<p>For an example of how to use these classes,
+read the code. If you need something more exotic than this,
+you will have to roll your own.
+</article>
+
+
+

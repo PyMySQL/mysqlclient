@@ -1,0 +1,135 @@
+<!doctype linuxdoc system>
+<article>
+<title>MySQLdb FAQ
+<author>Andy Dustman
+<date>$Id$
+<sect>Compiling <tt/_mysql.so/
+<P>Here are some common errors that happen during the build.
+This section covers UNIX/Linux problems only, as I don't do Windows.
+<tt/.so/ is a dynamically loading library on Linux and most other UNIX
+variants; a few use extensions other than <tt/.so/. Windows probably
+uses <tt/.dll/.
+<sect1>ImportError: libmysqlclient.so.6: cannot open shared object file:
+No such file or directory
+<P>
+You have dynamic MySQL libraries, and by default, your compiler links
+<tt/_mysql.so/ against these, but these are not on your loader path
+when you start Python.
+You have two basic options:
+<p>
+<enum>
+<item>
+Modify setup.py so that it links against the static library; see the comments.
+<item>
+If your linker supports a run-time loader path switch, you can set this
+in setup.py as well. 
+<item>
+Change your system environment so that the MySQL libraries are on
+your loader path. With Linux, you can modify <tt>/etc/ld.so.conf</tt> (see
+<tt/man ldconfig/ for more details) or you can add to or create the
+<tt/LD_LIBRARY_PATH/ environment variable before starting Python, i.e.
+<p><code>
+LD_LIBRARY_PATH=/path/to/mysql/libs python ... # Bourne-ish shell
+</code>
+</enum>
+<sect1>ImportError: ./_mysql.so: undefined symbol: PyLong_FromUnsignedLongLong
+<p>
+<tt/PyLong_FromUnsignedLongLong()/ first appears in Python 1.5.2, so you are
+linking against an earlier version. You may also have more than one version
+installed. Get Python 1.5.2 or newer from your vendor or python.org.
+
+<sect1>ImportError: ./_mysql.so: undefined symbol: uncompress
+<P>
+It seems that MySQL-3.23 client libraries require libz for gzip
+compression. setup.py should add this automatically.
+
+<sect1>./_mysql.c:33: mysql.h: No such file or directory
+<P>The include path (-I) to your MySQL include files is wrong; modify
+setup.py. OR: You don't have the MySQL development stuff loaded. If you
+are using the Red Hat RPMs, you need the <tt/MySQL-devel/ RPM to compile
+<tt/_mysql.so/. However, if you link against the static MySQL
+libraries (see above), you can install <tt/_mysql.so/ on a system
+that does not have the MySQL client libraries (<tt/libmysqlclient/).
+
+<sect1>I'm using Windows...
+<P>Say no more.
+<P>I don't use Windows. setup.py is supposed to work for building.
+There may also be a link to some user-contributed binaries on the web site.
+</sect1>
+<sect>
+Trouble with ZMySQLDA
+<sect1>I installed MySQLdb but ZMySQLDA can't find it.
+<p>Probably you installed a binary version of Zope which comes with
+it's own Python interpreter. You will have to compile MySQLdb against
+that particular Python installation. Find out where it's python binary
+lives and use that to run setup.py.
+</sect1>
+<sect1>I'm getting these stupid L's on my INTEGER columns.
+<p>Yup, they have to be converted to long integers to avoid overflows
+on UNSIGNED INT columns. Solutions: Use a <tt/fmt=%d/ attribute on your
+<tt/dtml-var/ elements; Wait for Zope 2.4 which comes with Python 2.1
+which doesn't add the L.
+</sect1>
+<sect1>I get SQL syntax errors on a LIMIT clause, and I didn't put in
+a LIMIT clause!  
+
+<p>Z SQL Methods have a <tt/max_rows/ parameter. If this is set to a
+non-zero value, ZMySQLDA adds a LIMIT clause to SELECT statements to
+enforce this. This is a big performance gain, particularly if the
+result set could be big. If it is interfering with something, set
+<tt/max_rows/ to zero, and it won't add a LIMIT clause. In particular,
+you will probably have to do this when inserting rows with
+AUTO_INCREMENT columns, because typically you use SELECT thereafter to
+get LAST_INSERT_ID(), and LIMIT can mess this up.
+
+<sect>Using MySQLdb
+<p>
+MySQLdb is a
+<htmlurl url="http://www.python.org/topics/database/DatabaseAPI-2.0.html"
+name="Python Database API Specification 2.0"> database module, so you
+should be familiar with the spec. Deviations from the spec are documented in the
+<htmlurl url="http://dustman.net/andy/python/MySQLdb/doc/MySQLdb.html"
+name="MySQLdb documentation">.
+
+<sect1>cursor.rollback() always fails!
+
+<p>MySQLdb now supports transactions if the server supports
+transaction-safe tables (TSTs) and you are using them.  If your server
+doesn't support them, rollbacks will always fail, as they should,
+because it can't do what you asked.  Even if your server does support
+them, rollbacks will fail if you modified any non-TST tables.
+
+<p>OTOH, <tt/cursor.commit()/, which attempts to commit the
+transaction to the database, <em/always/ succeeds, because MySQL
+essentially is always in auto-commit mode (unless you told it
+otherwise).
+
+<sect1>How do I use some of the special MySQL features?
+
+<P>First answer: Don't, if you can avoid it. Your program will not be
+portable to other databases.
+
+<P>Second answer: Nearly all the special API calls are implemented on
+the _mysql connection object, and the MySQLdb connection object can
+also invoke them. See the built-in module docs to find out what ones
+are implemented, and the MySQL C API docs to see what they do.
+
+<sect1>I still wanna use _mysql directly.
+
+<p>Well, it <tt/may/ be appropriate in some cirumstances.  ZMySQLDA
+does this, because Zope's ZRDB module is an API in itself, and too
+many layers of APIs tend to make a mess of things. Besides, it was
+actually pretty easy to do it that way and it probably improves the
+performance a bit.
+<enum>
+<item>
+Read the MySQL docs, particularly the C API, for an overview.
+<item>
+Read the MySQLdb docs. This shows how the C API is transliterated
+into Python. Plus some examplesa are in there.
+<item>
+Read the MySQLdb sources, particularly MySQLdb/cursors.py. That one
+file contains most of the gory details, particularly in the
+execute and _query methods.
+</enum>
+</article>
