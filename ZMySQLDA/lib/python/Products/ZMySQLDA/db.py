@@ -100,6 +100,7 @@ from MySQLdb.converters import conversions
 from MySQLdb.constants import FIELD_TYPE, CR, CLIENT
 from Shared.DC.ZRDB.TM import TM
 from DateTime import DateTime
+from zLOG import LOG, ERROR
 
 import string, sys
 from string import strip, split, find, upper, rfind
@@ -187,18 +188,31 @@ class DB(TM):
         self.connection=connection
         self.kwargs = kwargs = self._parse_connection_string(connection)
         self.db=apply(self.Database_Connection, (), kwargs)
-	self.transactions = self.db.server_capabilities & CLIENT.TRANSACTIONS
+        transactional = self.db.server_capabilities & CLIENT.TRANSACTIONS
         if self._try_transactions == '-':
-            self.transactions = 0
-        elif not self.transactions and self._try_transactions == '+':
+            transactional = 0
+        elif not transactional and self._try_transactions == '+':
             raise NotSupportedError, "transactions not supported by this server"
+        self._use_TM = self._transactions = transactional
+        if self._mysql_lock:
+            self._use_TM = 1
+        if self._use_TM:
+            self._tlock = allocate_lock()
         self._lock = allocate_lock()
         
     def _parse_connection_string(self, connection):
         kwargs = {'conv': self.conv}
         items = split(connection)
+        self._use_TM = None
         if not items: return kwargs
-        db_host, items = items[0], items[1:]
+        lockreq, items = items[0], items[1:]
+        if lockreq[0] == "*":
+            self._mysql_lock = lockreq[1:]
+            db_host, items = items[0], items[1:]
+            self._use_TM = 1
+        else:
+            self._mysql_lock = None
+            db_host = lockreq
         if '@' in db_host:
             db, host = split(db_host,'@',1)
             kwargs['db'] = db
@@ -227,12 +241,12 @@ class DB(TM):
                _care=('TABLE', 'VIEW')):
         r=[]
         a=r.append
-        if not self.transactions: self._lock.acquire()
+        self._lock.acquire()
         try:
             self.db.query("SHOW TABLES")
             result = self.db.store_result()
         finally:
-            if not self.transactions: self._lock.release()
+            self._lock.release()
         row = result.fetch_row(1)
 	while row:
             a({'TABLE_NAME': row[0][0], 'TABLE_TYPE': 'TABLE'})
@@ -243,12 +257,12 @@ class DB(TM):
         from string import join
         try:
             try:
-                if not self.transactions: self._lock.acquire()
+                self._lock.acquire()
                 # Field, Type, Null, Key, Default, Extra
                 self.db.query('SHOW COLUMNS FROM %s' % table_name)
                 c=self.db.store_result()
             finally:
-                if not self.transactions: self._lock.release()
+                self._lock.release()
         except:
             return ()
         r=[]
@@ -289,13 +303,13 @@ class DB(TM):
         return r
 
     def query(self,query_string, max_rows=1000):
-	if self.transactions: self._register()
+        self._use_TM and self._register()
         desc=None
         result=()
         db=self.db
         try:
             try:
-                if not self.transactions: self._lock.acquire()
+                self._lock.acquire()
                 for qs in filter(None, map(strip,split(query_string, '\0'))):
                     qtype = upper(split(qs, None, 1)[0])
                     if qtype == "SELECT" and max_rows:
@@ -314,7 +328,7 @@ class DB(TM):
                     else:
                         desc=None
             finally:
-                if not self.transactions: self._lock.release()
+                self._lock.release()
                     
         except OperationalError, m:
             if m[0] not in hosed_connection: raise
@@ -339,20 +353,45 @@ class DB(TM):
     def string_literal(self, s): return self.db.string_literal(s)
 
     def _begin(self, *ignored):
-        self.lock.acquire()
-        self.db.query("BEGIN")
-        self.db.store_result()
+        self._tlock.acquire()
+        try:
+            if self._transactions:
+                self.db.query("BEGIN")
+                self.db.store_result()
+            if self._mysql_lock:
+                self.db.query("SELECT GET_LOCK('%s',0)" % self._mysql_lock)
+                self.db.store_result()
+        except:
+            LOG('ZMySQLDA', ERROR, "exception during _begin",
+                error=sys.exc_info())
+            self._tlock.release()
+            raise
         
     def _finish(self, *ignored):
         try:
-            self.db.query("COMMIT")
-            self.db.store_result()
+            try:
+                if self._mysql_lock:
+                    self.db.query("SELECT RELEASE_LOCK('%s')" % self._mysql_lock)
+                    self.db.store_result()
+                if self._transactions:
+                    self.db.query("COMMIT")
+                self.db.store_result()
+            except:
+                LOG('ZMySQLDA', ERROR, "exception during _finish",
+                    error=sys.exc_info())
+                raise
         finally:
-            self.lock.release()
+            self._tlock.release()
 
     def _abort(self, *ignored):
         try:
-            self.db.query("ROLLBACK")
-            self.db.store_result()
+            if self._mysql_lock:
+                self.db.query("SELECT RELEASE_LOCK('%s')" % self._mysql_lock)
+                self.db.store_result()
+            if self._transactions:
+                self.db.query("ROLLBACK")
+                self.db.store_result()
+            else:
+                LOG('ZMySQLDA', ERROR, "aborting when non-transactional")
         finally:
-            self.lock.release()
+            self._tlock.release()
