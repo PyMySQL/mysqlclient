@@ -107,6 +107,7 @@ _mysql_Exception(_mysql_ConnectionObject *c)
 	case CR_COMMANDS_OUT_OF_SYNC:
 	case ER_DB_CREATE_EXISTS:
 	case ER_SYNTAX_ERROR:
+	case ER_PARSE_ERROR:
 	case ER_NO_SUCH_TABLE:
 	case ER_WRONG_DB_NAME:
 	case ER_WRONG_TABLE_NAME:
@@ -120,8 +121,12 @@ _mysql_Exception(_mysql_ConnectionObject *c)
 		e = _mysql_ProgrammingError;
 		break;
 	case ER_DUP_ENTRY:
+#ifdef ER_DUP_UNIQUE
 	case ER_DUP_UNIQUE:
+#endif
+#ifdef ER_PRIMARY_CANT_HAVE_NULL
 	case ER_PRIMARY_CANT_HAVE_NULL:
+#endif
 		e = _mysql_IntegrityError;
 		break;
 #ifdef ER_WARNING_NOT_COMPLETE_ROLLBACK
