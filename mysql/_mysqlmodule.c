@@ -6,12 +6,14 @@
 
 static PyObject *_mysql_Warning;
 static PyObject *_mysql_Error;
+static PyObject *_mysql_DatabaseError;
 static PyObject *_mysql_InterfaceError; 
 static PyObject *_mysql_DataError;
 static PyObject *_mysql_OperationalError; 
 static PyObject *_mysql_IntegrityError; 
 static PyObject *_mysql_InternalError; 
 static PyObject *_mysql_ProgrammingError;
+static PyObject *_mysql_NotSupportedError;
  
 typedef struct {
 	PyObject_HEAD
@@ -1208,7 +1210,7 @@ _mysql_methods[] = {
 	{ "connect", _mysql_connect, METH_VARARGS | METH_KEYWORDS },
 	{ "escape_row", _mysql_escape_row, METH_VARARGS },
 	{ "escape_string", _mysql_escape_string, METH_VARARGS },
-	{ "get_client_info", _mysql_get_client_info, METH_VARARGS },
+	{ "get_client_info", _mysql_get_client_info },
 	{NULL, NULL} /* sentinel */
 };
 
@@ -1287,7 +1289,7 @@ return result objects (MYSQL_RES). Functions which expect MYSQL_RES * as
 an argument are now methods of the result object. The mysql_real_*\n\
 functions are the ones used in place of not-real ones. The various\n\
 FLAG_*, CLIENT_*, FIELD_TYPE_*, etc. constants are renamed to FLAG.*,
-CLIENT.*, FIELD_TYPE.*, etc.\n\
+CLIENT.*, FIELD_TYPE.*, etc. Deprecated functions are NOT implemented.\n\
 \n\
 type_conv is a dictionary which maps FIELD_TYPE.* to Python functions\n\
 which convert a string to some value. This is used by the various\n\
@@ -1320,28 +1322,39 @@ init_mysql()
 
 	dict = PyModule_GetDict(module);
 	if (!(_mysql_Warning =
-	      _mysql_NewException(dict, "Warning", NULL)))
+	      _mysql_NewException(dict, "Warning", PyExc_StandardError)))
 		goto error;
 	if (!(_mysql_Error =
-	      _mysql_NewException(dict, "Error", NULL)))
+	      _mysql_NewException(dict, "Error", PyExc_StandardError)))
 		goto error;
 	if (!(_mysql_InterfaceError =
 	      _mysql_NewException(dict, "InterfaceError", _mysql_Error)))
 		goto error;
+	if (!(_mysql_DatabaseError =
+	      _mysql_NewException(dict, "DatabaseError", _mysql_Error)))
+		goto error;
 	if (!(_mysql_DataError =
-	      _mysql_NewException(dict, "DataError", _mysql_Error)))
+	      _mysql_NewException(dict, "DataError", _mysql_DatabaseError)))
 		goto error;
 	if (!(_mysql_OperationalError =
-	      _mysql_NewException(dict, "OperationalError", _mysql_Error)))
+	      _mysql_NewException(dict, "OperationalError",
+				  _mysql_DatabaseError)))
 		goto error;
 	if (!(_mysql_IntegrityError =
-	      _mysql_NewException(dict, "IntegrityError", _mysql_Error)))
+	      _mysql_NewException(dict, "IntegrityError",
+				  _mysql_DatabaseError)))
 		goto error;
 	if (!(_mysql_InternalError =
-	      _mysql_NewException(dict, "InternalError", _mysql_Error)))
+	      _mysql_NewException(dict, "InternalError",
+				  _mysql_DatabaseError)))
 		goto error;
 	if (!(_mysql_ProgrammingError =
-	      _mysql_NewException(dict, "ProgrammingError", _mysql_Error)))
+	      _mysql_NewException(dict, "ProgrammingError",
+				  _mysql_DatabaseError)))
+		goto error;
+	if (!(_mysql_NotSupportedError =
+	      _mysql_NewException(dict, "NotSupportedError",
+				  _mysql_DatabaseError)))
 		goto error;
 	if (_mysql_Constant_class(dict, "FLAG", _mysql_Constant_flag))
 		goto error;
