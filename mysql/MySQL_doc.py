@@ -52,6 +52,7 @@ def main():
 	  A("licensing agreement",
 	    href="license.py"), " with it's lack of warranty\n" \
 	  "statement."),
+	P(A("Download", href="."), " the friggin' thing."),
 	H2("Overview"),
 	P("MySQLdb is an interface to the popular ",
 	  A("MySQL", href="http://www.mysql.net/mirrors.html"),
@@ -74,6 +75,9 @@ def main():
 	P("Notes: MySQL 3.22.11 is known NOT to work. Only versions\n" \
 	  "3.22.19 and up are known to work. If you have an older version\n" \
 	  "you should seriously consider upgrading for it's own sake.\n"),
+	P("This module requires Python 1.5.2. Earlier versions will not\n"\
+	  "work, because support for C long longs is required by MySQL.\n" \
+	  "Thanks to Nikolas Kauer for pointing this out."),
 	P("If you work out\n" \
 	  "an installation routine for Windows, please contact the author."),
 	P("This module works better if you have the ",
@@ -239,7 +243,15 @@ def main():
 		"actually uses 'pyformat' = Python extended format codes,\n" \
 		"e.g. '...WHERE name=%(name)s'. However, the API does not\n" \
 		"presently allow the specification of more than one style\n" \
-		"in ", TT("paramstyle"), ".")),
+		"in ", TT("paramstyle"), "."),
+	      P("Compatibility note: The older MySQLmodule uses a similar\n" \
+	        "parameter scheme, but requires that quotes be placed\n" \
+	        "around format strings which will contain strings, dates,\n" \
+	        "and similar character data. This is not necessary for\n" \
+	        "MySQLdb. It is recommended that ", TT('%s'), " (and not\n",
+	        TT("'%s'"), ") be used for all\n" \
+	        "parameters, regardless of type. The interface performs\n" \
+	        "all necessary quoting.")),
 	   BDT("type_conv"),
 	   DD(P("A dictionary mapping MySQL types (from ",
 		TT("FIELD_TYPE.*"), ") to callable Python objects\n" \
