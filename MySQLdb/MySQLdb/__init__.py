@@ -16,11 +16,11 @@ MySQLdb.converters module.
 __author__ = "Andy Dustman <andy@dustman.net>"
 __revision__ = """$Revision$"""[11:-2]
 version_info = (
+    1,
     0,
-    9,
-    3,
-    "beta",
-    3)
+    0,
+    "final",
+    1)
 if version_info[3] == "final": __version__ = "%d.%d.%d" % version_info[:3]
 else: __version__ = "%d.%d.%d%1.1s%d" % version_info[:5]
 
@@ -53,6 +53,7 @@ NUMBER    = DBAPISet(FIELD_TYPE.DECIMAL, FIELD_TYPE.DOUBLE, FIELD_TYPE.FLOAT,
 DATE      = DBAPISet(FIELD_TYPE.DATE, FIELD_TYPE.NEWDATE)
 TIME      = DBAPISet(FIELD_TYPE.TIME)
 TIMESTAMP = DBAPISet(FIELD_TYPE.TIMESTAMP, FIELD_TYPE.DATETIME)
+DATETIME  = TIMESTAMP
 ROWID     = DBAPISet()
 
 def Binary(x): return str(x)
