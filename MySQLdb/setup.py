@@ -51,6 +51,10 @@ extra_link_args = []
 if sys.platform == "netbsd1":
     include_dirs = ['/usr/pkg/include/mysql']
     library_dirs = ['/usr/pkg/lib/mysql']
+elif sys.platform in ("freebsd4", "openbsd3"):
+    LOCALBASE = os.environ.get('LOCALBASE', '/usr/local')
+    include_dirs = ['%s/include/mysql' % LOCALBASE]
+    library_dirs = ['%s/lib/mysql' % LOCALBASE]
 elif sys.platform == "sunos5": # Solaris 2.8 + gcc
     runtime_library_dirs = ['/usr/local/lib:/usr/openwin/lib:/usr/dt/lib'] 
     extra_compile_args = ["-fPIC"]
