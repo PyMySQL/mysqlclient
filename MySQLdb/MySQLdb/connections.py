@@ -33,27 +33,7 @@ def defaulterrorhandler(connection, cursor, errorclass, errorvalue):
     raise errorclass, errorvalue
 
 
-if hasattr(types, "ObjectType"):
-
-    class ConnectionBase(_mysql.connection):
-
-        def _make_connection(self, args, kwargs):
-            super(ConnectionBase, self).__init__(*args, **kwargs)
-
-else:
-    
-    class ConnectionBase:
-        
-        def _make_connection(self, args, kwargs):
-            self._db = _mysql.connect(*args, **kwargs)
-            
-        def __getattr__(self, attr):
-            if hasattr(self, "_db"):
-                return getattr(self._db, attr)
-            raise AttributeError, attr
-
-        
-class Connection(ConnectionBase):
+class Connection(_mysql.connection):
 
     """
 
@@ -113,10 +93,9 @@ class Connection(ConnectionBase):
             conv[FIELD_TYPE.STRING] = u
             conv[FIELD_TYPE.VAR_STRING] = u
             conv[FIELD_TYPE.BLOB].insert(-1, (None, u))
-        self._make_connection(args, kwargs2)
+        super(Connection, self).__init__(*args, **kwargs2)
         self.converter[types.StringType] = self.string_literal
-        if hasattr(types, 'UnicodeType'):
-            self.converter[types.UnicodeType] = self.unicode_literal
+        self.converter[types.UnicodeType] = self.unicode_literal
         self._transactional = self.server_capabilities & CLIENT.TRANSACTIONS
         self.messages = []
         

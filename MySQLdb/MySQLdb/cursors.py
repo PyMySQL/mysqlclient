@@ -12,7 +12,7 @@ from _mysql_exceptions import Warning, Error, InterfaceError, DataError, \
      NotSupportedError, ProgrammingError
 
 
-class BaseCursor:
+class BaseCursor(object):
     
     """A base for Cursor classes. Useful attributes:
     
@@ -202,7 +202,7 @@ class BaseCursor:
     NotSupportedError = NotSupportedError
    
 
-class CursorStoreResultMixIn:
+class CursorStoreResultMixIn(object):
 
     """This is a MixIn class which causes the entire result set to be
     stored on the client side, i.e. it uses mysql_store_result(). If the
@@ -272,7 +272,7 @@ class CursorStoreResultMixIn:
         return iter(result)
     
 
-class CursorUseResultMixIn:
+class CursorUseResultMixIn(object):
 
     """This is a MixIn class which causes the result set to be stored
     in the server and sent row-by-row to client side, i.e. it uses
@@ -313,7 +313,7 @@ class CursorUseResultMixIn:
         return r
     
 
-class CursorTupleRowsMixIn:
+class CursorTupleRowsMixIn(object):
 
     """This is a MixIn class that causes all rows to be returned as tuples,
     which is the standard form required by DB API."""
@@ -321,7 +321,7 @@ class CursorTupleRowsMixIn:
     _fetch_type = 0
 
 
-class CursorDictRowsMixIn:
+class CursorDictRowsMixIn(object):
 
     """This is a MixIn class that causes all rows to be returned as
     dictionaries. This is a non-standard feature."""
