@@ -6,11 +6,11 @@ This module provides some Date and Time classes for dealing with MySQL data.
 from _mysql import string_literal
 
 try:
-    from pytimes import *
+    from mxdatetimes import *
 
 except ImportError:
     try:
-        from mxdatetimes import *
+        from pytimes import *
 
     except ImportError:
         # no DateTime? We'll muddle through somehow.

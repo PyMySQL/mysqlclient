@@ -43,12 +43,24 @@ def DateTime_or_None(s):
         return None
 
 def TimeDelta_or_None(s):
+    from math import modf
     try:
-        h, m, s = map(float, s.split(':'))
+        h, m, s = s.split(':')
+        td = timedelta(hours=int(h), minutes=int(m), seconds=int(s),
+                       microseconds=int(modf(float(s)[0]))*1000000)
         if h < 0:
-            return -timedelta(hours=h, minutes=m, seconds=s)
+            return -td
         else:
-            return timedelta(hours=h, minutes=m, seconds=s)
+            return td
+    except:
+        return None
+
+def Time_or_None(s):
+    from math import modf
+    try:
+        h, m, s = s.split(':')
+        return time(hour=int(h), minute=int(m), second=int(s),
+                    microsecond=int(modf(float(s))[0])*1000000)
     except:
         return None
 

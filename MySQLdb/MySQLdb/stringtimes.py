@@ -35,4 +35,4 @@ def format_DATE(d):
     return d
 
 format_TIME = format_TIMESTAMP = format_DATE
-TimeDelta_or_None = Date_or_None = DateTime_or_None = format_DATE
+Time_or_None = TimeDelta_or_None = Date_or_None = DateTime_or_None = format_DATE

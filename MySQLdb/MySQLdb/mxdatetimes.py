@@ -43,6 +43,8 @@ def TimeDelta_or_None(s):
     try: return ISO.ParseTimeDelta(s)
     except: return None
 
+Time_or_None = TimeDelta_or_None
+
 def Date_or_None(s):
     try: return ISO.ParseDate(s)
     except: return None
