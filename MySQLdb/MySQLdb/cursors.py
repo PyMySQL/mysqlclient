@@ -29,7 +29,7 @@ class BaseCursor(object):
         self.connection = connection
         self.description = None
         self.rowcount = -1
-        self.arraysize = 100
+        self.arraysize = 1
         self._executed = None
         self.lastrowid = None
         self.messages = []

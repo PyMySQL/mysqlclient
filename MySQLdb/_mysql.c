@@ -609,6 +609,10 @@ _mysql_ConnectionObject_close(
 		mysql_close(&(self->connection));
 		Py_END_ALLOW_THREADS
 		self->open = 0;
+	} else {
+		PyErr_SetString(_mysql_ProgrammingError,
+				"closing a closed connection");
+		return NULL;
 	}
 	_mysql_ConnectionObject_clear(self);
 	Py_INCREF(Py_None);
