@@ -1364,7 +1364,6 @@ _mysql_Constant_class(
 	char *name)
 {
 	PyObject *d = NULL;
-	int i;
 	if (!(d = PyImport_ImportModule(type))) goto error;
 	if (PyDict_SetItemString(mdict, name, d)) goto error;
 	Py_DECREF(d);
@@ -1416,7 +1415,7 @@ For everything else, check the MySQL docs." ;
 DL_EXPORT(void)
 init_mysql(void)
 {
-	PyObject *c, *dict, *module;
+	PyObject *dict, *module;
 	module = Py_InitModule3("_mysql", _mysql_methods, _mysql___doc__);
 #ifdef MS_WIN32
 	_mysql_ConnectionObject_Type.ob_type = &PyType_Type;
