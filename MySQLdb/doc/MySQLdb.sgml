@@ -41,7 +41,7 @@ cannot help you with compiling and running under Windows.
 MySQLdb requires Python 1.5.2 or newer. Earlier versions will not
 work, because support for C <tt/long long/ is required by MySQL.  If
 you have an earlier version of Python, upgrade to 1.5.2 or beyond.
-Current development is done with Python 2.1, but Python 1.5.2 will be
+Current development is done with Python 2.2.1, but Python 1.5.2 will be
 supported for the forseeable future.
 
 <sect1>MySQL
@@ -61,16 +61,22 @@ avoid this problem, use the <tt/DateTimeDelta/ type.
 
 <sect2>MySQL-3.23
 <p>
-MySQL-3.23 is now stable (3.23.37 as of this writing). MySQLdb
+MySQL-3.23 is now stable (3.23.51 as of this writing). MySQLdb
 supports transactions if the <em/server/ supports them. Even then,
 this does not guarantee that transactions will work. For that, you
 must use a transaction-safe table (TST). Current TSTs are BDB and
-InnoDB. GEMINI tables are slated for MySQL-4.0.  Note that MySQL
+InnoDB. Note that MySQL
 generally operates in <tt/AUTOCOMMIT/ mode by default, and MySQLdb
 assumes that <tt/AUTOCOMMIT/ is on by default. To change this, use the
 <tt/SET AUTOCOMMIT=0/ SQL statement.
 
-<sect1>DateTime <p>If you have the <htmlurl
+<sect2>MySQL-4.0
+<p>
+MySQL-4.0 is supported, though still alpha.
+
+
+<sect1>DateTime
+<p>If you have the <htmlurl
 url="http://www.lemburg.com/files/python/mxDateTime.html"
 name="mx.DateTime"> package installed (recommended), MySQLdb will use
 it for date-related objects. Otherwise, these will be returned to
@@ -153,6 +159,10 @@ the <tt>mysql_</tt> prefix is dropped from the name. Most of the
 <tt>conn</tt> methods listed are also available as MySQLdb Connection
 object methods. Their use is non-portable.
 
+<p>
+Starting with MySQLdb-0.9.2, the connection and result objects are
+subclassable types if you have at least Python-2.2.
+
 <table>
 <tabular ca="MySQL C API function mapping">
  C API | <tt>_mysql</tt>
@@ -184,6 +194,7 @@ object methods. Their use is non-portable.
 @ <tt>mysql_stat()</tt> | <tt>conn.stat()</tt>
 @ <tt>mysql_store_result()</tt> | <tt>conn.store_result()</tt>
 @ <tt>mysql_thread_id()</tt> | <tt>conn.thread_id()</tt>
+@ <tt>mysql_thread_safe_client()</tt> | <tt>conn.thread_safe_client()</tt>
 @ <tt>mysql_use_result()</tt> | <tt>conn.use_result()</tt>
 @ <tt>CLIENT_*</tt> | <tt>MySQLdb.constants.CLIENT.*</tt>
 @ <tt>CR_*</tt> | <tt>MySQLdb.constants.CR.*</tt>
@@ -263,7 +274,7 @@ db.query("""SELECT spam, eggs, sausage FROM breakfast
 There's no return value from this, but exceptions can be raised. The
 exceptions are defined in a separate module, <tt/_mysql_exceptions/,
 but <tt/_mysql/ exports them. Read the <htmlurl
-url="http://www.python.org/topics/database/DatabaseAPI-2.0.html"
+url="http://www.python.org/peps/pep-0249.html"
 name="DB API specification"> to find out what they are, or you can use
 the catch-all <tt/MySQLError/.
 
@@ -417,6 +428,10 @@ MySQLdb.
             unless overridden. Default: <tt/MySQLdb.cursors.Cursor/.
 	    <em/This must be a keyword parameter./
 
+      <tag>unicode</tag> If set, CHAR and VARCHAR columns are returned
+            as Unicode strings, using the specified character set.
+            None means to use a default encoding.
+
 </descrip>
 
 <tag>apilevel</tag> 
@@ -448,6 +463,10 @@ or mine, and in the end, will probably hurt performance, since the MySQL
       the MySQL client library will probably upchuck and die.
       You have been warned.
 
+      <p>For threaded applications, try using a connection pool.
+      This can be done using the 
+      <htmlurl url="http://dustman.net/andy/python/Pool" name="Pool module">.
+
 <tag>paramstyle</tag> String constant stating the type of parameter
       marker formatting expected by the interface. Set to 'format' =
       ANSI C printf format codes, e.g. '...WHERE name=%s'. If a
@@ -464,6 +483,9 @@ or mine, and in the end, will probably hurt performance, since the MySQL
       recommended that %s (and not '%s') be used for all parameters,
       regardless of type. The interface performs all necessary
       quoting.
+
+      Note that any literal percent signs in the query string passed
+      to execute() must be escaped, i.e. %%.
 
 <tag><label id="conversions">conv</tag> A dictionary mapping MySQL types
       (from <TT>FIELD_TYPE.*</TT>) to callable Python objects (usually
@@ -486,7 +508,8 @@ This requires the string quoting function to be a method bound to
 the connection object. MySQLdb handles this for you automatically.
 However, if you feel the need to do something goofy with your strings,
 you will have to modify the dictionary after opening the connection.
-In practice, you should never have to worry about this.
+In practice, you should never have to worry about this. This also
+applies to Unicode strings, if enabled.
 
 </descrip>
 
@@ -525,6 +548,10 @@ Compatibility note: The older <ref id="MySQLmodule"> defines this method,
 
 </descrip>
 
+<p>There are many more methods defined on the connection object which
+are MySQL-specific. For more information on them, consult the internal
+documentation using <tt/pydoc/.
+
 <sect1>Cursor Objects
 <p>
 <descrip>
@@ -552,6 +579,13 @@ Compatibility note: The older <ref id="MySQLmodule"> defines this method,
 
 <tag>setoutputsizes()</tag>
       Does nothing, successfully.
+
+<tag>nextset()</tag>
+      Advances the cursor to the next result set, discarding the remaining
+      rows in the current result set. If there are no additional result
+      sets, it returns None; otherwise it returns a true value.
+
+      Note that MySQL presently doesn't support multiple result sets.
 
 </descrip>
 <sect1>Some examples
@@ -615,13 +649,14 @@ when there are no more rows to fetch.
 <P>The only other method you are very likely to use is when you have to
 do a multi-row insert:
 <CODE>
-c.execute("""INSERT INTO breakfast (name, spam, eggs, sausage, price)
-             VALUES (%s, %s, %s, %s, %s)""",
-	     [ ("Spam and Sausage Lover's Plate", 5, 1, 8, 7.95 ),
-               ("Not So Much Spam Plate", 3, 2, 0, 3.95 ),
-               ("Don't Wany ANY SPAM! Plate", 0, 4, 3, 5.95 )
-             ]
-         )
+c.executemany(
+    """INSERT INTO breakfast (name, spam, eggs, sausage, price)
+    VALUES (%s, %s, %s, %s, %s)""",
+    [
+      ("Spam and Sausage Lover's Plate", 5, 1, 8, 7.95 ),
+      ("Not So Much Spam Plate", 3, 2, 0, 3.95 ),
+      ("Don't Wany ANY SPAM! Plate", 0, 4, 3, 5.95 )
+    ] )
 </CODE>
 Here we are inserting three rows of five values. Notice that there is
 a mix of types (strings, ints, floats) though we still only use
@@ -702,7 +737,7 @@ Use only if you are dealing with potentially large result sets.
 <tag/SSDictCursor/ Like <tt/SSCursor/ except it returns rows as
 dictionaries.
 
-<tag/XXXCursorNW/> Cursors with the "NW" suffix do not raise Warnings.
+<tag/XXXCursorNW/ Cursors with the "NW" suffix do not raise Warnings.
 
 </descrip>
 <p>For an example of how to use these classes,
