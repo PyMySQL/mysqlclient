@@ -95,6 +95,7 @@ conversions = {
     FIELD_TYPE.LONG: long,
     FIELD_TYPE.FLOAT: float,
     FIELD_TYPE.DOUBLE: float,
+    FIELD_TYPE.DECIMAL: float,
     FIELD_TYPE.LONGLONG: long,
     FIELD_TYPE.INT24: int,
     FIELD_TYPE.YEAR: int,
