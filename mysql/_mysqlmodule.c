@@ -597,7 +597,7 @@ _mysql_string_literal(
 	if (!str) return PyErr_NoMemory();
 	out = PyString_AS_STRING(str);
 #if MYSQL_VERSION_ID < 32321
-	len = mysql_escape_string(out+1, s, size);
+	len = mysql_escape_string(out+1, in, size);
 #else
 	if (self)
 		len = mysql_real_escape_string(&(self->connection), out+1, in, size);

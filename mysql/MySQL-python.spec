@@ -1,5 +1,5 @@
-%define ver 0.2.2
-%define rel 3
+%define ver 0.3.0b1
+%define rel 1
 Summary: Python interface to MySQL-3.22 and 3.23
 Name: MySQL-python
 Version: %ver
@@ -47,17 +47,13 @@ derived from the Python license.
 %setup -n MySQLdb-%ver
 
 %build
-python build.py
+python setup.py build
 
 %install
-mkdir -p $RPM_BUILD_ROOT/usr/lib/python1.5/site-packages
-make install prefix=$RPM_BUILD_ROOT/usr
-cp MySQLdb.py{,c,o} $RPM_BUILD_ROOT/usr/lib/python1.5/site-packages
+python setup.py install --root $RPM_BUILD_ROOT
 %clean
+rm -rf $RPM_BUILD_ROOT
 %files
 %defattr(-, root, root)
-%doc license.py examples/* doc/* CompatMysqldb.py
-/usr/lib/python1.5/site-packages/MySQLdb.py
-/usr/lib/python1.5/site-packages/MySQLdb.pyc
-/usr/lib/python1.5/site-packages/MySQLdb.pyo
-/usr/lib/python1.5/site-packages/_mysqlmodule.so
+%doc license.py examples/* doc/*.html doc/*.sgml README
+/usr/lib/python*/site-packages/*
