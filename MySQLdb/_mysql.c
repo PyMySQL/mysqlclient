@@ -1,4 +1,4 @@
-#define version_info "(0,9,2,'beta',1)"
+#define version_info "(0,9,2,'beta',2)"
 #define __version__ "0.9.2"
 /*
 This program is free software; you can redistribute it and/or modify
@@ -579,6 +579,7 @@ _mysql_escape_dict(
 		quoted = _escape_item(item, d);
 		if (!quoted) goto error;
 		if (PyDict_SetItem(r, pkey, quoted)==-1) goto error;
+		Py_DECREF(quoted);
 	}
 	return r;
   error:
@@ -856,6 +857,12 @@ _mysql_ResultObject_fetch_row(
 				if (rowsadded == -1) goto error;
 				skiprows += rowsadded;
 				if (rowsadded < maxrows) break;
+#if PY_VERSION_HEX < 0x02020000
+				if (_PyTuple_Resize(&r, skiprows+maxrows, 0) == -1)
+#else
+				if (_PyTuple_Resize(&r, skiprows+maxrows) == -1)
+#endif
+				        goto error;
 			}
 		} else {
 			/* XXX if overflow, maxrows<0? */
