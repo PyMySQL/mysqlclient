@@ -1,4 +1,13 @@
-0.9.1a1
+0.9.2a2
+
+  * Reworked platform configuration some more. cygwin is now (sorta)
+    supported (to the extent that Windows is supported at all).
+
+  * Use PyObject_Del() to dealloc objects, if we have Python 2.0 or newer.
+
+  * Fixed broken CursorStoreResultMixIn.fetchmany().
+
+0.9.2a1
 
   * Added a number of DB-API extensions.
 
