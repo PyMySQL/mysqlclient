@@ -87,7 +87,8 @@
 __version__='$Revision$'[11:-2]
 
 import _mysql
-from _mysql import FIELD_TYPE
+from MySQLdb.constants import FIELD_TYPE, CR, CLIENT
+from _mysql_exceptions import OperationalError
 from Shared.DC.ZRDB.TM import TM
 from DateTime import DateTime
 
@@ -96,8 +97,8 @@ from string import strip, split, find, upper
 from time import time
 
 hosed_connection = (
-    _mysql.CR.SERVER_GONE_ERROR,
-    _mysql.CR.SERVER_LOST
+    CR.SERVER_GONE_ERROR,
+    CR.SERVER_LOST
     )
 
 def _mysql_timestamp_converter(s):
@@ -155,7 +156,6 @@ class DB(TM):
     _p_oid=_p_changed=_registered=None
 
     def __init__(self,connection):
-	from _mysql import CLIENT
         self.connection=connection
         self.kwargs = kwargs = self._parse_connection_string(connection)
         self.db=apply(self.Database_Connection, (), kwargs)
@@ -237,7 +237,7 @@ class DB(TM):
                 else:
                     desc=None
                     
-        except _mysql.OperationalError, m:
+        except OperationalError, m:
             if m[0] not in hosed_connection: raise
             # Hm. maybe the db is hosed.  Let's restart it.
 	    db=self.db=apply(self.Database_Connection, (), self.kwargs)
