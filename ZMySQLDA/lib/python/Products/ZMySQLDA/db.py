@@ -105,6 +105,9 @@ def _mysql_timestamp_converter(s):
                           s[8:10],s[10:12],s[12:14]))
 	return DateTime("%04d-%02d-%02d %02d:%02d:%02d" % tuple(parts))
 
+def DateTime_or_None(s):
+    try: return DateTime(s)
+    except: return None
 
 class DB(TM):
 
@@ -143,9 +146,9 @@ class DB(TM):
         FIELD_TYPE.LONGLONG: long,
         FIELD_TYPE.INT24: int,
         FIELD_TYPE.YEAR: int,
-	FIELD_TYPE.DATETIME: DateTime,
-	FIELD_TYPE.DATE: DateTime,
-	FIELD_TYPE.TIME: DateTime
+	FIELD_TYPE.DATETIME: DateTime_or_None,
+	FIELD_TYPE.DATE: DateTime_or_None,
+	FIELD_TYPE.TIME: DateTime_or_None
         }
 
     _p_oid=_p_changed=_registered=None
