@@ -1,3 +1,9 @@
+0.9.1c2 
+
+  * Exceptions on connect() were not handled correctly.
+
+  * Added CHANGELOG to MANIFEST.in. (John Bowe)
+
 0.9.1c1
 
   * Added ER_PARSE_ERROR as a ProgrammingError, because
