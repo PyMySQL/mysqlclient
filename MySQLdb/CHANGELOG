@@ -1,3 +1,29 @@
+0.9.2c3
+
+  * Did some more setup cleanups. Apparently on non-server versions of
+    MacOSX, the MySQL stuff installs in /sw instead of /usr/local.
+
+  * There's now a cursor._execute(), used by execute() and executemany(),
+    when does NOT clear cursor.messages. Internal use only. This is so
+    all messages can be kept with executemany().
+
+  * Fixed a memory leak (cursor+traceback) I introduced when reworking
+    the errorhandler code.
+
+  * If both conv and unicode options were given to connect, things
+    broke. (Skip Montanaro)
+
+  * Since MySQL uses the same internal FIELD_TYPE for both BLOB and
+    TEXT columns, reverting the 0.9.2c1 change that returned them
+    as array objects; they are now strings again. Array objects passed
+    as parameters are still converted correctly into string literals.
+
+  * Replaced cursor iterator implementation with something not dumb.
+    The old one worked, but the new one makes use of the iter()
+    function. StoreResultMixIn has it's own implementation which is
+    fast but doesn't update the rownumber, which should not be a real
+    problem in practice.
+
 0.9.2c2
 
   * errorhandler cleanups (Rob Steele)
@@ -15,6 +41,7 @@
   * BLOBs are now converted to Python array objects (from the array
     module). If you are expecting them to be strings, sorry. This
     is actually the preferred representation for DB-API.
+    [Reverted in 0.9.2c3]
 
   * MySQL converts array objects passed as parameters into a correct
     string representation (presumably for BLOB columns).

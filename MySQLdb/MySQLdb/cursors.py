@@ -91,9 +91,12 @@ class BaseCursor:
         Returns long integer rows affected, if any
 
         """
+        del self.messages[:]
+        return self._execute(query, args)
+    
+    def _execute(self, query, args):
         from types import ListType, TupleType
         from sys import exc_info
-        del self.messages[:]
         try:
             r = self._query(query % self.connection.literal(args))
         except TypeError, m:
@@ -103,8 +106,9 @@ class BaseCursor:
             else:
                 self.errorhandler(self, TypeError, m)
         except:
-            e = exc_info()
-            self.errorhandler(self, e[0], e[1])
+            exc, value, tb = exc_info()
+            del tb
+            self.errorhandler(self, exc, value)
         self._executed = query
         return r
 
@@ -134,7 +138,7 @@ class BaseCursor:
         if not m:
             r = 0
             for a in args:
-                r = r + self.execute(query, a)
+                r = r + self._execute(query, a)
             return r
         p = m.start(1)
         qv = query[p:]
@@ -149,8 +153,9 @@ class BaseCursor:
             else:
                 self.errorhandler(self, TypeError, msg)
         except:
-            e = exc_info()
-            self.errorhandler(self, e[0], e[1])
+            exc, value, tb = exc_info()
+            del tb
+            self.errorhandler(self, exc, value)
         r = self._query(join(q,',\n'))
         self._executed = query
         return r

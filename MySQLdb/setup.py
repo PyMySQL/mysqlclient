@@ -18,7 +18,7 @@ thread_safe_library = YES
 # forget to include the value of sys.platform and os.name.
 
 name = "MySQL-%s" % os.path.basename(sys.executable)
-version = "0.9.2c2"
+version = "0.9.2c3"
 
 mysqlclient = thread_safe_library and "mysqlclient_r" or "mysqlclient"
 
@@ -56,8 +56,8 @@ elif sys.platform in ("freebsd4", "openbsd3"):
     include_dirs = ['%s/include/mysql' % LOCALBASE]
     library_dirs = ['%s/lib/mysql' % LOCALBASE]
 elif sys.platform == "sunos5": # Solaris 2.8 + gcc
-    runtime_library_dirs = ['/usr/local/lib:/usr/openwin/lib:/usr/dt/lib'] 
-    extra_compile_args = ["-fPIC"]
+    runtime_library_dirs.append('/usr/local/lib:/usr/openwin/lib:/usr/dt/lib') 
+    extra_compile_args.append("-fPIC")
 elif sys.platform == "win32": # Ugh
     include_dirs = [r'c:\mysql\include']
     library_dirs = [r'c:\mysql\lib\opt']
@@ -67,9 +67,11 @@ elif sys.platform == "win32": # Ugh
 elif sys.platform == "cygwin":
     include_dirs = ['/c/mysql/include']
     library_dirs = ['/c/mysql/lib']
-    extra_compile_args = ['-DMS_WIN32']
+    extra_compile_args.append('-DMS_WIN32')
 elif sys.platform[:6] == "darwin": # Mac OS X
-    extra_link_args = ['-flat_namespace']
+    include_dirs.append('/sw/include')
+    library_dirs.append('/sw/lib')
+    extra_link_args.append('-flat_namespace')
 elif sys.platform == 'linux2' and os.environ.get('HOSTTYPE') == 'alpha':
     libraries.extend(['ots', 'cpml'])
 elif os.name == "posix": # UNIX-ish platforms not covered above

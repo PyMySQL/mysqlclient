@@ -20,7 +20,7 @@ version_info = (
     9,
     2,
     "gamma",
-    2)
+    3)
 if version_info[3] == "final": __version__ = "%d.%d.%d" % version_info[:3]
 else: __version__ = "%d.%d.%d%1.1s%d" % version_info[:5]
 
@@ -37,9 +37,9 @@ apilevel = "2.0"
 paramstyle = "format"
 
 from _mysql import *
-from sets import DBAPISet, Set
-from constants import FIELD_TYPE
-from times import Date, Time, Timestamp, \
+from MySQLdb.sets import DBAPISet, Set
+from MySQLdb.constants import FIELD_TYPE
+from MySQLdb.times import Date, Time, Timestamp, \
     DateFromTicks, TimeFromTicks, TimestampFromTicks
 
 

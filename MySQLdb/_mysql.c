@@ -1,4 +1,4 @@
-#define version_info "(0,9,2,'gamma',2)"
+#define version_info "(0,9,2,'gamma',3)"
 #define __version__ "0.9.2"
 /*
 This program is free software; you can redistribute it and/or modify
@@ -2135,7 +2135,8 @@ DL_EXPORT(void)
 init_mysql(void)
 {
 	PyObject *dict, *module, *emod, *edict;
-	module = Py_InitModule3("_mysql", _mysql_methods, _mysql___doc__);
+	module = Py_InitModule4("_mysql", _mysql_methods, _mysql___doc__,
+				(PyObject *)NULL, PYTHON_API_VERSION);
 #ifdef MS_WIN32
 	_mysql_ConnectionObject_Type.ob_type = &PyType_Type;
 	_mysql_ResultObject_Type.ob_type = &PyType_Type;
