@@ -43,6 +43,10 @@ Finally, putting it together:
 $ python setup.py build
 # python setup.py install
 
+TIP: If you are using a binary package of Zope, you need run setup.py
+with Zope's python executable. Otherwise, Zope (ZMySQLDA) will not
+be able to find _mysql.
+
 If you prefer RPMs, you can use the bdist_rpm command with setup.py.
 
 Thanks go to Brian Fordham for cooking up an early version of setup.py.
