@@ -745,7 +745,7 @@ typedef PyObject *_PYFUNC(_mysql_ResultObject *, MYSQL_ROW);
 int
 _mysql__fetch_row(
 	_mysql_ResultObject *self,
-	PyObject *r,
+	PyObject **r,
 	int skiprows,
 	int maxrows,
 	_PYFUNC *convert_row)
@@ -767,12 +767,12 @@ _mysql__fetch_row(
 			goto error;
 		}
 		if (!row) {
-			if (_PyTuple_Resize(&r, i, 0) == -1) goto error;
+			if (_PyTuple_Resize(r, i, 0) == -1) goto error;
 			break;
 		}
 		v = convert_row(self, row);
 		if (!v) goto error;
-		PyTuple_SET_ITEM(r, i, v);
+		PyTuple_SET_ITEM(*r, i, v);
 	}
 	return i-skiprows;
   error:
@@ -808,7 +808,7 @@ _mysql_ResultObject_fetch_row(
 	convert_row = row_converters[how];
 	if (maxrows) {
 		if (!(r = PyTuple_New(maxrows))) goto error;
-		rowsadded = _mysql__fetch_row(self, r, skiprows, maxrows, 
+		rowsadded = _mysql__fetch_row(self, &r, skiprows, maxrows, 
 				convert_row);
 		if (rowsadded == -1) goto error;
 	} else {
@@ -816,7 +816,7 @@ _mysql_ResultObject_fetch_row(
 			maxrows = 1000;
 			if (!(r = PyTuple_New(maxrows))) goto error;
 			while (1) {
-				rowsadded = _mysql__fetch_row(self, r, skiprows,
+				rowsadded = _mysql__fetch_row(self, &r, skiprows,
 						maxrows, convert_row);
 				if (rowsadded == -1) goto error;
 				skiprows += rowsadded;
@@ -826,7 +826,7 @@ _mysql_ResultObject_fetch_row(
 			/* XXX if overflow, maxrows<0? */
 			maxrows = (int) mysql_num_rows(self->result);
 			if (!(r = PyTuple_New(maxrows))) goto error;
-			rowsadded = _mysql__fetch_row(self, r, 0,
+			rowsadded = _mysql__fetch_row(self, &r, 0,
 					maxrows, convert_row);
 			if (rowsadded == -1) goto error;
 		}
