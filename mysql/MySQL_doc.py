@@ -53,6 +53,7 @@ def main():
 	    href="license.py"), " with it's lack of warranty\n" \
 	  "statement."),
 	P(A("Download", href="."), " the friggin' thing."),
+        P("Read the ", A("FAQ",href="MySQLdb-FAQ.html")),
 	H2("Overview"),
 	P("MySQLdb is an interface to the popular ",
 	  A("MySQL", href="http://www.mysql.net/mirrors.html"),

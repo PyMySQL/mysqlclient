@@ -16,6 +16,7 @@ This module uses the mxDateTime package for handling date/time types.
 
 __version__ = """$Revision$"""[11:-2]
 
+import _mysql
 from _mysql import *
 from time import localtime
 import re, types
@@ -170,7 +171,9 @@ class _Cursor:
  	else:
             try:
                 self._query(query % escape_row(args, qc))
-            except TypeError:
+	    except TypeError, m:
+                if m.args[0] == "not enough arguments for format string": raise
+                if m.args[0] == "not all arguments converted": raise
                 self._query(query % escape_dict(args, qc))
 
     def executemany(self, query, args):
@@ -191,7 +194,9 @@ class _Cursor:
         qc = self.connection.quote_conv
         try:
 	    q = [query % escape(args[0], qc)]
-	except TypeError:
+	except TypeError, m:
+            if m.args[0] == "not enough arguments for format string": raise
+            if m.args[0] == "not all arguments converted": raise
 	    escape = escape_dict
 	    q = [query % escape(args[0], qc)]
         qv = query[p:]
@@ -249,7 +254,15 @@ class _Cursor:
         return self.result.fetch_all_rows_as_dict()
          
     def nextset(self): return None
+
+    def seek(self, row, whence=0):
+        if self.use: raise NotSupportedError, "use must be 0 to use seek"
+        if whence: raise NotSupportedError, "can't do relative seek"
+	return  self.result.data_seek(row)
+        ## return whence and self.result.row_seek(row) or self.result.data_seek(row)
      
+    ## def tell(self): return self.result.row_tell()
+
      
 class Connection:
 
@@ -292,8 +305,18 @@ class Connection:
         """Close the connection. No further activity possible."""
         self.db.close()
          
-    def commit(self): """Does nothing as there are no transactions."""
+    if hasattr(_mysql, 'transactions'):
+        def commit(self):
+            """Commit the current transaction."""
+            return self.db.commit()
+    else:
+        def commit(self): """Does nothing as there are no transactions."""
     
+    if hasattr(_mysql, 'transactions'):
+        def rollback(self):
+            """Rollback the current transaction."""
+            self.db.rollback()
+
     def cursor(self, *args, **kwargs):
         """Create a cursor on which queries may be performed."""
         return apply(self.CursorClass, (self,)+args, kwargs)
@@ -314,13 +337,20 @@ class Connection:
     def list_fields(self, table): return self.db.list_fields(table).fetch_all_rows()
     def list_processes(self): return self.db.list_processes().fetch_all_rows()
     def list_tables(self, db): return self.db.list_tables(db).fetch_all_rows()
-    def num_fields(self): return self.db.num_fields()
+    def field_count(self): return self.db.field_count()
+    num_fields = field_count # used prior to MySQL-3.22.24
     def ping(self): return self.db.ping()
     def row_tell(self): return self.db.row_tell()
     def select_db(self, db): return self.db.select_db(db)
     def shutdown(self): return self.db.shutdown()
     def stat(self): return self.db.stat()
     def thread_id(self): return self.db.thread_id()
+
+    def change_user(self, *args, **kwargs):
+        try:
+            return apply(self.db.change_user, args, kwargs)
+        except AttributeError:
+            raise NotSupportedError, "not supported by MySQL library"
 
 
 Connect = connect = Connection

@@ -194,6 +194,16 @@ static _mysql_Constant _mysql_Constant_cr[] = {
 	{ NULL } /* sentinel */
 } ;
 
+static _mysql_Constant _mysql_Constant_option[] = {
+	{ "OPT_CONNECT_TIMEOUT", MYSQL_OPT_CONNECT_TIMEOUT },
+	{ "OPT_COMPRESS", MYSQL_OPT_COMPRESS },
+        { "OPT_NAMED_PIPE", MYSQL_OPT_NAMED_PIPE },
+        { "INIT_COMMAND", MYSQL_INIT_COMMAND },
+        { "READE_DEFAULT_FILE", MYSQL_READ_DEFAULT_FILE },
+        { "READ_DEFAULT_GROUP", MYSQL_READ_DEFAULT_GROUP },
+	{ NULL } /* sentinel */
+} ;
+
 static _mysql_Constant _mysql_Constant_er[] = {
 	{ "HASHCHK", ER_HASHCHK },
 	{ "NISAMCHK", ER_NISAMCHK },
@@ -855,6 +865,28 @@ _mysql_ResultObject_fetch_rows_as_dict(self, args)
 	return NULL;
 }
 
+#if MYSQL_VERSION_ID >= 32303
+static PyObject *
+_mysql_ConnectionObject_change_user(self, args, kwargs)
+	_mysql_ConnectionObject *self;
+	PyObject *args, *kwargs;
+{
+	char *user, *pwd=NULL, *db=NULL;
+	int r;
+        static char *kwlist[] = { "user", "passwd", "db", NULL } ;
+
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|ss:change_user",
+					 kwlist, &user, &pwd, &db))
+		return NULL;
+	Py_BEGIN_ALLOW_THREADS
+	r = mysql_change_user(&(self->connection), user, pwd, db);
+	Py_END_ALLOW_THREADS
+	if (r) 	return _mysql_Exception(self);
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+#endif
+
 static PyObject *
 _mysql_get_client_info(self, args)
 	PyObject *self;
@@ -1001,12 +1033,16 @@ _mysql_ConnectionObject_list_tables(self, args)
 }
 
 static PyObject *
-_mysql_ConnectionObject_num_fields(self, args)
+_mysql_ConnectionObject_field_count(self, args)
 	_mysql_ConnectionObject *self;
 	PyObject *args;
 {
 	if (!PyArg_NoArgs(args)) return NULL;
+#if MYSQL_VERSION_ID < 32224
 	return PyInt_FromLong((long)mysql_num_fields(&(self->connection)));
+#else
+	return PyInt_FromLong((long)mysql_field_count(&(self->connection)));
+#endif
 }	
 
 static PyObject *
@@ -1056,19 +1092,6 @@ _mysql_ConnectionObject_query(self, args)
 	if (r) return _mysql_Exception(self);
 	Py_INCREF(Py_None);
 	return Py_None;
-}
-
-static PyObject *
-_mysql_ConnectionObject_row_tell(self, args)
-	_mysql_ConnectionObject *self;
-	PyObject *args;
-{
-	unsigned int r;
-	if (!PyArg_NoArgs(args)) return NULL;
-	Py_BEGIN_ALLOW_THREADS
-	r = mysql_insert_id(&(self->connection));
-	Py_END_ALLOW_THREADS
-	return PyInt_FromLong((long)r);
 }
 
 static PyObject *
@@ -1197,13 +1220,36 @@ _mysql_ResultObject_data_seek(self, args)
      _mysql_ResultObject *self;
      PyObject *args;
 {
-	unsigned int offset;
-	if (!PyArg_ParseTuple(args, "i:data_seek", &offset)) return NULL;
-	Py_BEGIN_ALLOW_THREADS
-	mysql_data_seek(self->result, offset);
-	Py_END_ALLOW_THREADS
+	unsigned int row;
+	if (!PyArg_ParseTuple(args, "i:data_seek", &row)) return NULL;
+	mysql_data_seek(self->result, row);
 	Py_INCREF(Py_None);
 	return Py_None;
+}
+
+static PyObject *
+_mysql_ResultObject_row_seek(self, args)
+     _mysql_ResultObject *self;
+     PyObject *args;
+{
+	int offset;
+        MYSQL_ROW_OFFSET r;
+	if (!PyArg_ParseTuple(args, "i:row_seek", &offset)) return NULL;
+	r = mysql_row_tell(self->result);
+	mysql_row_seek(self->result, r+offset);
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+static PyObject *
+_mysql_ResultObject_row_tell(self, args)
+	_mysql_ResultObject *self;
+	PyObject *args;
+{
+	MYSQL_ROW_OFFSET r;
+	if (!PyArg_NoArgs(args)) return NULL;
+	r = mysql_row_tell(self->result);
+	return PyInt_FromLong(r-self->result->data->data);
 }
 
 static void
@@ -1228,10 +1274,14 @@ _mysql_ResultObject_repr(self)
 
 static PyMethodDef _mysql_ConnectionObject_methods[] = {
 	{"affected_rows",   (PyCFunction)_mysql_ConnectionObject_affected_rows, 0},
+#if MYSQL_VERSION_ID >= 32303
+	{"change_user",     (PyCFunction)_mysql_ConnectionObject_change_user, METH_VARARGS | METH_KEYWORDS},
+#endif
 	{"close",           (PyCFunction)_mysql_ConnectionObject_close, 0},
 	{"dump_debug_info", (PyCFunction)_mysql_ConnectionObject_dump_debug_info, 0},
 	{"error",           (PyCFunction)_mysql_ConnectionObject_error, 0},
 	{"errno",           (PyCFunction)_mysql_ConnectionObject_errno, 0},
+	{"field_count",     (PyCFunction)_mysql_ConnectionObject_field_count, 0}, 
 	{"get_host_info",   (PyCFunction)_mysql_ConnectionObject_get_host_info, 0},
 	{"get_proto_info",  (PyCFunction)_mysql_ConnectionObject_get_proto_info, 0},
 	{"get_server_info", (PyCFunction)_mysql_ConnectionObject_get_server_info, 0},
@@ -1242,10 +1292,8 @@ static PyMethodDef _mysql_ConnectionObject_methods[] = {
 	{"list_fields",     (PyCFunction)_mysql_ConnectionObject_list_fields, 1},
 	{"list_processes",  (PyCFunction)_mysql_ConnectionObject_list_processes, 0},
 	{"list_tables",     (PyCFunction)_mysql_ConnectionObject_list_tables, 1},
-	{"num_fields",      (PyCFunction)_mysql_ConnectionObject_num_fields, 0},
 	{"ping",            (PyCFunction)_mysql_ConnectionObject_ping, 0},
 	{"query",           (PyCFunction)_mysql_ConnectionObject_query, 1},
-	{"row_tell",        (PyCFunction)_mysql_ConnectionObject_row_tell, 0},
 	{"select_db",       (PyCFunction)_mysql_ConnectionObject_select_db, 1},
 	{"shutdown",        (PyCFunction)_mysql_ConnectionObject_shutdown, 0},
 	{"stat",            (PyCFunction)_mysql_ConnectionObject_stat, 0},
@@ -1264,6 +1312,8 @@ static struct memberlist _mysql_ConnectionObject_memberlist[] = {
 
 static PyMethodDef _mysql_ResultObject_methods[] = {
 	{"data_seek",       (PyCFunction)_mysql_ResultObject_data_seek, 1},
+	{"row_seek",        (PyCFunction)_mysql_ResultObject_row_seek, 1},
+	{"row_tell",        (PyCFunction)_mysql_ResultObject_row_tell, 0},
 	{"describe",        (PyCFunction)_mysql_ResultObject_describe, 0},
 	{"fetch_row",       (PyCFunction)_mysql_ResultObject_fetch_row, 0},
 	{"fetch_row_as_dict", (PyCFunction)_mysql_ResultObject_fetch_row_as_dict, 0},
@@ -1523,6 +1573,8 @@ init_mysql()
 	if (_mysql_Constant_class(dict, "CR", _mysql_Constant_cr))
 		goto error;
 	if (_mysql_Constant_class(dict, "ER", _mysql_Constant_er))
+		goto error;
+	if (_mysql_Constant_class(dict, "option", _mysql_Constant_option))
 		goto error;
 	if (!(_mysql_NULL = PyString_FromString("NULL")))
 		goto error;
