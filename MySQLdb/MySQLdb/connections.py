@@ -80,6 +80,7 @@ class Connection(ConnectionBase):
             unicode objects with this encoding. If set to None, the
             default encoding is used. If not set at all, character
             columns are returned as normal strings.
+    client_flag -- integer, flags to use or 0 (see MySQL docs or constants/CLIENTS.py)
 
     There are a number of undocumented, non-standard methods. See the
     documentation for the MySQL C API for some hints on what they do.

@@ -410,6 +410,7 @@ _mysql_ConnectionObject_Initialize(
 				  "connect_timeout", "compress",
 				  "named_pipe", "init_command",
 				  "read_default_file", "read_default_group",
+				  "client_flag",
 				  NULL } ;
 	int connect_timeout = 0;
 	int compress = -1, named_pipe = -1;
@@ -420,14 +421,15 @@ _mysql_ConnectionObject_Initialize(
 	self->converter = NULL;
 	self->open = 0;
 	check_server_init(-1);
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|ssssisOiiisss:connect",
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|ssssisOiiisssi:connect",
 					 kwlist,
 					 &host, &user, &passwd, &db,
 					 &port, &unix_socket, &conv,
 					 &connect_timeout,
 					 &compress, &named_pipe,
 					 &init_command, &read_default_file,
-					 &read_default_group))
+					 &read_default_group,
+					 &client_flag))
 		return -1;
 
 	if (!conv) 
