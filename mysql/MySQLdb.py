@@ -149,7 +149,7 @@ def escape_dict(d, qc):
 def _fetchall(result, *args):
     rows = r = list(apply(result.fetch_row, args))
     while 1:
-        rows = apply(result.fetch_row, args))
+        rows = apply(result.fetch_row, args)
         if not rows: break
         r.extend(list(rows))
     return r
@@ -266,7 +266,7 @@ class CursorWarningMixIn:
         if self._info:
             warnings = atoi(split(self._info)[-1])
     	    if warnings:
-     	        raise Warning, self.info
+     	        raise Warning, self._info
 
 
 class CursorStoreResultMixIn:
