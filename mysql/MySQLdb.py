@@ -110,7 +110,9 @@ insert_values = re.compile(r'values\s(\(.+\))', re.IGNORECASE)
 
 def escape_dict(d):
     d2 = {}
-    for k,v in d.items(): d2[k] = "'%s'" % escape_string(str(v))
+    for k,v in d.items():
+        if v is None: d2[k] = "NULL"
+        else: d2[k] = "'%s'" % escape_string(str(v))
     return d2
 
 
