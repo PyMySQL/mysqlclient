@@ -18,20 +18,26 @@ class BaseCursor:
     
     See the MySQL docs for more information."""
 
+    from _mysql import MySQLError, Warning, Error, InterfaceError, \
+                       DatabaseError, DataError, OperationalError, \
+                       IntegrityError, InternalError, ProgrammingError, \
+                       NotSupportedError
+
     def __init__(self, connection):
-        self.__conn = connection
+        self.connection = connection
         self.description = None
         self.rowcount = -1
         self.arraysize = 100
         self._executed = None
+        self.lastrowid = None
 
     def __del__(self):
         self.close()
         
     def close(self):
         """Close the cursor. No further queries will be possible."""
-        if not self.__conn: return
-        self.__conn = None
+        if not self.connection: return
+        self.connection = None
 
     def _check_executed(self):
         if not self._executed:
@@ -44,9 +50,9 @@ class BaseCursor:
         """Does nothing, required by DB API."""
 
     def _get_db(self):
-        if not self.__conn:
+        if not self.connection:
             raise ProgrammingError, "cursor closed"
-        return self.__conn._db
+        return self.connection._db
     
     def execute(self, query, args=None):
 
@@ -63,7 +69,7 @@ class BaseCursor:
  	    r = self.executemany(query, args) # deprecated
  	else:
             try:
-                r = self._query(query % self.__conn.literal(args))
+                r = self._query(query % self.connection.literal(args))
 	    except TypeError, m:
                 if m.args[0] in ("not enough arguments for format string",
                                  "not all arguments converted"):
@@ -91,7 +97,7 @@ class BaseCursor:
         if not m: raise ProgrammingError, "can't find values"
         p = m.start(1)
         qv = query[p:]
-        qargs = self.__conn.literal(args)
+        qargs = self.connection.literal(args)
         try:
             q = [ query % qargs[0] ]
             for a in qargs[1:]: q.append( qv % a )
@@ -113,7 +119,7 @@ class BaseCursor:
         self._result = self._get_result()
         self.rowcount = db.affected_rows()
         self.description = self._result and self._result.describe() or None
-        self._insert_id = db.insert_id()
+        self.lastrowid = db.insert_id()
         self._info = db.info()
         self._check_for_warnings()
         return self.rowcount
@@ -130,7 +136,7 @@ class BaseCursor:
     def insert_id(self):
         """Return the last inserted ID on an AUTO_INCREMENT columns."""
         self._check_executed()
-        return self._insert_id
+        return self.lastrowid
     
     def _fetch_row(self, size=1):
         return self._result.fetch_row(size, self._fetch_type)
@@ -167,32 +173,32 @@ class CursorStoreResultMixIn:
     def _query(self, q):
         rowcount = self._BaseCursor__do_query(q)
         self._rows = self._result and self._fetch_row(0) or ()
-        self._pos = 0
+        self.rownumber = 0
         del self._result
         return rowcount
             
     def fetchone(self):
         """Fetches a single row from the cursor."""
         self._check_executed()
-        if self._pos >= len(self._rows): return None
-        result = self._rows[self._pos]
-        self._pos = self._pos+1
+        if self.rownumber >= len(self._rows): return None
+        result = self._rows[self.rownumber]
+        self.rownumber = self.rownumber+1
         return result
 
     def fetchmany(self, size=None):
         """Fetch up to size rows from the cursor. Result set may be smaller
         than size. If size is not defined, cursor.arraysize is used."""
         self._check_executed()
-        end = self._pos + size or self.arraysize
-        result = self._rows[self._pos:end]
-        self._pos = end
+        end = self.rownumber + size or self.arraysize
+        result = self._rows[self.rownumber:end]
+        self.rownumber = end
         return result
 
     def fetchall(self):
         """Fetchs all available rows from the cursor."""
         self._check_executed()
-        result = self._pos and self._rows[self._pos:] or self._rows
-        self._pos = len(self._rows)
+        result = self.rownumber and self._rows[self.rownumber:] or self._rows
+        self.rownumber = len(self._rows)
         return result
     
     def seek(self, row, whence=0):
@@ -200,17 +206,17 @@ class CursorStoreResultMixIn:
         This is non-standard extension."""
         self._check_executed()
         if whence == 0:
-            self._pos = row
+            self.rownumber = row
         elif whence == 1:
-            self._pos = self._pos + row
+            self.rownumber = self.rownumber + row
         elif whence == 2:
-            self._pos = len(self._rows) + row
+            self.rownumber = len(self._rows) + row
      
     def tell(self):
         """Return the current position in the result set analogously to
         file.tell(). This is a non-standard extension."""
         self._check_executed()
-        return self._pos
+        return self.rownumber
 
 
 class CursorUseResultMixIn:
