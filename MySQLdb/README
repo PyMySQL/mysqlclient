@@ -53,9 +53,17 @@ Finally, putting it together:
 $ python setup.py build
 # python setup.py install
 
-TIP: If you are using a binary package of Zope, you need run setup.py
+Zope: If you are using a binary package of Zope, you need run setup.py
 with Zope's python executable. Otherwise, Zope (ZMySQLDA) will not
-be able to find _mysql.
+be able to find _mysql. However, I have had reports that the Zope
+binary packages do not have the files necessary to compile Python
+extension modules. Your best option in this case is to install Python
+2.1.1 separately, compile MySQLdb with that, and then relocate them into
+your Zope tree. Running setup.py install with the --prefix=xxx option
+may accomplish this; see setup.py install --help. You *might* also be
+able to build with the system-wide Python and install using Zope's Python,
+but I haven't tried this, and I don't even know if binary Zope packages
+have distutils (they probably do).
 
 If you prefer RPMs, you can use the bdist_rpm command with setup.py.
 This only builds the RPM; it does not install it.
@@ -65,4 +73,4 @@ Thanks go to Brian Fordham for cooking up an early version of setup.py.
 License: GPL or the original license based on Python 1.5.2's license.
 
 Andy Dustman <andy@dustman.net>
-2001-10-16
+2001-10-30
