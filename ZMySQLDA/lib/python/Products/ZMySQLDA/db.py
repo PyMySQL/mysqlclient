@@ -171,6 +171,7 @@ class DB(TM):
     conv[FIELD_TYPE.LONG] = int_or_long
     conv[FIELD_TYPE.DATETIME] = DateTime_or_None
     conv[FIELD_TYPE.DATE] = DateTime_or_None
+    conv[FIELD_TYPE.DECIMAL] = float
     del conv[FIELD_TYPE.TIME]
 
     _p_oid=_p_changed=_registered=None
