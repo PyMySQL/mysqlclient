@@ -90,18 +90,16 @@ __version__='$Revision$'[11:-2]
 import sys, string
 import DA
 
-classes=DA.classes
-meta_types=DA.meta_types
 methods=DA.folder_methods
 misc_=DA.misc_
-__ac_permissions__=DA.__ac_permissions__
 
 def initialize(context):
 
     context.registerClass(
         DA.Connection,
         permission='Add Z MySQL Database Connections',
-        constructors=(DA.manage_addZMySQLConnectionForm,),
+        constructors=(DA.manage_addZMySQLConnectionForm,
+                      DA.manage_addZMySQLConnection),
     )
 
     context.registerHelp()

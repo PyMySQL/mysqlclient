@@ -120,7 +120,7 @@ class Connection(Shared.DC.ZRDB.Connection.Connection):
                     b.__name__=name
                     b._d=d
                     b._c=c
-                    # b._columns=c.columns(name)
+                    #b._columns=c.columns(name)
                     b.icon=table_icons.get(d['TABLE_TYPE'],'text')
                     r.append(b)
                     # tables[name]=b

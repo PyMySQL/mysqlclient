@@ -102,7 +102,7 @@ from Shared.DC.ZRDB.TM import TM
 from DateTime import DateTime
 
 import string, sys
-from string import strip, split, find, upper
+from string import strip, split, find, upper, rfind
 from time import time
 
 hosed_connection = (
@@ -110,6 +110,34 @@ hosed_connection = (
     CR.SERVER_LOST
     )
 
+key_types = {
+    "PRI": "PRIMARY KEY",
+    "MUL": "INDEX",
+    "UNI": "UNIQUE",
+    }
+
+field_icons = "bin", "date", "datetime", "float", "int", "text", "time"
+
+icon_xlate = {
+    "varchar": "text", "char": "text",
+    "enum": "what", "set": "what",
+    "double": "float", "numeric": "float",
+    "blob": "bin", "mediumblob": "bin", "longblob": "bin",
+    "tinytext": "text", "mediumtext": "text",
+    "longtext": "text", "timestamp": "datetime",
+    "decimal": "float", "smallint": "int",
+    "mediumint": "int", "bigint": "int",
+    }
+
+type_xlate = {
+    "double": "float", "numeric": "float",
+    "decimal": "float", "smallint": "int",
+    "mediumint": "int", "bigint": "int",
+    "int": "int", "float": "float",
+    "timestamp": "datetime", "datetime": "datetime",
+    "time": "datetime",
+    }
+    
 def _mysql_timestamp_converter(s):
 	if len(s) < 14:
 		s = s + "0"*(14-len(s))
@@ -204,38 +232,41 @@ class DB(TM):
             c=self.db.store_result()
         except:
             return ()
-        key_types = {"PRI": "PRIMARY KEY",
-                     "MUL": "INDEX",
-                     "UNI": "UNIQUE",
-                    }
-        field_icons = "bin", "date", "datetime", "float", "int", "text", "time"
-        icon_xlate = {"varchar": "text", "char": "text", "blob": "bin",
-                      "enum": "what", "double": "float", "numeric": "float",
-                      "mediumblob": "bin", "longblob": "bin",
-                      "tinytext": "text", "mediumtext": "text",
-                      "longtext": "text", "timestamp": "datetime",
-                      "decimal": "float", "smallint": "int",
-                      "mediumint": "int", "bigint": "int",
-                     }
         r=[]
-        a=r.append
         for Field, Type, Null, Key, Default, Extra in c.fetch_row(0):
+            info = {}
             field_default = Default and "DEFAULT %s"%Default or ''
+            if Default: info['Default'] = Default
             if '(' in Type:
-                short_type, junk = split(Type,'(',1)
+                end = rfind(Type,')')
+                short_type, size = split(Type[:end],'(',1)
+                if short_type not in ('set','enum'):
+                    if ',' in size:
+                        info['Scale'], info['Precision'] = \
+                                       map(int, split(size,',',1))
+                    else:
+                        info['Scale'] = int(size)
             else:
                 short_type = Type
             if short_type in field_icons:
-                Icon = short_type
+                info['Icon'] = short_type
             else:
-                Icon = icon_xlate.get(short_type, "what")
-            a({ 'Name': Field,
-                'Type': short_type,
-                'Icon': Icon,
-                'Description': join([Type, field_default, Extra or '',
-                                    key_types.get(Key, Key or '')]),
-                'Nullable': (Null == 'YES') and ' ' or "NOT NULL"
-              })
+                info['Icon'] = icon_xlate.get(short_type, "what")
+            info['Name'] = Field
+            info['Type'] = type_xlate.get(short_type,'string')
+            info['Extra'] = Extra,
+            info['Description'] = join([Type, field_default, Extra or '',
+                                        key_types.get(Key, Key or ''),
+                                        Null != 'YES' and 'NOT NULL' or '']),
+            info['Nullable'] = (Null == 'YES') and 1 or 0
+            if Key:
+                info['Index'] = 1
+            if Key == 'PRI':
+                info['PrimaryKey'] = 1
+                info['Unique'] = 1
+            elif Key == 'UNI':
+                info['Unique'] = 1
+            r.append(info)
         return r
 
     def query(self,query_string, max_rows=1000):
