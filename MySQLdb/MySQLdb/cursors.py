@@ -224,7 +224,7 @@ class CursorWarningMixIn:
     def _check_for_warnings(self):
         from string import atoi, split
         info = self._get_db().info()
-        if info is None:
+        if not info:
             return
         warnings = atoi(split(info)[-1])
         if warnings:
