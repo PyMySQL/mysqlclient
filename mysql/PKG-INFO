@@ -1,9 +1,0 @@
-Metadata-Version: 1.0
-Name: MySQL-python
-Version: 0.3.6
-Platform: POSIX, Windows
-Summary: An interface to the MySQL RDBMS
-Keywords: MySQL
-Author: Andy Dustman
-Author-email: <andy@dustman.net>
-License: GNU GPL
