@@ -41,18 +41,26 @@ _mysql_Exception(c)
 	merr = mysql_errno(&(c->connection));
 	if (!merr)
 		e = _mysql_InterfaceError;
-	else if (merr < CR_MIN_ERROR)
-		e = _mysql_InternalError;
 	else if (merr > CR_MAX_ERROR) {
 		PyTuple_SET_ITEM(t, 0, PyInt_FromLong(-1L));
 		PyTuple_SET_ITEM(t, 1, PyString_FromString("error totally whack"));
 		PyErr_SetObject(_mysql_Error, t);
 		return NULL;
 	}
-	else if (merr == CR_COMMANDS_OUT_OF_SYNC)
+	else switch (merr) {
+	case CR_COMMANDS_OUT_OF_SYNC:
 		e = _mysql_ProgrammingError;
-	else
-		e = _mysql_OperationalError;
+		break;
+	case ER_DUP_ENTRY:
+		e = _mysql_IntegrityError;
+		break;
+	default:
+		if (merr < 1000)
+			e = _mysql_InternalError;
+		else
+			e = _mysql_OperationalError;
+		break;
+	}
 	PyTuple_SET_ITEM(t, 0, PyInt_FromLong((long)merr));
 	PyTuple_SET_ITEM(t, 1, PyString_FromString(mysql_error(&(c->connection))));
 	PyErr_SetObject(e, t);
@@ -436,6 +444,52 @@ _mysql_escape_string(self, args)
 	if (_PyString_Resize(&str, len) < 0) return NULL;
 	return (str);
 }
+
+static PyObject *_mysql_NULL;
+
+static PyObject *
+_mysql_escape_row(self, args)
+	PyObject *self;
+	PyObject *args;
+{
+	PyObject *o, *r, *item, *quoted, *str, *itemstr;
+	char *in, *out;
+	int i, n, len, size;
+	if (!PyArg_ParseTuple(args, "O:escape_row", &o)) return NULL;
+	if (!PySequence_Check(o)) return NULL;
+	if (!(n = PyObject_Length(o))) return NULL;
+	if (!(r = PyTuple_New(n))) return NULL;
+	for (i=0; i<n; i++) {
+		if (!(item = PySequence_GetItem(o, i))) goto error;
+		if (item == Py_None) {
+			quoted = _mysql_NULL;
+			Py_INCREF(_mysql_NULL);
+		}
+		else {
+			if (!(itemstr = PyObject_Str(item)))
+				goto error;
+			in = PyString_AsString(itemstr);
+			size = PyString_Size(itemstr);
+			str = PyString_FromStringAndSize((char *)NULL, size*2+3);
+			if (!str) return PyErr_NoMemory();
+			out = PyString_AS_STRING(str);
+			len = mysql_escape_string(out+1, in, size);
+			*out = '\'' ;
+			*(out+len+1) = '\'' ;
+			*(out+len+2) = 0;
+			if (_PyString_Resize(&str, len+2) < 0)
+				goto error;
+			Py_DECREF(itemstr);
+			quoted = str;
+		}
+		PyTuple_SET_ITEM(r, i, quoted);
+	}
+	return r;
+  error:
+	Py_XDECREF(r);
+	return NULL;
+}
+				
 
 static PyObject *
 _mysql_ResultObject_describe(self, args)
@@ -1065,6 +1119,7 @@ PyTypeObject _mysql_ResultObject_Type = {
 static PyMethodDef
 _mysql_methods[] = {
 	{ "connect", _mysql_connect, METH_VARARGS | METH_KEYWORDS },
+	{ "escape_row", _mysql_escape_row, METH_VARARGS },
 	{ "escape_string", _mysql_escape_string, METH_VARARGS },
 	{ "get_client_info", _mysql_get_client_info, METH_VARARGS },
 	{NULL, NULL} /* sentinel */
@@ -1148,6 +1203,9 @@ init_mysql()
 		goto error;
 	if (_mysql_Constant_class(dict, "ER", _mysql_Constant_er))
 		goto error;
+	if (!(_mysql_NULL = PyString_FromString("NULL")))
+		goto error;
+	if (PyDict_SetItemString(dict, "NULL", _mysql_NULL)) goto error;
   error:
 	if (PyErr_Occurred())
 		PyErr_SetString(PyExc_ImportError,
