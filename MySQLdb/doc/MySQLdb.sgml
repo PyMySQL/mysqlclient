@@ -505,8 +505,8 @@ Compatibility note: The older <ref id="MySQLmodule"> defines this method,
       the additional supplied cursor classes in the <ref id="usage">
       section.
 
-<tag>begin()</tag> Explicitly start a transactions. Normally you do
-      not need to use this: Executing a query implicitely starts a new
+<tag>begin()</tag> Explicitly start a transaction. Normally you do
+      not need to use this: Executing a query implicitly starts a new
       transaction if one is not in progress. If AUTOCOMMIT is on, you
       can use <tt/begin()/ to temporarily turn it off. AUTOCOMMIT will
       resume after the next <tt/commit()/ or <tt/rollback/.

@@ -60,7 +60,7 @@ There may also be a link to some user-contributed binaries on the web site.
 Trouble with ZMySQLDA
 <sect1>I installed MySQLdb but ZMySQLDA can't find it.
 <p>Probably you installed a binary version of Zope which comes with
-it's own Python interpreter. You will have to compile MySQLdb against
+its own Python interpreter. You will have to compile MySQLdb against
 that particular Python installation. Find out where it's python binary
 lives and use that to run setup.py.
 </sect1>
@@ -126,7 +126,7 @@ performance a bit.
 Read the MySQL docs, particularly the C API, for an overview.
 <item>
 Read the MySQLdb docs. This shows how the C API is transliterated
-into Python. Plus some examplesa are in there.
+into Python. Plus some examples are in there.
 <item>
 Read the MySQLdb sources, particularly MySQLdb/cursors.py. That one
 file contains most of the gory details, particularly in the
