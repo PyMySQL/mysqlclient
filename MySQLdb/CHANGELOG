@@ -1,3 +1,17 @@
+0.9.2b2
+
+  * Avoid memory leak when using dictionary-based cursors
+
+  * Avoid crash when using fetchall on SSCursors (mysql_use_result)
+
+0.9.2b1
+
+  * Minor build updates
+
+  * Avoid memory leak on connection failure
+
+  * Avoid potential leak on cursor close. 
+
 0.9.2a2
 
   * Reworked platform configuration some more. cygwin is now (sorta)
