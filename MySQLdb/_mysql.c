@@ -159,38 +159,34 @@ _mysql_ResultObject_New(
 	int n, i;
 	MYSQL_FIELD *fields;
 	_mysql_ResultObject *r;
-	if (!(r = PyObject_NEW(_mysql_ResultObject, &_mysql_ResultObject_Type)))
-		return NULL;
+
+	r = PyObject_NEW(_mysql_ResultObject, &_mysql_ResultObject_Type);
+	if (!r) return NULL;
 	r->conn = (PyObject *) conn;
-	r->converter = NULL;
 	r->use = use;
-	Py_INCREF(conn);
-	Py_INCREF(conv);
 	r->result = result;
 	n = mysql_num_fields(result);
 	r->nfields = n;
-        if (n) {
-		if (!(r->converter = PyTuple_New(n))) {
-			Py_DECREF(conv);
-			Py_DECREF(conn);
-			return NULL;
+	if (!(r->converter = PyTuple_New(n))) goto error;
+	fields = mysql_fetch_fields(result);
+	for (i=0; i<n; i++) {
+		PyObject *tmp, *fun;
+		tmp = PyInt_FromLong((long) fields[i].type);
+		if (!tmp) goto error;
+		fun = PyObject_GetItem(conv, tmp);
+		Py_DECREF(tmp);
+		if (!fun) {
+			PyErr_Clear();
+			fun = Py_None;
+			Py_INCREF(Py_None);
 		}
-		fields = mysql_fetch_fields(result);
-		for (i=0; i<n; i++) {
-			PyObject *tmp, *fun;
-			tmp = PyInt_FromLong((long) fields[i].type);
-			fun = PyObject_GetItem(conv, tmp);
-			Py_DECREF(tmp);
-			if (!fun) {
-				PyErr_Clear();
-				fun = Py_None;
-				Py_INCREF(Py_None);
-			}
-			PyTuple_SET_ITEM(r->converter, i, fun);
-		}
+		PyTuple_SET_ITEM(r->converter, i, fun);
 	}
-	Py_DECREF(conv);
+	Py_INCREF(conn);
 	return r;
+  error:
+	Py_DECREF(r);
+	return NULL;
 }
 
 static char _mysql_connect__doc__[] =
@@ -252,14 +248,21 @@ _mysql_connect(
 					 &init_command, &read_default_file,
 					 &read_default_group))
 		return NULL;
-	if (conv) {
-		c->converter = conv;
-	} else {
-		if (!(c->converter = PyDict_New())) {
-			Py_DECREF(c);
-			return NULL;
-		}
+
+	if (!conv) 
+		conv = PyDict_New();
+#if PY_VERSION_HEX > 0x02000100
+	else
+		Py_INCREF(conv);
+#endif
+	c->converter = conv;
+	if (!(c->converter)) {
+		Py_DECREF(c);
+		return NULL;
 	}
+
+	printf("<%d> ",  c->ob_refcnt);
+	c->open = 0;
 	Py_BEGIN_ALLOW_THREADS ;
 	conn = mysql_init(&(c->connection));
 	if (connect_timeout) {
@@ -282,13 +285,13 @@ _mysql_connect(
 	conn = mysql_real_connect(&(c->connection), host, user, passwd, db,
 				  port, unix_socket, client_flag);
 	Py_END_ALLOW_THREADS ;
-	c->open = 1;
+
 	if (!conn) {
 		_mysql_Exception(c);
-		c->open = 0;
 		Py_DECREF(c);
 		return NULL;
 	}
+	c->open = 1;
 	return (PyObject *) c;
 }
 
@@ -1161,7 +1164,6 @@ _mysql_ConnectionObject_dealloc(
 		o = _mysql_ConnectionObject_close(self, NULL);
 		Py_XDECREF(o);
 	}
-	Py_XDECREF(self->converter);
 	PyMem_Free((char *) self);
 }
 
@@ -1232,7 +1234,7 @@ _mysql_ResultObject_dealloc(
 {
 	mysql_free_result(self->result);
 	Py_DECREF(self->conn);
-	Py_DECREF(self->converter);
+	Py_XDECREF(self->converter);
 	PyMem_Free((char *) self);
 }
 
