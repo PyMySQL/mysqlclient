@@ -153,6 +153,12 @@ def int_or_long(s):
     try: return int(s)
     except: return long(s)
 
+"""Locking strategy:
+
+The minimum that must be done is a mutex around a query, store_result
+sequence. When using transactions, the mutex must go around the
+entire transaction."""
+
 class DB(TM):
 
     Database_Connection=_mysql.connect
@@ -177,6 +183,7 @@ class DB(TM):
     _p_oid=_p_changed=_registered=None
 
     def __init__(self,connection):
+        from thread import allocate_lock
         self.connection=connection
         self.kwargs = kwargs = self._parse_connection_string(connection)
         self.db=apply(self.Database_Connection, (), kwargs)
@@ -185,7 +192,8 @@ class DB(TM):
             self.transactions = 0
         elif not self.transactions and self._try_transactions == '+':
             raise NotSupportedError, "transactions not supported by this server"
-
+        self._lock = allocate_lock()
+        
     def _parse_connection_string(self, connection):
         kwargs = {'conv': self.conv}
         items = split(connection)
@@ -219,20 +227,28 @@ class DB(TM):
                _care=('TABLE', 'VIEW')):
         r=[]
         a=r.append
-	self.db.query("SHOW TABLES")
-	result = self.db.store_result()
-	while 1:
-	    row = result.fetch_row(1)
-	    if not row: break
+        if not self.transactions: self._lock.acquire()
+        try:
+            self.db.query("SHOW TABLES")
+            result = self.db.store_result()
+        finally:
+            if not self.transactions: self._lock.release()
+        row = result.fetch_row(1)
+	while row:
             a({'TABLE_NAME': row[0][0], 'TABLE_TYPE': 'TABLE'})
+            row = result.fetch_row(1)
         return r
 
     def columns(self, table_name):
         from string import join
         try:
-            # Field, Type, Null, Key, Default, Extra
-            self.db.query('SHOW COLUMNS FROM %s' % table_name)
-            c=self.db.store_result()
+            try:
+                if not self.transactions: self._lock.acquire()
+                # Field, Type, Null, Key, Default, Extra
+                self.db.query('SHOW COLUMNS FROM %s' % table_name)
+                c=self.db.store_result()
+            finally:
+                if not self.transactions: self._lock.release()
         except:
             return ()
         r=[]
@@ -278,23 +294,27 @@ class DB(TM):
         result=()
         db=self.db
         try:
-            for qs in filter(None, map(strip,split(query_string, '\0'))):
-                qtype = upper(split(qs, None, 1)[0])
-                if qtype == "SELECT" and max_rows:
-                    qs = "%s LIMIT %d" % (qs,max_rows)
-                    r=0
-                db.query(qs)
-                c=db.store_result()
-                if desc is not None:
-                    if c and (c.describe() != desc):
-                        raise 'Query Error', (
-                            'Multiple select schema are not allowed'
-                            )
-                if c:
-                    desc=c.describe()
-                    result=c.fetch_row(max_rows)
-                else:
-                    desc=None
+            try:
+                if not self.transactions: self._lock.acquire()
+                for qs in filter(None, map(strip,split(query_string, '\0'))):
+                    qtype = upper(split(qs, None, 1)[0])
+                    if qtype == "SELECT" and max_rows:
+                        qs = "%s LIMIT %d" % (qs,max_rows)
+                        r=0
+                    db.query(qs)
+                    c=db.store_result()
+                    if desc is not None:
+                        if c and (c.describe() != desc):
+                            raise 'Query Error', (
+                                'Multiple select schema are not allowed'
+                                )
+                    if c:
+                        desc=c.describe()
+                        result=c.fetch_row(max_rows)
+                    else:
+                        desc=None
+            finally:
+                if not self.transactions: self._lock.release()
                     
         except OperationalError, m:
             if m[0] not in hosed_connection: raise
@@ -319,13 +339,20 @@ class DB(TM):
     def string_literal(self, s): return self.db.string_literal(s)
 
     def _begin(self, *ignored):
+        self.lock.acquire()
         self.db.query("BEGIN")
-	self.db.store_result()
+        self.db.store_result()
         
     def _finish(self, *ignored):
-        self.db.query("COMMIT")
-	self.db.store_result()
+        try:
+            self.db.query("COMMIT")
+            self.db.store_result()
+        finally:
+            self.lock.release()
 
     def _abort(self, *ignored):
-	self.db.query("ROLLBACK")
-	self.db.store_result()
+        try:
+            self.db.query("ROLLBACK")
+            self.db.store_result()
+        finally:
+            self.lock.release()
