@@ -1,5 +1,5 @@
-#define version_info "(0,9,0,'candidate',2)"
-#define __version__ "0.9.0c2"
+#define version_info "(0,9,0,'final',1)"
+#define __version__ "0.9.0"
 /*
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
