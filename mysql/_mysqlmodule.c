@@ -68,6 +68,7 @@ _mysql_Exception(c)
 	PyTuple_SET_ITEM(t, 0, PyInt_FromLong((long)merr));
 	PyTuple_SET_ITEM(t, 1, PyString_FromString(mysql_error(&(c->connection))));
 	PyErr_SetObject(e, t);
+	Py_DECREF(t);
 	return NULL;
 }
 
@@ -358,7 +359,6 @@ _mysql_ResultObject_New(conn, result)
         if (n) {
 		r->converter = PyMem_Malloc(n*sizeof(PyObject *));
 		fields = mysql_fetch_fields(result);
-		r->fields = fields;
 		for (i=0; i<n; i++) {
 			PyObject *tmp, *fun;
 			tmp = PyInt_FromLong((long) fields[i].type);
@@ -501,13 +501,13 @@ _mysql_escape_row(self, args)
 	PyObject *self;
 	PyObject *args;
 {
-	PyObject *o, *r, *item, *quoted, *str, *itemstr;
+	PyObject *o=NULL, *r=NULL, *item, *quoted, *str, *itemstr;
 	char *in, *out;
 	int i, n, len, size;
-	if (!PyArg_ParseTuple(args, "O:escape_row", &o)) return NULL;
-	if (!PySequence_Check(o)) return NULL;
-	if (!(n = PyObject_Length(o))) return NULL;
-	if (!(r = PyTuple_New(n))) return NULL;
+	if (!PyArg_ParseTuple(args, "O:escape_row", &o)) goto error2;
+	if (!PySequence_Check(o)) goto error2;
+	if (!(n = PyObject_Length(o))) goto error2;
+	if (!(r = PyTuple_New(n))) goto error;
 	for (i=0; i<n; i++) {
 		if (!(item = PySequence_GetItem(o, i))) goto error;
 		if (item == Py_None) {
@@ -517,10 +517,13 @@ _mysql_escape_row(self, args)
 		else {
 			if (!(itemstr = PyObject_Str(item)))
 				goto error;
-			in = PyString_AsString(itemstr);
-			size = PyString_Size(itemstr);
+			if (!(in = PyString_AsString(itemstr))) {
+				Py_DECREF(itemstr);
+				goto error;
+			}
+			size = PyString_GET_SIZE(itemstr);
 			str = PyString_FromStringAndSize((char *)NULL, size*2+3);
-			if (!str) return PyErr_NoMemory();
+			if (!str) goto error;
 			out = PyString_AS_STRING(str);
 			len = mysql_escape_string(out+1, in, size);
 			*out = '\'' ;
@@ -531,11 +534,13 @@ _mysql_escape_row(self, args)
 			Py_DECREF(itemstr);
 			quoted = str;
 		}
+		Py_DECREF(item);
 		PyTuple_SET_ITEM(r, i, quoted);
 	}
 	return r;
   error:
 	Py_XDECREF(r);
+  error2:
 	return NULL;
 }
 				
@@ -621,11 +626,12 @@ _mysql_ResultObject_fetch_row(self, args)
 		if (row[i]) {
 			if (self->converter[i])
 				v = PyObject_CallFunction(self->converter[i],
-							   "s#",
-							   row[i], length[i]);
+							  "s#",
+							  row[i],
+							  (int)length[i]);
 			else
 				v = PyString_FromStringAndSize(row[i],
-							       length[i]);
+							       (int)length[i]);
 			if (!v) goto error;
 		}
 		else {
@@ -991,7 +997,7 @@ _mysql_ResultObject_dealloc(self)
 	_mysql_ResultObject *self;
 {
 	int i;
-	if (self->result) mysql_free_result(self->result);
+	mysql_free_result(self->result);
 	Py_DECREF(self->conn);
 	for (i=0; i<self->nfields; i++) Py_XDECREF(self->converter[i]);
 	PyMem_Free((char *) self->converter);
@@ -1097,7 +1103,7 @@ _mysql_ConnectionObject_setattr(c, name, v)
 {
 	if (v == NULL) {
 		PyErr_SetString(PyExc_AttributeError,
-				"can't delete file attributes");
+				"can't delete connection attributes");
 		return -1;
 	}
 	return PyMember_Set((char *)c, _mysql_ConnectionObject_memberlist, name, v);

@@ -25,7 +25,10 @@ class Cursor:
         self.result = None
         self.arraysize = None
         self.warnings = 1
-     
+        
+##    def __del__(self):
+##        self.result = None
+##     
     def setinputsizes(self, size): pass
       
     def setoutputsizes(self, size): pass
@@ -115,6 +118,8 @@ class Connection:
         self.db.close()
          
     def commit(self): pass
+    
+    def rollback(self): raise OperationalError, "transactions not supported"
      
     def cursor(self, name=''):
         return self.CursorClass(self, name)
