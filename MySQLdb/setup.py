@@ -24,7 +24,7 @@ version = "1.1.4"
 include_dirs = [
     '/usr/local/include/mysql',
     '/usr/local/mysql/include',
-    '/usr/local/mysql/include/mysql'
+    '/usr/local/mysql/include/mysql',
     '/usr/include/mysql', 
     ]
 library_dirs = [
