@@ -9,7 +9,7 @@ from distutils.extension import Extension
 YES = 1
 NO = 0
 
-# set this to 1 if you have the thread-safe mysqlclient library
+# set this to YES if you have the thread-safe mysqlclient library
 thread_safe_library = NO
 
 # You probably don't have to do anything past this point. If you
@@ -37,10 +37,16 @@ elif sys.platform == "win32":
                  'wsock32', 'advapi32']
     runtime_library_dirs = []
     extra_objects = [r'c:\mysql\lib\opt\mysqlclient.lib']
+elif sys.platform == "darwin1": # Mac OS X
+    include_dirs = ['/usr/local/mysql/include/mysql']
+    library_dirs = ['/usr/local/mysql/lib/mysql']
+    libraries = [mysqlclient, "z"]
+    runtime_library_dirs = []
+    extra_objects = []
 elif os.name == "posix": # most Linux/UNIX platforms
     include_dirs = ['/usr/include/mysql']
     library_dirs = ['/usr/lib/mysql']
-    # MySQL-3.23 seems to need libz
+    # MySQL-3.23 needs libz
     libraries = [mysqlclient, "z"]
     # On some platorms, this can be used to find the shared libraries
     # at runtime, if they are in a non-standard location. Doesn't
@@ -77,11 +83,12 @@ setup (# Distribution meta-data
         name = "MySQL-python",
         version = "0.9.1c1",
         description = "An interface to MySQL",
-	long_description=long_description,
+        long_description=long_description,
         author = "Andy Dustman",
         author_email = "andy@dustman.net",
-	licence = "GPL",
-        url = "http://dustman.net/andy/python/MySQLdb",
+        license = "GPL",
+        platforms = "ALL",
+        url = "http://sourceforge.net/projects/mysql-python",
 
         # Description of the modules and packages in the distribution
 
@@ -105,8 +112,8 @@ setup (# Distribution meta-data
                 sources=['_mysql.c'],
                 include_dirs=include_dirs,
                 library_dirs=library_dirs,
-		runtime_library_dirs=runtime_library_dirs,
+                runtime_library_dirs=runtime_library_dirs,
                 libraries=libraries,
-		extra_objects=extra_objects,
+                extra_objects=extra_objects,
                 )],
 )
