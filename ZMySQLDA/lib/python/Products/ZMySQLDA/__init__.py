@@ -102,7 +102,6 @@ def initialize(context):
         DA.Connection,
         permission='Add Z MySQL Database Connections',
         constructors=(DA.manage_addZMySQLConnectionForm,),
-        icon='misc_/ZMySQLDA/conn',
     )
 
     context.registerHelp()
