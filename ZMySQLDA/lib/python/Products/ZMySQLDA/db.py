@@ -148,7 +148,6 @@ class DB(TM):
         FIELD_TYPE.YEAR: int,
 	FIELD_TYPE.DATETIME: DateTime_or_None,
 	FIELD_TYPE.DATE: DateTime_or_None,
-	FIELD_TYPE.TIME: DateTime_or_None
         }
 
     _p_oid=_p_changed=_registered=None
