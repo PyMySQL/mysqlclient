@@ -10,8 +10,20 @@ import cursors
 from _mysql_exceptions import Warning, Error, InterfaceError, DataError, \
      DatabaseError, OperationalError, IntegrityError, InternalError, \
      NotSupportedError, ProgrammingError
+import types, _mysql
+
 
 def defaulterrorhandler(connection, cursor, errorclass, errorvalue):
+    """
+
+    If cursor is not None, errorvalue is appended to cursor.messages;
+    otherwise it is appended to connection.messages. Then errorclass
+    is raised with errorvalue as the value.
+
+    You can override this with your own error handler by assigning it
+    to the instance.
+
+    """
     if cursor:
         cursor.messages.append(errorvalue)
     else:
@@ -19,7 +31,27 @@ def defaulterrorhandler(connection, cursor, errorclass, errorvalue):
     raise errorclass, errorvalue
 
 
-class Connection:
+if hasattr(types, "ObjectType"):
+
+    class ConnectionBase(_mysql.connection):
+
+        def _make_connection(self, args, kwargs):
+            apply(super(ConnectionBase, self).__init__, args, kwargs)
+
+else:
+    
+    class ConnectionBase:
+        
+        def _make_connection(self, args, kwargs):
+            self._db = apply(_mysql.connect, args, kwargs)
+            
+        def __getattr__(self, attr):
+            if hasattr(self, "_db"):
+                return getattr(self._db, attr)
+            raise AttributeError, attr
+
+        
+class Connection(ConnectionBase):
 
     """
 
@@ -42,6 +74,8 @@ class Connection:
     read_default_file -- file from which default client values are read
     read_default_group -- configuration group to use from the default file
     cursorclass -- class object, used to create cursors (keyword only)
+    unicode -- string, character set. If set, character columns are
+            returned as unicode objects with this encoding
 
     There are a number of undocumented, non-standard methods. See the
     documentation for the MySQL C API for some hints on what they do.
@@ -51,7 +85,6 @@ class Connection:
     default_cursor = cursors.Cursor
     
     def __init__(self, *args, **kwargs):
-        from _mysql import connect
         from constants import CLIENT
         from converters import conversions
         import types
@@ -63,19 +96,24 @@ class Connection:
             del kwargs2['cursorclass']
         else:
             self.cursorclass = self.default_cursor
-        self._db = apply(connect, args, kwargs2)
-        self._db.converter[types.StringType] = self._db.string_literal
+        charset = ''
+        if kwargs.has_key('unicode'):
+            charset = kwargs['unicode']
+            del kwargs2['unicode']
+        self._make_connection(args, kwargs2)
+        self.converter[types.StringType] = self.string_literal
         if hasattr(types, 'UnicodeType'):
-            self._db.converter[types.UnicodeType] = self.unicode_literal
-        self._transactional = self._db.server_capabilities & CLIENT.TRANSACTIONS
+            self.converter[types.UnicodeType] = self.unicode_literal
+        if charset:
+            u = lambda s, c=charset: unicode(s, c)
+            self.converter[FIELD_TYPE.CHAR] = u
+            self.converter[FIELD_TYPE.VAR_STRING] = u
+        self._transactional = self.server_capabilities & CLIENT.TRANSACTIONS
         self.messages = []
         
     def __del__(self):
-        if hasattr(self, '_db'): self.close()
+        self.close()
 
-    def __getattr__(self, attr):
-        return getattr(self._db, attr)
-    
     def begin(self):
         """Explicitly begin a transaction. Non-standard."""
         self.query("BEGIN")
@@ -110,9 +148,10 @@ class Connection:
         If o is a non-string sequence, the items of the sequence are
         converted and returned as a sequence.
 
+        Non-standard.
+
         """
-        import _mysql
-        return _mysql.escape(o, self._db.converter)
+        return self.escape(o, self.converter)
 
     def unicode_literal(self, u, dummy=None):
         """
@@ -120,6 +159,8 @@ class Connection:
         Convert a unicode object u to a string using the current
         character set as the encoding. If that's not available,
         latin1 is used.
+
+        Non-standard.
 
         """
         return self.literal(u.encode(self.character_set_name()))
@@ -136,5 +177,3 @@ class Connection:
     NotSupportedError = NotSupportedError
 
     errorhandler = defaulterrorhandler
-
-    
