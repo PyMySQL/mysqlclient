@@ -95,3 +95,16 @@ meta_types=DA.meta_types
 methods=DA.folder_methods
 misc_=DA.misc_
 __ac_permissions__=DA.__ac_permissions__
+
+def initialize(context):
+
+    context.registerClass(
+        DA.Connection,
+        permission='Add Z MySQL Database Connections',
+        constructors=(DA.manage_addZMySQLConnectionForm,),
+        icon='misc_/ZMySQLDA/conn',
+    )
+
+    context.registerHelp()
+    context.registerHelpTitle('ZMySQLDA')
+
