@@ -569,10 +569,13 @@ class Connection:
         else:
             self.cursorclass = Cursor
         self.db = apply(connect, (), kwargs)
-        self.quote_conv[types.StringType] = self.Thing2Literal
+        self.quote_conv[types.StringType] = self.db.string_literal
         self._transactional = self.db.server_capabilities & CLIENT.TRANSACTIONS
         if _threading: self.__lock = _threading.Lock()
 
+    def __del__(self):
+        self.close()
+        
     if _threading:
         def _acquire(self, blocking=1): return self.__lock.acquire(blocking)
         def _release(self): return self.__lock.release()
@@ -580,11 +583,6 @@ class Connection:
         def _acquire(self, blocking=1): return 1
         def _release(self): return 1
         
-    def Thing2Literal(self, o, d={}):
-        """Convert a thing to a string literal using the current
-        character set."""
-        return self.db.string_literal(str(o))
-    
     def close(self):
         """Close the connection. No further activity possible."""
         self.db.close()
