@@ -16,10 +16,10 @@ MySQLdb.converters module.
 __author__ = "Andy Dustman <andy@dustman.net>"
 __revision__ = """$Revision$"""[11:-2]
 version_info = (
+    0,
+    9,
     1,
-    0,
-    0,
-    "beta",
+    "gamma",
     1)
 if version_info[3] == "final": __version__ = "%d.%d.%d" % version_info[:3]
 else: __version__ = "%d.%d.%d%1.1s%d" % version_info[:5]

@@ -1,5 +1,5 @@
-#define version_info "(1,0,0,'beta',1)"
-#define __version__ "1.0.0"
+#define version_info "(0,9,1,'gamma',1)"
+#define __version__ "0.9.1"
 /*
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -159,7 +159,7 @@ _mysql_ResultObject_New(
 	int n, i;
 	MYSQL_FIELD *fields;
 	_mysql_ResultObject *r;
-	if (!(r = PyObject_New(_mysql_ResultObject, &_mysql_ResultObject_Type)))
+	if (!(r = PyObject_NEW(_mysql_ResultObject, &_mysql_ResultObject_Type)))
 		return NULL;
 	r->conn = (PyObject *) conn;
 	r->converter = NULL;
@@ -240,7 +240,7 @@ _mysql_connect(
 	     *read_default_group=NULL;
 	_mysql_ConnectionObject *c=NULL;
 	
-	c = PyObject_New(_mysql_ConnectionObject,
+	c = PyObject_NEW(_mysql_ConnectionObject,
 			 &_mysql_ConnectionObject_Type);
 	if (c == NULL) return NULL;
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|ssssisOiiisss:connect",
@@ -1162,7 +1162,7 @@ _mysql_ConnectionObject_dealloc(
 		Py_XDECREF(o);
 	}
 	Py_XDECREF(self->converter);
-	PyObject_Del(self);
+	PyMem_Free((char *) self);
 }
 
 static PyObject *
@@ -1233,7 +1233,7 @@ _mysql_ResultObject_dealloc(
 	mysql_free_result(self->result);
 	Py_DECREF(self->conn);
 	Py_DECREF(self->converter);
-	PyObject_Del(self);
+	PyMem_Free((char *) self);
 }
 
 static PyObject *
