@@ -162,6 +162,7 @@ class BaseCursor:
         self.description = None
         self.rowcount = -1
         self.arraysize = 100
+        self._query = ''
 
     def close(self):
         self.connection = None
@@ -181,6 +182,7 @@ class BaseCursor:
         args -- sequence or mapping, parameters to use with query.
         rows -- rows affected, if any"""
         self._check_open()
+        self._query = query
         from types import ListType, TupleType
         from string import rfind, join, split, atoi
         qc = self.connection.quote_conv
@@ -209,6 +211,7 @@ class BaseCursor:
         
         This method performs multiple-row inserts and similar queries."""
         self._check_open()
+        self._query = query
         from string import join
         m = insert_values.search(query)
         if not m: raise ProgrammingError, "can't find values"
@@ -294,6 +297,7 @@ class CursorStoreResultMixIn:
             
     def fetchone(self):
         """Fetches a single row from the cursor."""
+        if not self._query: raise ProgrammingError, "execute() first"
         if self._pos >= len(self._rows): return None
         result = self._rows[self._pos]
         self._pos = self._pos+1
@@ -303,6 +307,7 @@ class CursorStoreResultMixIn:
         """cursor.fetchmany(size=cursor.arraysize)
         
         size -- integer, maximum number of rows to fetch."""
+        if not self._query: raise ProgrammingError, "execute() first"
         end = self._pos + size or self.arraysize
         result = self._rows[self._pos:end]
         self._pos = end
@@ -310,6 +315,7 @@ class CursorStoreResultMixIn:
 
     def fetchall(self):
         """Fetchs all available rows from the cursor."""
+        if not self._query: raise ProgrammingError, "execute() first"
         result = self._pos and self._rows[self._pos:] or self._rows
         self._pos = len(self._rows)
         return result
@@ -347,21 +353,21 @@ class CursorUseResultMixIn:
     def fetchone(self):
         """Fetches a single row from the cursor."""
         self._check_open()
-        try:
-            return self._fetch_row()
-        except AttributeError:
-            raise ProgrammingError, "no query executed yet"
+        if not self._query: raise ProgrammingError, "execute() first"
+        return self._fetch_row()
              
     def fetchmany(self, size=None):
         """cursor.fetchmany(size=cursor.arraysize)
         
         size -- integer, maximum number of rows to fetch."""
         self._check_open()
+        if not self._query: raise ProgrammingError, "execute() first"
         return self._fetch_rows(size or self.arraysize)
          
     def fetchall(self):
         """Fetchs all available rows from the cursor."""
         self._check_open()
+        if not self._query: raise ProgrammingError, "execute() first"
         return self._fetch_all_rows()
 
 
