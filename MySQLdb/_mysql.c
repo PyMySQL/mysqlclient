@@ -823,10 +823,8 @@ _mysql_string_literal(
 	len = mysql_escape_string(out+1, in, size);
 #else
 	check_server_init(NULL);
-	if (self) {
-		check_connection(self);
+	if (self && self->open)
 		len = mysql_real_escape_string(&(self->connection), out+1, in, size);
-	}
 	else
 		len = mysql_escape_string(out+1, in, size);
 #endif
