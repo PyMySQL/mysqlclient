@@ -1,25 +1,16 @@
 """MySQLdb - A DB API v2.0 compatible interface to MySQL.
 
-This module is a thin wrapper around _mysql, which mostly implements the
-MySQL C API. All symbols from that module are imported.
+This module is a thin wrapper around _mysql, which mostly implements
+the MySQL C API. All symbols from that module are imported.
 
 connect() -- connects to server
 
-type_conv -- dictionary mapping SQL types (FIELD_TYPE) to Python functions,
-    which convert a string into an appropriate data type. Reasonable
-    defaults are set for most items, and you can add your own.
+See the API specification and the MySQL documentation for more info on
+other items.
 
-quote_conv -- dictionary mapping Python types to functions. Function takes
-    one argument of the indicated type and a mapping argument, and returns
-    an SQL-quoted string. The mapping argument is only used for recursive
-    quoting (i.e. when quoting sequences). Most simple converters
-    will not need this and can ignore it.
+For information on how MySQLdb handles type conversion, see the
+_mysql_const.converters module.
 
-See the API specification and the MySQL documentation for more info
-on other items.
-
-This module uses the mx.DateTime package for handling date/time types,
-if it is available. Otherwise, date types are returned as strings.
 """
 
 __author__ = "Andy Dustman <andy@dustman.net>"
@@ -28,14 +19,15 @@ __revision__ = """$Revision$"""[11:-2]
 
 import _mysql
 from _mysql import *
-from time import localtime
+if __version__ != getattr(_mysql, '__version__', None):
+    raise ImportError, "this is MySQLdb version %s, but _mysql is version %s" %\
+          (__version__, _mysql.__version__)
+
+from _mysql_const import converters
+from _mysql_const.converters import *
 import re, types
 from types import ListType, TupleType
 from string import rfind, join, split, atoi
-
-if __version__ != _mysql.__version__:
-    raise ImportError, "this is MySQLdb version %s, but _mysql is version %s" %\
-          (__version__, _mysql.__version__)
 
 threadsafety = 2
 apilevel = "2.0"
@@ -47,142 +39,6 @@ try:
     del threading
 except ImportError:
     _threading = None
-
-def Thing2Str(s, d):
-    """Convert something into a string via str()."""
-    return str(s)
-
-# Python 1.5.2 compatibility hack
-if str(0L)[-1]=='L':
-    def Long2Int(l, d):
-        """Convert a long integer to a string, chopping the L."""
-        return str(l)[:-1]
-else:
-    Long2Int = Thing2Str
-
-def None2NULL(o, d):
-    """Convert None to NULL."""
-    return NULL # duh
-
-def Thing2Literal(o, d):
-    """Convert something into a SQL string literal.
-    If using MySQL-3.23 or newer, string_literal() is a method
-    of the _mysql.MYSQL object, and this function will be overridden
-    with that method when the connection is created."""
-    return string_literal(o)
-
-def Instance2Str(o, d):
-    """Convert an Instance to a string representation.
-    If the __str__() method produces acceptable output,
-    then you don't need to add the class to quote_conv;
-    it will be handled by the default converter. If the
-    exact class is not found in d, it will use the first
-    class it can find for which o is an instance."""
-    if d.has_key(o.__class__):
-        return d[o.__class__](o, d)
-    cl = filter(lambda x,o=o: type(x)==types.ClassType and isinstance(o,x),
-                d.keys())
-    if not cl: return d[types.StringType](o,d)
-    d[o.__class__] = d[cl[0]]
-    return d[cl[0]](o, d)
-
-quote_conv = { types.IntType: Thing2Str,
-	       types.LongType: Long2Int,
-	       types.FloatType: Thing2Str,
-	       types.NoneType: None2NULL,
-               types.TupleType: escape_sequence,
-               types.ListType: escape_sequence,
-               types.DictType: escape_dict,
-               types.InstanceType: Instance2Str,
-               types.StringType: Thing2Literal } # default
-
-type_conv = { FIELD_TYPE.TINY: int,
-              FIELD_TYPE.SHORT: int,
-              FIELD_TYPE.LONG: long,
-              FIELD_TYPE.FLOAT: float,
-              FIELD_TYPE.DOUBLE: float,
-              FIELD_TYPE.LONGLONG: long,
-              FIELD_TYPE.INT24: int,
-              FIELD_TYPE.YEAR: int }
-
-try:
-    try:
-        # new packaging
-        from mx.DateTime import Date, Time, Timestamp, ISO, \
-            DateTimeType, DateTimeDeltaType
-    except ImportError:
-        # old packaging
-        from DateTime import Date, Time, Timestamp, ISO, \
-            DateTimeType, DateTimeDeltaType
-
-    def DateFromTicks(ticks):
-        """Convert UNIX ticks into a mx.DateTime.Date."""
-	return apply(Date, localtime(ticks)[:3])
-
-    def TimeFromTicks(ticks):
-        """Convert UNIX ticks into a mx.DateTime.Time."""
-	return apply(Time, localtime(ticks)[3:6])
-
-    def TimestampFromTicks(ticks):
-        """Convert UNIX ticks into a mx.DateTime.Timestamp."""
-	return apply(Timestamp, localtime(ticks)[:6])
-
-    def format_DATE(d):
-        """Format a DateTime object as an ISO date."""
-        return d.strftime("%Y-%m-%d")
-    
-    def format_TIME(d):
-        """Format a DateTime object as a time value."""
-        return d.strftime("%H:%M:%S")
-    
-    def format_TIMESTAMP(d):
-        """Format a DateTime object as an ISO timestamp."""
-        return d.strftime("%Y-%m-%d %H:%M:%S")
-
-    def mysql_timestamp_converter(s):
-        """Convert a MySQL TIMESTAMP to a mx.DateTime.Timestamp."""
-	parts = map(int, filter(None, (s[:4],s[4:6],s[6:8],
-				       s[8:10],s[10:12],s[12:14])))
-	return apply(Timestamp, tuple(parts))
-
-    type_conv[FIELD_TYPE.TIMESTAMP] = mysql_timestamp_converter
-    type_conv[FIELD_TYPE.DATETIME] = ISO.ParseDateTime
-    type_conv[FIELD_TYPE.TIME] = ISO.ParseTimeDelta
-    type_conv[FIELD_TYPE.DATE] = ISO.ParseDate
-
-    def DateTime2literal(d, c):
-        """Format a DateTime object as an ISO timestamp."""
-        return "'%s'" % format_TIMESTAMP(d)
-    
-    def DateTimeDelta2literal(d, c):
-        """Format a DateTimeDelta object as a time."""
-        return "'%s'" % format_TIME(d)
-
-    quote_conv[DateTimeType] = DateTime2literal
-    quote_conv[DateTimeDeltaType] = DateTimeDelta2literal
-
-except ImportError:
-    # no DateTime? We'll muddle through somehow.
-    from time import strftime
-
-    def DateFromTicks(ticks):
-        """Convert UNIX ticks to ISO date format."""
-	return strftime("%Y-%m-%d", localtime(ticks))
-
-    def TimeFromTicks(ticks):
-        """Convert UNIX ticks to time format."""
-	return strftime("%H:%M:%S", localtime(ticks))
-
-    def TimestampFromTicks(ticks):
-        """Convert UNIX ticks to ISO timestamp format."""
-	return strftime("%Y-%m-%d %H:%M:%S", localtime(ticks))
-
-    def format_DATE(d):
-        """Format a date as a date (does nothing, you don't have mx.DateTime)."""
-        return d
-    
-    format_TIME = format_TIMESTAMP = format_DATE
-
 
 class DBAPITypeObject:
 
@@ -557,6 +413,9 @@ class Connection:
     client_flags -- integer, flags to use or 0 (see MySQL docs)
     conv -- dictionary, maps MySQL FIELD_TYPE.* to Python functions which
             convert a string to the appropriate Python type
+    quote_conv -- dictionary, maps Python types or classes to Python
+            functions which convert a value of that type (or instance
+            of that class) into an SQL literal value
     connect_time -- number of seconds to wait before the connection
             attempt fails.
     compress -- if set, compression is enabled
@@ -565,13 +424,9 @@ class Connection:
     read_default_group -- see the MySQL documentation for mysql_options()
     
     Returns a Connection object.
-    
-    Useful attributes and methods:
-    
-    db -- _mysql.MYSQL connection object. Good for accessing some of the
-        MySQL-specific calls.
-    close -- close the connection.
-    cursor -- create a cursor (emulated) for executing queries.
+
+    There are a number of undocumented, non-standard methods. See the
+    documentation for the MySQL C API for some hints on what they do.
     """
     
     def __init__(self, **kwargs):
@@ -657,4 +512,8 @@ class Connection:
         return apply(self._try_feature, ('change_user',)+args, kwargs)
 
 
-Connect = connect = Connection
+def Connect(*args, **kwargs):
+    """Factory function for Connection."""
+    return apply(Connection, args, kwargs)
+
+connect = Connect
