@@ -1,0 +1,48 @@
+0.9.1c1
+
+  * Added ER_PARSE_ERROR as a ProgrammingError, because
+    ER_SYNTAX_ERROR doesn't get the job done.
+
+  * In Python < 2.0.1, PyArgs_ParseTupleAndKeywords() returns a new
+    reference when the O format is used. In 2.0.1 and later, it
+    returns a borrowed reference. Since it's not actually documented
+    either way that I can tell, I must assume this is some sort of
+    bugfix. However, it does mean that you need to test against the
+    Python version, and Py_INCREF() if it is 2.0.1 or later. If you
+    Py_INCREF() all the time, you get a memory leak in earlier
+    version; and if you never Py_INCREF(), it works fine in earlier
+    versions but crashes later versions. If you're an end-user, don't
+    worry about this...
+
+  * In Python 2.2, the internal _PyTuple_Resize() dropped the (unused)
+    third argument, so we have to test against the Python version here
+    as well to maintain backwards compatibility.
+
+  * Some deprecated MySQL API functions were removed.
+
+  * A literal() method was added to the database connection. It takes
+    a single argument and converts it into an SQL literal. If the
+    argument is a non-string sequence, the sequence items are
+    converted to SQL literals, and the sequence of converted items is
+    returned as a list. This was previously done internally by Cursor
+    objects. You don't normally need to use it, but it might be useful
+    for debugging.
+
+  * A number of documentation updates.
+
+
+0.9.0
+
+  Too many changes from 0.3.5 to go into much detail.
+
+  * MySQLdb was turned into a true Python package.
+
+  * _mysql didn't change all that much. Constants were moved out into
+    the MySQLdb package structure. Exceptions were moved to
+    _mysql_exceptions.py, but these are imported into _mysql. This
+    makes the binary (and source) significantly smaller.
+
+  * Loads of docstrings were added to take advantage of pydoc.
+
+  * Operationally, there's not much difference.
+
