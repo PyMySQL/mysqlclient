@@ -93,7 +93,9 @@ class Connection(ConnectionBase):
         from converters import conversions
         import types
         kwargs2 = kwargs.copy()
-        if not kwargs.has_key('conv'):
+        if kwargs.has_key('conv'):
+            kwargs2['conv'] = conv = kwargs['conv']
+        else:
             kwargs2['conv'] = conv = conversions.copy()
         if kwargs.has_key('cursorclass'):
             self.cursorclass = kwargs['cursorclass']
