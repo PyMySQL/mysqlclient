@@ -1,1 +1,1 @@
-ZMySQLDA 2.0.7b1
+ZMySQLDA 2.0.7b2

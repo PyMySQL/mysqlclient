@@ -185,7 +185,7 @@ class TableBrowser(Browser, Acquisition.Implicit):
         for d in self._c.columns(tname):
             b=ColumnBrowser()
             b._d=d
-            b.icon=field_icons.get(d['Type'], 'text')
+            b.icon=d['Icon']
             b.TABLE_NAME=tname
             r.append(b)
         return r
@@ -240,12 +240,7 @@ class ColumnBrowser(Browser):
                 (self.TABLE_NAME, self._d['Name']))
     def tpId(self): return self._d['Name']
     def tpURL(self): return "Column/%s" % self._d['Name']
-    def Description(self):
-        d=self._d
-        if d['Scale']:
-            return " %(Type)s(%(Precision)s,%(Scale)s) %(Nullable)s" % d
-        else:
-            return " %(Type)s(%(Precision)s) %(Nullable)s" % d
+    def Description(self): return " %s" % self._d['Description']
 
 table_icons={
     'TABLE': 'table',
@@ -253,12 +248,3 @@ table_icons={
     'SYSTEM_TABLE': 'stable',
     }
 
-field_icons={
-            "CHAR": "int", "DATE": "date",
-            "DATETIME": "date", "DECIMAL": "float",
-            "DOUBLE": "float", "FLOAT": "float",
-            "MEDIUMINT": "int", "INT": "int",
-            "LONGINT": "int", "SMALLINT": "int",
-            "TIMESTAMP": "date", "TINYINT": "int",
-            "YEAR": "int"
-            }

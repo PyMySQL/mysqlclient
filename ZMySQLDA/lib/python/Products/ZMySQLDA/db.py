@@ -139,19 +139,6 @@ class DB(TM):
         FIELD_TYPE.TINY: "i", FIELD_TYPE.YEAR: "i",
         }
 
-    types={
-        FIELD_TYPE.CHAR: "CHAR", FIELD_TYPE.DATE: "DATE",
-        FIELD_TYPE.DATETIME: "DATETIME", FIELD_TYPE.DECIMAL: "DECIMAL",
-        FIELD_TYPE.DOUBLE: "DOUBLE", FIELD_TYPE.FLOAT: "FLOAT",
-	FIELD_TYPE.INT24: "MEDIUMINT", FIELD_TYPE.VAR_STRING: "VARCHAR",
-        FIELD_TYPE.LONG: "INT", FIELD_TYPE.LONGLONG: "LONGINT",
-        FIELD_TYPE.SHORT: "SMALLINT", FIELD_TYPE.TIMESTAMP: "TIMESTAMP",
-        FIELD_TYPE.TINY: "TINYINT", FIELD_TYPE.YEAR: "YEAR",
-	FIELD_TYPE.ENUM: "ENUM", FIELD_TYPE.SET: "SET",
-	FIELD_TYPE.TINY_BLOB: "TINYBLOB", FIELD_TYPE.MEDIUM_BLOB: "MEDIUMBLOB",
-	FIELD_TYPE.BLOB: "BLOB", FIELD_TYPE.STRING: "STRING",
-        }
-
     conv=conversions.copy()
     conv[FIELD_TYPE.LONG] = int_or_long
     conv[FIELD_TYPE.DATETIME] = DateTime_or_None
@@ -201,7 +188,8 @@ class DB(TM):
                _care=('TABLE', 'VIEW')):
         r=[]
         a=r.append
-	result = self.db.list_tables()
+	self.db.query("SHOW TABLES")
+	result = self.db.store_result()
 	while 1:
 	    row = result.fetch_row(1)
 	    if not row: break
@@ -209,22 +197,45 @@ class DB(TM):
         return r
 
     def columns(self, table_name):
+        from string import join
         try:
-            self.db.query('SELECT * FROM %s LIMIT 0' % table_name)
+            # Field, Type, Null, Key, Default, Extra
+            self.db.query('SHOW COLUMNS FROM %s' % table_name)
             c=self.db.store_result()
         except:
             return ()
-        desc=c.describe()
+        key_types = {"PRI": "PRIMARY KEY",
+                     "MUL": "INDEX",
+                     "UNI": "UNIQUE",
+                    }
+        field_icons = "bin", "date", "datetime", "float", "int", "text", "time"
+        icon_xlate = {"varchar": "text", "char": "text", "blob": "bin",
+                      "enum": "what", "double": "float", "numeric": "float",
+                      "mediumblob": "bin", "longblob": "bin",
+                      "tinytext": "text", "mediumtext": "text",
+                      "longtext": "text", "timestamp": "datetime",
+                      "decimal": "float", "smallint": "int",
+                      "mediumint": "int", "bigint": "int",
+                     }
         r=[]
         a=r.append
-        for name, type, width, ds, p, scale, null_ok in desc:
-            a({ 'Name': name,
-                'Type': self.types.get(type, '?'),
-                'Precision': p,
-                'Scale': scale,
-                'Nullable': null_ok and ' ' or "NOT NULL",
-                })
-
+        for Field, Type, Null, Key, Default, Extra in c.fetch_row(0):
+            field_default = Default and "DEFAULT %s"%Default or ''
+            if '(' in Type:
+                short_type, junk = split(Type,'(',1)
+            else:
+                short_type = Type
+            if short_type in field_icons:
+                Icon = short_type
+            else:
+                Icon = icon_xlate.get(short_type, "what")
+            a({ 'Name': Field,
+                'Type': short_type,
+                'Icon': Icon,
+                'Description': join([Type, field_default, Extra or '',
+                                    key_types.get(Key, Key or '')]),
+                'Nullable': (Null == 'YES') and ' ' or "NOT NULL"
+              })
         return r
 
     def query(self,query_string, max_rows=1000):
