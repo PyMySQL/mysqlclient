@@ -1,34 +1,41 @@
 Prerequisites:
 
 Python 1.5.2 or higher
--- http://www.pythonlabs.com/products/python2.0/download_python2.0.html
--- http://www.python.org/1.6/
--- http://www.python.org/1.5/
+-- http://www.python.org/
 -- Versions lower than 1.5.2 WON'T WORK.
+-- All versions from 1.5.2 should work. 1.6.x versions have not been
+   tested. 2.0.1, 2.1.1, and 2.2a3 have all been tested.
 -- If you have Red Hat Linux or a similar packaging system, make sure
    you have the Python development headers and libraries (python-devel).
+   For Python-2.x versions, this is python2-devel.
 
-Distutils 1.0 or higher
--- comes with Python 1.6 and 2.0
+Distutils 1.0.2 or higher
+-- comes starting with Python 1.6
+-- 1.0.2 is included in Python version 2.1 and newer
 -- http://www.python.org/sigs/distutils-sig/download.html
 
 MySQL 3.22.19 or higher
 -- http://www.mysql.com/downloads/
 -- Versions lower than 3.22 definitely WON'T WORK.
 -- Versions lower than 3.22.19 might not work.
--- The current (recommended) 3.22 release is 3.22.32.
--- MySQL-3.23 is beta at present but supported.
+-- The current 3.22 release is 3.22.32.
+-- MySQL-3.23 is supported. Current release: 3.23.42
+-- MySQL-3.22 is slightly deprecated in favor of 3.23.
 -- If you have Red Hat Linux or a similar packaging system, make sure
-   you have the MySQL development headers and libraries (MySQL-devel).
+   you have the MySQL development headers and libraries. If you use the
+   mysql.com packages, this is MySQL-devel. If you use the Red Hat packages,
+   this is mysql-devel. I prefer the mysql.com packages.
 
 First thing to do is edit setup.py. There are some variables towards the
 beginning that tell it where your MySQL include files and libraries are.
 The values are right for MySQL's standard Red Hat Linux (6.2) RPMs. If
 you have another platform, you'll have to figure out the right values
-yourself.
+yourself. You should almost never have to change this. If you have an old
+version of distutils (pre-1.0.2), upgrade, or remove the parameters that
+are complained about. 
 
-Note that recent binary distributions include two sets of client
-libraries: mysqlclient and mysqlclient_r. The latter are the
+Note that recent binary distributions from mysql.com include two sets
+of client libraries: mysqlclient and mysqlclient_r. The latter are the
 "thread-safe" libraries, so use those if you can, and if threading is
 important to you.
 
@@ -36,7 +43,9 @@ If you have the dynamic client libraries (on Linux, .so vs. .a), those
 will be used by default. If they are not on your standard loader path,
 you will have to set or adjust the LD_LIBRARY_PATH environment variable
 (on Linux) or whatever your platform requires. Otherwise, you can adjust
-setup.py to link against the static library.
+setup.py to link against the static library. If you are using standard
+RPM packaging, you shouldn't have to mess with this. If you compiled MySQL
+yourself, you might.
 
 Finally, putting it together:
 
@@ -48,10 +57,11 @@ with Zope's python executable. Otherwise, Zope (ZMySQLDA) will not
 be able to find _mysql.
 
 If you prefer RPMs, you can use the bdist_rpm command with setup.py.
+This only builds the RPM; it does not install it.
 
 Thanks go to Brian Fordham for cooking up an early version of setup.py.
 
 License: GPL or the original license based on Python 1.5.2's license.
 
 Andy Dustman <andy@dustman.net>
-2000-11-30
+2001-09-20
