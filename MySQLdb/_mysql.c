@@ -522,7 +522,7 @@ _mysql_escape_sequence(
                               "argument 2 must be a mapping");
               return NULL;
         }
-	if (!(n = PyObject_Length(o))) goto error;
+	if ((n = PyObject_Length(o)) == -1) goto error;
 	if (!(r = PyTuple_New(n))) goto error;
 	for (i=0; i<n; i++) {
 		item = PySequence_GetItem(o, i);
