@@ -261,7 +261,7 @@ _mysql_connect(
 		return NULL;
 	}
 
-	c->open = 0;
+	c->open = 1;
 	Py_BEGIN_ALLOW_THREADS ;
 	conn = mysql_init(&(c->connection));
 	if (connect_timeout) {
@@ -287,10 +287,10 @@ _mysql_connect(
 
 	if (!conn) {
 		_mysql_Exception(c);
+		c->open = 0;
 		Py_DECREF(c);
 		return NULL;
 	}
-	c->open = 1;
 	return (PyObject *) c;
 }
 
