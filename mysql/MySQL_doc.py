@@ -355,6 +355,17 @@ def main():
 		"DateTime objects includes fractional seconds, which\n" \
 		"MySQL (up to 3.22.20a, at least), considers illegal\n" \
 		"input, and so zeros the field.")),
+           BDT("fetchone()"),
+           BDT("fetchmany([n])"),
+           BDT("fetchall()"),
+           BDT("fetchoneDict()"),
+           BDT("fetchmanyDict([n])"),
+           BDT("fetchallDict()"),
+           DD(P("These methods work as described in the API.\n" \
+                "The ", TT("fetchXXXDict"), " variants are non-standard\n" \
+                "extensions to provide some backwards-compatibility\n" \
+                "with the old MySQLmodule. As you might expect, they\n" \
+                "return dictionaries.\n")),
 	   BDT("format_DATE(d)"),
 	   BDT("format_TIME(d)"),
 	   BDT("format_TIMESTAMP(d)"),
