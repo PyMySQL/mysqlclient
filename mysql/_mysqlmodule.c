@@ -1422,12 +1422,12 @@ PyTypeObject _mysql_ResultObject_Type = {
 
 static PyMethodDef
 _mysql_methods[] = {
-	{ "connect", _mysql_connect, METH_VARARGS | METH_KEYWORDS },
-        { "debug", _mysql_debug, METH_VARARGS },
-	{ "escape_row", _mysql_escape_row, METH_VARARGS },
-	{ "escape_string", _mysql_escape_string, METH_VARARGS },
-	{ "string_literal", _mysql_string_literal, METH_VARARGS },
-	{ "get_client_info", _mysql_get_client_info },
+	{ "connect", (PyCFunction)_mysql_connect, METH_VARARGS | METH_KEYWORDS },
+        { "debug", (PyCFunction)_mysql_debug, METH_VARARGS },
+	{ "escape_row", (PyCFunction)_mysql_escape_row, METH_VARARGS },
+	{ "escape_string", (PyCFunction)_mysql_escape_string, METH_VARARGS },
+	{ "string_literal", (PyCFunction)_mysql_string_literal, METH_VARARGS },
+	{ "get_client_info", (PyCFunction)_mysql_get_client_info },
 	{NULL, NULL} /* sentinel */
 };
 
