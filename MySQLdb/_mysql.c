@@ -740,6 +740,37 @@ _mysql_ConnectionObject_rollback(
 	return Py_None;
 }		
 
+static char _mysql_ConnectionObject_next_result__doc__[] =
+"If more query results exist, next_result() reads the next query\n\
+results and returns the status back to application.\n\
+\n\
+After calling next_result() the state of the connection is as if\n\
+you had called query() for the next query. This means that you can\n\
+now call store_result(), warning_count(), affected_rows()\n\
+, and so forth. \n\
+\n\
+Returns 0 if there are more results; -1 if there are no more results\n\
+\n\
+Non-standard.\n\
+";
+static PyObject *
+_mysql_ConnectionObject_next_result(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
+{
+	int err;
+	if (!PyArg_ParseTuple(args, "")) return NULL;
+	Py_BEGIN_ALLOW_THREADS
+#if MYSQL_VERSION_ID >= 40100
+	err = mysql_next_result(&(self->connection));
+#else
+	err = -1
+#endif
+	Py_END_ALLOW_THREADS
+	if (err > 0) return _mysql_Exception(self);
+	return PyInt_FromLong(err);
+}		
+
 static char _mysql_ConnectionObject_errno__doc__[] =
 "Returns the error code for the most recently invoked API function\n\
 that can succeed or fail. A return value of zero means that no error\n\
@@ -796,7 +827,7 @@ _mysql_escape_string(
 	len = mysql_escape_string(out, in, size);
 #else
 	check_server_init(NULL);
-	if (self) {
+	if (self && self->open) {
 		check_connection(self);
 		len = mysql_real_escape_string(&(self->connection), out, in, size);
 	}
@@ -1862,6 +1893,12 @@ static PyMethodDef _mysql_ConnectionObject_methods[] = {
 		(PyCFunction)_mysql_ConnectionObject_rollback,
 		METH_VARARGS,
 		_mysql_ConnectionObject_rollback__doc__
+	},
+	{
+		"next_result",
+		(PyCFunction)_mysql_ConnectionObject_next_result,
+		METH_VARARGS,
+		_mysql_ConnectionObject_next_result__doc__
 	},
 #if MYSQL_VERSION_ID >= 32303
 	{
