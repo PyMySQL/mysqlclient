@@ -180,6 +180,15 @@ class Connection(_mysql.connection):
         """
         return self.escape(o, self.converter)
 
+    def begin(self):
+        """Explicitly begin a connection. Non-standard.
+        DEPRECATED: Will be removed in 1.3.
+        Use an SQL BEGIN statement instead."""
+        from warnings import warn
+        warn("begin() is non-standard and will be removed in 1.3",
+             DeprecationWarning)
+        self.query("BEGIN")
+        
     if not hasattr(_mysql.connection, 'warning_count'):
 
         def warning_count(self):
