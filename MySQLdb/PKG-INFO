@@ -1,6 +1,6 @@
 Metadata-Version: 1.0
 Name: MySQL-python
-Version: 0.9.0a3
+Version: 0.9.0
 Summary: An interface to MySQL
 Home-page: http://dustman.net/andy/python/MySQLdb
 Author: Andy Dustman
