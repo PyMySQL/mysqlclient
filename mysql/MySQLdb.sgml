@@ -237,7 +237,7 @@ attributes are defined within MySQLdb.
       <tag>cursorclass</tag> cursor class that <tt/cursor()/ uses,
             unless overridden. Default: <tt/MySQLdb.Cursor/.
 
-<tag>unix_pipe</tag>
+<tag>unix_socket</tag>
 	location of UNIX socket. Default: use TCP.
 
 <tag>port</tag>
