@@ -61,13 +61,12 @@ class Connection(_mysql.connection):
         read_default_file -- file from which default client values are read
         read_default_group -- configuration group to use from the default file
         cursorclass -- class object, used to create cursors (keyword only)
-        unicode -- If set to a string, character columns are returned as
-                unicode objects with this encoding. If set to None, the
-                default encoding is used. If not set at all, character
-                columns are returned as normal strings.
-        unicode_errors -- If set to a string, this is used as the errors
-                parameter to the unicode function; by default it is
-                'strict'. See documentation for unicode for more details.
+        use_unicode -- If True, text-like columns are returned as
+                unicode objects using the connection's character set.
+                Otherwise, text-like columns are returned as strings.
+                columns are returned as normal strings. Unicode objects
+                will always be encoded to the connection's character set
+                regardless of this setting.
         client_flag -- integer, flags to use or 0
                (see MySQL docs or constants/CLIENTS.py)
         ssl -- dictionary or mapping, contains SSL connection parameters; see
@@ -92,22 +91,19 @@ class Connection(_mysql.connection):
             del kwargs2['cursorclass']
         else:
             self.cursorclass = self.default_cursor
-        self.charset = None
-        if kwargs.has_key('unicode'):
-            charset = kwargs['unicode']
-            errors = kwargs.get('unicode_errors', 'strict')
-            del kwargs2['unicode']
-            if kwargs.has_key('unicode_errors'):
-                del kwargs2['unicode_errors']
-            if charset:
-                self.charset = charset
-                def u(s, c=charset, e=errors): return unicode(s, c, e)
-            else:
-                u = unicode
-            conv[FIELD_TYPE.STRING] = u
-            conv[FIELD_TYPE.VAR_STRING] = u
-            conv[FIELD_TYPE.BLOB].insert(-1, (None, u))
+        use_unicode = kwargs.get('use_unicode', 0)
+        if kwargs.has_key('use_unicode'):
+            del kwargs2['use_unicode']
+                
         super(Connection, self).__init__(*args, **kwargs2)
+
+        self.charset = self.character_set_name().split('_')[0]
+
+        if use_unicode:
+            conv[FIELD_TYPE.STRING] = unicode
+            conv[FIELD_TYPE.VAR_STRING] = unicode
+            conv[FIELD_TYPE.BLOB].insert(-1, (None, unicode))
+            
         self.converter[types.StringType] = self.string_literal
         self.converter[types.UnicodeType] = self.unicode_literal
         self._transactional = self.server_capabilities & CLIENT.TRANSACTIONS
@@ -116,12 +112,6 @@ class Connection(_mysql.connection):
             self.autocommit(0)
         self.messages = []
         
-    def __del__(self):
-        try:
-            self.close()
-        except:
-            pass
-
     def cursor(self, cursorclass=None):
         """
 

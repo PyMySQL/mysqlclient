@@ -18,7 +18,7 @@ __revision__ = """$Revision$"""[11:-2]
 version_info = (
     1,
     1,
-    8,
+    9,
     "final",
     1)
 if version_info[3] == "final": __version__ = "%d.%d.%d" % version_info[:3]
@@ -56,7 +56,9 @@ TIMESTAMP = DBAPISet(FIELD_TYPE.TIMESTAMP, FIELD_TYPE.DATETIME)
 DATETIME  = TIMESTAMP
 ROWID     = DBAPISet()
 
-def Binary(x): return str(x)
+def Binary(x):
+    from array import array
+    return array('c', x)
 
 def Connect(*args, **kwargs):
     """Factory function for connections.Connection."""

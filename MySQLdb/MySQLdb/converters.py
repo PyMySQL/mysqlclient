@@ -42,8 +42,10 @@ def Thing2Str(s, d):
     return str(s)
 
 def Unicode2Str(s, d):
-    """Convert a unicode object to a string using latin1 encoding."""
-    return s.encode('latin')
+    """Convert a unicode object to a string using the default encoding.
+    This is only used as a placeholder for the real function, which
+    is connection-dependent."""
+    return s.encode()
 
 Long2Int = Thing2Str
 

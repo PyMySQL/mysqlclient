@@ -73,8 +73,11 @@ class BaseCursor(object):
         if nr == -1:
             return None
         self._do_get_result()
+        self._post_get_result()
         self._warning_check()
         return 1
+
+    def _post_get_result(self): pass
     
     def _do_get_result(self):
         db = self.connection
@@ -225,10 +228,13 @@ class CursorStoreResultMixIn(object):
 
     def _query(self, q):
         rowcount = self._do_query(q)
+        self._post_get_result()
+        return rowcount
+
+    def _post_get_result(self):
         self._rows = self._fetch_row(0)
         self._result = None
-        return rowcount
-            
+
     def fetchone(self):
         """Fetches a single row from the cursor. None indicates that
         no more rows are available."""
