@@ -1968,11 +1968,17 @@ PyTypeObject _mysql_ConnectionObject_Type = {
 	_mysql_connect__doc__, /* (char *) tp_doc Documentation string */
 #if PY_VERSION_HEX >= 0x02000000	
 	/* Assigned meaning in release 2.0 */
+#if PY_VERSION_HEX >= 0x02020000
 	/* call function for all accessible objects */
 	(traverseproc) _mysql_ConnectionObject_traverse, /* tp_traverse */
 	
 	/* delete references to contained objects */
 	(inquiry) _mysql_ConnectionObject_clear, /* tp_clear */
+#else
+	/* not supporting pre-2.2 GC */
+	0,
+	0,
+#endif
 #if PY_VERSION_HEX >= 0x02010000	
 	/* Assigned meaning in release 2.1 */
 	/* rich comparisons */
@@ -2051,11 +2057,17 @@ PyTypeObject _mysql_ResultObject_Type = {
 	_mysql_ResultObject__doc__, /* (char *) tp_doc Documentation string */
 #if PY_VERSION_HEX >= 0x02000000	
 	/* Assigned meaning in release 2.0 */
+#if PY_VERSION_HEX >= 0x02020000
 	/* call function for all accessible objects */
 	(traverseproc) _mysql_ResultObject_traverse, /* tp_traverse */
 	
 	/* delete references to contained objects */
 	(inquiry) _mysql_ResultObject_clear, /* tp_clear */
+#else
+	/* not supporting pre-2.2 GC */
+	0,
+	0,
+#endif
 #if PY_VERSION_HEX >= 0x02010000	
 	/* Assigned meaning in release 2.1 */
 	/* rich comparisons */
