@@ -32,8 +32,9 @@ try:
 except ImportError:
     _threading = None
 
-def Long2Int(l): return str(l)[:-1] # drop the trailing L
+def Long2Int(l): s = str(l); return s[-1] == 'L' and s[:-1] or s
 def None2NULL(d): return "NULL"
+def Thing2Literal(o): return string_literal(str(o))
 
 # MySQL-3.23.xx now has a new escape_string function that uses
 # the connection to determine what character set is in use and
@@ -139,12 +140,6 @@ ROWID     = _Set()
 def Binary(x): return str(x)
 
 insert_values = re.compile(r'values\s(\(.+\))', re.IGNORECASE)
-
-def escape_dict(d, qc):
-    d2 = {}
-    for k,v in d.items():
-        d2[k] = qc.get(type(v), String2Literal)(v)
-    return d2
 
 def _fetchall(result, *args):
     rows = r = list(apply(result.fetch_row, args))

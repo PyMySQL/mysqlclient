@@ -586,15 +586,18 @@ _mysql_string_literal(
 	_mysql_ConnectionObject *self,
 	PyObject *args)
 {
-	PyObject *str;
+	PyObject *str, *s, *o;
 	char *in, *out;
 	int len, size;
-	if (!PyArg_ParseTuple(args, "s#:string_literal", &in, &size)) return NULL;
+	if (!PyArg_ParseTuple(args, "O:string_literal", &o)) return NULL;
+	s = PyObject_Str(o);
+	in = PyString_AsString(s);
+	size = PyString_GET_SIZE(s);
 	str = PyString_FromStringAndSize((char *) NULL, size*2+3);
 	if (!str) return PyErr_NoMemory();
 	out = PyString_AS_STRING(str);
 #if MYSQL_VERSION_ID < 32321
-	len = mysql_escape_string(out+1, in, size);
+	len = mysql_escape_string(out+1, s, size);
 #else
 	if (self)
 		len = mysql_real_escape_string(&(self->connection), out+1, in, size);
@@ -603,18 +606,47 @@ _mysql_string_literal(
 #endif
 	*out = *(out+len+1) = '\'';
 	if (_PyString_Resize(&str, len+2) < 0) return NULL;
+	Py_DECREF(s);
 	return (str);
 }
 
 static PyObject *_mysql_NULL;
 
 static PyObject *
+_escape_item(
+	PyObject *item,
+	PyObject *d)
+{
+	PyObject *quoted, *itemtype, *itemconv;
+	int i, n;
+	if (!(itemtype = PyObject_Type(item)))
+		goto error;
+	itemconv = PyObject_GetItem(d, itemtype);
+	Py_DECREF(itemtype);
+	if (!itemconv) {
+		PyErr_Clear();
+		itemconv = PyObject_GetItem(d,
+				 (PyObject *) &PyString_Type);
+	}
+	if (!itemconv) {
+		PyErr_SetString(PyExc_TypeError,
+				"no default type converter defined");
+		goto error;
+	}
+	quoted = PyObject_CallFunction(itemconv, "O", item);
+	Py_DECREF(itemconv);
+	if (!quoted) goto error;
+	return quoted;
+  error:
+	return NULL;
+}
+
+static PyObject *
 _mysql_escape_row(
 	PyObject *self,
 	PyObject *args)
 {
-	PyObject *o=NULL, *d=NULL, *r=NULL, *item, *quoted, 
-		*itemtype, *itemconv;
+	PyObject *o=NULL, *d=NULL, *r=NULL, *item, *quoted; 
 	int i, n;
 	if (!PyArg_ParseTuple(args, "O!O!:escape_row", &PyTuple_Type, &o,
 				                       &PyDict_Type, &d))
@@ -623,24 +655,32 @@ _mysql_escape_row(
 	if (!(r = PyTuple_New(n))) goto error;
 	for (i=0; i<n; i++) {
 		item = PyTuple_GET_ITEM(o, i);
-		if (!(itemtype = PyObject_Type(item)))
-			goto error;
-		itemconv = PyObject_GetItem(d, itemtype);
-		Py_DECREF(itemtype);
-		if (!itemconv) {
-			PyErr_Clear();
-			itemconv = PyObject_GetItem(d,
-					 (PyObject *) &PyString_Type);
-		}
-		if (!itemconv) {
-			PyErr_SetString(PyExc_TypeError,
-					"no default type converter defined");
-			goto error;
-		}
-		quoted = PyObject_CallFunction(itemconv, "O", item);
-		Py_DECREF(itemconv);
+		quoted = _escape_item(item, d);
 		if (!quoted) goto error;
 		PyTuple_SET_ITEM(r, i, quoted);
+	}
+	return r;
+  error:
+	Py_XDECREF(r);
+	return NULL;
+}
+
+static PyObject *
+_mysql_escape_dict(
+	PyObject *self,
+	PyObject *args)
+{
+	PyObject *o=NULL, *d=NULL, *r=NULL, *item, *quoted, *pkey; 
+	int ppos = 0;
+	int i, n;
+	if (!PyArg_ParseTuple(args, "O!O!:escape_dict", &PyDict_Type, &o,
+				                       &PyDict_Type, &d))
+		goto error;
+	if (!(r = PyDict_New())) goto error;
+	while (PyDict_Next(o, &ppos, &pkey, &item)) {
+		quoted = _escape_item(item, d);
+		if (!quoted) goto error;
+		if (PyDict_SetItem(r, pkey, quoted)==-1) goto error;
 	}
 	return r;
   error:
@@ -1478,6 +1518,7 @@ _mysql_methods[] = {
 	{ "connect", (PyCFunction)_mysql_connect, METH_VARARGS | METH_KEYWORDS },
         { "debug", (PyCFunction)_mysql_debug, METH_VARARGS },
 	{ "escape_row", (PyCFunction)_mysql_escape_row, METH_VARARGS },
+	{ "escape_dict", (PyCFunction)_mysql_escape_dict, METH_VARARGS },
 	{ "escape_string", (PyCFunction)_mysql_escape_string, METH_VARARGS },
 	{ "string_literal", (PyCFunction)_mysql_string_literal, METH_VARARGS },
 	{ "get_client_info", (PyCFunction)_mysql_get_client_info },
