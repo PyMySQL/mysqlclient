@@ -53,7 +53,13 @@ class BaseCursor:
         if not self._executed:
             self.errorhandler(self.connection, self,
                               ProgrammingError, "execute() first")
-        
+
+    def nextset(self):
+        """Advance to the next result set. Returns None if there are
+        no more result sets. Note that MySQL does not support multiple
+        result sets at this time."""
+        return None
+    
     def setinputsizes(self, *args):
         """Does nothing, required by DB API."""
       
@@ -64,7 +70,7 @@ class BaseCursor:
         if not self.connection:
             self.errorhandler(self.connection, self,
                               ProgrammingError, "cursor closed")
-        return self.connection._db
+        return self.connection
     
     def execute(self, query, args=None):
 
@@ -105,6 +111,7 @@ class BaseCursor:
         This method performs multiple-row inserts and similar queries."""
 
         from string import join
+        if not args: return
         m = insert_values.search(query)
         if not m:
             r = 0
@@ -166,9 +173,9 @@ class BaseCursor:
         return self._result.fetch_row(size, self._fetch_type)
 
     def next(self):
-        """Fetches the next row. If using Python 2.1 or newer,
-        StopIteration is raised when there are no more rows.
-        Otherwise, IndexError is raised."""
+        """Fetches the next row. StopIteration is raised when there
+        are no more rows, if Python has iterator support. Otherwise,
+        IndexError is raised."""
         result = self.fetchone()
         if result is None:
             raise _EndOfData
