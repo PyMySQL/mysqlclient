@@ -1,8 +1,0 @@
-prune CVS
-recursive-include doc *
-recursive-include examples *
-include README.MySQLmodule
-include license.py
-include MANIFEST.in
-include MANIFEST
-include GPL
