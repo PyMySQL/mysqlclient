@@ -1144,7 +1144,7 @@ _mysql_ConnectionObject_info(
 	_mysql_ConnectionObject *self,
 	PyObject *args)
 {
-	char *s;
+	const char *s;
 	if (!PyArg_NoArgs(args)) return NULL;
 	check_connection(self);
 	s = mysql_info(&(self->connection));
@@ -1372,7 +1372,7 @@ _mysql_ConnectionObject_stat(
 	_mysql_ConnectionObject *self,
 	PyObject *args)
 {
-	char *s;
+	const char *s;
 	if (!PyArg_NoArgs(args)) return NULL;
 	check_connection(self);
 	Py_BEGIN_ALLOW_THREADS
