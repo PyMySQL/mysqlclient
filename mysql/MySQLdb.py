@@ -61,10 +61,14 @@ type_conv = { FIELD_TYPE.TINY: int,
               FIELD_TYPE.YEAR: int }
 
 try:
-    try: from mx import DateTime # new packaging
-    except ImportError: import DateTime # old packaging
-    from DateTime import Date, Time, Timestamp, ISO, \
-         DateTimeType, DateTimeDeltaType
+    try:
+      from mx import DateTime # new packaging
+      from mx.DateTime import Date, Time, Timestamp, ISO, \
+           DateTimeType, DateTimeDeltaType
+    except ImportError:
+      import DateTime # old packaging
+      from DateTime import Date, Time, Timestamp, ISO, \
+           DateTimeType, DateTimeDeltaType
 
     def DateFromTicks(ticks):
 	return apply(Date, localtime(ticks)[:3])
