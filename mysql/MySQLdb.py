@@ -227,13 +227,13 @@ class BaseCursor:
         self.result = self._get_result()
      	self.rowcount = db.affected_rows()
         self.description = self.result and self.result.describe() or None
-        self.__insert_id = db.insert_id()
+        self._insert_id = db.insert_id()
         return self.rowcount
 
     _query = _do_query
 
     def insert_id(self):
-        try: return self.__insert_id
+        try: return self._insert_id
         except AttributeError: raise ProgrammingError, "execute() first"
     
     def nextset(self): return None
@@ -260,42 +260,42 @@ class CursorStoreResultMixIn:
         self.connection._acquire()
         try:
             BaseCursor._do_query(self, q)
-            self.__rows = self.result and self._fetch_all_rows() or ()
-            self.__pos = 0
+            self._rows = self.result and self._fetch_all_rows() or ()
+            self._pos = 0
             del self.result
         finally:
             self.connection._release()
             
     def fetchone(self):
         """Fetches a single row from the cursor."""
-        result = self.__rows[self.__pos]
-        self.__pos = self.__pos+1
+        result = self._rows[self._pos]
+        self._pos = self._pos+1
         return result
 
     def fetchmany(self, size=None):
         """cursor.fetchmany(size=cursor.arraysize)
         
         size -- integer, maximum number of rows to fetch."""
-        end = self.__pos + size or self.arraysize
-        result = self.__rows[self.__pos:end]
-        self.__pos = end
+        end = self._pos + size or self.arraysize
+        result = self._rows[self._pos:end]
+        self._pos = end
         return result
 
     def fetchall(self):
         """Fetchs all available rows from the cursor."""
-        result = self.__pos and self.__rows[self.__pos:] or self.__rows
-        self.__pos = len(self.__rows)
+        result = self._pos and self._rows[self._pos:] or self._rows
+        self._pos = len(self._rows)
         return result
     
     def seek(self, row, whence=0):
         if whence == 0:
-            self.__pos = row
+            self._pos = row
         elif whence == 1:
-            self.__pos = self.__pos + row
+            self._pos = self._pos + row
         elif whence == 2:
-            self.__pos = len(self.__rows) + row
+            self._pos = len(self._rows) + row
      
-    def tell(self): return self.__pos
+    def tell(self): return self._pos
 
 
 class CursorUseResultMixIn:
