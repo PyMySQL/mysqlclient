@@ -139,7 +139,14 @@ def escape_dict(d, qc):
         d2[k] = qc.get(type(v), String2Literal)(v)
     return d2
 
-
+def _fetchall(result, *args):
+    rows = r = list(apply(result.fetch_row, args))
+    while 1:
+        rows = list(apply(result.fetch_row, args))
+        if not rows: break
+        r.extend(list(rows))
+    return r
+    
 class BaseCursor:
     
     """A base for Cursor classes. Useful attributes:
@@ -208,10 +215,10 @@ class BaseCursor:
         qc = self.connection.quote_conv
         try:
 	    q = [query % escape(args[0], qc)]
-	except TypeError, m:
-            if m.args[0] in ("not enough arguments for format string",
+	except TypeError, msg:
+            if msg.args[0] in ("not enough arguments for format string",
                              "not all arguments converted"):
-                raise ProgrammingError, m.args[0]
+                raise ProgrammingError, msg.args[0]
 	    escape = escape_dict
 	    q = [query % escape(args[0], qc)]
         qv = query[p:]
@@ -258,6 +265,10 @@ class CursorWarningMixIn:
 class CursorStoreResultMixIn:
 
     def _get_result(self): return self.connection.db.store_result()
+
+    def close(self):
+        self.connection = None
+        del self._rows
 
     def _query(self, q):
         self.connection._acquire()
@@ -345,17 +356,11 @@ class CursorUseResultMixIn:
 
 class CursorTupleRowsMixIn:
 
-    def _fetch_row(self): return self._result.fetch(1)[0]
+    def _fetch_row(self): return self._result.fetch_row(1)[0]
 
-    def _fetch_rows(self, size): return self._result.fetch(size)
+    def _fetch_rows(self, size): return self._result.fetch_row(size)
 
-    def _fetch_all_rows(self): 
-        r = list(self._result.fetch(self.arraysize))
-        while len(r) >= self.arraysize:
-            rows = self._result.fetch(self.arraysize)
-            if not rows: break
-            r.extend(list(rows))
-        return r
+    def _fetch_all_rows(self): return _fetchall(self._result, self.arraysize)
          
 
 class CursorDictRowsMixIn:
@@ -364,13 +369,7 @@ class CursorDictRowsMixIn:
 
     def _fetch_rows(self, size): return self._result.fetch(size, 1)
 
-    def _fetch_all_rows(self):
-        r = list(self._result.fetch(self.arraysize, 1))
-        while len(r) >= self.arraysize:
-            rows = self._result.fetch(self.arraysize, 1)
-            if not rows: break
-            r.extend(list(rows))
-        return r
+    def _fetch_all_rows(self): return _fetchall(self._result, self.arraysize, 1)
 
     ## XXX Deprecated
     
@@ -481,10 +480,10 @@ class Connection:
     def get_server_info(self): return self.db.get_server_info()
     def info(self): return self.db.info()
     def kill(self, p): return self.db.kill(p)
-    def list_dbs(self): return self.db.list_dbs().fetch_all_rows()
-    def list_fields(self, table): return self.db.list_fields(table).fetch_all_rows()
-    def list_processes(self): return self.db.list_processes().fetch_all_rows()
-    def list_tables(self, db): return self.db.list_tables(db).fetch_all_rows()
+    def list_dbs(self): return _fetchall(self.db.list_dbs())
+    def list_fields(self, table): return _fetchall(self.db.list_fields(table))
+    def list_processes(self): return _fetchall(self.db.list_processes())
+    def list_tables(self, db): return _fetchall(self.db.list_tables(db))
     def field_count(self): return self.db.field_count()
     num_fields = field_count # used prior to MySQL-3.22.24
     def ping(self): return self.db.ping()

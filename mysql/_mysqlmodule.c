@@ -578,19 +578,13 @@ _mysql_escape_row(self, args)
 	PyObject *o=NULL, *d=NULL, *r=NULL, *item, *quoted, 
 		*itemtype, *itemconv;
 	int i, n;
-	if (!PyArg_ParseTuple(args, "OO:escape_row", &o, &d)) goto error;
-	if (!PySequence_Check(o)) {
-		PyErr_SetString(PyExc_TypeError, "sequence required");
+	if (!PyArg_ParseTuple(args, "O!O!:escape_row", &PyTuple_Type, &o,
+				                       &PyDict_Type, &d))
 		goto error;
-	}
-	if (!PyMapping_Check(d)) {
-		PyErr_SetString(PyExc_TypeError, "mapping required");
-		goto error;
-	}
 	if (!(n = PyObject_Length(o))) goto error;
 	if (!(r = PyTuple_New(n))) goto error;
 	for (i=0; i<n; i++) {
-		if (!(item = PySequence_GetItem(o, i))) goto error;
+		item = PyTuple_GET_ITEM(o, i);
 		if (!(itemtype = PyObject_Type(item)))
 			goto error;
 		itemconv = PyObject_GetItem(d, itemtype);
@@ -608,7 +602,6 @@ _mysql_escape_row(self, args)
 		quoted = PyObject_CallFunction(itemconv, "O", item);
 		Py_DECREF(itemconv);
 		if (!quoted) goto error;
-		Py_DECREF(item);
 		PyTuple_SET_ITEM(r, i, quoted);
 	}
 	return r;
@@ -799,12 +792,12 @@ _mysql_row_to_dict_old(self, row)
 }
 
 static PyObject *
-_mysql_ResultObject_fetch(self, args, kwargs)
+_mysql_ResultObject_fetch_row(self, args, kwargs)
 	_mysql_ResultObject *self;
 	PyObject *args, *kwargs;
 {
 	typedef PyObject *_PYFUNC();
-	static char *kwlist[] = { "maxrows", "as_dict", NULL };
+	static char *kwlist[] = { "maxrows", "how", NULL };
 	static _PYFUNC *row_converters[] =
 	{
 		_mysql_row_to_tuple,
@@ -812,18 +805,18 @@ _mysql_ResultObject_fetch(self, args, kwargs)
 		_mysql_row_to_dict_old
 	};
 	_PYFUNC *convert_row;
-	unsigned int maxrows=1, as_dict=0, i;
+	unsigned int maxrows=1, how=0, i;
 	PyObject *r;
 	MYSQL_ROW row;
 
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|ii:fetch", kwlist,
-					 &maxrows, &as_dict))
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|ii:fetch_row", kwlist,
+					 &maxrows, &how))
 		return NULL;
-	if (as_dict < 0 || as_dict >= sizeof(row_converters)) {
-		PyErr_SetString(PyExc_ValueError, "as_dict out of range");
+	if (how < 0 || how >= sizeof(row_converters)) {
+		PyErr_SetString(PyExc_ValueError, "how out of range");
 		return NULL;
 	}
-	convert_row = row_converters[as_dict];
+	convert_row = row_converters[how];
 
 	if (!(r = PyTuple_New(maxrows))) return NULL;
 	for (i = 0; i<maxrows; i++) {
@@ -835,8 +828,10 @@ _mysql_ResultObject_fetch(self, args, kwargs)
 			row = mysql_fetch_row(self->result);
 			Py_END_ALLOW_THREADS;
 		}
-		if (!row && mysql_errno(self->connection))
+		if (!row && mysql_errno(self->connection)) {
+			Py_XDECREF(r);
 			return _mysql_Exception(self->connection);
+		}
 		if (!row) {
 			if (_PyTuple_Resize(&r, i, 0) == -1) goto error;
 			break;
@@ -1312,7 +1307,7 @@ static PyMethodDef _mysql_ResultObject_methods[] = {
 	{"row_seek",        (PyCFunction)_mysql_ResultObject_row_seek, 1},
 	{"row_tell",        (PyCFunction)_mysql_ResultObject_row_tell, 0},
 	{"describe",        (PyCFunction)_mysql_ResultObject_describe, 0},
-	{"fetch",           (PyCFunction)_mysql_ResultObject_fetch, METH_VARARGS | METH_KEYWORDS},
+	{"fetch_row",       (PyCFunction)_mysql_ResultObject_fetch_row, METH_VARARGS | METH_KEYWORDS},
 	{"field_flags",     (PyCFunction)_mysql_ResultObject_field_flags, 0},
 	{"num_fields",      (PyCFunction)_mysql_ResultObject_num_fields, 0},
 	{"num_rows",        (PyCFunction)_mysql_ResultObject_num_rows, 0},
@@ -1485,9 +1480,9 @@ FLAG_*, CLIENT_*, FIELD_TYPE_*, etc. constants are renamed to FLAG.*,\n\
 CLIENT.*, FIELD_TYPE.*, etc. Deprecated functions are NOT implemented.\n\
 \n\
 type_conv is a dictionary which maps FIELD_TYPE.* to Python functions\n\
-which convert a string to some value. This is used by the various\n\
-fetch methods. Types not mapped are returned as strings. Numbers are\n\
-all converted reasonably, except DECIMAL.\n\
+which convert a string to some value. This is used by the fetch_row method.\n\
+Types not mapped are returned as strings. Numbers are all converted\n\
+reasonably, except DECIMAL.\n\
 \n\
 result.describe() produces a DB API description of the rows.\n\
 \n\
@@ -1501,14 +1496,10 @@ mysql_escape_string() on them, and returns them as a tuple.\n\
 \n\
 result.field_flags() returns the field flags for the result.\n\
 \n\
-result.fetch_row() fetches the next row as a tuple of objects. MySQL\n\
-returns strings, but fetch_row() does data conversion according to\n\
-type_conv.\n\
-\n\
-result.fetch_rows(n) is like fetch_row() but fetches up to n rows and\n\
-returns a tuple of rows.\n\
-\n\
-result.fetch_all_rows() is like fetch_rows() but fetchs all rows.\n\
+result.fetch_row([n=0[, how=1]]) fetches up to n rows (default: n=1)\n\
+as a tuple of tuples (default: how=0) or dictionaries (how=1).\n\
+MySQL returns strings, but fetch_row() does data conversion\n\
+according to type_conv.\n\
 \n\
 For everything else, check the MySQL docs." ;
 

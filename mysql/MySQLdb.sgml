@@ -130,6 +130,9 @@ information, see the MySQL documentation. The documentation for this
 module is intentionally weak because you probably should use the
 higher-level <ref id="MySQLdb"> module. If you really need it, use the
 standard MySQL docs and transliterate as necessary.
+<p>Compatibility note: As of 0.2.2, the various fetch_rowXXX() cursor
+methods have been combined into a single fetch_row([n=1[,how=0]])
+method. See the built-in module documentation for more details.
 <p>
 The C API has been wrapped in an object-oriented way. The only MySQL
 data structures which are implemented are the <tt>MYSQL</tt> (database
@@ -154,12 +157,7 @@ use is explicitly non-portable.
 @ <tt>mysql_debug()</tt> | <tt>_mysql.debug()</tt>
 @ <tt>mysql_dump_debug_info</tt> | <tt>conn.dump_debug_info()</tt>
 @ <tt>mysql_escape_string()</tt> | <tt>_mysql.escape_string()</tt>
-@ <tt>mysql_fetch_row()</tt> | <tt>result.fetch_row()<newline>
-result_fetch_row_as_dict()<newline>
-result.fetch_rows()<newline>
-result.fetch_rows_as_dict()<newline>
-result.fetch_all_rows()<newline>
-result.fetch_all_rows_as_dict()</tt>
+@ <tt>mysql_fetch_row()</tt> | <tt>result.fetch_row()</tt>
 @ <tt>mysql_get_client_info()</tt> | <tt>_mysql.get_client_info()</tt>
 @ <tt>mysql_get_host_info()</tt> | <tt>conn.get_host_info()</tt>
 @ <tt>mysql_get_proto_info()</tt> | <tt>conn.get_proto_info()</tt>
