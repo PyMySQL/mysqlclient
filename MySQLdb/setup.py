@@ -18,7 +18,7 @@ embedded_server = (mysqlclient == 'mysqld')
 name = "MySQL-%s" % os.path.basename(sys.executable)
 if embedded_server:
     name = name + "-embedded"
-version = "1.1.5"
+version = "1.1.6"
 
 # include files and library locations should cover most platforms
 include_dirs = [
@@ -120,7 +120,7 @@ setup (# Distribution meta-data
 
         # Description of the modules and packages in the distribution
 
-        py_modules = ["CompatMysqldb",
+        py_modules = [
                       "_mysql_exceptions",
                       "MySQLdb.converters",
                       "MySQLdb.connections",

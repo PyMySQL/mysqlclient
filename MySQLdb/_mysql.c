@@ -1,5 +1,5 @@
-#define version_info "(1,1,5,'final',1)"
-#define __version__ "1.1.5"
+#define version_info "(1,1,6,'final',1)"
+#define __version__ "1.1.6"
 /*
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -427,8 +427,10 @@ _mysql_ConnectionObject_Initialize(
 	PyObject *conv = NULL;
 	PyObject *ssl = NULL;
 	PyObject *value = NULL;
+#if HAVE_OPENSSL
 	char *key = NULL, *cert = NULL, *ca = NULL,
 		*capath = NULL, *cipher = NULL;
+#endif
 	char *host = NULL, *user = NULL, *passwd = NULL,
 		*db = NULL, *unix_socket = NULL;
 	uint port = MYSQL_PORT;

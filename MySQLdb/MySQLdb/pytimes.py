@@ -50,7 +50,7 @@ def TimeDelta_or_None(s):
     try:
         h, m, s = s.split(':')
         td = timedelta(hours=int(h), minutes=int(m), seconds=int(s),
-                       microseconds=int(modf(float(s)[0]))*1000000)
+                       microseconds=int(modf(float(s))[0])*1000000)
         if h < 0:
             return -td
         else:
