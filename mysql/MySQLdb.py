@@ -283,7 +283,7 @@ class CursorStoreResultMixIn:
 
     def fetchall(self):
         """Fetchs all available rows from the cursor."""
-        result = self.__rows[self.__pos:]
+        result = self.__pos and self.__rows[self.__pos:] or self.__rows
         self.__pos = len(self.__rows)
         return result
     
