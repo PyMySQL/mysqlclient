@@ -37,7 +37,7 @@ embedded_server = (mysqlclient == 'mysqld')
 name = "MySQL-%s" % os.path.basename(sys.executable)
 if embedded_server:
     name = name + "-embedded"
-version = "1.1.9"
+version = "1.1.10"
 
 extra_objects = []
 
@@ -72,8 +72,8 @@ else:
         libs = config("libs_r")
     elif mysqlclient == "mysqld":
         libs = config("embedded")
-    library_dirs = [ i[2:] for i in libs if i[:2] == "-L" ]
-    libraries = [ i[2:] for i in libs if i[:2] == "-l" ]
+    library_dirs = [ i[2:] for i in libs if i.startswith("-L") ]
+    libraries = [ i[2:] for i in libs if i.startswith("-l") ]
 
     # Workaround for a pre-4.1.9 bug
     if "z" not in libraries:

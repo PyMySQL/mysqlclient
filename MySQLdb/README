@@ -101,15 +101,9 @@ Prerequisites
 Building and installing
 -----------------------
 
-First thing to do is read setup.py. There are some variables towards
-the beginning that tell it where your MySQL include files and
-libraries are, compiler flags, loader flags, etc. You will rarely have
-to change this unless you have some kind of weird setup.
-
-After the main variables section, there is some platform-specific
-configuration. If your platform is not listed, this is where you want
-to add it. Note that most POSIX and UNIX-ish systems will work just
-fine the way it is.
+The setup.py script uses mysql_config to find all compiler and linker
+options, and should work as is on any POSIX-like platform, so long as
+mysql_config is in your path.
 
 Depending on which version of MySQL you have, you may have the option
 of using three different client libraries:
@@ -123,42 +117,19 @@ mysqlclient_r
 mysqld
 	embedded server
 
-mysqlclient is used by default. To use one of the others, set
+mysqlclient_r is used by default. To use one of the others, set
 the environment variable mysqlclient to the name of the library
 you want to use. In a Bourne-style shell, use::
 
-    $ export mysqlclient=mysqlclient_r
+    $ export mysqlclient=mysqlclient
 
-There are several active versions of MySQL out there, and this makes
-it a little tricky to configure setup.py automatically and still be
-cross-platform. setup.py assumes you are using version 4.0.20. To
-specify a different version, set the environment variable
-mysqlversion.
-
-If your MySQL is compiled with certain options, you may need to add
-some more libraries to the link. In particular, with 4.0 and up, if
-MySQL was configured to use SSL, you need to link against crypto and
-ssl. You can do this by setting the environment variable mysqloptlibs
-a space-separated list of libraries.
-  
-If you have the dynamic client libraries (on Linux, .so vs. .a), those
-will be used by default. If they are not on your standard loader path,
-you will have to set or adjust the LD_LIBRARY_PATH environment
-variable (on Linux) or whatever your platform requires. Otherwise, you
-can adjust setup.py to link against the static library. If you are
-using standard RPM packaging, you shouldn't have to mess with this. If
-you compiled MySQL yourself, you might. There is a
-runtime_libraries_dir variable you can play with, but this does not
-work on all system; in particular, it doesn't seem to work on Linux
-gcc.
+Only do this if you don't have the thread-safe library (mysqlclient_r)
+or you want to use the embedded server (mysqld).
 
 Finally, putting it together::
 
-  $ tar xfz MySQL-python-1.1.8.tar.gz
-  $ cd MySQL-python-1.1.8
-  $ export mysqlversion="4.0.20"
-  $ export mysqlclient="mysqlclient_r"
-  $ export mysqloptlibs="ssl crypto"
+  $ tar xfz MySQL-python-1.1.10.tar.gz
+  $ cd MySQL-python-1.1.10
   $ python setup.py build
   $ su # or use sudo
   # python setup.py install
@@ -175,6 +146,17 @@ I don't do Windows. However if someone provides me with a package for
 Windows, I'll make it available. Don't ask me for help with Windows
 because I can't help you.
 
+Generally, though, running setup.py is similar to above::
+
+  C:\...> python setup.py install
+  C:\...> python setup.py bdist_wininst
+
+The latter example should build a Windows installer package, if you
+have the correct tools. In any event, you *must* have a C compiler.
+Additionally, you have to set an environment variable (mysqlroot)
+which is the path to your MySQL installation. In theory, it would be
+possible to get this information out of the registry, but like I said,
+I don't do Windows, but I'll accept a patch that does this.
 
 Zope
 ....
