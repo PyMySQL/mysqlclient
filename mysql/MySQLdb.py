@@ -451,11 +451,7 @@ class Connection:
             self.cursorclass = Cursor
         self.db = apply(connect, (), kwargs)
         self.quote_conv[types.StringType] = self.Thing2Literal
-        self.db.query('show variables')
-        r = self.db.store_result()
-        vars = r.fetch_row(0)
-        self._server_vars = {}
-        for k,v in vars: self._server_vars[k] = v
+        self._transactional = self.db.server_capabilities & CLIENT.TRANSACTIONS
         if _threading: self.__lock = _threading.Lock()
 
     if _threading:
@@ -473,12 +469,12 @@ class Connection:
          
     def commit(self):
         """Commit the current transaction."""
-        if self._server_vars.get('have_bdb','NO') == 'YES':
+        if self._transactional:
             self.db.query("COMMIT")
 
     def rollback(self):
         """Rollback the current transaction."""
-        if self._server_vars.get('have_bdb','NO') == 'YES':
+        if self._transactional:
             self.db.query("ROLLBACK")
         else: raise NotSupportedError, "Not supported by server"
 

@@ -1245,6 +1245,8 @@ _mysql_ConnectionObject_getattr(
 		return PyInt_FromLong((long)(self->open));
 	if (strcmp(name, "closed") == 0)
 		return PyInt_FromLong((long)!(self->open));
+	if (strcmp(name, "server_capabilities") == 0)
+		return PyInt_FromLong((long)(self->connection.server_capabilities));
 	return PyMember_Get((char *)self, _mysql_ConnectionObject_memberlist, name);
 }
 
