@@ -1,5 +1,32 @@
 0.9.2c1
 
+  * If using Python 2.2 or newer, the _mysql connection object is
+    now usable as a base class, and MySQLdb.Connection uses it as
+    it's base class. If you have an older Python, everything still
+    works as if it were a subclass, due to some clever __getattr__.
+
+  * Internal documentation with _mysql is greatly expanded and
+    improved.
+
+  * BLOBs are now converted to Python array objects (from the array
+    module). If you are expecting them to be strings, sorry. This
+    is actually the preferred representation for DB-API.
+
+  * MySQL converts array objects passed as parameters into a correct
+    string representation (presumably for BLOB columns).
+
+  * The unicode=charset option to connect causes CHAR and VARCHAR
+    columns to be returned as unicode options using the specified
+    character set. XXX This needs more testing as I really don't
+    do anything with unicode.
+
+  * cursor.executemany() would only work with INSERT and REPLACE,
+    when it ought to work with any statement. Now fixed, though
+    still optimized to do multi-row INSERT/REPLACE.
+
+  * cursor.executemany() also didn't work if you passed it a
+    zero-length list. Whoops. Although zero is not many...
+
   * Use name of the python interpreter as part of the package name.
     On Red Hat Linux (7.2 and earlier), the standard python package
     is 1.5.2. The www.python.org RPM package for Python-2.2.1 is
@@ -10,6 +37,10 @@
     python setup.py bdist_rpm # MySQL-python for python-1.5.2
     python2.1 setup.py bdist_rpm # MySQL-python2.1 for python 2.1.x
     python2 setup.py bdist_rpm # MySQL-python2 for python 2.2.x
+
+    (You probably need to use the --python=x option where x is the
+    name of the Python executable so that the RPM build uses the right
+    version of python.)
 
     Once Python 2.3 comes out, that will probably become the python2
     package, and the Python 2.2.x version will become the python2.2
