@@ -1,4 +1,34 @@
+/*
+Copyright 1999 by Comstar.net, Inc., Atlanta, GA, US.
+
+                        All Rights Reserved
+
+Permission to use, copy, modify, and distribute this software and its
+documentation for any purpose and without fee is hereby granted,
+provided that the above copyright notice appear in all copies and that
+both that copyright notice and this permission notice appear in
+supporting documentation, and that the name of Comstar.net, Inc.
+or COMSTAR not be used in advertising or publicity pertaining to
+distribution of the software without specific, written prior permission.
+
+COMSTAR DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE,
+INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO
+EVENT SHALL COMSTAR BE LIABLE FOR ANY SPECIAL, INDIRECT OR
+CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF
+USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
+OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
+PERFORMANCE OF THIS SOFTWARE.
+*/
+
 #include "Python.h"
+
+#ifdef MS_WIN32
+#include <windows.h>
+#ifndef uint
+#define uint unsigned int
+#endif
+#endif /* MS_WIN32 */
+
 #include "structmember.h"
 #include "mysql.h"
 #include "mysqld_error.h"
@@ -91,7 +121,9 @@ static _mysql_Constant _mysql_Constant_flag[] = {
 	{ "ENUM", ENUM_FLAG },
 	{ "AUTO_INCREMENT", AUTO_INCREMENT_FLAG },
 	{ "TIMESTAMP", TIMESTAMP_FLAG },
+#ifdef SET_FLAG
 	{ "SET", SET_FLAG },
+#endif
 	{ "PART_KEY", PART_KEY_FLAG },
 	{ "GROUP", GROUP_FLAG },
 	{ NULL } /* sentinel */
@@ -313,6 +345,7 @@ static _mysql_Constant _mysql_Constant_er[] = {
 	{ "NONEXISTING_TABLE_GRANT", ER_NONEXISTING_TABLE_GRANT },
 	{ "NOT_ALLOWED_COMMAND", ER_NOT_ALLOWED_COMMAND },
 	{ "SYNTAX_ERROR", ER_SYNTAX_ERROR },
+#ifdef ER_DELAYED_CANT_CHANGE_LOCK
 	{ "DELAYED_CANT_CHANGE_LOCK", ER_DELAYED_CANT_CHANGE_LOCK },
 	{ "TOO_MANY_DELAYED_THREADS", ER_TOO_MANY_DELAYED_THREADS },
 	{ "ABORTING_CONNECTION", ER_ABORTING_CONNECTION },
@@ -325,6 +358,7 @@ static _mysql_Constant _mysql_Constant_er[] = {
 	{ "NET_READ_INTERRUPTED", ER_NET_READ_INTERRUPTED },
 	{ "NET_ERROR_ON_WRITE", ER_NET_ERROR_ON_WRITE },
 	{ "NET_WRITE_INTERRUPTED", ER_NET_WRITE_INTERRUPTED },
+#endif
 	{ "ERROR_MESSAGES", ER_ERROR_MESSAGES },
 	{ NULL } /* sentinel */
 } ;
@@ -401,7 +435,6 @@ _mysql_connect(self, args, kwargs)
 		return NULL;
 	if (conv) {
 		c->converter = conv;
-		Py_INCREF(conv);
 	} else {
 		if (!(c->converter = PyDict_New())) {
 			Py_DECREF(c);
@@ -1041,7 +1074,7 @@ _mysql_ConnectionObject_dealloc(self)
 		mysql_close(&(self->connection));
 		Py_END_ALLOW_THREADS
 	}
-	Py_DECREF(self->converter);
+	Py_XDECREF(self->converter);
 	PyMem_Free((char *) self);
 }
 
@@ -1206,7 +1239,11 @@ _mysql_ResultObject_setattr(c, name, v)
 }
 
 PyTypeObject _mysql_ConnectionObject_Type = {
+#ifndef MS_WIN32
 	PyObject_HEAD_INIT(&PyType_Type)
+#else
+	PyObject_HEAD_INIT(NULL)
+#endif
 	0,
 	"connection",
 	sizeof(_mysql_ConnectionObject),
@@ -1220,7 +1257,11 @@ PyTypeObject _mysql_ConnectionObject_Type = {
 };
 
 PyTypeObject _mysql_ResultObject_Type = {
+#ifndef MS_WIN32
 	PyObject_HEAD_INIT(&PyType_Type)
+#else
+	PyObject_HEAD_INIT(NULL)
+#endif
 	0,
 	"result",
 	sizeof(_mysql_ResultObject),
@@ -1323,7 +1364,10 @@ init_mysql()
 {
 	PyObject *dict, *module;
 	module = Py_InitModule3("_mysql", _mysql_methods, _mysql___doc__);
-
+#ifdef MS_WIN32
+	_mysql_ConnectionObject_Type.ob_type = &PyType_Type;
+	_mysql_ResultObject_Type.ob_type = &PyType_Type;
+#endif
 	dict = PyModule_GetDict(module);
 	if (!(_mysql_Warning =
 	      _mysql_NewException(dict, "Warning", PyExc_StandardError)))
