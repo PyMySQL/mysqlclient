@@ -200,11 +200,13 @@ class DB(TM):
             kwargs['host'] = host
         else:
             kwargs['db'] = db_host
-        if kwargs['db'][0] in ('+', '-'):
+        if kwargs['db'] and kwargs['db'][0] in ('+', '-'):
             self._try_transactions = kwargs['db'][0]
             kwargs['db'] = kwargs['db'][1:]
         else:
             self._try_transactions = None
+        if not kwargs['db']:
+            del kwargs['db']
         if not items: return kwargs
         kwargs['user'], items = items[0], items[1:]
         if not items: return kwargs
