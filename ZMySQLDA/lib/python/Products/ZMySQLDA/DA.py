@@ -88,6 +88,7 @@ __doc__='''%s Database Connection
 $Id$''' % database_type
 __version__='$Revision$'[11:-2]
 
+import os
 from db import DB
 import Shared.DC.ZRDB.Connection, sys, DABase
 from App.Dialogs import MessageDialog
@@ -124,11 +125,7 @@ class Connection(DABase.Connection):
 	## No try. DO.
 	self._v_database_connection=DB(s)
         self._v_connected=DateTime()
-
         return self
-
-    def table_info(self):
-	return self._v_database_connection.table_info()
 
     def sql_quote__(self, v, escapes={}):
         return self._v_database_connection.string_literal(v)
@@ -155,11 +152,10 @@ __ac_permissions__=(
       'manage_addZMySQLConnection')),
     )
 
-misc_={
-    'conn':   ImageFile('Shared/DC/ZRDB/www/DBAdapterFolder_icon.gif'),
-    }
+misc_={'conn': ImageFile(
+    os.path.join('Shared','DC','ZRDB','www','DBAdapterFolder_icon.gif'))}
 
 for icon in ('table', 'view', 'stable', 'what',
 	     'field', 'text','bin','int','float',
 	     'date','time','datetime'):
-    misc_[icon]=ImageFile('icons/%s.gif' % icon, globals())
+    misc_[icon]=ImageFile(os.path.join('icons','%s.gif') % icon, globals())
