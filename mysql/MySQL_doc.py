@@ -346,15 +346,16 @@ def main():
 	   DD(P("Does nothing, successfully.")),
 	   BDT("execute(query[,parameters])"),
 	   BDT("executemany(query,[,parameters])"),
-	   DD(P("These methods work as described in the API. However,\n" \
-		"it should be noted that the interface relies on the\n",
-		TT("__str__"), " method of each parameter. That is,\n" \
-		"each parameter is converted to a string when passed\n" \
-		"to MySQL. This presents a problem for the various\n" \
+	   DD(P("These methods work as described in the API. \n" \
+                "They are converted according to the ", TT("quote_conv"),
+                " dictionary (see above). By default, ", TT("str()"),
+                " is used as the conversion function." \
+		"This presents a problem for the various\n" \
 		"date and time columns: ", TT("__str__"), " for\n" \
 		"DateTime objects includes fractional seconds, which\n" \
 		"MySQL (up to 3.22.20a, at least), considers illegal\n" \
-		"input, and so zeros the field.")),
+		"input, and so zeros the field. This may be fixed in\n" \
+                "later MySQL releases.")),
            BDT("fetchone()"),
            BDT("fetchmany([n])"),
            BDT("fetchall()"),
