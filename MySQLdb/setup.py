@@ -2,7 +2,8 @@
 
 """Setup script for the MySQLdb module distribution."""
 
-import os, sys
+import os
+import sys
 from distutils.core import setup
 from distutils.extension import Extension
 
@@ -18,7 +19,7 @@ embedded_server = (mysqlclient == 'mysqld')
 name = "MySQL-%s" % os.path.basename(sys.executable)
 if embedded_server:
     name = name + "-embedded"
-version = "1.1.6"
+version = "1.1.7"
 
 # include files and library locations should cover most platforms
 include_dirs = [
@@ -87,7 +88,11 @@ elif os.name == "posix": # UNIX-ish platforms not covered above
 else:
     raise "UnknownPlatform", "sys.platform=%s, os.name=%s" % \
           (sys.platform, os.name)
-    
+
+# avoid frightening noobs with warnings about missing directories
+include_dirs = [ d for d in include_dirs if os.path.isdir(d) ]
+library_dirs = [ d for d in library_dirs if os.path.isdir(d) ]
+
 long_description = \
 """Python interface to MySQL
 
