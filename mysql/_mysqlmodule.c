@@ -399,6 +399,15 @@ _mysql_connect(self, args, kwargs)
 					 &port, &unix_socket, &client_flag,
 					 &conv))
 		return NULL;
+	if (conv) {
+		c->converter = conv;
+		Py_INCREF(conv);
+	} else {
+		if (!(c->converter = PyDict_New())) {
+			Py_DECREF(c);
+			return NULL;
+		}
+	}
 	Py_BEGIN_ALLOW_THREADS ;
 	conn = mysql_init(&(c->connection));
 	conn = mysql_real_connect(&(c->connection), host, user, passwd, db,
@@ -410,15 +419,6 @@ _mysql_connect(self, args, kwargs)
 		return NULL;
 	}
 	c->open = 1;
-	if (conv) {
-		c->converter = conv;
-		Py_INCREF(conv);
-	} else {
-		if (!(c->converter = PyDict_New())) {
-			Py_DECREF(c);
-			return NULL;
-		}
-	}
 	return (PyObject *) c;
 }
 
