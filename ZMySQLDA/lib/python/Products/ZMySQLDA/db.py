@@ -140,19 +140,11 @@ class DB(TM):
 
     _p_oid=_p_changed=_registered=None
 
-    def __init__(self,connection,transactions=None):
+    def __init__(self,connection):
         self.connection=connection
         self.kwargs = kwargs = self._parse_connection_string(connection)
         self.db=apply(self.Database_Connection, (), kwargs)
-	self.transactions = transactions
-	if not transactions: return
-	self.db.query("SHOW VARIABLES")
-	r = self.db.store_result()
-	for row in r.fetch_row(250):
-	    if row == ('have_bdb', 'YES'):
-		return 
-        raise _mysql.OperationalError, \
-              "server does not support transactions (have_bdb != 'YES')"
+	self.transactions = self.db.server_capabilities & CLIENT.TRANSACTIONS
 
     def _parse_connection_string(self, connection):
         kwargs = {'conv': self.conv}

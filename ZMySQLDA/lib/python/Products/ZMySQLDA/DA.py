@@ -100,9 +100,9 @@ manage_addZMySQLConnectionForm=HTMLFile('connectionAdd',globals())
 
 def manage_addZMySQLConnection(self, id, title,
                                 connection_string,
-                                check=None, transactions=None, REQUEST=None):
+                                check=None, REQUEST=None):
     """Add a DB connection to a folder"""
-    self._setObject(id, Connection(id, title, connection_string, check, transactions))
+    self._setObject(id, Connection(id, title, connection_string, check))
     if REQUEST is not None: return self.manage_main(self,REQUEST)
 
 class Connection(DABase.Connection):
@@ -115,37 +115,15 @@ class Connection(DABase.Connection):
     manage_properties=HTMLFile('connectionEdit', globals())
     manage_main=HTMLFile('connectionStatus', globals())
 
-    def __init__(self, id, title, connection_string, check=None, transactions=None):
-        self.id=str(id)
-        self.edit(title, connection_string, check, transactions)
-
     def factory(self): return DB
-
-    def edit(self, title, connection_string, check=1, transactions=None):
-        self.title=title
-        self.connection_string=connection_string
-	self.transactions = transactions
-        if check: self.connect(connection_string)
-    
-    def manage_edit(self, title, connection_string, check=None, transactions=None, REQUEST=None):
-        """Change connection
-        """
-        self.edit(title, connection_string, check, transactions)
-        if REQUEST is not None:
-            return MessageDialog(
-                title='Edited',
-                message='<strong>%s</strong> has been edited.' % self.id,
-                action ='./manage_main',
-                )
 
     def connect(self,s):
         try: self._v_database_connection.close()
         except: pass
         self._v_connected=''
-	if not hasattr(self, 'transactions'): self.transactions = None
         DB=self.factory()
 	## No try. DO.
-	self._v_database_connection=DB(s, self.transactions)
+	self._v_database_connection=DB(s)
         self._v_connected=DateTime()
 
         return self

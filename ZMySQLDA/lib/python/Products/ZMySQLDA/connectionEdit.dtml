@@ -35,13 +35,6 @@
             <input name="check" type="CHECKBOX" value="YES" CHECKED>
           </td>
 	</tr>
-	<tr>
-	  <th align="LEFT" valign="TOP">Use transactions</th>
-	  <td align="LEFT" valign="TOP">
-            <input name="transactions" type="CHECKBOX" value="YES"
-                   value="<dtml-var transactions>">
-          </td>
-	</tr>
 
         <tr>
 	  <td></td>

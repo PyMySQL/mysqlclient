@@ -35,12 +35,6 @@
           </td>
 	</tr>
 	<tr>
-	  <th align="LEFT" valign="TOP">Use transactions</th>
-	  <td align="LEFT" valign="TOP">
-            <input name="transactions" type="CHECKBOX" value="YES">
-          </td>
-	</tr>
-	<tr>
 	  <td></td>
 	  <td><br><input type="SUBMIT" value="Add"></td>
 	</tr>
