@@ -35,6 +35,8 @@ class BaseCursor(object):
         self.messages = []
         self.errorhandler = connection.errorhandler
         self._result = None
+        self._warnings = 0
+        self._info = None
         
     def __del__(self):
         self.close()
@@ -51,47 +53,38 @@ class BaseCursor(object):
         if not self._executed:
             self.errorhandler(self, ProgrammingError, "execute() first")
 
-    def _warning_info(self):
-        from string import atoi
-        
-        db = self.connection
-        info = db.info()
-        try:
-            return db.warning_count(), info
-        except AttributeError:
-            if info:
-                return atoi(info.split()[-1]), info
-            else:
-                return 0, info
-            
+    def _warning_check(self):
+        from warnings import warn
+        if self._warnings and self._info:
+            self.messages.append((self.Warning, self._info))
+            warn(self._info, self.Warning, 3)
+
     def nextset(self):
         """Advance to the next result set.
 
         Returns None if there are no more result sets.
         """
-        del self.messages[:]
         if self._executed:
             self.fetchall()
+        del self.messages[:]
         
         db = self._get_db()
         nr = db.next_result()
         if nr == -1:
             return None
         self._do_get_result()
+        self._warning_check()
         return 1
     
     def _do_get_result(self):
-        from warnings import warn
-
         db = self.connection
         self._result = self._get_result()
         self.rowcount = db.affected_rows()
         self.rownumber = 0
         self.description = self._result and self._result.describe() or None
         self.lastrowid = db.insert_id()
-        warnings, info = self._warning_info()
-        if warnings:
-            warn(info, self.Warning, stacklevel=6)
+        self._warnings = db.warning_count()
+        self._info = db.info()
     
     def setinputsizes(self, *args):
         """Does nothing, required by DB API."""
@@ -118,12 +111,9 @@ class BaseCursor(object):
         Returns long integer rows affected, if any
 
         """
-        del self.messages[:]
-        return self._execute(query, args)
-    
-    def _execute(self, query, args):
         from types import ListType, TupleType
         from sys import exc_info
+        del self.messages[:]
         try:
             if args is None:
                 r = self._query(query)
@@ -132,14 +122,18 @@ class BaseCursor(object):
         except TypeError, m:
             if m.args[0] in ("not enough arguments for format string",
                              "not all arguments converted"):
+                self.messages.append((ProgrammingError, m.args[0]))
                 self.errorhandler(self, ProgrammingError, m.args[0])
             else:
+                self.messages.append((TypeError, m))
                 self.errorhandler(self, TypeError, m)
         except:
             exc, value, tb = exc_info()
             del tb
+            self.messages.append((exc, value))
             self.errorhandler(self, exc, value)
         self._executed = query
+        self._warning_check()
         return r
 
     def executemany(self, query, args):
@@ -160,14 +154,13 @@ class BaseCursor(object):
         execute().
 
         """
-        from sys import exc_info
         del self.messages[:]
         if not args: return
         m = insert_values.search(query)
         if not m:
             r = 0
             for a in args:
-                r = r + self._execute(query, a)
+                r = r + self.execute(query, a)
             return r
         p = m.start(1)
         qv = query[p:]
@@ -178,21 +171,22 @@ class BaseCursor(object):
         except TypeError, msg:
             if msg.args[0] in ("not enough arguments for format string",
                                "not all arguments converted"):
+                self.messages.append((ProgrammingError, msg.args[0]))
                 self.errorhandler(self, ProgrammingError, msg.args[0])
             else:
+                self.messages.append((TypeError, msg))
                 self.errorhandler(self, TypeError, msg)
         except:
+            from sys import exc_info
             exc, value, tb = exc_info()
             del tb
             self.errorhandler(self, exc, value)
         r = self._query(',\n'.join(q))
         self._executed = query
+        self._warning_check()
         return r
 
     def _do_query(self, q):
-        from warnings import warn
-        from string import atoi
-
         db = self._get_db()
         db.query(q)
         self._do_get_result()

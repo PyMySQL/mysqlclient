@@ -155,7 +155,19 @@ class Connection(_mysql.connection):
 
         """
         return self.literal(u.encode(self.charset))
-        
+
+    if not hasattr(_mysql.connection, 'warning_count'):
+
+        def warning_count(self):
+            """Return the number of warnings generated from the
+            last query. This is derived from the info() method."""
+            from string import atoi
+            info = self.info()
+            if info:
+                return atoi(info.split()[-1])
+            else:
+                return 0
+            
     Warning = Warning
     Error = Error
     InterfaceError = InterfaceError
