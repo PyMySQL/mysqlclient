@@ -88,8 +88,8 @@ except ImportError:
         """Format a date as a date (does nothing, you don't have mx.DateTime)."""
         return d
 
-    format_TIME = format_TIMESTAMP = format_DATE = \
-                  TimeDelta_or_None = Date_or_None
+    format_TIME = format_TIMESTAMP = format_DATE
+    TimeDelta_or_None = Date_or_None = DateTime_or_None = format_DATE
 
 def DateTime2literal(d, c):
     """Format a DateTime object as an ISO timestamp."""
