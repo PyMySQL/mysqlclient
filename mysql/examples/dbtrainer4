@@ -23,7 +23,7 @@ __version__ = "$Revision$"[11:-2]
 # CHANGES:	7/99	Initial Version
 
 import sys
-import webops
+#import webops
 import traceback
 sys.stderr = sys.stdout
 

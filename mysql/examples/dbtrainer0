@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/
 
 __version__ = "$Revision$"[11:-2]
 
@@ -6,19 +6,19 @@ __version__ = "$Revision$"[11:-2]
 # Original credits follow. This is a nice introduction in general,
 # but I felt there were a few bits and pieces that needs to be cleaned up.
 
-# TITLE:        dbtrainer0
-# WRITTEN BY:	Bradley Stec, July 1999
+# TITLE:        
+# WRITTEN BY:	Bradley Stec, July 
 # 		RuleSpace, Inc.
-# SUPPORTS:     WebOps Database Interface Trainer Script
-# PURPOSE:      This script is an code and output example of how to use the
-#		MySQLdb API to communicate with a database and perform basic
+# SUPPORTS:     WebOps Database Interface Trainer 
+# PURPOSE:      This script is an code and output example of how to use 
+#		MySQLdb API to communicate with a database and perform 
 #		SQL queries.
 # FUNCTION:     Both by executing the script and by reading the source code,
-#		a programmer should be able to get a grasp on how the interface
+#		a programmer should be able to get a grasp on how the 
 #		works and may borrow code for their own script projects.
-# REQUIREMENTS: This script requires the access to the webops module, and that a
+# REQUIREMENTS: This script requires the access to the webops module, and that 
 #		database named "TEST" be installed in the webops specified 
-#		database server.  The contents of the test database can be created
+#		database server.  The contents of the test database can be 
 #		using the following SQL command sets.
 #
 #		CREATE TABLE COLORS (
@@ -59,16 +59,16 @@ __version__ = "$Revision$"[11:-2]
 #		INSERT INTO TEAM VALUES (3,'Brittney','McChristy','The Data Diva','blue',NOW(),NOW());
 #		INSERT INTO TEAM VALUES (4,'Fuzzy','Logic','The Logic Bunny','cyan',NOW(),NOW());
 #
-# CHANGES:	7/99	Initial Version
+# CHANGES:	7/99	Initial 
 
-import sys
-#import webops
-import traceback
-sys.stderr = sys.stdout
+import 
+#import 
+import 
+sys.stderr = sys.
 
-# Set Up Page Layout
+# Set Up Page 
 print "content-type: text/html"
-print
+
 print "<HTML>\n"
 print "<BODY BGCOLOR=\"#FFFFFF\">\n"
 print "<FONT FACE=\"arial\" SIZE=\"3\"><B>RuleSpace, Inc. WebOps Database Interface Trainer - Part 0</B><BR><HR>"
@@ -76,22 +76,22 @@ print "The purpose of this page is to present sample code for interfacing with t
 print "By viewing the CGI script which presents the information below you'll be able to see how the database interface and API works within the WebOps scripting environment.<P>"
 print "<HR>"
 
-# Loading The API Support
-# The API MySQLdb is a thin wrapper around a C program which is also in the site-packages directory called _mysqlmodule.so
-# The API follows the Python Database API Spec version 2.0 which basically sets standards for what kind of methods will be
-# used to access databases within the Python environment.  The _mysqlmodule.so and MySQLdb.py programs allow a programmer
-# to pass SQL commands/queries through to a database.  The database server may be remote or local.  The MySQL database server
-# software doesn't provide an interactive cursor, so the API programs create a "cursor" in local memory.  Read the Python
+# Loading The API 
+# The API MySQLdb is a thin wrapper around a C program which is also in the site-packages directory called _mysqlmodule.
+# The API follows the Python Database API Spec version 2.0 which basically sets standards for what kind of methods will 
+# used to access databases within the Python environment.  The _mysqlmodule.so and MySQLdb.py programs allow a 
+# to pass SQL commands/queries through to a database.  The database server may be remote or local.  The MySQL database 
+# software doesn't provide an interactive cursor, so the API programs create a "cursor" in local memory.  Read the 
 # Database API Spec version 2.0 for details.
 
-# This command loads the support files
-import MySQLdb
+# This command loads the support 
+import 
 
 # PREPARE TO CONNECT TO DATABASE 
 # This command forms a connection through the support files to the target database server and database name.
 try:
 	# Note: most of these keyword values have reasonable defaults.
-	# The following line with probably also work, depending on your
+	# The following line with probably also work, depending on 
 	# MySQL configuration:
 	WebOpsDB = MySQLdb.Connect(db='test')
 	#WebOpsDB = MySQLdb.Connection(host=webops.dbserver,user=webops.dbuser,passwd=webops.dbpass,db='test',port=3306,unix_socket="")
@@ -100,7 +100,7 @@ except:
         traceback.print_exc()
 	sys.exit()
 
-# A LITTLE BONUS INFORMATION FROM THE API
+# A LITTLE BONUS INFORMATION FROM THE 
 # The API can provide some information about the connection and server.
 # These functions are not portable to other databases.
 print "<B>CONNECTED TO</B><BR>"
@@ -109,9 +109,9 @@ print "&nbsp;&nbsp;&nbsp;&nbsp;running <B>mySQL server v", WebOpsDB.get_server_i
 print "&nbsp;&nbsp;&nbsp;&nbsp;current status: ",WebOpsDB.stat(), "<P>"
 print "<HR>"
 
-# CREATE YOUR PERSONAL CONNECTION TO THE "RESULTS" WITHIN THE CONNECTION OBJECT
+# CREATE YOUR PERSONAL CONNECTION TO THE "RESULTS" WITHIN THE CONNECTION 
 # We haven't actually queried anything yet, so don't get confused, we're just preparing for it.
-# A cursor is a "result set" holding object.  The API creates a "cursor" object complete with a set of
+# A cursor is a "result set" holding object.  The API creates a "cursor" object complete with a set 
 # methods for executing query results into it.
 try:
 	cursor = WebOpsDB.cursor()
@@ -120,7 +120,7 @@ except:
         traceback.print_exc()
         sys.exit()
 
-# PERFORM A QUERY
+# PERFORM A 
 # The cursor object is a Python class object.  In it, we can specify a query.  Below we query the TEAM table from the 
 # WebOpsDB object by referring to our new "cursor" object.
 try:
@@ -130,17 +130,17 @@ except:
         traceback.print_exc()
         sys.exit()
 
-# STORE THE RESULTS INTO A LOCALLY CONTROLLED MEMORY LOCATION
+# STORE THE RESULTS INTO A LOCALLY CONTROLLED MEMORY 
 # Two things just came from our query: 1) a description of the table structure and 2) a result set stored in the API cursor. 
-# The API "cursor" must be "consumed" by your script to get the results out.  Therefore its a good idea to store the results
+# The API "cursor" must be "consumed" by your script to get the results out.  Therefore its a good idea to store the 
 # into a local variable.  The results will become a nicely formatted Python list data type.  If you don't store it locally,
 # you'll need to requery the database every time you need the data again.
 
-# 1) THE TABLE STRUCTURE
+# 1) THE TABLE 
 # The cursor.description attribute will provide a Python list data type representation of the field structure.
 # In the example below we use the for loop to travel through the list and read the first element of each list.
 
-# 2) THE RESULT SET
+# 2) THE RESULT 
 # The result set can be completely fetched into one list data type.
 try:
 	resultSet = cursor.fetchall()
@@ -149,19 +149,19 @@ except:
         traceback.print_exc()
         sys.exit()
 
-# AND NOW YOU CAN SEE RESULTS
+# AND NOW YOU CAN SEE 
 # Now you can take your information and present it.
 print "<B>EXAMPLES OF USING THE <U>SELECT</U> SQL COMMAND.</B><P>"
 print "QUERY OF TEAM TABLE<BR>"
 print "<FONT SIZE=\"1\"><B>("
-# The Table Field Names
+# The Table Field 
 for cursorFieldname in cursor.description:
 	print cursorFieldname[0]+","
 print ")</B>"
 print "<BR>"
-# The Result Set
+# The Result 
 for cursorRecord in resultSet:
-	print cursorRecord
+	print 
 	print "<BR>"
 print "<P></FONT>"
 
@@ -174,14 +174,14 @@ for cursorRecord in resultSet:
 	print "<TR>"
 	for cursorField in cursorRecord:
 		print "<TD><FONT FACE=\"arial\" SIZE=\"1\">"
-		print cursorField
+		print 
 		print "</FONT></TD>"
 	print "</TR>"
 print "</TABLE>"
 print "</CENTER>"
 print "&nbsp;<P></FONT><P><HR><P>"
 
-# HERE'S ANOTHER TABLE
+# HERE'S ANOTHER 
 try:
 	cursor.execute("SELECT * FROM COLORS")
 except:
@@ -198,11 +198,11 @@ print "<BR>"
 # The values are loaded into the object 'resultSet'
 resultSet = cursor.fetchall()
 for cursorRecord in resultSet:
-	print cursorRecord
+	print 
 	print "<BR>"
 print "&nbsp;<BR></FONT>"
 
-# Display Query Results In Columns
+# Display Query Results In 
 print "<FONT SIZE=\"1\">same results in very nicely formatted columns:<BR>"
 print "<TABLE BORDER=\"1\"><TR>"
 for cursorFieldname in cursor.description:
@@ -212,15 +212,15 @@ for cursorRecord in resultSet:
         print "<TR>"
         for cursorField in cursorRecord:
                 print "<TD><FONT FACE=\"arial\" SIZE=\"1\">"
-                print cursorField
+                print 
                 print "</FONT></TD>"
         print "</TR>"
 print "</TABLE>"
 print "</CENTER>"
 print "&nbsp;<P><HR><P></FONT>"
 
-# NOW WE CAN SEE HOW TO COMBINE KEYED TABLES
-# The following query uses standard SQL commands to join the two databases together and produce a list of each of the team's
+# NOW WE CAN SEE HOW TO COMBINE KEYED 
+# The following query uses standard SQL commands to join the two databases together and produce a list of each of the team'
 # favorite colors.
 try:
 	cursor.execute("SELECT TEAM.FIRST_NAME,TEAM.LAST_NAME,TEAM.FAV_COLOR,COLORS.PRIME_COLOR FROM TEAM,COLORS WHERE TEAM.FAV_COLOR = COLORS.COLOR")
@@ -242,14 +242,14 @@ for cursorRecord in resultSet:
         print "<TR>"
         for cursorField in cursorRecord:
                 print "<TD><FONT FACE=\"arial\" SIZE=\"1\">"
-                print cursorField
+                print 
                 print "</FONT></TD>"
         print "</TR>"
 print "</TABLE>"
 print "</CENTER>"
 print "<P>"
 
-# CLOSING THE DATABASE OBJECT
+# CLOSING THE DATABASE 
 try:
 	WebOpsDB.close()
 except:
@@ -257,10 +257,10 @@ except:
         traceback.print_exc()
         sys.exit()
 
-# CONTINUED IN DBTRAINER1
-# To learn more about inserting records, and performing other SQL functions review
+# CONTINUED IN 
+# To learn more about inserting records, and performing other SQL functions 
 # dbtrainer1.
 
-# END YOUR HTML PAGE
+# END YOUR HTML 
 print "</FONT></BODY>\n"
 print "</HTML>\n"

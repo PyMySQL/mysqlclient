@@ -52,7 +52,7 @@ import MySQLdb
 # This command forms a connection through the support files to the target database server and database name.
 try:
 	#WebOpsDB = MySQLdb.Connection(host=webops.dbserver,user=webops.dbuser,passwd=webops.dbpass,db='test',port=3306,unix_socket="")
-	WebOpsDB = MySQL.Connect(db='test')
+	WebOpsDB = MySQLdb.Connect(db='test')
 except:
         print "\n\n<PRE>"
         traceback.print_exc()
