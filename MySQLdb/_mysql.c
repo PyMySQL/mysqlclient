@@ -1,5 +1,5 @@
-#define version_info "(1,1,2,'final',1)"
-#define __version__ "1.1.2"
+#define version_info "(1,1,3,'final',1)"
+#define __version__ "1.1.3"
 /*
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -114,6 +114,7 @@ _mysql_Exception(_mysql_ConnectionObject *c)
 		Py_DECREF(t);
 		return NULL;
 	}
+	merr = mysql_errno(&(c->connection));
 	if (!merr)
 		e = _mysql_InterfaceError;
 	else if (merr > CR_MAX_ERROR) {
@@ -474,11 +475,17 @@ _mysql_ConnectionObject_Initialize(
         PyErr_Clear();}
 	
 	if (ssl) {
+#if HAVE_OPENSSL
 		_stringsuck(ca, value, ssl);
 		_stringsuck(capath, value, ssl);
 		_stringsuck(cert, value, ssl);
 		_stringsuck(key, value, ssl);
 		_stringsuck(cipher, value, ssl);
+#else
+		PyErr_SetString(_mysql_NotSupportedError,
+				"client library does not have SSL support");
+		return -1;
+#endif
 	}
 
 	Py_BEGIN_ALLOW_THREADS ;
@@ -500,13 +507,16 @@ _mysql_ConnectionObject_Initialize(
 		mysql_options(&(self->connection), MYSQL_READ_DEFAULT_FILE, read_default_file);
 	if (read_default_group != NULL)
 		mysql_options(&(self->connection), MYSQL_READ_DEFAULT_GROUP, read_default_group);
-#if MYSQL_VERSION_ID >= 40000
+
+#if HAVE_OPENSSL
 	if (ssl)
 		mysql_ssl_set(&(self->connection),
 			      key, cert, ca, capath, cipher);
 #endif
+
 	conn = mysql_real_connect(&(self->connection), host, user, passwd, db,
 				  port, unix_socket, client_flag);
+  error:
 	Py_END_ALLOW_THREADS ;
 
 	if (!conn) {
