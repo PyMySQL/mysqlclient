@@ -27,6 +27,7 @@ typedef struct {
 	MYSQL *connection;
 	MYSQL_RES *result;
 	int nfields;
+	int use;
 	PyObject **converter;
 } _mysql_ResultObject;
 
@@ -340,9 +341,10 @@ static _mysql_Constant _mysql_Constant_er[] = {
 } ;
 
 static _mysql_ResultObject*
-_mysql_ResultObject_New(conn, result)
+_mysql_ResultObject_New(conn, result, use)
 	_mysql_ConnectionObject *conn;
 	MYSQL_RES *result;
+	int use;
 {
 	int n, i;
 	MYSQL_FIELD *fields;
@@ -352,6 +354,7 @@ _mysql_ResultObject_New(conn, result)
 	r->connection = &conn->connection;
 	r->conn = (PyObject *) conn;
 	r->converter = NULL;
+	r->use = use;
 	Py_INCREF(conn);
 	r->result = result;
 	n = mysql_num_fields(result);
@@ -608,10 +611,16 @@ _mysql_ResultObject_fetch_row(self, args)
 	unsigned long *length;
 	PyObject *r;
 	MYSQL_ROW row;
-	if (!PyArg_NoArgs(args)) return NULL;
-	Py_BEGIN_ALLOW_THREADS
-	row = mysql_fetch_row(self->result);
-        Py_END_ALLOW_THREADS;
+	if (!args) {
+		if (!PyArg_NoArgs(args)) return NULL;
+	}
+	if (!self->use)
+		row = mysql_fetch_row(self->result);
+	else {
+		Py_BEGIN_ALLOW_THREADS;
+		row = mysql_fetch_row(self->result);
+		Py_END_ALLOW_THREADS;
+	}
 	n = mysql_num_fields(self->result);
 	if (!row && mysql_errno(self->connection))
 		return _mysql_Exception(self->connection);
@@ -637,6 +646,58 @@ _mysql_ResultObject_fetch_row(self, args)
 		else {
 			Py_INCREF(Py_None);
 			v = Py_None;
+		}
+		PyTuple_SET_ITEM(r, i, v);
+	}
+	return r;
+  error:
+	Py_XDECREF(r);
+	return NULL;
+}
+
+static PyObject *
+_mysql_ResultObject_fetch_all_rows(self, args)
+	_mysql_ResultObject *self;
+	PyObject *args;
+{
+	unsigned int n, i;
+	unsigned long *length;
+	PyObject *r;
+	if (!PyArg_NoArgs(args)) return NULL;
+	if (!(r = PyList_New(0))) return NULL;
+	while (1) {
+		PyObject *v = _mysql_ResultObject_fetch_row(self, NULL);
+		if (!v) goto error;
+		if (v == Py_None) {
+			Py_DECREF(v);
+			return r;
+		}
+		PyList_Append(r, v);
+		Py_DECREF(v);
+	}
+  error:
+	Py_XDECREF(r);
+	return NULL;
+}
+
+static PyObject *
+_mysql_ResultObject_fetch_rows(self, args)
+	_mysql_ResultObject *self;
+	PyObject *args;
+{
+	unsigned int n, i;
+	PyObject *r;
+
+	if (!PyArg_ParseTuple(args, "i", &n)) return NULL;
+	if (!(r = PyTuple_New(n))) return NULL;
+	for (i = 0; i<n; i++) {
+		PyObject *v = _mysql_ResultObject_fetch_row(self, NULL);
+		if (!v) goto error;
+		if (v == Py_None) {
+			Py_DECREF(v);
+			if (_PyTuple_Resize(&r, i, 0) == -1)
+				goto error;
+			return r;
 		}
 		PyTuple_SET_ITEM(r, i, v);
 	}
@@ -737,7 +798,7 @@ _mysql_ConnectionObject_list_dbs(self, args)
         result = mysql_list_dbs(&(self->connection), wild);
 	Py_END_ALLOW_THREADS
         if (!result) return _mysql_Exception(self);
-	return (PyObject *) _mysql_ResultObject_New(self, result);
+	return (PyObject *) _mysql_ResultObject_New(self, result, 0);
 }
 
 static PyObject *
@@ -754,7 +815,7 @@ _mysql_ConnectionObject_list_fields(self, args)
         result = mysql_list_fields(&(self->connection), table, wild);
 	Py_END_ALLOW_THREADS
         if (!result) return _mysql_Exception(self);
-	return (PyObject *) _mysql_ResultObject_New(self, result);
+	return (PyObject *) _mysql_ResultObject_New(self, result, 0);
 }
 
 static PyObject *
@@ -769,7 +830,7 @@ _mysql_ConnectionObject_list_processes(self, args)
         result = mysql_list_processes(&(self->connection));
 	Py_END_ALLOW_THREADS
         if (!result) return _mysql_Exception(self);
-	return (PyObject *) _mysql_ResultObject_New(self, result);
+	return (PyObject *) _mysql_ResultObject_New(self, result, 0);
 }
 
 static PyObject *
@@ -785,7 +846,7 @@ _mysql_ConnectionObject_list_tables(self, args)
         result = mysql_list_tables(&(self->connection), wild);
 	Py_END_ALLOW_THREADS
         if (!result) return _mysql_Exception(self);
-	return (PyObject *) _mysql_ResultObject_New(self, result);
+	return (PyObject *) _mysql_ResultObject_New(self, result, 0);
 }
 
 static PyObject *
@@ -920,7 +981,7 @@ _mysql_ConnectionObject_store_result(self, args)
 		Py_INCREF(Py_None);
 		return Py_None;
 	}
-	return (PyObject *) _mysql_ResultObject_New(self, result);
+	return (PyObject *) _mysql_ResultObject_New(self, result, 0);
 }
 
 static PyObject *
@@ -951,7 +1012,7 @@ _mysql_ConnectionObject_use_result(self, args)
 		Py_INCREF(Py_None);
 		return Py_None;
 	}
-	return (PyObject *) _mysql_ResultObject_New(self, result);
+	return (PyObject *) _mysql_ResultObject_New(self, result, 1);
 }
 
 static void
@@ -1053,6 +1114,8 @@ static PyMethodDef _mysql_ResultObject_methods[] = {
 	{"data_seek",       (PyCFunction)_mysql_ResultObject_data_seek, 1},
 	{"describe",        (PyCFunction)_mysql_ResultObject_describe, 0},
 	{"fetch_row",       (PyCFunction)_mysql_ResultObject_fetch_row, 0},
+	{"fetch_rows",      (PyCFunction)_mysql_ResultObject_fetch_rows, 1},
+	{"fetch_all_rows",  (PyCFunction)_mysql_ResultObject_fetch_all_rows, 0},
 	{"field_flags",     (PyCFunction)_mysql_ResultObject_field_flags, 0},
 	{"num_fields",      (PyCFunction)_mysql_ResultObject_num_fields, 0},
 	{"num_rows",        (PyCFunction)_mysql_ResultObject_num_rows, 0},
