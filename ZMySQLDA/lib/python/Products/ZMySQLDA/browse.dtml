@@ -1,0 +1,12 @@
+<html>
+  <head><title><!--#var title_or_id--> tables</title></head>
+  <body bgcolor="#FFFFFF" link="#000099" vlink="#555555" alink="#77003B">
+    <!--#var manage_tabs-->
+    <!--#tree header=info-->
+      <IMG SRC="<!--#var SCRIPT_NAME-->/misc_/ZMySQLDA/<!--#var icon-->"
+       ALT="<!--#var Type-->" BORDER="0">
+      <!--#var Name--><!--#var Description-->
+    <!--#/tree-->
+
+  </body>
+</html>

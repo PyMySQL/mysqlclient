@@ -1,0 +1,8 @@
+Z MySQL DA Releases
+
+  2.0.0
+
+    This is the first version of the database adapter using MySQLdb
+    for Zope.  This database adapter is based on the Z DCOracle DA
+    version 2.2.0.
+
