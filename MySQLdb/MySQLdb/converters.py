@@ -54,6 +54,9 @@ if str(0L)[-1]=='L':
 else:
     Long2Int = Thing2Str
 
+def Float2Str(o, d):
+    return '%.15g' % o
+
 def None2NULL(o, d):
     """Convert None to NULL."""
     return NULL # duh
@@ -105,7 +108,7 @@ def array2Str(o, d):
 conversions = {
     types.IntType: Thing2Str,
     types.LongType: Long2Int,
-    types.FloatType: Thing2Str,
+    types.FloatType: Float2Str,
     types.NoneType: None2NULL,
     types.TupleType: escape_sequence,
     types.ListType: escape_sequence,
