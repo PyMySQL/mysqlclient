@@ -280,5 +280,29 @@ class Connection:
         """Create a cursor on which queries may be performed."""
         return apply(self.CursorClass, (self,)+args, kwargs)
 
+    # Non-portable MySQL-specific stuff
+    # Methods not included on purpose (use Cursors instead):
+    #     query, store_result, use_result
+
+    def affected_rows(self): return self.db.affected_rows()
+    def dump_debug_info(self): return self.db.dump_debug_info()
+    def get_host_info(self): return self.db.get_host_info()
+    def get_proto_info(self): return self.db.get_proto_info()
+    def get_server_info(self): return self.db.get_server_info()
+    def info(self): return self.db.info()
+    def insert_id(self): return self.db.insert_id()
+    def kill(self, p): return self.db.kill(p)
+    def list_dbs(self): return self.db.list_dbs().fetch_all_rows()
+    def list_fields(self, table): return self.db.list_fields(table).fetch_all_rows()
+    def list_processes(self): return self.db.list_processes().fetch_all_rows()
+    def list_tables(self, db): return self.db.list_tables(db).fetch_all_rows()
+    def num_fields(self): return self.db.num_fields()
+    def ping(self): return self.db.ping()
+    def row_tell(self): return self.db.row_tell()
+    def select_db(self, db): return self.db.select_db(db)
+    def shutdown(self): return self.db.shutdown()
+    def stat(self): return self.db.stat()
+    def thread_id(self): return self.db.thread_id()
+
 
 Connect = connect = Connection
