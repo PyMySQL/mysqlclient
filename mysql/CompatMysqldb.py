@@ -1,8 +1,20 @@
-#author: James Henstridge <james@daa.com.au>
-#adapted to _mysql by Andy Dustman <andy@dustman.net>
-#under no circumstances should you bug James about this!!!
+"""
+Original author: James Henstridge <james@daa.com.au>
+Adapted by: Andy Dustman <andy@dustman.net>
 
-"""This is a class that implements an interface to mySQL databases, conforming
+This is the original Mysqldb.py module which came with MySQLmodule-1.4,
+only it has been adapted to use _mysql instead MySQL. It is intended
+for backwards compatibility purposes only. But as a bonus, transactions
+will work if your database server and table types support them. It is
+called CompatMysqldb instead of Mysqldb so as not to interfere with an
+existing Mysqldb, or MySQLdb on case-insensitive brain-dead operating
+systems.
+
+Under no circumstances should you bug James Henstridge about this!!!
+
+-----
+
+This is a class that implements an interface to mySQL databases, conforming
 to the API published by the Python db-sig at
 http://www.python.org/sigs/db-sig/DatabaseAPI.html
 
