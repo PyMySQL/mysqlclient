@@ -255,12 +255,13 @@ _mysql_connect(
 	conn = mysql_real_connect(&(c->connection), host, user, passwd, db,
 				  port, unix_socket, client_flag);
 	Py_END_ALLOW_THREADS ;
+	c->open = 1;
 	if (!conn) {
 		_mysql_Exception(c);
+		c->open = 0;
 		Py_DECREF(c);
 		return NULL;
 	}
-	c->open = 1;
 	return (PyObject *) c;
 }
 
