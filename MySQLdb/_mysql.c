@@ -434,6 +434,7 @@ _mysql_string_literal(
 	int len, size;
 	if (!PyArg_ParseTuple(args, "O|O:string_literal", &o, &d)) return NULL;
 	s = PyObject_Str(o);
+	if (!s) return NULL;
 	in = PyString_AsString(s);
 	size = PyString_GET_SIZE(s);
 	str = PyString_FromStringAndSize((char *) NULL, size*2+3);
