@@ -1,4 +1,4 @@
-#define version_info "(0,9,2,'alpha',1)"
+#define version_info "(0,9,2,'alpha',2)"
 #define __version__ "0.9.2"
 /*
 This program is free software; you can redistribute it and/or modify
@@ -1168,7 +1168,11 @@ _mysql_ConnectionObject_dealloc(
 		o = _mysql_ConnectionObject_close(self, NULL);
 		Py_XDECREF(o);
 	}
+#if PY_VERSION_HEX < 0x02000100
 	PyMem_Free((char *) self);
+#else
+	PyObject_Del(self);
+#endif
 }
 
 static PyObject *
@@ -1239,7 +1243,11 @@ _mysql_ResultObject_dealloc(
 	mysql_free_result(self->result);
 	Py_DECREF(self->conn);
 	Py_XDECREF(self->converter);
+#if PY_VERSION_HEX < 0x02000100
 	PyMem_Free((char *) self);
+#else
+	PyObject_Del(self);
+#endif
 }
 
 static PyObject *
