@@ -17,6 +17,9 @@ thread_safe_library = YES
 # do, please mail me the configuration for your platform. Don't
 # forget to include the value of sys.platform and os.name.
 
+name = "MySQL-%s" % os.path.basename(sys.executable)
+version = "0.9.2c1"
+
 mysqlclient = thread_safe_library and "mysqlclient_r" or "mysqlclient"
 
 # include files and library locations should cover most platforms
@@ -91,8 +94,8 @@ MySQLdb. MySQLdb is free software.
 """
 
 setup (# Distribution meta-data
-        name = "MySQL-python",
-        version = "0.9.2b2",
+        name = name,
+        version = version,
         description = "An interface to MySQL",
         long_description=long_description,
         author = "Andy Dustman",
