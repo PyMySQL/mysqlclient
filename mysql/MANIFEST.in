@@ -1,0 +1,8 @@
+prune CVS
+recursive-include doc *.html *.sgml
+recursive-include examples db* README test.sql
+include build.py
+include README.MySQLmodule
+include compile.py
+include MANIFEST.in
+include MANIFEST
