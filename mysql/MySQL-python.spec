@@ -1,5 +1,5 @@
 %define ver 0.2.2
-%define rel 1
+%define rel 3
 Summary: Python interface to MySQL-3.22 and 3.23
 Name: MySQL-python
 Version: %ver
@@ -56,7 +56,7 @@ cp MySQLdb.py{,c,o} $RPM_BUILD_ROOT/usr/lib/python1.5/site-packages
 %clean
 %files
 %defattr(-, root, root)
-%doc license.py examples/* doc/*
+%doc license.py examples/* doc/* CompatMysqldb.py
 /usr/lib/python1.5/site-packages/MySQLdb.py
 /usr/lib/python1.5/site-packages/MySQLdb.pyc
 /usr/lib/python1.5/site-packages/MySQLdb.pyo
