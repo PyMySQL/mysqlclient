@@ -764,15 +764,15 @@ _mysql_ConnectionObject_next_result(
 #if MYSQL_VERSION_ID >= 40100
 	err = mysql_next_result(&(self->connection));
 #else
-	err = -1
+	err = -1;
 #endif
 	Py_END_ALLOW_THREADS
 	if (err > 0) return _mysql_Exception(self);
-	Py_INCREF(Py_None);
-	return Py_None;
+	return PyInt_FromLong(err);
 }		
 
 #if MYSQL_VERSION_ID >= 40100
+
 static char _mysql_ConnectionObject_set_server_option__doc__[] =
 "set_server_option(option) -- Enables or disables an option\n\
 for the connection.\n\
@@ -814,6 +814,22 @@ _mysql_ConnectionObject_sqlstate(
 	if (!PyArg_ParseTuple(args, "")) return NULL;
 	return PyString_FromString(mysql_sqlstate(&(self->connection)));
 }		
+
+static char _mysql_ConnectionObject_warning_count__doc__[] =
+"Returns the number of warnings generated during execution\n\
+of the previous SQL statement.\n\
+\n\
+Non-standard.\n\
+";
+static PyObject *
+_mysql_ConnectionObject_warning_count(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, "")) return NULL;
+	return PyInt_FromLong(mysql_warning_count(&(self->connection)));
+}		
+
 #endif
 
 static char _mysql_ConnectionObject_errno__doc__[] =
@@ -1955,6 +1971,12 @@ static PyMethodDef _mysql_ConnectionObject_methods[] = {
 		(PyCFunction)_mysql_ConnectionObject_sqlstate,
 		METH_VARARGS,
 		_mysql_ConnectionObject_sqlstate__doc__
+	},
+	{
+		"warning_count",
+		(PyCFunction)_mysql_ConnectionObject_warning_count,
+		METH_VARARGS,
+		_mysql_ConnectionObject_warning_count__doc__
 	},
 #endif
 #if MYSQL_VERSION_ID >= 32303

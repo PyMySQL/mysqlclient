@@ -38,33 +38,60 @@ class BaseCursor(object):
         
     def __del__(self):
         self.close()
+        self.errorhandler = None
+        self._result = None
         
     def close(self):
         """Close the cursor. No further queries will be possible."""
         if not self.connection: return
-        del self.messages[:]
-        self.nextset()
+        while self.nextset(): pass
         self.connection = None
-        self.errorhandler = None
-        self._result = None
 
     def _check_executed(self):
         if not self._executed:
             self.errorhandler(self, ProgrammingError, "execute() first")
 
+    def _warning_info(self):
+        from string import atoi
+        
+        db = self.connection
+        info = db.info()
+        try:
+            return db.warning_count(), info
+        except AttributeError:
+            if info:
+                return atoi(info.split()[-1]), info
+            else:
+                return 0, info
+            
     def nextset(self):
         """Advance to the next result set.
 
         Returns None if there are no more result sets.
-
-        Note that MySQL does not support multiple result sets at this
-        time.
-
         """
         del self.messages[:]
         if self._executed:
             self.fetchall()
-        return None
+        
+        db = self._get_db()
+        nr = db.next_result()
+        if nr == -1:
+            return None
+        self._do_get_result()
+        return 1
+    
+    def _do_get_result(self):
+        from warnings import warn
+
+        db = self.connection
+        self._result = self._get_result()
+        self.rowcount = db.affected_rows()
+        self.rownumber = 0
+        self.description = self._result and self._result.describe() or None
+        self.lastrowid = db.insert_id()
+        warnings, info = self._warning_info()
+        if warnings:
+            warn(info, self.Warning, stacklevel=6)
     
     def setinputsizes(self, *args):
         """Does nothing, required by DB API."""
@@ -168,16 +195,7 @@ class BaseCursor(object):
 
         db = self._get_db()
         db.query(q)
-        self._result = self._get_result()
-        self.rowcount = db.affected_rows()
-        self.rownumber = 0
-        self.description = self._result and self._result.describe() or None
-        self.lastrowid = db.insert_id()
-        info = db.info()
-        if info:
-            warnings = atoi(info.split()[-1])
-            if warnings:
-                warn(info, self.Warning, stacklevel=4)
+        self._do_get_result()
         return self.rowcount
 
     def _query(self, q): return self._do_query(q)
@@ -210,11 +228,6 @@ class CursorStoreResultMixIn(object):
     query, or using CursorUseResultMixIn instead."""
 
     def _get_result(self): return self._get_db().store_result()
-
-    def close(self):
-        """Close the cursor. Further queries will not be possible."""
-        self._rows = ()
-        BaseCursor.close(self)
 
     def _query(self, q):
         rowcount = self._do_query(q)
@@ -279,13 +292,6 @@ class CursorUseResultMixIn(object):
     mysql_use_result(). You MUST retrieve the entire result set and
     close() the cursor before additional queries can be peformed on
     the connection."""
-
-    def close(self):
-        """Close the cursor. No further queries can be executed."""
-        del self.messages[:]
-        self.nextset()
-        self._result = None
-        BaseCursor.close(self)
 
     def _get_result(self): return self._get_db().use_result()
 
