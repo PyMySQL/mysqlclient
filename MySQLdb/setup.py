@@ -19,7 +19,7 @@ embedded_server = (mysqlclient == 'mysqld')
 name = "MySQL-%s" % os.path.basename(sys.executable)
 if embedded_server:
     name = name + "-embedded"
-version = "1.1.7"
+version = "1.1.8"
 
 # include files and library locations should cover most platforms
 include_dirs = [
