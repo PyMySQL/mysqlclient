@@ -230,6 +230,24 @@ class _Cursor:
         """Fetchs all available rows from the cursor."""
         return self.result.fetch_all_rows()
          
+    def fetchoneDict(self):
+        """Fetches a single row from the cursor as a dictionary."""
+        try:
+            return self.result.fetch_row_as_dict()
+        except AttributeError:
+            raise ProgrammingError, "no query executed yet"
+             
+    def fetchmanyDict(self, size=None):
+        """cursor.fetchmany(size=cursor.arraysize)
+        
+        size -- integer, maximum number of rows to fetch.
+        rows are returned as dictionaries."""
+        return self.result.fetch_rows_as_dict(size or self.arraysize)
+         
+    def fetchallDict(self):
+        """Fetchs all available rows from the cursor as dictionaries."""
+        return self.result.fetch_all_rows_as_dict()
+         
     def nextset(self): return None
      
      
