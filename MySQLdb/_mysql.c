@@ -682,7 +682,7 @@ _mysql_ConnectionObject_autocommit(
 	Py_BEGIN_ALLOW_THREADS
 	err = mysql_autocommit(&(self->connection), flag);
 	Py_END_ALLOW_THREADS
-	if (err) return _mysql_Execption(self);
+	if (err) return mysql_Exception(self);
 	Py_INCREF(Py_None);
 	return Py_None;
 }		
@@ -700,7 +700,7 @@ _mysql_ConnectionObject_commit(
 	Py_BEGIN_ALLOW_THREADS
 	err = mysql_commit(&(self->connection));
 	Py_END_ALLOW_THREADS
-	if (err) return _mysql_Execption(self);
+	if (err) return mysql_Exception(self);
 	Py_INCREF(Py_None);
 	return Py_None;
 }		
@@ -718,7 +718,7 @@ _mysql_ConnectionObject_rollback(
 	Py_BEGIN_ALLOW_THREADS
 	err = mysql_rollback(&(self->connection));
 	Py_END_ALLOW_THREADS
-	if (err) return _mysql_Execption(self);
+	if (err) return mysql_Exception(self);
 	Py_INCREF(Py_None);
 	return Py_None;
 }		
