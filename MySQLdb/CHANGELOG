@@ -1,4 +1,12 @@
+0.9.3a2
+
+  * Removed some casts in _mysql_init() that caused problems with
+    Python 2.3. The type for tp_free was changed from destructor
+    to freefunc. Removing the casts make both 2.2 and 2.3 happy.
+
 0.9.3a1
+
+  * Fixed the bug that prevented member access.
 
   * Embedded server support. Can't get it use InnoDB tables yet.
     However, MyISAM (default) tables seem to work fine.
