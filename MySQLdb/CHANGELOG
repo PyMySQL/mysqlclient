@@ -1,3 +1,7 @@
+post-0.9.1
+
+  * netbsd configuration (Tage Stabell-Kuloe)
+
 0.9.1
 
   * The Set class wasn't being imported into MySQLdb, so

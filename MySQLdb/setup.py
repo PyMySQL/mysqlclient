@@ -30,6 +30,12 @@ elif sys.platform in ("freebsd4", "openbsd2"):
     libraries = [mysqlclient, "z"]
     runtime_library_dirs = []
     extra_objects = []
+elif sys.platform == "netbsd1":
+    include_dirs = ['/usr/pkg/include/mysql']
+    library_dirs = ['/usr/pkg/lib/mysql']
+    libraries = [mysqlclient, "z"]
+    runtime_library_dirs = []
+    extra_objects = []
 elif sys.platform == "sunos5": # Solaris 2.8 
     include_dirs = ['/usr/local/mysql/include/mysql'] 
     library_dirs = ['/usr/local/mysql/lib/mysql'] 
