@@ -168,11 +168,9 @@ class DB(TM):
             db, host = split(db_host,'@',1)
             kwargs['db'] = db
             if ':' in host:
-                host, port = split(db_host,':',1)
-                kwargs['host'] = host
+                host, port = split(host,':',1)
                 kwargs['port'] = int(port)
-            else:
-                kwargs['host'] = host
+            kwargs['host'] = host
         else:
             kwargs['db'] = db_host
         if not items: return kwargs
