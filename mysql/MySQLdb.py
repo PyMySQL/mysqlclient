@@ -272,6 +272,7 @@ class CursorStoreResultMixIn:
             
     def fetchone(self):
         """Fetches a single row from the cursor."""
+        if self._pos >= len(self._rows): return None
         result = self._rows[self._pos]
         self._pos = self._pos+1
         return result
@@ -441,6 +442,8 @@ class Connection:
         else:
             self.cursorclass = Cursor
         self.db = apply(connect, (), kwargs)
+        self._server_info = i = self.db.get_server_info()
+        self._server_version = int(i[0])*10000 + int(i[2:4])*100 + int(i[5:7])
         if _threading: self.__lock = _threading.Lock()
 
     if _threading:
@@ -454,16 +457,14 @@ class Connection:
         """Close the connection. No further activity possible."""
         self.db.close()
          
-    if hasattr(_mysql, 'rollback'):
-        def commit(self):
-            """Commit the current transaction."""
-            return self.db.commit()
+    def commit(self):
+        """Commit the current transaction."""
+        if self._server_version > 32315: self.db.query("COMMIT")
 
-        def rollback(self):
-            """Rollback the current transaction."""
-            self.db.rollback()
-    else:
-        def commit(self): """Does nothing as there are no transactions."""
+    def rollback(self):
+        """Rollback the current transaction."""
+        if self._server_version > 32315: self.db.query("ROLLBACK")
+        else: raise NotSupportedError, "Not supported by server"
 
     def cursor(self, cursorclass=None):
         """Create a cursor on which queries may be performed."""
