@@ -136,7 +136,7 @@ insert_values = re.compile(r'values\s(\(.+\))', re.IGNORECASE)
 def escape_dict(d, qc):
     d2 = {}
     for k,v in d.items():
-        d2[k] = qc.get(type(v), String2literal)(v)
+        d2[k] = qc.get(type(v), String2Literal)(v)
     return d2
 
 
@@ -149,13 +149,11 @@ class BaseCursor:
     
     See the MySQL docs for more information."""
 
-    def __init__(self, connection, warnings=1):
+    def __init__(self, connection):
         self.connection = connection
         self.description = None
         self.rowcount = -1
-        self.result = None
         self.arraysize = 100
-        self.warnings = warnings
 
     def close(self):
         self.connection = None
@@ -220,18 +218,27 @@ class BaseCursor:
         for a in args[1:]: q.append(qv % escape(a, qc))
         return self._query(join(q, ',\n'))
 
-    def _do_query(self, q):
+    def __do_query(self, q):
         from string import split, atoi
         db = self.connection.db
+        print q
         db.query(q)
-        self.result = self._get_result()
+        self._result = self._get_result()
      	self.rowcount = db.affected_rows()
-        self.description = self.result and self.result.describe() or None
+        self.description = self._result and self._result.describe() or None
         self._insert_id = db.insert_id()
+        self._info = db.info()
+        self._check_for_warnings()
         return self.rowcount
 
-    _query = _do_query
+    def _check_for_warnings(self): pass
 
+    _query = __do_query
+
+    def info(self):
+        try: return self._info
+        except AttributeError: raise ProgrammingError, "execute() first"
+    
     def insert_id(self):
         try: return self._insert_id
         except AttributeError: raise ProgrammingError, "execute() first"
@@ -241,28 +248,26 @@ class BaseCursor:
 
 class CursorWarningMixIn:
 
-    def _query(self, q):
+    def _check_for_warnings(self):
         from string import atoi, split
-        r = self._do_query(q)
-        w = self.connection.db.info()
-        if w:
-            warnings = atoi(split(w)[-1])
+        if self._info:
+            warnings = atoi(split(self._info)[-1])
     	    if warnings:
-     	        raise Warning, w
-        return r
+     	        raise Warning, self.info
 
 
 class CursorStoreResultMixIn:
 
     def _get_result(self): return self.connection.db.store_result()
 
-    def _do_query(self, q):
+    def _query(self, q):
         self.connection._acquire()
         try:
-            BaseCursor._do_query(self, q)
-            self._rows = self.result and self._fetch_all_rows() or ()
+            rowcount = self._BaseCursor__do_query(q)
+            self._rows = self._result and self._fetch_all_rows() or ()
             self._pos = 0
-            del self.result
+            del self._result
+            return rowcount
         finally:
             self.connection._release()
             
@@ -300,18 +305,18 @@ class CursorStoreResultMixIn:
 
 class CursorUseResultMixIn:
 
-    def __init__(self, name=""):
-        BaseCursor.__init__(self, name="")
+    def __init__(self, connection):
+        BaseCursor.__init__(self, connection)
         if not self.connection._acquire(0):
             raise ProgrammingError, "would deadlock"
 
     def close(self):
-        self.connection._release()
+        if self.connection: self.connection._release()
         self.connection = None
         
     def __del__(self):
         try:
-            del self.result
+            del self._result
         finally:
             self.close()
         
@@ -340,16 +345,16 @@ class CursorUseResultMixIn:
 
 class CursorTupleRowsMixIn:
 
-    def _fetch_row(self): return self.result.fetch_row()
-    def _fetch_rows(self, size): return self.result.fetch_rows(size)
-    def _fetch_all_rows(self): return self.result.fetch_all_rows()
+    def _fetch_row(self): return self._result.fetch_row()
+    def _fetch_rows(self, size): return self._result.fetch_rows(size)
+    def _fetch_all_rows(self): return self._result.fetch_all_rows()
     
          
 class CursorDictRowsMixIn:
 
-    def _fetch_row(self): return self.result.fetch_row_as_dict()
-    def _fetch_rows(self, size): return self.result.fetch_rows_as_dict(size)
-    def _fetch_all_rows(self): return self.result.fetch_all_rows_as_dict()
+    def _fetch_row(self): return self._result.fetch_row_as_dict()
+    def _fetch_rows(self, size): return self._result.fetch_rows_as_dict(size)
+    def _fetch_all_rows(self): return self._result.fetch_all_rows_as_dict()
 
     ## XXX Deprecated
     
@@ -363,14 +368,25 @@ class CursorDictRowsMixIn:
         return apply(self.fetchall, args, kwargs)
 
 
-class Cursor(CursorWarningMixIn, CursorStoreResultMixIn,
-             CursorTupleRowsMixIn, BaseCursor): pass
-class DictCursor(CursorWarningMixIn, CursorStoreResultMixIn,
-                 CursorDictRowsMixIn, BaseCursor): pass
-class SSCursor(CursorWarningMixIn, CursorUseResultMixIn,
-               CursorTupleRowsMixIn, BaseCursor): pass
-class SSDictCursor(CursorWarningMixIn, CursorUseResultMixIn,
-                   CursorDictRowsMixIn, BaseCursor): pass
+class CursorNW(CursorStoreResultMixIn, CursorTupleRowsMixIn,
+               BaseCursor): pass
+
+class Cursor(CursorWarningMixIn, CursorNW): pass
+
+class DictCursorNW(CursorStoreResultMixIn, CursorDictRowsMixIn,
+                   BaseCursor): pass
+
+class DictCursor(CursorWarningMixIn, DictCursorNW): pass
+
+class SSCursorNW(CursorUseResultMixIn, CursorTupleRowsMixIn,
+                 BaseCursor): pass
+
+class SSCursor(CursorWarningMixIn, SSCursorNW): pass
+
+class SSDictCursorNW(CursorUseResultMixIn, CursorDictRowsMixIn,
+                     BaseCursor): pass
+
+class SSDictCursor(CursorWarningMixIn, SSDictCursorNW): pass
 
 
 class Connection:

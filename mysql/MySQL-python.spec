@@ -1,4 +1,4 @@
-%define ver 0.2.0
+%define ver 0.2.1
 %define rel 1
 Summary: Python interface to MySQL-3.22
 Name: MySQL-python
@@ -6,8 +6,8 @@ Version: %ver
 Release: %rel
 Copyright: Python-style
 Group: Applications/Databases
-Source: ftp://starsip.python.net/pub/crew/adustman/MySQLdb-%ver.tar.gz
-URL: http://starship.python.net/crew/adustman
+Source: http://dustman.net/andy/python/MySQLdb/%ver/MySQLdb-%ver.tar.gz
+URL: http://dustman.net/andy/python/MySQLdb
 Requires: python >= 1.5.2
 BuildRoot: /tmp/mysqldb-root
 Packager: Andy Dustman <adustman@comstar.net>

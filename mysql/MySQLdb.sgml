@@ -115,7 +115,7 @@ the patch. If that fails, read the FAQ.
 and may reflect features of the next release.
 <sect1>FAQs
 <p>A FAQ is available at
-<htmlurl url="http://starship.python.net/crew/adustman/MySQLdb-FAQ.html">.
+<htmlurl url="http://dustman.net/andy/python/MySQLdb-FAQ.html">.
 <sect>_mysql module<label id="_mysql">
 <P>
 If you want to write applications which are portable across databases,
@@ -371,7 +371,7 @@ creating a new subclass, assuming the new database is reasonably
 standard.
 
 For an example of this, see the author's
-<htmlurl url="http://starship.python.net/crew/adustman"
+<htmlurl url="http://dustman.net/andy/python"
 name="SQLDict module">, which allows standard queries to be
 defined and accessed using an object which looks like a
 dictionary, and reads/writes user-defined objects.
@@ -381,7 +381,8 @@ you can easily derive your own subclasses. There are several Cursor
 classes in MySQLdb:
 <p>
 <descrip>
-<tag>CursorBase</tag> The base class for Cursor objects.
+<tag>BaseCursor</tag> The base class for Cursor objects.
+This does not raise Warnings.
 
 <tag>CursorWarningMixIn</tag> Causes the Warning exception to be raised
 on queries which produce warnings.
@@ -427,6 +428,8 @@ Use only if you are dealing with potentially large result sets.
 
 <tag/SSDictCursor/ Like <tt/SSCursor/ except it returns rows as
 dictionaries.
+
+<tag/XXXCursorNW/> Cursors with the "NW" suffix do not raise Warnings.
 
 </descrip>
 <p>For an example of how to use these classes,
