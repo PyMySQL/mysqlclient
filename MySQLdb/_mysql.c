@@ -261,7 +261,6 @@ _mysql_connect(
 		return NULL;
 	}
 
-	printf("<%d> ",  c->ob_refcnt);
 	c->open = 0;
 	Py_BEGIN_ALLOW_THREADS ;
 	conn = mysql_init(&(c->connection));
@@ -790,7 +789,11 @@ _mysql__fetch_row(
 			goto error;
 		}
 		if (!row) {
+#if PY_VERSION_HEX < 0x02020000
 			if (_PyTuple_Resize(r, i, 0) == -1) goto error;
+#else
+			if (_PyTuple_Resize(r, i) == -1) goto error;
+#endif
 			break;
 		}
 		v = convert_row(self, row);
