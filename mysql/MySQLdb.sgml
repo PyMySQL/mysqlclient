@@ -46,11 +46,12 @@ if you have an older version you should
 seriously consider upgrading to get the bug fixes and particularly
 the security updates.
 
-MySQL-3.22 seems to have a strange bug when handling TIME
-columns. For this reason, there is presently no type converter for
-TIME columns (the value is returned as a string). If you want to
-experiment with this, the code which actives the type converter can be
-easily commented in.
+MySQL-3.22 seems to have a problem trying to insert <tt/TIME/
+values with fractional seconds. Values like 12:56:13.00 are
+returned as 344:13:00, apparently interpreting the original input
+as 12 days, 56 hours, 13 minutes, 0 seconds. (12 days and 56 hours
+is 344 hours.) To avoid this problem, use the <tt/DateTimeDelta/
+type.
 
 <sect2>MySQL-3.23
 <p>
@@ -92,8 +93,10 @@ Operation | Mysqldb | MySQLdb
 implicit cursors dropped from DB API v2.0; always use <tt>c = db.cursor()</tt>
 @ Fetch row as dictionary | <tt>c.fetchDict()</tt>,
 keys are "<em/table.column/" |
-not standard; <tt>MySQLDict.py</tt> provides a dictionary interface,
-keys are "<em/column/"; use SQL <tt/AS/ to rename fields.
+not standard; alternate cursor class <tt>DictCursor</tt>
+provides a dictionary interface,
+keys are "<em/column/" or "<em/table.column/" if there are two columns
+with the same name; use SQL <tt/AS/ to rename fields.
 @ Transactions | <tt>db.commit()</tt> and <tt>db.rollback()</tt>
 both exist and silently do nothing <ref id="rollback" name="(danger!)">
 | <tt>db.commit()</tt> and <tt>db.rollback()</tt> work if the MySQL
@@ -190,7 +193,9 @@ which makes it compatible with the Python DB API interface (version
 2).  In reality, a fair amount of the code which implements the API is
 in <tt>_mysql</tt> for the sake of efficiency.
 <p>
-The DB API specification should be your primary guide for using this
+The 
+<htmlurl url="http://www.python.org/topics/database/DatabaseAPI-2.0.html"
+name="DB API specification"> should be your primary guide for using this
 module. Only deviations from the spec and other database-dependent
 things will be documented here. Note that all symbols from
 <tt>_mysql</tt> are imported into this module.  Mostly these are the
@@ -221,10 +226,13 @@ attributes are defined within MySQLdb.
             database to use. Default: no default database.
 
       <tag>conv</tag> literal-to-Python type conversion dictionary.
-            Default: empty dictionary, no type conversion.
+            Default: <tt/MySQLdb.type_conv/
 
       <tag>quote_conv</tag> Python type-to-literal conversion
-            dictionary Default: empty dictionary, no type conversion.
+            dictionary.  Default: <tt/MySQLdb.quote_conv/
+
+      <tag>cursorclass</tag> cursor class that <tt/cursor()/ uses,
+            unless overridden. Default: <tt/MySQLdb.Cursor/.
 
 <tag>unix_pipe</tag>
 	location of UNIX socket. Default: use TCP.
@@ -237,15 +245,13 @@ attributes are defined within MySQLdb.
       String constant stating the supported DB API level. '2.0'
 
 <tag>threadsafety</tag> Integer constant stating the level of thread
-      safety the interface supports. Set to 1, which means: Threads
-      may share the module, but not connections. This is the practice
-      recommended by the MySQL documentation. However, it should be
-      safe to share a connection between two threads provided only one
-      thread at a time uses it (i.e. a mutex is employed). Note that
-      this is only safe if the threads are using. mysql_store_result()
-      as opposed to mysql_use_result(). The latter is not recommended
-      for threaded applications. See the MySQL documentation for more
-      details.
+      safety the interface supports. As of MySQLdb version 0.2.0, this
+      is set to 2, which means: Threads may share the module and connections.
+      Cursors employ a mutex in the connection object to ensure that
+      cursors do not use the connection at the same time. Generally,
+      sharing a connection probably reduces performance; the MySQL
+      server maintains a seperate thread for each connection.
+      See the MySQL documentation for more details.
 
 <tag>paramstyle</tag> String constant stating the type of parameter
       marker formatting expected by the interface. Set to 'format' =
@@ -308,19 +314,31 @@ Compatibility note: The older <ref id="MySQLmodule"> does define this method,
       programmer that the database now needs to be cleaned up by other
       means.
 
-<tag>cursor(parameters...)</tag> 
+<tag>cursor([cursorclass])</tag> 
       MySQL does not support cursors; however, cursors are easily emulated.
+      You can supply an alternative cursor class as an optional parameter.
+If this is not present, it defaults to the value
+given when creating the connection object, or the standard <tt/Cursor/
+class. Also see the additional supplied cursor classes in the
+<ref id="usage"> section.
+
 </descrip>
 
 <sect1>Cursor Objects
-<P>Cursor objects support an optional argument
-<tt>name</tt>, which is pretty useless.  While it is possible to
-create Cursor objects with the class constructor, this is not
-recommended.
 <p>
 <descrip>
 <tag>callproc()</tag>
       Not implemented.
+
+<tag>close()</tag>
+      Closes the cursor. Future operations raise <tt/ProgrammingError/.
+      If you are using <ref id="SSCursor" name="server-side cursors">,
+      it is very important to close the cursor when you are done with
+      it and before creating a new one. Otherwise, deadlock may occur.
+
+<tag/insert_id()/
+      Returns the last <tt/AUTO_INCREMENT/ field value inserted
+      into the database. (Non-standard)
 
 <tag>nextset()</tag>
       Not implemented.
@@ -331,36 +349,8 @@ recommended.
 <tag>setoutputsizes()</tag>
       Does nothing, successfully.
 
-<tag><label id="executeXXX()">execute(query[,parameters]></tag>
-
-<tag>executemany(query,[,parameters])</tag> These methods work as
-      described in the API. The parameters are converted according to
-      the <ref id="quote_conv"> dictionary (see above).  By default,
-      <tt>str()</tt> is used as the conversion function. This presents
-      a problem for the various date and time columns:
-      <tt>__str__</tt> for <tt>DateTime</tt> objects includes
-      fractional seconds, which MySQL (up to 3.22.32, at least),
-      considers illegal input, and so zeros the field. This may be
-      fixed in later MySQL releases.
-
-<tag>fetchone()</tag>
-
-<tag>fetchmany([n])</tag>
-
-<tag>fetchall()</tag>
-      These methods work as described in the API.
-
-<tag>format_DATE(d)</tag>
-
-<tag>format_TIME(d)</tag>
-
-<tag>format_TIMESTAMP(d)</tag> These functions all take a DateTime
-      object as input and return an appropriately formatted
-      string. They are intended for use with the <tt><ref
-      id="executeXXX()"></tt> methods.
-
 </descrip>
-<sect>Using and extending
+<sect>Using and extending<label id="usage">
 
 <P>In general, it is probably wise to not directly interact with the
 DB API except for small applicatons. Databases, even SQL databases,
@@ -400,11 +390,15 @@ on queries which produce warnings.
 <tt>mysql_store_result()</tt> function to get the query result. The
 entire result set is stored on the client side.
 
-<tag>CursorUseResultMixIn</tag> Causes the cursor to use the
+<tag><label id="SSCursor">CursorUseResultMixIn</tag> Causes the cursor to use the
 <tt>mysql_use_result()</tt> function to get the query result. The
 result set is stored on the server side and is transferred row by row
 using fetch operations. Not recommended, particularly for threaded
-applications.
+applications that share connections. Note that creating the cursor
+causes it to acquire a lock on the connection object, and this is
+not released until the cursor is deleted or <tt/cursor.close()/.
+If you aren't careful about this, it can result in deadlock, which
+is bad.
 
 <tag>CursorTupleRowsMixIn</tag> Causes the cursor to return rows
 as a tuple of the column values.
@@ -412,7 +406,9 @@ as a tuple of the column values.
 <tag>CursorDictRowsMixIn</tag> Causes the cursor to return rows
 as a dictionary, where the keys are column names and the values
 are column values. Note that if the column names are not unique,
-some of them will be overwritten. This can be avoided by using
+i.e., you are selecting from two tables that share column names,
+some of them will be rewritten as <em/table.column/.
+This can be avoided by using
 the SQL <tt>AS</TT> keyword. (This is yet-another reason not to use
 <tt/*/ in SQL queries, particularly where <tt/JOIN/ is involved.
 
@@ -420,12 +416,22 @@ the SQL <tt>AS</TT> keyword. (This is yet-another reason not to use
 of <tt>CursorWarningMixIn, CursorStoreResultMixIn, CursorTupleRowsMixIn,</tt>
 and <tt>BaseCursor</tt>, i.e. it raises <tt>Warning</tt>, uses
 <tt>mysql_store_result()</tt>, and returns rows as tuples.
-</descrip>
-<p>For an example of how to use these classes, take a look at the
-<tt>MySQLDict</tt> module, which comes with MySQLdb.
-This operates as above, except that it
-returns rows as dictionaries.
 
+<tag>DictCursor</tag> Like <tt/Cursor/ except it returns rows as
+dictionaries.
+
+<tag>SSCursor</tag> A "server-side" cursor. Like <tt/Cursor/ but uses
+<tt/CursorUseResultMixIn/. Thread-safe, but not recommended for
+threaded applications which share connections.
+Use only if you are dealing with potentially large result sets.
+
+<tag/SSDictCursor/ Like <tt/SSCursor/ except it returns rows as
+dictionaries.
+
+</descrip>
+<p>For an example of how to use these classes,
+read the code. If you need something more exotic than this,
+you will have to roll your own.
 </article>
 
 
