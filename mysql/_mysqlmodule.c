@@ -85,7 +85,7 @@ _mysql_Exception(_mysql_ConnectionObject *c)
 
 	if (!(t = PyTuple_New(2))) return NULL;
 	if (!(c->open)) {
-		e = _mysql_ProgrammingError;
+		e = _mysql_InternalError;
 		PyTuple_SET_ITEM(t, 0, PyInt_FromLong(-1L));
 		PyTuple_SET_ITEM(t, 1, PyString_FromString("connection is closed"));
 		PyErr_SetObject(e, t);
@@ -98,17 +98,36 @@ _mysql_Exception(_mysql_ConnectionObject *c)
 	else if (merr > CR_MAX_ERROR) {
 		PyTuple_SET_ITEM(t, 0, PyInt_FromLong(-1L));
 		PyTuple_SET_ITEM(t, 1, PyString_FromString("error totally whack"));
-		PyErr_SetObject(_mysql_Error, t);
+		PyErr_SetObject(_mysql_InterfaceError, t);
 		Py_DECREF(t);
 		return NULL;
 	}
 	else switch (merr) {
 	case CR_COMMANDS_OUT_OF_SYNC:
+	case ER_DB_CREATE_EXISTS:
+	case ER_SYNTAX_ERROR:
+	case ER_NO_SUCH_TABLE:
+	case ER_WRONG_DB_NAME:
+	case ER_WRONG_TABLE_NAME:
+	case ER_FIELD_SPECIFIED_TWICE:
+	case ER_INVALID_GROUP_FUNC_USE:
+	case ER_UNSUPPORTED_EXTENSION:
+	case ER_TABLE_MUST_HAVE_COLUMNS:
+#ifdef ER_CANT_DO_THIS_DURING_AN_TRANSACTION
+	case ER_CANT_DO_THIS_DURING_AN_TRANSACTION:
+#endif
 		e = _mysql_ProgrammingError;
 		break;
 	case ER_DUP_ENTRY:
+	case ER_DUP_UNIQUE:
+	case ER_PRIMARY_CANT_HAVE_NULL:
 		e = _mysql_IntegrityError;
 		break;
+#ifdef ER_WARNING_NOT_COMPLETE_ROLLBACK
+	case ER_WARNING_NOT_COMPLETE_ROLLBACK:
+		e = _mysql_NotSupportedError;
+		break;
+#endif
 	default:
 		if (merr < 1000)
 			e = _mysql_InternalError;
