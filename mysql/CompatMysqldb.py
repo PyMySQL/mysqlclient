@@ -90,6 +90,7 @@ ROWID     = _Set()
 class Connection:
 	"""This is the connection object for the mySQL database interface."""
 	def __init__(self, host, user, passwd, db):
+		from _mysql import CLIENT
 		kwargs = {}
 		kwargs['conv'] = _type_conv
 		if host: kwargs['host'] = host
@@ -101,10 +102,7 @@ class Connection:
 		except MySQL.Error, msg:
 			raise error, msg
 		self.__curs = Cursor(self.__conn)
-		self.__conn.query("SHOW VARIABLES")
-		self.__vars = {}
-		for k, v in self.__conn.store_result().fetch_row(0):
-			self.__vars[k] = v
+		self.__transactional = self.__conn.server_capabilities & CLIENT.TRANSACTIONS
 
 	def __del__(self):
 		self.close()
@@ -127,12 +125,12 @@ class Connection:
 
 	def commit(self):
 		"""Commit the current transaction."""
-		if self.__vars.get('have_bdb', 'NO') == 'YES':
+		if self.__transactional:
 			 self.__conn.query("COMMIT")
 
 	def rollback(self):
 		"""Rollback the current transaction."""
-		if self.__vars.get('have_bdb', 'NO') == 'YES':
+		if self.__transactional:
 			 self.__conn.query("ROLLBACK")
 		else: raise error, "Not supported by server"
 
