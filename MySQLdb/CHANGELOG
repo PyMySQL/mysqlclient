@@ -1,5 +1,7 @@
 0.9.3a2
 
+  * Add some support for Python 2.3 datetime classes.
+
   * Removed some casts in _mysql_init() that caused problems with
     Python 2.3. The type for tp_free was changed from destructor
     to freefunc. Removing the casts make both 2.2 and 2.3 happy.
