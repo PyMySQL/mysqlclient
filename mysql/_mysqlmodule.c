@@ -548,49 +548,48 @@ _mysql_escape_row(self, args)
 	PyObject *self;
 	PyObject *args;
 {
-	PyObject *o=NULL, *r=NULL, *item, *quoted, *str, *itemstr;
+	PyObject *o=NULL, *d=NULL, *r=NULL, *item, *quoted, *str, *itemstr,
+		*itemtype, *itemconv;
 	char *in, *out;
 	int i, n, len, size;
-	if (!PyArg_ParseTuple(args, "O:escape_row", &o)) goto error2;
+	if (!PyArg_ParseTuple(args, "OO:escape_row", &o, &d)) goto error;
 	if (!PySequence_Check(o)) {
 		PyErr_SetString(PyExc_TypeError, "sequence required");
-		goto error2;
+		goto error;
 	}
-	if (!(n = PyObject_Length(o))) goto error2;
+	if (!PyMapping_Check(d)) {
+		PyErr_SetString(PyExc_TypeError, "mapping required");
+		goto error;
+	}
+	if (!(n = PyObject_Length(o))) goto error;
 	if (!(r = PyTuple_New(n))) goto error;
 	for (i=0; i<n; i++) {
 		if (!(item = PySequence_GetItem(o, i))) goto error;
-		if (item == Py_None) {
-			quoted = _mysql_NULL;
-			Py_INCREF(_mysql_NULL);
+		if (!(itemtype = PyObject_Type(item)))
+			goto error;
+		itemconv = PyObject_GetItem(d, itemtype);
+		Py_DECREF(itemtype);
+		if (!itemconv) {
+			PyErr_Clear();
+			itemconv = PyObject_GetItem(d,
+					 (PyObject *) &PyString_Type);
 		}
-		else {
-			if (!(itemstr = PyObject_Str(item)))
-				goto error;
-			if (!(in = PyString_AsString(itemstr))) {
-				Py_DECREF(itemstr);
-				goto error;
-			}
-			size = PyString_GET_SIZE(itemstr);
-			str = PyString_FromStringAndSize((char *)NULL, size*2+3);
-			if (!str) goto error;
-			out = PyString_AS_STRING(str);
-			len = mysql_escape_string(out+1, in, size);
-			*out = '\'' ;
-			*(out+len+1) = '\'' ;
-			*(out+len+2) = 0;
-			if (_PyString_Resize(&str, len+2) < 0)
-				goto error;
-			Py_DECREF(itemstr);
-			quoted = str;
+		if (!itemconv) {
+			PyErr_SetString(PyExc_TypeError,
+					"no default type converter defined");
+			goto error;
 		}
+		quoted = PyObject_CallFunction(itemconv, "O", item);
+		Py_DECREF(itemconv);
+		if (!quoted) goto error;
 		Py_DECREF(item);
 		PyTuple_SET_ITEM(r, i, quoted);
 	}
 	return r;
   error:
 	Py_XDECREF(r);
-  error2:
+	Py_XDECREF(o);
+	Py_XDECREF(d);
 	return NULL;
 }
 				
@@ -1347,7 +1346,12 @@ all converted reasonably, except DECIMAL.\n\
 \n\
 result.describe() produces a DB API description of the rows.\n\
 \n\
-escape_row() accepts a sequence of items, converts them to strings, does\n\
+escape_row() accepts a sequence of items and a type conversion dictionary.\n\
+Using the type of the item, it gets a converter function from the dictionary\n\
+(uses the string type if the item type is not found) and applies this to the\n\
+item. the result should be converted to strings with all the necessary\n\
+quoting.\n\
+\n\
 mysql_escape_string() on them, and returns them as a tuple.\n\
 \n\
 result.field_flags() returns the field flags for the result.\n\
