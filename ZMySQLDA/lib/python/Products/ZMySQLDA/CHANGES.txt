@@ -1,5 +1,13 @@
 Z MySQL DA Releases
 
+  2.0.9
+
+    Allow the connection string to work without a specified database.
+
+    Wrap queries with a lock to prevent multiple threads from using
+    the connection simultaneously (this may or may not be happening).
+    If transactional, then the lock is held for the entire transaction.
+
   2.0.8
 
     More information about columns is available from the table
