@@ -1,3 +1,9 @@
 *shared*
+# Only one line should be uncommented.
 # Adjust -L and -I as necessary for your local configuration.
+# If you have dynamic MySQL libraries, they will need to be on your
+# LD_LIBRARY_PATH at runtime.
 _mysql _mysqlmodule.c -L/usr/lib/mysql -I/usr/include/mysql -lmysqlclient
+# Uncomment for Windows
+#_mysql _mysqlmodule.c -L/mysql/lib/opt -I/mysql/include -lmysqlclient -lwsock32
+
