@@ -227,7 +227,7 @@ class BaseCursor:
                 raise
         qv = query[p:]
         for a in args[1:]: q.append(qv % escape(a, qc))
-        return self._thequery(join(q, ',\n'))
+        return self._query(join(q, ',\n'))
 
     def __do_query(self, q):
         from string import split, atoi
