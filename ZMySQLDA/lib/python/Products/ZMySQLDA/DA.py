@@ -113,7 +113,6 @@ class Connection(DABase.Connection):
     icon='misc_/Z%sDA/conn' % database_type
 
     manage_properties=HTMLFile('connectionEdit', globals())
-    manage_main=HTMLFile('connectionStatus', globals())
 
     def factory(self): return DB
 

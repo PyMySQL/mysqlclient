@@ -261,10 +261,10 @@ class DB(TM):
         self.db.query("BEGIN")
 	self.db.store_result()
         
-    def commit(self, *ignored):
+    def _commit(self, *ignored):
         self.db.query("COMMIT")
 	self.db.store_result()
 
-    def rollback(self, *ignored):
+    def _abort(self, *ignored):
 	self.db.query("ROLLBACK")
 	self.db.store_result()
