@@ -46,8 +46,8 @@ class BaseCursor:
         
     def close(self):
         """Close the cursor. No further queries will be possible."""
-        if not self.connection: return
         self.connection = None
+        self.errorhandler = None
 
     def _check_executed(self):
         if not self._executed:

@@ -63,6 +63,8 @@ elif sys.platform == "cygwin":
     extra_compile_args = ['-DMS_WIN32']
 elif sys.platform[:6] == "darwin": # Mac OS X
     extra_link_args = ['-flat_namespace']
+elif sys.platform == 'linux2' and os.environ.get('HOSTTYPE') == 'alpha':
+    libraries.extend(['ots', 'cpml'])
 elif os.name == "posix": # UNIX-ish platforms not covered above
     pass # default should work
 else:
@@ -90,7 +92,7 @@ MySQLdb. MySQLdb is free software.
 
 setup (# Distribution meta-data
         name = "MySQL-python",
-        version = "0.9.2a2",
+        version = "0.9.2b1",
         description = "An interface to MySQL",
         long_description=long_description,
         author = "Andy Dustman",
