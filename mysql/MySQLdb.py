@@ -1,11 +1,19 @@
 import _mysql
 from _mysql import *
-from DateTime import Date, Time, Timestamp
+from DateTime import Date, Time, Timestamp, ISO
 from types import StringType, ListType, TupleType
 
 threadsafety = 1
 apllevel = "1.1"
 
+def mysql_timestamp_converter(s):
+    parts = map(int, filter(None, (s[:4],s[4:6],s[6:8],s[8:10],s[10:12],s[12:14])))
+    return apply(Timestamp, tuple(parts))
+    
+type_conv[FIELD_TYPE.TIMESTAMP] = mysql_timestamp_converter
+type_conv[FIELD_TYPE.DATETIME] = ISO.ParseDateTime
+type_conv[FIELD_TYPE.TIME] = ISO.ParseTime
+type_conv[FIELD_TYPE.DATE] = ISO.ParseDate
 
 class Cursor:
 
