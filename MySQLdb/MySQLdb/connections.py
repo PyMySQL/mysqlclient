@@ -60,6 +60,9 @@ class Connection(_mysql.connection):
             unicode objects with this encoding. If set to None, the
             default encoding is used. If not set at all, character
             columns are returned as normal strings.
+    unicode_errors -- If set to a string, this is used as the errors
+            parameter to the unicode function; by default it is
+            'strict'. See documentation for unicode for more details.
     client_flag -- integer, flags to use or 0 (see MySQL docs or constants/CLIENTS.py)
     ssl -- dictionary or mapping, contains SSL connection parameters; see
            the MySQL documentation for more details (mysql_ssl_set()).
@@ -89,9 +92,13 @@ class Connection(_mysql.connection):
             self.cursorclass = self.default_cursor
         if kwargs.has_key('unicode'):
             charset = kwargs['unicode']
+            errors = kwargs.get('unicode_errors', 'strict')
             del kwargs2['unicode']
+            if kwargs.has_key('unicode_errors'):
+                del kwargs2['unicode_errors']
             if charset:
-                u = lambda s, c=charset: unicode(s, c)
+                self.charset = charset
+                u = lambda s, c=charset, e=errors: unicode(s, c, e)
             else:
                 u = unicode
             conv[FIELD_TYPE.STRING] = u
@@ -171,7 +178,7 @@ class Connection(_mysql.connection):
         Non-standard.
 
         """
-        return self.literal(u.encode(self.character_set_name()))
+        return self.literal(u.encode(self.charset))
         
     Warning = Warning
     Error = Error
