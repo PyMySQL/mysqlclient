@@ -106,6 +106,9 @@ class Connection(_mysql.connection):
           (mysql_ssl_set()).  If this is set, and the client does not
           support SSL, UnsupportedError will be raised.
 
+        local_infile
+          integer, non-zero enables LOAD LOCAL INFILE; zero disables
+    
         There are a number of undocumented, non-standard methods. See the
         documentation for the MySQL C API for some hints on what they do.
 
@@ -162,7 +165,8 @@ class Connection(_mysql.connection):
         If o is a non-string sequence, the items of the sequence are
         converted and returned as a sequence.
 
-        Non-standard.
+        Non-standard. For internal use; do not use this in your
+        applications.
 
         """
         return self.escape(o, self.converter)
@@ -174,7 +178,8 @@ class Connection(_mysql.connection):
         character set as the encoding. If that's not available,
         latin1 is used.
 
-        Non-standard.
+        Non-standard. For internal use; do not use this in your
+        applications.
 
         """
         return self.literal(u.encode(self.charset))
