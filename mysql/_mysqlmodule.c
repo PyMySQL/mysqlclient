@@ -531,7 +531,6 @@ _mysql_escape_string(self, args)
 	PyObject *str;
 	char *in, *out;
 	int len, size;
-	PyObject *o;
 	if (!PyArg_ParseTuple(args, "s#:escape_string", &in, &size)) return NULL;
 	str = PyString_FromStringAndSize((char *) NULL, size*2+1);
 	if (!str) return PyErr_NoMemory();
@@ -548,10 +547,9 @@ _mysql_escape_row(self, args)
 	PyObject *self;
 	PyObject *args;
 {
-	PyObject *o=NULL, *d=NULL, *r=NULL, *item, *quoted, *str, *itemstr,
+	PyObject *o=NULL, *d=NULL, *r=NULL, *item, *quoted, 
 		*itemtype, *itemconv;
-	char *in, *out;
-	int i, n, len, size;
+	int i, n;
 	if (!PyArg_ParseTuple(args, "OO:escape_row", &o, &d)) goto error;
 	if (!PySequence_Check(o)) {
 		PyErr_SetString(PyExc_TypeError, "sequence required");
@@ -588,8 +586,6 @@ _mysql_escape_row(self, args)
 	return r;
   error:
 	Py_XDECREF(r);
-	Py_XDECREF(o);
-	Py_XDECREF(d);
 	return NULL;
 }
 				
@@ -707,8 +703,6 @@ _mysql_ResultObject_fetch_all_rows(self, args)
 	_mysql_ResultObject *self;
 	PyObject *args;
 {
-	unsigned int n, i;
-	unsigned long *length;
 	PyObject *r;
 	if (!PyArg_NoArgs(args)) return NULL;
 	if (!(r = PyList_New(0))) return NULL;
@@ -854,7 +848,6 @@ _mysql_ConnectionObject_list_fields(self, args)
 	_mysql_ConnectionObject *self;
 	PyObject *args;
 {
-	_mysql_ResultObject *r;
 	MYSQL_RES *result;
 	char *wild = NULL, *table;
 
@@ -1022,7 +1015,6 @@ _mysql_ConnectionObject_store_result(self, args)
 	PyObject *args;
 {
 	MYSQL_RES *result;
-	unsigned int n;
 
 	if (!PyArg_NoArgs(args)) return NULL;
 	Py_BEGIN_ALLOW_THREADS
@@ -1111,7 +1103,6 @@ static void
 _mysql_ResultObject_dealloc(self)
 	_mysql_ResultObject *self;
 {
-	int i;
 	mysql_free_result(self->result);
 	Py_DECREF(self->conn);
 	Py_DECREF(self->converter);
@@ -1280,6 +1271,7 @@ PyTypeObject _mysql_ResultObject_Type = {
 static PyMethodDef
 _mysql_methods[] = {
 	{ "connect", _mysql_connect, METH_VARARGS | METH_KEYWORDS },
+        { "debug", _mysql_debug, METH_VARARGS },
 	{ "escape_row", _mysql_escape_row, METH_VARARGS },
 	{ "escape_string", _mysql_escape_string, METH_VARARGS },
 	{ "get_client_info", _mysql_get_client_info },
