@@ -85,8 +85,7 @@ class BaseCursor:
 	    except TypeError, m:
                 if m.args[0] in ("not enough arguments for format string",
                                  "not all arguments converted"):
-                    self.errorhandler(self.connection, self,
-                                      ProgrammingError, m.args[0])
+                    self.errorhandler(self, ProgrammingError, m.args[0])
                 else:
                     raise
         self._executed = query
