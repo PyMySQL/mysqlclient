@@ -24,8 +24,6 @@ class BaseCursor:
         self.rowcount = -1
         self.arraysize = 100
         self._executed = None
-        self._transaction = 0
-        self.__c_locked = 0
 
     def __del__(self):
         self.close()
@@ -33,10 +31,7 @@ class BaseCursor:
     def close(self):
         """Close the cursor. No further queries will be possible."""
         if not self.__conn: return
-        self._end()
         self.__conn = None
-        self._executed = None
-        self._transaction = None
 
     def _check_executed(self):
         if not self._executed:
@@ -58,12 +53,12 @@ class BaseCursor:
         """Execute a query.
         
         query -- string, query to execute on server
-        args -- sequence or mapping, parameters to use with query.
+        args -- optional sequence or mapping, parameters to use with query.
         returns long integer rows affected, if any"""
 
         from types import ListType, TupleType
         qc = self._get_db().converter
-        if not args:
+        if args is None:
             r = self._query(query)
         elif type(args) is ListType and type(args[0]) is TupleType:
  	    r = self.executemany(query, args) # deprecated
@@ -105,7 +100,7 @@ class BaseCursor:
 	except TypeError, msg:
             if msg.args[0] in ("not enough arguments for format string",
                                "not all arguments converted"):
-                raise ProgrammingError, (0, msg.args[0])
+                raise ProgrammingError, msg.args[0]
             else:
                 raise
         r = self._query(join(q,',\n'))
@@ -113,20 +108,16 @@ class BaseCursor:
         return r
 
     def __do_query(self, q):
+
         from string import split, atoi
         db = self._get_db()
-        if self._transaction: self._begin()
-        try:
-            db.query(q)
-            self._result = self._get_result()
-            self.rowcount = db.affected_rows()
-            self.description = self._result and self._result.describe() or None
-            self._insert_id = db.insert_id()
-            self._info = db.info()
-            self._check_for_warnings()
-        except:
-            self._end()
-            raise
+        db.query(q)
+        self._result = self._get_result()
+        self.rowcount = db.affected_rows()
+        self.description = self._result and self._result.describe() or None
+        self._insert_id = db.insert_id()
+        self._info = db.info()
+        self._check_for_warnings()
         return self.rowcount
 
     def _check_for_warnings(self): pass
@@ -143,34 +134,8 @@ class BaseCursor:
         self._check_executed()
         return self._insert_id
     
-    def nextset(self):
-        """Does nothing. Required by DB API."""
-        self._check_executed()
-        return None
-
     def _fetch_row(self, size=1):
         return self._result.fetch_row(size, self._fetch_type)
-
-    def _begin(self):
-        self.__conn._begin()
-        self._transaction = 1
-
-    def _end(self):
-        self._transaction = 0
-        self.__conn._end()
-
-    def _acquire(self):
-        if self.__c_locked: return
-        self.__conn._acquire()
-        self.__c_locked = 1
-
-    def _release(self):
-        if not self.__conn: return
-        self.__conn._release()
-        self.__c_locked = 0
-    
-    def _is_transactional(self):
-        return self.__conn._transactional
 
         
 class CursorWarningMixIn:
@@ -194,10 +159,6 @@ class CursorStoreResultMixIn:
     result set can be very large, consider adding a LIMIT clause to your
     query, or using CursorUseResultMixIn instead."""
 
-    def __init__(self, connection):
-        BaseCursor.__init__(self, connection)
-        self._acquire()
-        
     def _get_result(self): return self._get_db().store_result()
 
     def close(self):
@@ -206,16 +167,11 @@ class CursorStoreResultMixIn:
         BaseCursor.close(self)
 
     def _query(self, q):
-        self._acquire()
-        try:
-            rowcount = self._BaseCursor__do_query(q)
-            self._rows = self._result and self._fetch_row(0) or ()
-            self._pos = 0
-            del self._result
-            if not self._is_transactional: self._end()
-            return rowcount
-        finally:
-            self._release()
+        rowcount = self._BaseCursor__do_query(q)
+        self._rows = self._result and self._fetch_row(0) or ()
+        self._pos = 0
+        del self._result
+        return rowcount
             
     def fetchone(self):
         """Fetches a single row from the cursor."""
@@ -269,7 +225,6 @@ class CursorUseResultMixIn:
 
     def close(self):
         """Close the cursor. No further queries can be executed."""
-        self._release()
         self._result = None
         BaseCursor.close(self)
 
@@ -279,19 +234,22 @@ class CursorUseResultMixIn:
         """Fetches a single row from the cursor."""
         self._check_executed()
         r = self._fetch_row(1)
-        return r and r[0] or None
+        if r: return r[0]
+        return None
              
     def fetchmany(self, size=None):
         """Fetch up to size rows from the cursor. Result set may be smaller
         than size. If size is not defined, cursor.arraysize is used."""
         self._check_executed()
-        return self._fetch_row(size or self.arraysize)
+        r = self._fetch_row(size or self.arraysize)
+        return r
          
     def fetchall(self):
         """Fetchs all available rows from the cursor."""
-        self._check_open()
-        return self._fetch_row(0)
-
+        self._check_executed()
+        r = self._fetch_row(0)
+        return r
+    
 
 class CursorTupleRowsMixIn:
 

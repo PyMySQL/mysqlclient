@@ -75,7 +75,7 @@ MySQLdb. MySQLdb is free software.
 
 setup (# Distribution meta-data
         name = "MySQL-python",
-        version = "0.9.0b1",
+        version = "0.9.0b2",
         description = "An interface to MySQL",
 	long_description=long_description,
         author = "Andy Dustman",
@@ -89,6 +89,7 @@ setup (# Distribution meta-data
                       "MySQLdb.converters",
                       "MySQLdb.connections",
                       "MySQLdb.cursors",
+                      "MySQLdb.data",
                       "MySQLdb.constants.CR",
                       "MySQLdb.constants.FIELD_TYPE",
                       "MySQLdb.constants.ER",

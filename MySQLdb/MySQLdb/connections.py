@@ -33,8 +33,6 @@ class Connection:
     read_default_group -- see the MySQL documentation for mysql_options()
     cursorclass -- class object, used to create cursors or cursors.Cursor.
             This parameter MUST be specified as a keyword parameter.
-    threads -- boolean, if false threading is disabled, otherwise threads
-            are enabled by default. (MUST be a keyword parameter.)
 
     Returns a Connection object.
 
@@ -50,9 +48,6 @@ class Connection:
         from converters import conversions
         import types
         kwargs2 = kwargs.copy()
-        self.__threads = kwargs.get('threads',1)
-        if kwargs.has_key('threads'):
-            del kwargs2['threads']
         if not kwargs.has_key('conv'):
             kwargs2['conv'] = conversions.copy()
         if kwargs.has_key('cursorclass'):
@@ -64,69 +59,9 @@ class Connection:
         self._db.converter[types.StringType] = self._db.string_literal
         self._transactional = self._db.server_capabilities & CLIENT.TRANSACTIONS
         self._autocommit = 1
-        if self.__threads:
-            # __c_lock: connection lock. Cursors must always obtain the
-            #     connection lock before doing any queries. A blocking
-            #     call is used. If the same thread tries to acquire the
-            #     lock, produce an error.
-            #
-            # _t_lock: transaction lock. If operating transactionally,
-            #     Cursors must acquire the transaction lock on the first
-            #     query. The same thread may acquire the lock more than
-            #     once. commit() or rollback() or an error releases this
-            #     lock.
-            import threading
-            self.__c_lock = threading.Lock()
-            self.__c_locker = None
-            self.__t_lock = threading.Lock()
-            self.__t_locker = None
 
     def __del__(self):
-        self.close()
-        
-    def _begin(self):
-        """Obtain the transaction lock. A thread may try to obtain this
-        lock multiple times."""
-        if not self.__threads: return
-        import threading
-        me = threading.currentThread()
-        if self.__t_locker == me: return
-        self.__t_lock.acquire()
-        self.__t_locker = me
-
-    def _end(self):
-        """Release the transaction lock. If a thread tries to release this
-        lock when it is not currently locking it, it does nothing."""
-        if not self.__threads: return
-        import threading
-        me = threading.currentThread()
-        if self.__t_locker != me: return
-        self.__t_locker = None
-        self.__t_lock.release()
-
-    def _acquire(self):
-        """Acquire the connection. ProgrammingError is raised if the
-        thread has already acquired the connection."""
-        if not self.__threads: return
-        import threading
-        me = threading.currentThread()
-        if self.__c_locker == me:
-            raise ProgrammingError, "would produce deadlock"
-        self.__c_lock.acquire()
-        self.__c_locker = me
-        
-    def _release(self):
-        """Release the connection. If a thread tries to release this
-        lock when it is not currently locking it, ProgrammingError
-        is raised (this shouldn't happen)."""
-        if not self.__threads: return
-        import threading
-        me = threading.currentThread()
-        if self.__c_locker != me:
-            if not self.__c_locker: return
-            raise ProgrammingError, "tried to release another %s's lock" % self.__c_locker
-        self.__c_locker = None
-        self.__c_lock.release()
+        if hasattr(self, '_db'): self.close()
         
     def close(self):
         """Close the connection. No further activity possible."""
@@ -149,7 +84,6 @@ class Connection:
             if self._transactional:
                 self._db.query("COMMIT")
         finally:
-            self._end()
             self._transactional = not self._autocommit
             
     def rollback(self):
@@ -160,7 +94,6 @@ class Connection:
             else:
                 raise NotSupportedError, "Not supported by server"
         finally:
-            self._end()
             self._transactional = not self._autocommit
             
     def cursor(self, cursorclass=None):

@@ -15,8 +15,7 @@ others. However, the older version is a) not thread-friendly (database
 operations could cause all other threads to block), b) written for
 MySQL 3.21 (does not compile against newer versions without patches),
 c) apparently not actively maintained. MySQLdb is a completely new
-module, distributed free of charge under a license derived from the
-Python license.
+module, distributed free of charge under the GNU Public License.
 
 <p>
 <sect1>Platforms
@@ -70,14 +69,14 @@ InnoDB. GEMINI tables are slated for MySQL-4.0.  Note that MySQL
 generally operates in <tt/AUTOCOMMIT/ mode by default, and MySQLdb
 assumes that <tt/AUTOCOMMIT/ is on by default. To change this, use the
 <tt/autocommit(n)/ method; otherwise MySQLdb will not know that that
-you have changed it, and this affects locking for transactions.
+you have changed it.
 
 <sect1>DateTime <p>If you have the <htmlurl
 url="http://www.lemburg.com/files/python/mxDateTime.html"
 name="mx.DateTime"> package installed (recommended), MySQLdb will use
 it for date-related objects. Otherwise, these will be returned to
 Python as strings. You can also modify the type conversion
-dictionaries to return these as other object classes, if you prefer.
+dictionary to return these as other object classes, if you prefer.
 
 <sect1>MySQLmodule<label id="MySQLmodule">
 <p>
@@ -389,7 +388,7 @@ MySQLdb.
 	    location of UNIX socket. Default: use TCP.
 
       <tag>conv</tag> type conversion dictionary.
-            Default: a copy of <tt/MySQLdb.converters.conv/
+            Default: a copy of <tt/MySQLdb.converters.conversions/
 
       <tag>compress</tag> Enable protocol compression. Default: no compression.
 
@@ -411,36 +410,36 @@ MySQLdb.
             unless overridden. Default: <tt/MySQLdb.cursors.Cursor/.
 	    <em/This must be a keyword parameter./
 
-      <tag>threads</tag> boolean, to enable use of threading within
-            <tt/MySQLdb/. Default: 1 (enabled). Set this to 0 if you
-	    don't want to or can't use threads.
-	    <em/This must be a keyword parameter./
-
 </descrip>
 
 <tag>apilevel</tag> 
       String constant stating the supported DB API level. '2.0'
 
 <tag>threadsafety</tag> Integer constant stating the level of thread
-      safety the interface supports. As of MySQLdb version 0.2.0, this
-      is set to 2, which means: Threads may share the module and
-      connections.  Cursors employ a lock in the connection object to
-      ensure that cursors do not use the connection at the same
-      time. Generally, sharing a connection probably reduces
-      performance; the MySQL server maintains a seperate thread for
-      each connection. It is recommended that connections not be
-      shared between threads. See the MySQL documentation for more
-      details. As of 0.9.0, there is an additional blocking lock that
-      is used if transactioning is available, to insure a connection
-      cannot be shared between two threads if a transaction is in
-      progress. Note that two cursors in the same thread cannot
-      attempt to acquire the connection lock at the same time; this
-      would produce deadlock, and <tt/ProgrammingError/ is
-      raised. However, multiple cursors in the same thread can acquire
-      the transaction lock. <tt/commit()/ and <tt/rollback()/ release
-      the transaction lock. The general rule here is, cursors acquire
-      locks, commit and rollback release them. Fortunately, you don't
-      need to think about this too much.
+      safety the interface supports. As of MySQLdb version 0.9.0, this
+      is set to 1, which means: Threads may share the module.
+      <p>The MySQL protocol can not handle multiple threads using the
+      same connection at once. Some earlier versions of MySQLdb utilized locking
+      to achieve a threadsafety of 2. While this is not terribly hard
+      to accomplish using the standard Cursor class (which uses
+      <tt/mysql_store_result()/), it is complicated by SSCursor (which
+      uses <tt/mysql_use_result()/; with the latter you must ensure
+      all the rows have been read before another query can be executed.
+      It is further complicated by the addition of transactions, since
+      transactions start when a cursor execute a query, but end when
+      <tt/COMMIT/ or <tt/ROLLBACK/ is executed by the Connection object.
+      Two threads cannot share a connection while a transaction is in
+      progress, in addition to not being able to share it during query
+      execution. This excessively complicated the code to the point where
+      it just isn't worth it. <p>The general upshot of this is: Don't
+      share connections between threads. It's really not worth your effort
+or mine, and in the end, will probably hurt performance, since the MySQL
+      server runs a separate thread for each connection.
+      You can certainly do things like
+      cache connections in a pool, and give those connections to one
+      thread at a time. If you let two threads use a connection simultaneously,
+      the MySQL client library will probably upchuck and die.
+      You have been warned.
 
 <tag>paramstyle</tag> String constant stating the type of parameter
       marker formatting expected by the interface. Set to 'format' =
@@ -459,7 +458,7 @@ MySQLdb.
       regardless of type. The interface performs all necessary
       quoting.
 
-<tag><label id="type_conv">conv</tag> A dictionary mapping MySQL types
+<tag><label id="conversions">conv</tag> A dictionary mapping MySQL types
       (from <TT>FIELD_TYPE.*</TT>) to callable Python objects (usually
       functions) which convert from a string to the desired type; and
       mapping Python types to callable Python objects which convert
@@ -467,10 +466,10 @@ MySQLdb.
       initialized with reasonable defaults for most types. When
       creating a Connection object, you can pass your own type
       converter dictionary as a keyword parameter. Otherwise, it uses
-      a copy of <tt>MySQLdb.converters.conv</tt>. The dictionary
+      a copy of <tt>MySQLdb.converters.conversions</tt>. The dictionary
       includes some of the factory functions from the
       <tt>DateTime</tt> module, if it is available. Several
-      non-standard types (<tt>SET, ENUM</tt>) are returned as strings,
+      non-standard types are returned as strings,
       which is how MySQL returns all columns. For more details, see
       the built-in module documentation.
 
@@ -544,9 +543,6 @@ Compatibility note: The older <ref id="MySQLmodule"> defines this method,
       warnings cause <tt/Warning/ to be raised. If you are using a
       cursor class without warnings, then you might want to use
       this. See the MySQL docs for <tt/mysql_info()/. (Non-standard)
-
-<tag>nextset()</tag>
-      Not implemented.
 
 <tag>setinputsizes()</tag>
       Does nothing, successfully.
@@ -674,12 +670,7 @@ entire result set is stored on the client side.
 <tag><label id="SSCursor">CursorUseResultMixIn</tag> Causes the cursor to use the
 <tt>mysql_use_result()</tt> function to get the query result. The
 result set is stored on the server side and is transferred row by row
-using fetch operations. Not recommended, particularly for threaded
-applications that share connections. Note that creating the cursor
-causes it to acquire a lock on the connection object, and this is
-not released until the cursor is deleted or <tt/cursor.close()/.
-If you aren't careful about this, it can result in deadlock, which
-is bad.
+using fetch operations. 
 
 <tag>CursorTupleRowsMixIn</tag> Causes the cursor to return rows
 as a tuple of the column values.
@@ -702,8 +693,7 @@ and <tt>BaseCursor</tt>, i.e. it raises <tt>Warning</tt>, uses
 dictionaries.
 
 <tag>SSCursor</tag> A "server-side" cursor. Like <tt/Cursor/ but uses
-<tt/CursorUseResultMixIn/. Thread-safe, but not recommended for
-threaded applications which share connections.
+<tt/CursorUseResultMixIn/. 
 Use only if you are dealing with potentially large result sets.
 
 <tag/SSDictCursor/ Like <tt/SSCursor/ except it returns rows as
