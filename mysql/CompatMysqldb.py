@@ -1,5 +1,6 @@
 #author: James Henstridge <james@daa.com.au>
-#adapted to _mysql by Andy Dustman <adustman@comstar.net>
+#adapted to _mysql by Andy Dustman <andy@dustman.net>
+#under no circumstances should you bug James about this!!!
 
 """This is a class that implements an interface to mySQL databases, conforming
 to the API published by the Python db-sig at
@@ -41,21 +42,10 @@ from string import upper, split, join
 
 error = 'mysqldb.error'
 
-_type = {}
-for a in ('char', 'varchar', 'string', 'unhandled', '????'):
-	_type[a] = 'STRING'
-for a in ('tiny blob', 'medium blob', 'long blob', 'blob'):
-	_type[a] = 'RAW'
-for a in ('short', 'long', 'float', 'double', 'decimal'):
-	_type[a] = 'NUMBER'
-for a in ('date', 'time', 'datetime', 'timestamp'):
-	_type[a] = 'DATE'
-del a
-
 from _mysql import FIELD_TYPE
 _type_conv = { FIELD_TYPE.TINY: int,
                FIELD_TYPE.SHORT: int,
-               FIELD_TYPE.LONG: int,
+               FIELD_TYPE.LONG: long,
                FIELD_TYPE.FLOAT: float,
                FIELD_TYPE.DOUBLE: float,
                FIELD_TYPE.LONGLONG: long,
@@ -69,6 +59,33 @@ def isDML(q):
 	return upper(split(q)[0]) in ('DELETE', 'INSERT', 'UPDATE', 'LOAD')
 def isDQL(q):
 	return upper(split(q)[0]) in ('SELECT', 'SHOW', 'DESC', 'DESCRIBE')
+
+class DBAPITypeObject:
+    
+    def __init__(self,*values):
+        self.values = values
+        
+    def __cmp__(self,other):
+        if other in self.values:
+            return 0
+        if other < self.values:
+            return 1
+        else:
+            return -1
+
+_Set = DBAPITypeObject
+
+STRING    = _Set(FIELD_TYPE.CHAR, FIELD_TYPE.ENUM, FIELD_TYPE.INTERVAL,
+                 FIELD_TYPE.SET, FIELD_TYPE.STRING, FIELD_TYPE.VAR_STRING)
+BINARY    = _Set(FIELD_TYPE.BLOB, FIELD_TYPE.LONG_BLOB, FIELD_TYPE.MEDIUM_BLOB,
+                 FIELD_TYPE.TINY_BLOB)
+NUMBER    = _Set(FIELD_TYPE.DECIMAL, FIELD_TYPE.DOUBLE, FIELD_TYPE.FLOAT,
+	         FIELD_TYPE.INT24, FIELD_TYPE.LONG, FIELD_TYPE.LONGLONG,
+	         FIELD_TYPE.TINY, FIELD_TYPE.YEAR)
+DATE      = _Set(FIELD_TYPE.DATE, FIELD_TYPE.NEWDATE)
+TIME      = _Set(FIELD_TYPE.TIME)
+TIMESTAMP = _Set(FIELD_TYPE.TIMESTAMP, FIELD_TYPE.DATETIME)
+ROWID     = _Set()
 
 class Connection:
 	"""This is the connection object for the mySQL database interface."""
@@ -84,9 +101,10 @@ class Connection:
 		except MySQL.Error, msg:
 			raise error, msg
 		self.__curs = Cursor(self.__conn)
-		self._server_info = i = self.__conn.get_server_info()
-		self._server_version = int(i[0])*10000 + int(i[2:4])*100 + int(i[5:7])
-
+		self.__conn.query("SHOW VARIABLES")
+		self.__vars = {}
+		for k, v in self.__conn.store_result().fetch_row(0):
+			self.__vars[k] = v
 
 	def __del__(self):
 		self.close()
@@ -109,13 +127,14 @@ class Connection:
 
 	def commit(self):
 		"""Commit the current transaction."""
-		if self._server_version > 32315: self.__conn.query("COMMIT")
+		if self.__vars.get('have_bdb', 'NO') == 'YES':
+			 self.__conn.query("COMMIT")
 
 	def rollback(self):
 		"""Rollback the current transaction."""
-		if self._server_version > 32315: self.__conn.query("ROLLBACK")
+		if self.__vars.get('have_bdb', 'NO') == 'YES':
+			 self.__conn.query("ROLLBACK")
 		else: raise error, "Not supported by server"
-
 
 	def callproc(self, params=None): pass
 
@@ -205,12 +224,9 @@ class Cursor:
 					self.__res = self.__conn.query(
 						op % params[-1])
 					self.insert_id = self.__res.insert_id()
-					f = self.__res.fields()
 				except MySQL.Error, msg:
 					raise error, msg
-				self.__dict__['description'] = tuple(map(
-					lambda x: (x[0], _type[x[2]], x[3],
-					x[3]), f))
+				self.__dict__['description'] = self.__res.describe()
 				return None
 		else:
 			try:
@@ -244,16 +260,9 @@ class Cursor:
 	def fetchall(self):
 		if not self.__res: raise error, "no query made yet."
 		try:
-			rows = r = list(self.__res.fetch_row(self.arraysize))
-			while 1:
-				rows = list(self.__res.fetch_row(self.arraysize))
-				if not rows: break
-				r.extend(rows)
-			return r
+			return self.__res.fetch_row(0)
 		except MySQL.Error, msg:
 			raise error, msg
-
-
 
 	def fetchoneDict(self):
 		"""This is not a standard part of Python DB API."""
@@ -275,16 +284,9 @@ class Cursor:
 		"""This is not a standard part of Python DB API."""
 		if not self.__res: raise error, "no query made yet."
 		try:
-			rows = r = list(self.__res.fetch_row(self.arraysize, 2))
-			while 1:
-				rows = list(self.__res.fetch_row(self.arraysize, 2))
-				if not rows: break
-				r.extend(rows)
-			return r
+			return self.__res.fetch_row(0,2)
 		except MySQL.Error, msg:
 			raise error, msg
-						
-
 
 	def setinputsizes(self, sizes): pass
 	def setoutputsize(self, size, col=None): pass

@@ -23,14 +23,21 @@ charge under a license derived from the Python license.
 <p>
 <sect2>Linux/UNIX
 <p>
-This module is developed on RedHat Linux 5.2 for Intel. It should build without
-much trouble on most UNIX-like platforms by using the <tt/build.py/ script.
+This module is developed on RedHat Linux (currently 7.0)
+for Intel. It should build without
+much trouble on most platforms by using the <tt/setup.py/ script.
+Supposedly it builds on MacOS X.
+Be aware that you need the Distutils package which comes with
+Python 2.0. If you don't have it (i.e. you have Python 1.5.2), you
+can find it over at <htmlurl url="http://www.python.org/" name="www.python.org">.
 <sect2>Windows (3.11, 95, 98, NT, 2000, CE, BSOD, XYZ, etc.)
 <p>
 Windows is <em/not/ a supported platform. 
-However, the <tt/compile.py/ script
+However, the <tt/setup.py/ script
 reportedly gets the job done.
-Be aware that this is a user-contributed script; the author
+There is probably a link on the web page for getting a precompiled
+Windows installer from someone or other.
+Be aware that this is a user-contributed package; the author
 cannot help you with compiling and running under Windows.
 <sect1>Python
 <p>
@@ -57,19 +64,19 @@ type.
 
 <sect2>MySQL-3.23
 <p>
-MySQLdb has only been lightly tested.
-MySQL-3.23 is presently in beta (testing) release. Several API
+MySQL-3.23 is presently in gamma (stable prerelease). Several API
 additions have been made so far. These will be incorporated into
-MySQLdb as work progresses. As of 3.23.15, transactions are supported
-in MySQL using BDB tables. MySQLdb (0.2.2 and up) detects the
-server version upon connection and will issue <tt/COMMIT/ and <tt/ROLLBACK/
+MySQLdb as work progresses. As of 3.23.30, transactions are supported
+in MySQL using BDB tables. MySQLdb (0.3.0 and up) detects the
+presence of BDB table support
+upon connection and will issue <tt/COMMIT/ and <tt/ROLLBACK/
 statements when appropriate. Note that MySQL operates in
 <tt/AUTOCOMMIT/ mode by default; you will have to issue SQL to
 change this.
 
 <sect1>DateTime
 <p>If you have the <htmlurl
-url="http://starship.skyport.net/~lemburg/mxDateTime.html"
+url="http://www.lemburg.com/files/python/mxDateTime.html"
 name="DateTime"> module installed (recommended), MySQLdb will use
 it for date-related objects. Otherwise, these will be returned to
 Python as strings. You can also modify the type conversion
@@ -109,14 +116,12 @@ with the same name; use SQL <tt/AS/ to rename fields.
 @ Transactions | <tt>db.commit()</tt> and <tt>db.rollback()</tt>
 both exist and silently do nothing <ref id="rollback" name="(danger!)">
 | <tt>db.commit()</tt> and <tt>db.rollback()</tt> work if the MySQL
-client library can perform transactions; otherwise <tt>db.rollback()</tt>
-is not defined
+server can perform transactions; otherwise <tt>db.rollback()</tt>
+always fails
 <caption>Mysqldb to MySQLdb changes</tabular></table>
 
 <sect1>Zope and ZMySQLDA
-<p>I'm not distributing a ZMySQLDA patch any more. Somebody else
-has written a ZMySQLDA that works with MySQLdb. Find it at
-<htmlurl url="http://www.zope.org/" name="the Zope home site">.
+<p>I wrote a <htmlurl url="http://dustman.net/andy/python/ZMySQLDA" name="ZMySQLDA"> for use with MySQLdb.
 <sect1>Documentation
 <p>The web page documentation may be slightly ahead of the latest release
 and may reflect features of the next release.
@@ -132,7 +137,7 @@ information, see the MySQL documentation. The documentation for this
 module is intentionally weak because you probably should use the
 higher-level <ref id="MySQLdb"> module. If you really need it, use the
 standard MySQL docs and transliterate as necessary.
-<p>Compatibility note: As of 0.2.2, the various fetch_rowXXX() cursor
+<p>Compatibility note: As of 0.3.0, the various fetch_rowXXX() cursor
 methods have been combined into a single fetch_row([n=1[,how=0]])
 method. See the built-in module documentation for more details.
 <p>

@@ -53,7 +53,7 @@ quote_conv = { types.IntType: Thing2Str,
 
 type_conv = { FIELD_TYPE.TINY: int,
               FIELD_TYPE.SHORT: int,
-              FIELD_TYPE.LONG: int,
+              FIELD_TYPE.LONG: long,
               FIELD_TYPE.FLOAT: float,
               FIELD_TYPE.DOUBLE: float,
               FIELD_TYPE.LONGLONG: long,
@@ -144,14 +144,6 @@ def Binary(x): return str(x)
 
 insert_values = re.compile(r'values\s(\(.+\))', re.IGNORECASE)
 
-def _fetchall(result, *args):
-    rows = r = list(apply(result.fetch_row, args))
-    while 1:
-        rows = apply(result.fetch_row, args)
-        if not rows: break
-        r.extend(list(rows))
-    return r
-    
 class BaseCursor:
     
     """A base for Cursor classes. Useful attributes:
@@ -256,6 +248,14 @@ class BaseCursor:
     
     def nextset(self): return None
 
+    def _fetch_row(self): return self._result.fetch_row(1, self._fetch_type)[0]
+
+    def _fetch_rows(self, size):
+        return self._result.fetch_row(size, self._fetch_type)
+
+    def _fetch_all_rows(self): 
+        return self._result.fetch_row(0, self._fetch_type)
+         
 
 class CursorWarningMixIn:
 
@@ -363,16 +363,8 @@ class CursorTupleRowsMixIn:
 
     _fetch_type = 0
 
-    def _fetch_row(self): return self._result.fetch_row(1, self._fetch_type)[0]
 
-    def _fetch_rows(self, size):
-        return self._result.fetch_row(size, self._fetch_type)
-
-    def _fetch_all_rows(self): 
-        return _fetchall(self._result, self.arraysize, self._fetch_type)
-         
-
-class CursorDictRowsMixIn(CursorTupleRowsMixIn):
+class CursorDictRowsMixIn:
 
     _fetch_type = 1
 
@@ -453,9 +445,11 @@ class Connection:
             self.cursorclass = Cursor
         self.db = apply(connect, (), kwargs)
         self.quote_conv[types.StringType] = self.Thing2Literal
-        self._server_info = self.db.get_server_info()
-        i = map(int, split(split(self._server_info, '-')[0],'.'))
-        self._server_version = i[0]*10000 + i[1]*100 + i[2]
+        self.db.query('show variables')
+        r = self.db.store_result()
+        vars = r.fetch_row(0)
+        self._server_vars = {}
+        for k,v in vars: self._server_vars[k] = v
         if _threading: self.__lock = _threading.Lock()
 
     if _threading:
@@ -473,11 +467,13 @@ class Connection:
          
     def commit(self):
         """Commit the current transaction."""
-        if self._server_version > 32315: self.db.query("COMMIT")
+        if self._server_vars.get('have_bdb','NO') == 'YES':
+            self.db.query("COMMIT")
 
     def rollback(self):
         """Rollback the current transaction."""
-        if self._server_version > 32315: self.db.query("ROLLBACK")
+        if self._server_vars.get('have_bdb','NO') == 'YES':
+            self.db.query("ROLLBACK")
         else: raise NotSupportedError, "Not supported by server"
 
     def cursor(self, cursorclass=None):
@@ -496,10 +492,10 @@ class Connection:
     def get_server_info(self): return self.db.get_server_info()
     def info(self): return self.db.info()
     def kill(self, p): return self.db.kill(p)
-    def list_dbs(self): return _fetchall(self.db.list_dbs())
-    def list_fields(self, table): return _fetchall(self.db.list_fields(table))
-    def list_processes(self): return _fetchall(self.db.list_processes())
-    def list_tables(self, db): return _fetchall(self.db.list_tables(db))
+    def list_dbs(self): return self.db.list_dbs().fetch_row(0)
+    def list_fields(self, table): return self.db.list_fields(table).fetch_row(0)
+    def list_processes(self): return self.db.list_processes().fetch_row(0)
+    def list_tables(self, db): return self.db.list_tables(db).fetch_row(0)
     def field_count(self): return self.db.field_count()
     num_fields = field_count # used prior to MySQL-3.22.24
     def ping(self): return self.db.ping()

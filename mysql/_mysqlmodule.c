@@ -880,12 +880,14 @@ _mysql_row_to_dict_old(
 		v = _mysql_field_to_python(c, row[i], length[i]);
 		if (!v) goto error;
 		{
-			int len;
-			char buf[256];
-			strncpy(buf, fields[i].table, 256);
-			len = strlen(buf);
-			strncat(buf, ".", 256-len);
-			len = strlen(buf);
+			int len=0;
+			char buf[256]="";
+			if (strlen(fields[i].table)) {
+				strncpy(buf, fields[i].table, 256);
+				len = strlen(buf);
+				strncat(buf, ".", 256-len);
+				len = strlen(buf);
+			}
 			strncat(buf, fields[i].name, 256-len);
 			PyMapping_SetItemString(r, buf, v);
 		}
@@ -895,6 +897,45 @@ _mysql_row_to_dict_old(
   error:
 	Py_XDECREF(r);
 	return NULL;
+}
+
+typedef PyObject *_PYFUNC(_mysql_ResultObject *, MYSQL_ROW);
+
+int
+_mysql__fetch_row(
+	_mysql_ResultObject *self,
+	PyObject *r,
+	int skiprows,
+	int maxrows,
+	_PYFUNC *convert_row)
+{
+	unsigned int i;
+	MYSQL_ROW row;
+
+	for (i = skiprows; i<(skiprows+maxrows); i++) {
+		PyObject *v;
+		if (!self->use)
+			row = mysql_fetch_row(self->result);
+		else {
+			Py_BEGIN_ALLOW_THREADS;
+			row = mysql_fetch_row(self->result);
+			Py_END_ALLOW_THREADS;
+		}
+		if (!row && mysql_errno(self->connection)) {
+			_mysql_Exception((_mysql_ConnectionObject *)self->conn);
+			goto error;
+		}
+		if (!row) {
+			if (_PyTuple_Resize(&r, i, 0) == -1) goto error;
+			break;
+		}
+		v = convert_row(self, row);
+		if (!v) goto error;
+		PyTuple_SET_ITEM(r, i, v);
+	}
+	return i-skiprows;
+  error:
+	return -1;
 }
 
 static PyObject *
@@ -912,9 +953,8 @@ _mysql_ResultObject_fetch_row(
 		_mysql_row_to_dict_old
 	};
 	_PYFUNC *convert_row;
-	unsigned int maxrows=1, how=0, i;
-	PyObject *r;
-	MYSQL_ROW row;
+	unsigned int maxrows=1, how=0, skiprows=0, rowsadded;
+	PyObject *r=NULL;
 
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|ii:fetch_row", kwlist,
 					 &maxrows, &how))
@@ -924,28 +964,30 @@ _mysql_ResultObject_fetch_row(
 		return NULL;
 	}
 	convert_row = row_converters[how];
-
-	if (!(r = PyTuple_New(maxrows))) return NULL;
-	for (i = 0; i<maxrows; i++) {
-		PyObject *v;
-		if (!self->use)
-			row = mysql_fetch_row(self->result);
-		else {
-			Py_BEGIN_ALLOW_THREADS;
-			row = mysql_fetch_row(self->result);
-			Py_END_ALLOW_THREADS;
+	if (maxrows) {
+		if (!(r = PyTuple_New(maxrows))) goto error;
+		rowsadded = _mysql__fetch_row(self, r, skiprows, maxrows, 
+				convert_row);
+		if (rowsadded == -1) goto error;
+	} else {
+		if (self->use) {
+			maxrows = 1000;
+			if (!(r = PyTuple_New(maxrows))) goto error;
+			while (1) {
+				rowsadded = _mysql__fetch_row(self, r, skiprows,
+						maxrows, convert_row);
+				if (rowsadded == -1) goto error;
+				skiprows += rowsadded;
+				if (rowsadded < maxrows) break;
+			}
+		} else {
+			/* XXX if overflow, maxrows<0? */
+			maxrows = (int) mysql_num_rows(self->result);
+			if (!(r = PyTuple_New(maxrows))) goto error;
+			rowsadded = _mysql__fetch_row(self, r, 0,
+					maxrows, convert_row);
+			if (rowsadded == -1) goto error;
 		}
-		if (!row && mysql_errno(self->connection)) {
-			Py_XDECREF(r);
-			return _mysql_Exception((_mysql_ConnectionObject *)self->conn);
-		}
-		if (!row) {
-			if (_PyTuple_Resize(&r, i, 0) == -1) goto error;
-			break;
-		}
-		v = convert_row(self, row);
-		if (!v) goto error;
-		PyTuple_SET_ITEM(r, i, v);
 	}
 	return r;
   error:
