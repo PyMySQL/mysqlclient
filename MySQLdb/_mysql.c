@@ -1,5 +1,5 @@
-#define version_info "(0,9,2,'final',1)"
-#define __version__ "0.9.2"
+#define version_info "(0,9,3,'alpha',1)"
+#define __version__ "0.9.3"
 /*
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -75,7 +75,7 @@ typedef struct {
 	PyObject *converter;
 } _mysql_ConnectionObject;
 
-#define check_connection(c) if (!(c->open)) _mysql_Exception(c)
+#define check_connection(c) if (!(c->open)) return _mysql_Exception(c)
 #define result_connection(r) ((_mysql_ConnectionObject *)r->conn)
 #define check_result_connection(r) check_connection(result_connection(r))
 
@@ -92,6 +92,13 @@ typedef struct {
 
 extern PyTypeObject _mysql_ResultObject_Type;
 
+static int _mysql_server_init_done = 0;
+#if MYSQL_VERSION_ID >= 40000
+#define check_server_init(x) if (!_mysql_server_init_done) { if (mysql_server_init(0, NULL, NULL)) { _mysql_Exception(NULL); return x; } else { _mysql_server_init_done = 1;} }
+#else
+#define check_server_init(x) if (!_mysql_server_init_done) _mysql_server_init_done = 1
+#endif
+
 PyObject *
 _mysql_Exception(_mysql_ConnectionObject *c)
 {
@@ -99,6 +106,14 @@ _mysql_Exception(_mysql_ConnectionObject *c)
 	int merr;
 
 	if (!(t = PyTuple_New(2))) return NULL;
+	if (!_mysql_server_init_done) {
+		e = _mysql_InternalError;
+		PyTuple_SET_ITEM(t, 0, PyInt_FromLong(-1L));
+		PyTuple_SET_ITEM(t, 1, PyString_FromString("server not initialized"));
+		PyErr_SetObject(e, t);
+		Py_DECREF(t);
+		return NULL;
+	}
 	if (!(c->open)) {
 		e = _mysql_InternalError;
 		PyTuple_SET_ITEM(t, 0, PyInt_FromLong(-1L));
@@ -161,7 +176,120 @@ _mysql_Exception(_mysql_ConnectionObject *c)
 	Py_DECREF(t);
 	return NULL;
 }
+	  
+static char _mysql_server_init__doc__[] =
+"Initialize embedded server. If this client is not linked against\n\
+the embedded server library, this function does nothing.\n\
+\n\
+args -- sequence of command-line arguments\n\
+groups -- sequence of groups to use in defaults files\n\
+";
 
+static PyObject *_mysql_server_init(
+	PyObject *self,
+	PyObject *args,
+	PyObject *kwargs) {
+	static char *kwlist[] = {"args", "groups", NULL};
+	char **cmd_args_c=NULL, **groups_c=NULL, *s;
+	int cmd_argc=0, i, groupc;
+	PyObject *cmd_args=NULL, *groups=NULL, *ret=NULL, *item;
+
+	if (_mysql_server_init_done) {
+		PyErr_SetString(_mysql_ProgrammingError,
+				"already initialized");
+		return NULL;
+	}
+	  
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|OO", kwlist,
+					 &cmd_args, &groups))
+		return NULL;
+
+#if MYSQL_VERSION_ID >= 40000
+	if (args) {
+		if (!PySequence_Check(cmd_args)) {
+			PyErr_SetString(PyExc_TypeError,
+					"args must be a sequence");
+			goto finish;
+		}
+		cmd_argc = PySequence_Size(cmd_args);
+		if (cmd_argc == -1) {
+			PyErr_SetString(PyExc_TypeError,
+					"args could not be sized");
+			goto finish;
+		}
+		cmd_args_c = (char **) PyMem_Malloc(cmd_argc*sizeof(char *));
+		for (i=0; i< cmd_argc; i++) {
+			item = PySequence_GetItem(cmd_args, i);
+			s = PyString_AsString(item);
+			Py_DECREF(item);
+			if (!s) {
+				PyErr_SetString(PyExc_TypeError,
+						"args must contain strings");
+				goto finish;
+			}
+			cmd_args_c[i] = s;
+		}
+	}
+	if (groups) {
+		if (!PySequence_Check(groups)) {
+			PyErr_SetString(PyExc_TypeError,
+					"groups must be a sequence");
+			goto finish;
+		}
+		groupc = PySequence_Size(groups);
+		if (groupc == -1) {
+			PyErr_SetString(PyExc_TypeError,
+					"groups could not be sized");
+			goto finish;
+		}
+		groups_c = (char **) PyMem_Malloc((1+groupc)*sizeof(char *));
+		for (i=0; i< groupc; i++) {
+			item = PySequence_GetItem(groups, i);
+			s = PyString_AsString(item);
+			Py_DECREF(item);
+			if (!s) {
+				PyErr_SetString(PyExc_TypeError,
+						"groups must contain strings");
+				goto finish;
+			}
+			groups_c[i] = s;
+		}
+		groups_c[groupc+1] = (char *)NULL;
+	}
+	/* even though this may block, don't give up the interpreter lock
+	   so that the server can't be initialized multiple times. */
+	if (mysql_server_init(cmd_argc, cmd_args_c, groups_c)) {
+		_mysql_Exception(NULL);
+		goto finish;
+	}
+#endif
+	ret = Py_None;
+	Py_INCREF(Py_None);
+	_mysql_server_init_done = 1;
+  finish:
+	PyMem_Free(groups_c);
+	PyMem_Free(cmd_args_c);
+	return ret;
+}
+
+static char _mysql_server_end__doc__[] =
+"Shut down embedded server. If not using an embedded server, this\n\
+does nothing.";
+
+static PyObject *_mysql_server_end(
+	PyObject *self,
+	PyObject *args) {
+	if (_mysql_server_init_done) {
+#if MYSQL_VERSION_ID >= 40000
+		mysql_server_end();
+#endif
+		_mysql_server_init_done = 0;
+		Py_INCREF(Py_None);
+		return Py_None;
+	}
+	return _mysql_Exception(NULL);
+}
+	 
 #if MYSQL_VERSION_ID >= 32314
 static char _mysql_thread_safe__doc__[] =
 "Indicates whether the client is compiled as thread-safe.";
@@ -171,6 +299,7 @@ static PyObject *_mysql_thread_safe(
 	PyObject *args) {
 	PyObject *flag;
 	if (!PyArg_NoArgs(args)) return NULL;
+	check_server_init(NULL);
 	if (!(flag=PyInt_FromLong((long)mysql_thread_safe()))) return NULL;
 	return flag;
 }
@@ -270,7 +399,7 @@ _mysql_ConnectionObject_Initialize(
 	PyObject *args,
 	PyObject *kwargs)
 {
-	MYSQL *conn;
+	MYSQL *conn=NULL;
 	PyObject *conv = NULL;
 	char *host = NULL, *user = NULL, *passwd = NULL,
 		*db = NULL, *unix_socket = NULL;
@@ -290,6 +419,7 @@ _mysql_ConnectionObject_Initialize(
 	
 	self->converter = NULL;
 	self->open = 0;
+	check_server_init(-1);
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|ssssisOiiisss:connect",
 					 kwlist,
 					 &host, &user, &passwd, &db,
@@ -536,6 +666,7 @@ _mysql_escape_string(
 #if MYSQL_VERSION_ID < 32321
 	len = mysql_escape_string(out, in, size);
 #else
+	check_server_init(NULL);
 	if (self) {
 		check_connection(self);
 		len = mysql_real_escape_string(&(self->connection), out, in, size);
@@ -576,6 +707,7 @@ _mysql_string_literal(
 #if MYSQL_VERSION_ID < 32321
 	len = mysql_escape_string(out+1, in, size);
 #else
+	check_server_init(NULL);
 	if (self) {
 		check_connection(self);
 		len = mysql_real_escape_string(&(self->connection), out+1, in, size);
@@ -1085,6 +1217,7 @@ _mysql_get_client_info(
 	PyObject *args)
 {
 	if (!PyArg_NoArgs(args)) return NULL;
+	check_server_init(NULL);
 	return PyString_FromString(mysql_get_client_info());
 }
 
@@ -1341,7 +1474,7 @@ _mysql_ConnectionObject_select_db(
 
 static char _mysql_ConnectionObject_shutdown__doc__[] =
 "Asks the database server to shut down. The connected user must\n\
-have shutdown privileges. Non-stadard.\n\
+have shutdown privileges. Non-standard.\n\
 ";
 
 static PyObject *
@@ -2151,8 +2284,22 @@ _mysql_methods[] = {
 		0,
 		_mysql_thread_safe__doc__
 	},
-	{NULL, NULL} /* sentinel */
 #endif
+#if MYSQL_VERSION_ID >= 40000
+	{
+		"server_init",
+		(PyCFunction)_mysql_server_init,
+		METH_VARARGS | METH_KEYWORDS,
+		_mysql_server_init__doc__
+	},
+	{
+		"server_end",
+		(PyCFunction)_mysql_server_end,
+		METH_VARARGS,
+		_mysql_server_end__doc__
+	},
+#endif
+	{NULL, NULL} /* sentinel */
 };
 
 static PyObject *

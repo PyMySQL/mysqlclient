@@ -10,17 +10,28 @@ import string
 YES = 1
 NO = 0
 
-# set this to YES if you have the thread-safe mysqlclient library
-thread_safe_library = YES
+# set this to YES to use the special thread-safe mysqlclient_r library
+# Note that since MySQL 4.0, it appears the normal library is
+# thread-safe by default, so you can leave this set as NO.
+# If building an embedded server, this option is ignored.
+thread_safe_library = NO
+
+# set this to YES if you want an embedded server version
+embedded_server = NO
 
 # You probably don't have to do anything past this point. If you
 # do, please mail me the configuration for your platform. Don't
 # forget to include the value of sys.platform and os.name.
 
 name = "MySQL-%s" % os.path.basename(sys.executable)
-version = "0.9.2"
+if embedded_server:
+    name = name + "-embedded"
+version = "0.9.3"
 
-mysqlclient = thread_safe_library and "mysqlclient_r" or "mysqlclient"
+if embedded_server:
+    mysqlclient = "mysqld"
+else:
+    mysqlclient = thread_safe_library and "mysqlclient_r" or "mysqlclient"
 
 # include files and library locations should cover most platforms
 include_dirs = [
@@ -34,6 +45,8 @@ library_dirs = [
 
 # MySQL-3.23 and newer need libz
 libraries = [mysqlclient, "z"]
+if embedded_server:
+    libraries.append("crypt")
 
 # On some platorms, this can be used to find the shared libraries
 # at runtime, if they are in a non-standard location. Doesn't
