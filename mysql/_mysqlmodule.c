@@ -508,7 +508,10 @@ _mysql_escape_row(self, args)
 	char *in, *out;
 	int i, n, len, size;
 	if (!PyArg_ParseTuple(args, "O:escape_row", &o)) goto error2;
-	if (!PySequence_Check(o)) goto error2;
+	if (!PySequence_Check(o)) {
+		PyErr_SetString(PyExc_TypeError, "sequence required");
+		goto error2;
+	}
 	if (!(n = PyObject_Length(o))) goto error2;
 	if (!(r = PyTuple_New(n))) goto error;
 	for (i=0; i<n; i++) {
