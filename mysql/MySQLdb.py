@@ -248,7 +248,9 @@ class BaseCursor:
     
     def nextset(self): return None
 
-    def _fetch_row(self): return self._result.fetch_row(1, self._fetch_type)[0]
+    def _fetch_row(self):
+        r = self._result.fetch_row(1, self._fetch_type)
+        return r and r[0] or ()
 
     def _fetch_rows(self, size):
         return self._result.fetch_row(size, self._fetch_type)

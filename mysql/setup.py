@@ -69,7 +69,7 @@ derived from the Python license.
 
 setup (# Distribution meta-data
         name = "MySQL-python",
-        version = "0.3.2",
+        version = "0.3.3",
         description = "An interface to MySQL",
 	long_description=long_description,
         author = "Andy Dustman",
