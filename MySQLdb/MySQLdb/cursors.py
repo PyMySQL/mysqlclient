@@ -77,7 +77,7 @@ class BaseCursor:
             self.errorhandler(self, ProgrammingError, "cursor closed")
         return self.connection
     
-    def execute(self, query, args=()):
+    def execute(self, query, args=None):
 
         """Execute a query.
         
@@ -98,7 +98,10 @@ class BaseCursor:
         from types import ListType, TupleType
         from sys import exc_info
         try:
-            r = self._query(query % self.connection.literal(args))
+            if args is None:
+                r = self._query(query)
+            else:
+                r = self._query(query % self.connection.literal(args))
         except TypeError, m:
             if m.args[0] in ("not enough arguments for format string",
                              "not all arguments converted"):
