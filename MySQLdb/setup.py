@@ -18,7 +18,7 @@ thread_safe_library = NO
 
 mysqlclient = thread_safe_library and "mysqlclient_r" or "mysqlclient"
 
-if sys.platform == "linux-i386": # Red Hat
+if sys.platform in ("linux-i386", "linux2"): # most Linux
     include_dirs = ['/usr/include/mysql']
     library_dirs = ['/usr/lib/mysql']
     libraries = [mysqlclient, "z"]
