@@ -194,16 +194,6 @@ static _mysql_Constant _mysql_Constant_cr[] = {
 	{ NULL } /* sentinel */
 } ;
 
-static _mysql_Constant _mysql_Constant_option[] = {
-	{ "OPT_CONNECT_TIMEOUT", MYSQL_OPT_CONNECT_TIMEOUT },
-	{ "OPT_COMPRESS", MYSQL_OPT_COMPRESS },
-        { "OPT_NAMED_PIPE", MYSQL_OPT_NAMED_PIPE },
-        { "INIT_COMMAND", MYSQL_INIT_COMMAND },
-        { "READE_DEFAULT_FILE", MYSQL_READ_DEFAULT_FILE },
-        { "READ_DEFAULT_GROUP", MYSQL_READ_DEFAULT_GROUP },
-	{ NULL } /* sentinel */
-} ;
-
 static _mysql_Constant _mysql_Constant_er[] = {
 	{ "HASHCHK", ER_HASHCHK },
 	{ "NISAMCHK", ER_NISAMCHK },
@@ -431,17 +421,28 @@ _mysql_connect(self, args, kwargs)
 	uint port = MYSQL_PORT;
 	uint client_flag = 0;
 	static char *kwlist[] = { "host", "user", "passwd", "db", "port",
-				  "unix_socket", "client_flag", "conv",
+				  "unix_socket", "conv",
+				  "connect_timeout", "compress",
+				  "named_pipe", "init_command",
+				  "read_default_file", "read_default_group",
 				  NULL } ;
+	int connect_timeout = 0;
+	int compress = -1, named_pipe = -1;
+	char *init_command=NULL,
+	     *read_default_file=NULL,
+	     *read_default_group=NULL;
 	_mysql_ConnectionObject *c = PyObject_NEW(_mysql_ConnectionObject,
 					      &_mysql_ConnectionObject_Type);
 	if (c == NULL) return NULL;
 	c->open = 0;
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|ssssisiO:connect",
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|ssssisOiiisss:connect",
 					 kwlist,
 					 &host, &user, &passwd, &db,
-					 &port, &unix_socket, &client_flag,
-					 &conv))
+					 &port, &unix_socket, &conv,
+					 &connect_timeout,
+					 &compress, &named_pipe,
+					 &init_command, &read_default_file,
+					 &read_default_group))
 		return NULL;
 	if (conv) {
 		c->converter = conv;
@@ -453,6 +454,23 @@ _mysql_connect(self, args, kwargs)
 	}
 	Py_BEGIN_ALLOW_THREADS ;
 	conn = mysql_init(&(c->connection));
+	if (connect_timeout) {
+		unsigned int timeout = connect_timeout;
+		mysql_options(&(c->connection), MYSQL_OPT_CONNECT_TIMEOUT, 
+				(char *)&timeout);
+	}
+	if (compress != -1) {
+		mysql_options(&(c->connection), MYSQL_OPT_COMPRESS, 0);
+		client_flag |= CLIENT_COMPRESS;
+	}
+	if (named_pipe != -1)
+		mysql_options(&(c->connection), MYSQL_OPT_NAMED_PIPE, 0);
+	if (init_command != NULL)
+		mysql_options(&(c->connection), MYSQL_INIT_COMMAND, init_command);
+	if (read_default_file != NULL)
+		mysql_options(&(c->connection), MYSQL_READ_DEFAULT_FILE, read_default_file);
+	if (read_default_group != NULL)
+		mysql_options(&(c->connection), MYSQL_READ_DEFAULT_GROUP, read_default_group);
 	conn = mysql_real_connect(&(c->connection), host, user, passwd, db,
 				  port, unix_socket, client_flag);
 	Py_END_ALLOW_THREADS ;
@@ -535,7 +553,7 @@ _mysql_ConnectionObject_error(self, args)
 
 static PyObject *
 _mysql_escape_string(self, args)
-	PyObject *self;
+	_mysql_ConnectionObject *self;
 	PyObject *args;
 {
 	PyObject *str;
@@ -545,14 +563,28 @@ _mysql_escape_string(self, args)
 	str = PyString_FromStringAndSize((char *) NULL, size*2+1);
 	if (!str) return PyErr_NoMemory();
 	out = PyString_AS_STRING(str);
+#if MYSQL_VERSION_ID < 32321
 	len = mysql_escape_string(out, in, size);
+#else
+	if (self)
+		len = mysql_real_escape_string(&(self->connection), out, in, size);
+	else
+		len = mysql_escape_string(out, in, size);
+#endif
 	if (_PyString_Resize(&str, len) < 0) return NULL;
 	return (str);
 }
 
+/* In 3.23.x, mysql_escape_string() is deprecated for
+ * mysql_real_escape_string, which takes a connection
+ * as the first arg, so this needs to be a connection
+ * method. For backwards compatibility, it also needs
+ * to be a module function.
+ */
+
 static PyObject *
 _mysql_string_literal(self, args)
-	PyObject *self;
+	_mysql_ConnectionObject *self;
 	PyObject *args;
 {
 	PyObject *str;
@@ -562,7 +594,14 @@ _mysql_string_literal(self, args)
 	str = PyString_FromStringAndSize((char *) NULL, size*2+3);
 	if (!str) return PyErr_NoMemory();
 	out = PyString_AS_STRING(str);
+#if MYSQL_VERSION_ID < 32321
 	len = mysql_escape_string(out+1, in, size);
+#else
+	if (self)
+		len = mysql_real_escape_string(&(self->connection), out+1, in, size);
+	else
+		len = mysql_escape_string(out+1, in, size);
+#endif
 	*out = *(out+len+1) = '\'';
 	if (_PyString_Resize(&str, len+2) < 0) return NULL;
 	return (str);
@@ -865,6 +904,19 @@ _mysql_ConnectionObject_change_user(self, args, kwargs)
 	if (r) 	return _mysql_Exception(self);
 	Py_INCREF(Py_None);
 	return Py_None;
+}
+#endif
+
+#if MYSQL_VERSION_ID >= 32321
+static PyObject *
+_mysql_ConnectionObject_character_set_name(self, args)
+	_mysql_ConnectionObject *self;
+	PyObject *args;
+{
+	const char *s;
+	if (!PyArg_NoArgs(args)) return NULL;
+	s = mysql_character_set_name(&(self->connection));
+	return PyString_FromString(s);
 }
 #endif
 
@@ -1268,9 +1320,13 @@ static PyMethodDef _mysql_ConnectionObject_methods[] = {
 #if MYSQL_VERSION_ID >= 32303
 	{"change_user",     (PyCFunction)_mysql_ConnectionObject_change_user, METH_VARARGS | METH_KEYWORDS},
 #endif
+#if MYSQL_VERSION_ID >= 32321
+	{"character_set_name", (PyCFunction)_mysql_ConnectionObject_character_set_name, 0},
+#endif
 	{"close",           (PyCFunction)_mysql_ConnectionObject_close, 0},
 	{"commit",          (PyCFunction)_mysql_ConnectionObject_commit, 0},
 	{"dump_debug_info", (PyCFunction)_mysql_ConnectionObject_dump_debug_info, 0},
+	{"escape_string",   (PyCFunction)_mysql_escape_string, 1},
 	{"error",           (PyCFunction)_mysql_ConnectionObject_error, 0},
 	{"errno",           (PyCFunction)_mysql_ConnectionObject_errno, 0},
 	{"field_count",     (PyCFunction)_mysql_ConnectionObject_field_count, 0}, 
@@ -1290,6 +1346,7 @@ static PyMethodDef _mysql_ConnectionObject_methods[] = {
 	{"shutdown",        (PyCFunction)_mysql_ConnectionObject_shutdown, 0},
 	{"stat",            (PyCFunction)_mysql_ConnectionObject_stat, 0},
 	{"store_result",    (PyCFunction)_mysql_ConnectionObject_store_result, 0},
+	{"string_literal",  (PyCFunction)_mysql_string_literal, 1},
 	{"thread_id",       (PyCFunction)_mysql_ConnectionObject_thread_id, 0},
 	{"use_result",      (PyCFunction)_mysql_ConnectionObject_use_result, 0},
 	{NULL,              NULL} /* sentinel */
@@ -1557,8 +1614,6 @@ init_mysql()
 	if (_mysql_Constant_class(dict, "CR", _mysql_Constant_cr))
 		goto error;
 	if (_mysql_Constant_class(dict, "ER", _mysql_Constant_er))
-		goto error;
-	if (_mysql_Constant_class(dict, "option", _mysql_Constant_option))
 		goto error;
 	if (!(_mysql_NULL = PyString_FromString("NULL")))
 		goto error;
