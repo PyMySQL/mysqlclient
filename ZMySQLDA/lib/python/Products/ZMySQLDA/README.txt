@@ -23,8 +23,11 @@ Z MySQL DA
     This must be installed before you can use the Z MySQL DA.
     You can find this at::
 
-        http://dustman.net/andy/python/MySQLdb
         http://sourceforge.net/projects/mysql-python
+
+    You need at least version 0.9.0. If you are compiling this
+    yourself, you must use the same python executable as your
+    Zope installation uses, otherwise Zope will not find it.
 
   Connection Strings
   
