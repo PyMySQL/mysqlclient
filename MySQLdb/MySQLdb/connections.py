@@ -95,6 +95,13 @@ class Connection:
     # Methods not included on purpose (use Cursors instead):
     #     query, store_result, use_result
 
+    def literal(self, o):
+        """If o is a single object, returns an SQL literal as a string.
+        If o is a non-string sequences, the items of the sequence are
+        converted and returned as a sequence."""
+        import _mysql
+        return _mysql.escape(o, self._db.converter)
+
     def affected_rows(self): return self._db.affected_rows()
     def dump_debug_info(self): return self._db.dump_debug_info()
     def escape_string(self, s): return self._db.escape_string(s)

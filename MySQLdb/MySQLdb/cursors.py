@@ -6,7 +6,7 @@ default, MySQLdb uses the Cursor class.
 """
 
 import re
-insert_values = re.compile(r'values\s(\(.+\))', re.IGNORECASE)
+insert_values = re.compile(r'values\s*(\(.+\))', re.IGNORECASE)
 from _mysql import escape, ProgrammingError, Warning
 
 class BaseCursor:
@@ -57,14 +57,13 @@ class BaseCursor:
         returns long integer rows affected, if any"""
 
         from types import ListType, TupleType
-        qc = self._get_db().converter
         if args is None:
             r = self._query(query)
         elif type(args) is ListType and type(args[0]) is TupleType:
  	    r = self.executemany(query, args) # deprecated
  	else:
             try:
-                r = self._query(query % escape(args, qc))
+                r = self._query(query % self.__conn.literal(args))
 	    except TypeError, m:
                 if m.args[0] in ("not enough arguments for format string",
                                  "not all arguments converted"):
@@ -88,12 +87,11 @@ class BaseCursor:
         This method performs multiple-row inserts and similar queries."""
 
         from string import join
-        qc = self._get_db().converter
         m = insert_values.search(query)
         if not m: raise ProgrammingError, "can't find values"
         p = m.start(1)
         qv = query[p:]
-        qargs = escape(args, qc)
+        qargs = self.__conn.literal(args)
         try:
             q = [ query % qargs[0] ]
             for a in qargs[1:]: q.append( qv % a )

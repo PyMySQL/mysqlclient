@@ -16,10 +16,10 @@ MySQLdb.converters module.
 __author__ = "Andy Dustman <andy@dustman.net>"
 __revision__ = """$Revision$"""[11:-2]
 version_info = (
+    1,
     0,
-    9,
     0,
-    "final",
+    "beta",
     1)
 if version_info[3] == "final": __version__ = "%d.%d.%d" % version_info[:3]
 else: __version__ = "%d.%d.%d%1.1s%d" % version_info[:5]
@@ -39,6 +39,9 @@ paramstyle = "format"
 from _mysql import *
 from sets import DBAPISet
 from constants import FIELD_TYPE
+from times import Date, Time, Timestamp, \
+    DateFromTicks, TimeFromTicks, TimestampFromTicks
+
 
 STRING    = DBAPISet(FIELD_TYPE.CHAR, FIELD_TYPE.ENUM, FIELD_TYPE.STRING,
                      FIELD_TYPE.VAR_STRING)

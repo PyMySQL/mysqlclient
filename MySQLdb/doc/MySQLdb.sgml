@@ -236,7 +236,7 @@ login name really was "joebob", you could shorten it to this:
 <code>
 db=_mysql.connect(passwd="moonpie",db="thangs")
 </code>
-UNIX sockets and named pipes on't work over a network, so if you specify a host other
+UNIX sockets and named pipes don't work over a network, so if you specify a host other
 than localhost, TCP will be used, and you can specify an odd port
 if you need to (the default port is 3306):
 <code>

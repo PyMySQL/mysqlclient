@@ -5,4 +5,5 @@ include README.MySQLmodule
 include license.py
 include MANIFEST.in
 include MANIFEST
+include PKG-INFO
 include GPL
