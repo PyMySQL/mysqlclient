@@ -132,3 +132,9 @@ conversions = {
         (None, None),
     ],
     }
+
+try:
+    from decimal import Decimal
+    conversions[FIELD_TYPE.DECIMAL] = Decimal
+except ImportError:
+    pass

@@ -37,13 +37,13 @@ def DateTime_or_None(s):
     elif 'T' in s:
         sep = 'T'
     else:
-        return None
+        return Date_or_None(s)
 
     try:
         d, t = s.split(sep, 1)
         return datetime(*[ int(x) for x in d.split('-')+t.split(':') ])
     except:
-        return None
+        return Date_or_None(s)
 
 def TimeDelta_or_None(s):
     from math import modf
