@@ -247,7 +247,6 @@ _mysql_connect(
 		return NULL;
 	if (conv) {
 		c->converter = conv;
-		Py_INCREF(conv);
 	} else {
 		if (!(c->converter = PyDict_New())) {
 			Py_DECREF(c);
