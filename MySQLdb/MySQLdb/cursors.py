@@ -106,7 +106,11 @@ class BaseCursor:
 
         from string import join
         m = insert_values.search(query)
-        if not m: raise ProgrammingError, "can't find values"
+        if not m:
+            r = 0
+            for a in args:
+                r = r + self.execute(query, a)
+            return r
         p = m.start(1)
         qv = query[p:]
         qargs = self.connection.literal(args)
