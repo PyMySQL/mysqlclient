@@ -633,7 +633,7 @@ _escape_item(
 				"no default type converter defined");
 		goto error;
 	}
-	quoted = PyObject_CallFunction(itemconv, "O", item);
+	quoted = PyObject_CallFunction(itemconv, "OO", item, d);
 	Py_DECREF(itemconv);
 	if (!quoted) goto error;
 	return quoted;
@@ -642,19 +642,41 @@ _escape_item(
 }
 
 static PyObject *
-_mysql_escape_row(
+_mysql_escape(
+	PyObject *self,
+	PyObject *args)
+{
+	PyObject *o=NULL, *d=NULL, *r=NULL, *item, *quoted, *pkey; 
+	int ppos = 0;
+	int i, n;
+	if (!PyArg_ParseTuple(args, "OO:escape", &o, &d))
+		return NULL;
+	if (!PyMapping_Check(d)) {
+		PyErr_SetString(PyExc_TypeError,
+				"argument 2 must be a mapping");
+		return NULL;
+        }
+	return _escape_item(o, d);
+}
+
+static PyObject *
+_mysql_escape_sequence(
 	PyObject *self,
 	PyObject *args)
 {
 	PyObject *o=NULL, *d=NULL, *r=NULL, *item, *quoted; 
 	int i, n;
-	if (!PyArg_ParseTuple(args, "O!O!:escape_row", &PyTuple_Type, &o,
-				                       &PyDict_Type, &d))
+	if (!PyArg_ParseTuple(args, "OO:escape_sequence", &o, &d))
 		goto error;
+	if (!PyMapping_Check(d)) {
+              PyErr_SetString(PyExc_TypeError,
+                              "argument 2 must be a mapping");
+              return NULL;
+        }
 	if (!(n = PyObject_Length(o))) goto error;
 	if (!(r = PyTuple_New(n))) goto error;
 	for (i=0; i<n; i++) {
-		item = PyTuple_GET_ITEM(o, i);
+		item = PySequence_GetItem(o, i);
 		quoted = _escape_item(item, d);
 		if (!quoted) goto error;
 		PyTuple_SET_ITEM(r, i, quoted);
@@ -673,9 +695,13 @@ _mysql_escape_dict(
 	PyObject *o=NULL, *d=NULL, *r=NULL, *item, *quoted, *pkey; 
 	int ppos = 0;
 	int i, n;
-	if (!PyArg_ParseTuple(args, "O!O!:escape_dict", &PyDict_Type, &o,
-				                       &PyDict_Type, &d))
+	if (!PyArg_ParseTuple(args, "O!O:escape_dict", &PyDict_Type, &o, &d))
 		goto error;
+	if (!PyMapping_Check(d)) {
+              PyErr_SetString(PyExc_TypeError,
+                              "argument 2 must be a mapping");
+              return NULL;
+        }
 	if (!(r = PyDict_New())) goto error;
 	while (PyDict_Next(o, &ppos, &pkey, &item)) {
 		quoted = _escape_item(item, d);
@@ -1517,7 +1543,8 @@ static PyMethodDef
 _mysql_methods[] = {
 	{ "connect", (PyCFunction)_mysql_connect, METH_VARARGS | METH_KEYWORDS },
         { "debug", (PyCFunction)_mysql_debug, METH_VARARGS },
-	{ "escape_row", (PyCFunction)_mysql_escape_row, METH_VARARGS },
+	{ "escape", (PyCFunction)_mysql_escape, METH_VARARGS },
+	{ "escape_sequence", (PyCFunction)_mysql_escape_sequence, METH_VARARGS },
 	{ "escape_dict", (PyCFunction)_mysql_escape_dict, METH_VARARGS },
 	{ "escape_string", (PyCFunction)_mysql_escape_string, METH_VARARGS },
 	{ "string_literal", (PyCFunction)_mysql_string_literal, METH_VARARGS },
@@ -1586,7 +1613,7 @@ reasonably, except DECIMAL.\n\
 \n\
 result.describe() produces a DB API description of the rows.\n\
 \n\
-escape_row() accepts a sequence of items and a type conversion dictionary.\n\
+escape_sequence() accepts a sequence of items and a type conversion dictionary.\n\
 Using the type of the item, it gets a converter function from the dictionary\n\
 (uses the string type if the item type is not found) and applies this to the\n\
 item. the result should be converted to strings with all the necessary\n\
