@@ -19,7 +19,8 @@ MySQL 3.22.19 or higher
 -- Versions lower than 3.22 definitely WON'T WORK.
 -- Versions lower than 3.22.19 might not work.
 -- The current 3.22 release is 3.22.32.
--- MySQL-3.23 is supported. Current release: 3.23.42
+-- MySQL-4.0 is supported. Current release 4.0.0 alpha.
+-- MySQL-3.23 is supported. Current release: 3.23.43.
 -- MySQL-3.22 is slightly deprecated in favor of 3.23.
 -- If you have Red Hat Linux or a similar packaging system, make sure
    you have the MySQL development headers and libraries. If you use the
@@ -64,4 +65,4 @@ Thanks go to Brian Fordham for cooking up an early version of setup.py.
 License: GPL or the original license based on Python 1.5.2's license.
 
 Andy Dustman <andy@dustman.net>
-2001-09-20
+2001-10-16
