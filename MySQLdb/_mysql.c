@@ -1,5 +1,5 @@
-#define version_info "(0,9,3,'beta',3)"
-#define __version__ "0.9.3"
+#define version_info "(1,0,1,'final',1)"
+#define __version__ "1.0.1"
 /*
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -32,10 +32,10 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #ifdef MS_WIN32
 #include <windows.h>
+#endif /* MS_WIN32 */
 #ifndef uint
 #define uint unsigned int
 #endif
-#endif /* MS_WIN32 */
 
 #include "structmember.h"
 #include "mysql.h"
@@ -211,7 +211,7 @@ static PyObject *_mysql_server_init(
 					"args must be a sequence");
 			goto finish;
 		}
-		cmd_argc = PySequence_Size(cmd_args);
+		cmd_argc = PySequence_Length(cmd_args);
 		if (cmd_argc == -1) {
 			PyErr_SetString(PyExc_TypeError,
 					"args could not be sized");
@@ -236,7 +236,7 @@ static PyObject *_mysql_server_init(
 					"groups must be a sequence");
 			goto finish;
 		}
-		groupc = PySequence_Size(groups);
+		groupc = PySequence_Length(groups);
 		if (groupc == -1) {
 			PyErr_SetString(PyExc_TypeError,
 					"groups could not be sized");
@@ -254,7 +254,7 @@ static PyObject *_mysql_server_init(
 			}
 			groups_c[i] = s;
 		}
-		groups_c[groupc+1] = (char *)NULL;
+		groups_c[groupc] = (char *)NULL;
 	}
 	/* even though this may block, don't give up the interpreter lock
 	   so that the server can't be initialized multiple times. */
@@ -363,7 +363,7 @@ _mysql_ResultObject_Initialize(
 			Py_INCREF(Py_None);
 		}
 		if (PySequence_Check(fun)) {
-			int j, n2=PySequence_Size(fun);
+			int j, n2=PySequence_Length(fun);
 			PyObject *fun2=NULL;
 			for (j=0; j<n2; j++) {
 				PyObject *t = PySequence_GetItem(fun, j);
@@ -434,7 +434,7 @@ _mysql_ConnectionObject_Initialize(
 	MYSQL *conn=NULL;
 	PyObject *conv = NULL;
 	PyObject *ssl = NULL;
-	PyObject *value = NULL;;
+	PyObject *value = NULL;
 	char *key = NULL, *cert = NULL, *ca = NULL,
 		*capath = NULL, *cipher = NULL;
 	char *host = NULL, *user = NULL, *passwd = NULL,

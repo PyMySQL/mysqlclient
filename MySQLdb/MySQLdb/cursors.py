@@ -149,7 +149,7 @@ class BaseCursor:
         try:
             q = [ query % qargs[0] ]
             for a in qargs[1:]: q.append( qv % a )
-	except TypeError, msg:
+        except TypeError, msg:
             if msg.args[0] in ("not enough arguments for format string",
                                "not all arguments converted"):
                 self.errorhandler(self, ProgrammingError, msg.args[0])
