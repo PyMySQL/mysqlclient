@@ -205,7 +205,7 @@ static PyObject *_mysql_server_init(
 		return NULL;
 
 #if MYSQL_VERSION_ID >= 40000
-	if (args) {
+	if (cmd_args) {
 		if (!PySequence_Check(cmd_args)) {
 			PyErr_SetString(PyExc_TypeError,
 					"args must be a sequence");
