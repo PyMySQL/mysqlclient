@@ -6,7 +6,7 @@ default, MySQLdb uses the Cursor class.
 """
 
 import re
-insert_values = re.compile(r'values\s*(\(.+\))', re.IGNORECASE)
+insert_values = re.compile(r'\svalues\s*(\(.+\))', re.IGNORECASE)
 from _mysql_exceptions import Warning, Error, InterfaceError, DataError, \
      DatabaseError, OperationalError, IntegrityError, InternalError, \
      NotSupportedError, ProgrammingError
