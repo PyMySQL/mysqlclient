@@ -14,7 +14,7 @@ MYSQL_LIB_DIR = '/usr/lib/mysql'
 
 setup (# Distribution meta-data
         name = "MySQLdb",
-        version = "0.2.2",
+        version = "0.3.0a2",
         description = "An interface to MySQL",
         author = "Andy Dustman",
         author_email = "andy@dustman.net",
@@ -29,7 +29,7 @@ setup (# Distribution meta-data
                 sources=['_mysqlmodule.c'],
                 include_dirs=[MYSQL_INCLUDE_DIR],
 		# maybe comment to force dynamic libraries
-                # library_dirs=[MYSQL_LIB_DIR],
+                #library_dirs=[MYSQL_LIB_DIR],
 		# uncomment if linking against dynamic libraries
 		runtime_library_dirs=[MYSQL_LIB_DIR],
                 libraries=['mysqlclient',
@@ -42,5 +42,5 @@ setup (# Distribution meta-data
                         ],
 		# uncomment to force use of the static library
 		# extra_objects=[`MYSQL_LIB_DIR`+'libmysqlclient.a'],
-                )]
+                )],
 )
