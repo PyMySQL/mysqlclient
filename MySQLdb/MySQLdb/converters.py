@@ -127,10 +127,6 @@ conversions = {
     FIELD_TYPE.DATETIME: DateTime_or_None,
     FIELD_TYPE.TIME: TimeDelta_or_None,
     FIELD_TYPE.DATE: Date_or_None,
-    FIELD_TYPE.BLOB: char_array,
-    FIELD_TYPE.LONG_BLOB: char_array,
-    FIELD_TYPE.MEDIUM_BLOB: char_array,
-    FIELD_TYPE.TINY_BLOB: char_array,
     }
 
 
