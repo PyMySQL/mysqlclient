@@ -239,6 +239,8 @@ _mysql_connect(
 	c = PyObject_NEW(_mysql_ConnectionObject,
 			 &_mysql_ConnectionObject_Type);
 	if (c == NULL) return NULL;
+	c->converter = NULL;
+	c->open = 0;
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|ssssisOiiisss:connect",
 					 kwlist,
 					 &host, &user, &passwd, &db,
@@ -246,8 +248,10 @@ _mysql_connect(
 					 &connect_timeout,
 					 &compress, &named_pipe,
 					 &init_command, &read_default_file,
-					 &read_default_group))
+					 &read_default_group)) {
+		Py_DECREF(c);
 		return NULL;
+	}
 
 	if (!conv) 
 		conv = PyDict_New();
@@ -287,7 +291,6 @@ _mysql_connect(
 
 	if (!conn) {
 		_mysql_Exception(c);
-		c->open = 0;
 		Py_DECREF(c);
 		return NULL;
 	}
