@@ -206,7 +206,8 @@ db=_mysql.connect()
 </code>
 
 This creates a connection to the MySQL server running on the local
-machine using the standard UNIX socket, your login name (from the USER
+machine using the standard UNIX socket (or named pipe on Windows),
+your login name (from the USER
 environment variable), no password, and does not <tt/USE/ a database.
 Maybe this will work for you, if you have set up a configuration file,
 i.e. (<tt>~/.my.cnf</tt>). Chances are you need to supply more
@@ -217,26 +218,35 @@ db=_mysql.connect("localhost","joebob","moonpie","thangs")
 </code>
 
 This creates a connection to the MySQL server running on the local
-machine <em/using TCP on the standard port (3306)/, the user name
+machine via a UNIX socket (or named pipe), the user name
 "joebob", the password "moonpie", and selects the initial database
 "thangs".
 
 <P>We haven't even begun to touch upon all the parameters <tt/connect()/
-can take, and you'll notice that if you use positional parameters, you
-basically are stuck with using TCP, which is not as quite as fast as
-using a UNIX socket. (Of course, you have to use TCP anyway if it's a
-remote host.) For this reason, I prefer to use keyword parameters:
+can take.
+For this reason, I prefer to use keyword parameters:
 
 <code>
 db=_mysql.connect(host="localhost",user="joebob",
                   passwd="moonpie",db="thangs")
 </code>
 This does exactly what the last example did, but is arguably easier
-to read. Now if you really did want to use that UNIX socket, and your
+to read. But since the default host is "localhost", and if your
 login name really was "joebob", you could shorten it to this:
 <code>
 db=_mysql.connect(passwd="moonpie",db="thangs")
 </code>
+UNIX sockets and named pipes on't work over a network, so if you specify a host other
+than localhost, TCP will be used, and you can specify an odd port
+if you need to (the default port is 3306):
+<code>
+db=_mysql.connect(host="outhouse",port=3307,passwd="moonpie",db="thangs")
+</code>
+
+<p>If you really had to, you could connect to the local host with TCP
+by specifying the full host name, or 127.0.0.1.
+
+<p>
 There are some other parameters you can use, and most of them aren't
 needed, except for one, which we'll get to momentarily. For the rest,
 read the built-in documentation. Python 2.1's <tt/pydoc/ module is
@@ -365,7 +375,8 @@ MySQLdb.
 
 <descrip>
       <tag>host</tag> 
-            name of host to connect to. Default: use local host 
+            name of host to connect to. Default: use the local host 
+            via a UNIX socket (where applicable)
 
       <tag>user</tag> 
             user to authenticate as. Default: current effective user.
@@ -380,7 +391,8 @@ MySQLdb.
 	    TCP port of MySQL server. Default: standard port (3306).
 
       <tag>unix_socket</tag>
-	    location of UNIX socket. Default: use TCP.
+	    location of UNIX socket. Default: use default location or
+            TCP for remote hosts.
 
       <tag>conv</tag> type conversion dictionary.
             Default: a copy of <tt/MySQLdb.converters.conversions/
