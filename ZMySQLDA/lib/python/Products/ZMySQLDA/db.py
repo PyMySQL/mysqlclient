@@ -87,6 +87,7 @@
 __version__='$Revision$'[11:-2]
 
 import _mysql
+from _mysql_exceptions import OperationalError, NotSupportedError
 MySQLdb_version_required = (0,9,0)
 
 _v = getattr(_mysql, 'version_info', (0,0,0))
@@ -97,7 +98,6 @@ if _v < MySQLdb_version_required:
 
 from MySQLdb.converters import conversions
 from MySQLdb.constants import FIELD_TYPE, CR, CLIENT
-from _mysql_exceptions import OperationalError, NotSupportedError
 from Shared.DC.ZRDB.TM import TM
 from DateTime import DateTime
 
