@@ -1,4 +1,11 @@
 #!/usr/bin/python
+
+__version__ = "$Revision$"[11:-2]
+
+# This version mangled by Andy Dustman <adustman@comstar.net>.
+# Original credits follow. This is a nice introduction in general,
+# but I felt there were a few bits and pieces that needs to be cleaned up.
+
 # TITLE:        dbtrainer3
 # WRITTEN BY:	Bradley Stec, July 1999
 # 		RuleSpace, Inc.
@@ -16,7 +23,7 @@
 # CHANGES:	7/99	Initial Version
 
 import sys
-import webops
+#import webops
 import traceback
 sys.stderr = sys.stdout
 
@@ -44,21 +51,20 @@ import MySQLdb
 # PREPARE TO CONNECT TO DATABASE 
 # This command forms a connection through the support files to the target database server and database name.
 try:
-	WebOpsDB = MySQLdb.Connection(host=webops.dbserver,user=webops.dbuser,passwd=webops.dbpass,db='test',port=3306,unix_socket="")
+	#WebOpsDB = MySQLdb.Connection(host=webops.dbserver,user=webops.dbuser,passwd=webops.dbpass,db='test',port=3306,unix_socket="")
+	WebOpsDB = MySQLdb.Connect(db='test')
 except:
         print "\n\n<PRE>"
         traceback.print_exc()
         sys.exit()
 
 # A LITTLE BONUS INFORMATION FROM THE API
-# The API can provide some information about the connection and server.  Note that these functions are
-# making use of the "db" object which is a sub-class of the WebOpsDB object.  The "db" object bypasses the "wrapper"
-# level of the MySQLdb interface and speaks directly to the C coded _mysqlmodule.so, therefore it is not recommended
-# that you use this method frequently in timing-sensitive script applications.
+# The API can provide some information about the connection and server.
+# These methods are not portable to other databases.
 print "<B>CONNECTED TO</B><BR>"
-print "&nbsp;&nbsp;&nbsp;&nbsp;server <B> ", WebOpsDB.db.get_host_info(), "</B><BR>"
-print "&nbsp;&nbsp;&nbsp;&nbsp;running <B>mySQL server v", WebOpsDB.db.get_server_info(), "</B><BR>"
-print "&nbsp;&nbsp;&nbsp;&nbsp;current status: ",WebOpsDB.db.stat(), "<P>"
+print "&nbsp;&nbsp;&nbsp;&nbsp;server <B> ", WebOpsDB.get_host_info(), "</B><BR>"
+print "&nbsp;&nbsp;&nbsp;&nbsp;running <B>mySQL server v", WebOpsDB.get_server_info(), "</B><BR>"
+print "&nbsp;&nbsp;&nbsp;&nbsp;current status: ",WebOpsDB.stat(), "<P>"
 print "<HR>"
 
 # CREATE YOUR PERSONAL CONNECTION TO THE "RESULTS" WITHIN THE CONNECTION OBJECT
