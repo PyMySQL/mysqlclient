@@ -86,6 +86,7 @@ _mysql_Exception(_mysql_ConnectionObject *c)
 		PyTuple_SET_ITEM(t, 0, PyInt_FromLong(-1L));
 		PyTuple_SET_ITEM(t, 1, PyString_FromString("error totally whack"));
 		PyErr_SetObject(_mysql_Error, t);
+		Py_DECREF(t);
 		return NULL;
 	}
 	else switch (merr) {
@@ -142,7 +143,7 @@ _mysql_ResultObject_New(
 			PyObject *tmp, *fun;
 			tmp = PyInt_FromLong((long) fields[i].type);
 			fun = PyObject_GetItem(conv, tmp);
-			Py_XDECREF(tmp);
+			Py_DECREF(tmp);
 			if (!fun) {
 				PyErr_Clear();
 				fun = Py_None;
@@ -365,7 +366,7 @@ _escape_item(
 	PyObject *item,
 	PyObject *d)
 {
-	PyObject *quoted, *itemtype, *itemconv;
+	PyObject *quoted=NULL, *itemtype, *itemconv;
 	if (!(itemtype = PyObject_Type(item)))
 		goto error;
 	itemconv = PyObject_GetItem(d, itemtype);
@@ -382,10 +383,8 @@ _escape_item(
 	}
 	quoted = PyObject_CallFunction(itemconv, "OO", item, d);
 	Py_DECREF(itemconv);
-	if (!quoted) goto error;
+error:
 	return quoted;
-  error:
-	return NULL;
 }
 
 static PyObject *
@@ -422,7 +421,9 @@ _mysql_escape_sequence(
 	if (!(r = PyTuple_New(n))) goto error;
 	for (i=0; i<n; i++) {
 		item = PySequence_GetItem(o, i);
+		if (!item) goto error;
 		quoted = _escape_item(item, d);
+		Py_DECREF(item);
 		if (!quoted) goto error;
 		PyTuple_SET_ITEM(r, i, quoted);
 	}
