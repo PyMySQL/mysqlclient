@@ -46,7 +46,7 @@ def main():
 	P("Brought to you by ",
 	  A("Andy Dustman",
 	    href="mailto:adustman@comstar.net"), " and ",
-	  A("Comstar Commnuications Corporation",
+	  A("Comstar.Net, Inc.",
 	    href="http://www.comstar.net/"), "."),
 	P("Please read the ",
 	  A("licensing agreement",
@@ -74,11 +74,14 @@ def main():
 	  "under a license derived from the Python license."),
 	P("Notes: MySQL 3.22.11 is known NOT to work. Only versions\n" \
 	  "3.22.19 and up are known to work. If you have an older version\n" \
-	  "you should seriously consider upgrading for it's own sake.\n"),
+	  "you should seriously consider upgrading for it's own sake.\n" \
+          "Some older versions may work due to some recent patches.\n" \
+          "It ought to work with 3.23 (currently under development) but\n" \
+          "has not been tested."),
 	P("This module requires Python 1.5.2. Earlier versions will not\n"\
 	  "work, because support for C long longs is required by MySQL.\n" \
 	  "Thanks to Nikolas Kauer for pointing this out."),
-        P("This version has been tested against MySQL-3.23.25, which seems\n" \
+        P("This version has been tested against MySQL-3.22.25, which seems\n" \
           "to have a strange bug when handling TIME columns. For this\n" \
           "reason, there is presently no type converter for TIME columns\n" \
           "(the value is returned as a string)."),
