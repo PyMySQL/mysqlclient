@@ -37,7 +37,7 @@ apilevel = "2.0"
 paramstyle = "format"
 
 from _mysql import *
-from sets import DBAPISet
+from sets import DBAPISet, Set
 from constants import FIELD_TYPE
 from times import Date, Time, Timestamp, \
     DateFromTicks, TimeFromTicks, TimestampFromTicks
