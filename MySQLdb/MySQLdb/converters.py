@@ -41,6 +41,10 @@ def Thing2Str(s, d):
     """Convert something into a string via str()."""
     return str(s)
 
+def Unicode2Str(s, d):
+    """Convert a unicode object to a string using latin1 encoding."""
+    return s.encode('latin')
+
 # Python 1.5.2 compatibility hack
 if str(0L)[-1]=='L':
     def Long2Int(l, d):
@@ -105,4 +109,7 @@ conversions = {
     FIELD_TYPE.TIME: TimeDelta_or_None,
     FIELD_TYPE.DATE: Date_or_None,
     }
+
+if hasattr(types, 'UnicodeType'):
+    conversions[types.UnicodeType] = Unicode2Str
 
