@@ -640,8 +640,9 @@ _mysql_ConnectionObject_close(
 	_mysql_ConnectionObject *self,
 	PyObject *args)
 {
-	if (!args) return NULL;
-	if (!PyArg_ParseTuple(args, "")) return NULL;
+	if (args) {
+		if (!PyArg_ParseTuple(args, "")) return NULL;
+	}
 	if (self->open) {
 		Py_BEGIN_ALLOW_THREADS
 		mysql_close(&(self->connection));
