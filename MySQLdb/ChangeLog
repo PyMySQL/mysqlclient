@@ -1,3 +1,21 @@
+2004-09-11  adustman  <adustman@tweek.neosouth.net>
+
+	* _mysql.c, setup.py, MySQLdb/__init__.py, MySQLdb/connections.py:
+	Version 1.1.4
+
+	 * setup.py: changed include and library path order
+
+	 * MySQLdb/connections.py: fix super class reference in autocommit()
+
+	 * Tested against MySQL-4.1.4a with InnoDB tables
+
+	* _mysql.c: Re-fix typo
+
+	* _mysql.c:
+	Fix _mysql_Execption() typo. Code is only compiled when MySQL-4.1
+	is in use, and I haven't done any actual testing against 4.1 yet.
+	Please report any bugs to the SourceForge tracker.
+
 2004-09-08  adustman  <adustman@tweek.neosouth.net>
 
 	* _mysql.c, setup.py, MySQLdb/__init__.py: Version 1.1.3
