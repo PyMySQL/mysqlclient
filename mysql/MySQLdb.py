@@ -56,7 +56,7 @@ try:
 
     type_conv[FIELD_TYPE.TIMESTAMP] = mysql_timestamp_converter
     type_conv[FIELD_TYPE.DATETIME] = ISO.ParseDateTime
-    type_conv[FIELD_TYPE.TIME] = ISO.ParseTime
+    #type_conv[FIELD_TYPE.TIME] = ISO.ParseTime
     type_conv[FIELD_TYPE.DATE] = ISO.ParseDate
 
 except ImportError:
@@ -234,6 +234,8 @@ class Connection:
     port -- integer, TCP/IP port to connect to or default MySQL port
     unix_socket -- string, location of unix_socket to use or use TCP
     client_flags -- integer, flags to use or 0 (see MySQL docs)
+    conv -- dictionary, maps MySQL FIELD_TYPE.* to Python functions which
+            convert a string to the appropriate Python type
     
     Returns a Connection object.
     
@@ -251,7 +253,7 @@ class Connection:
     
     def __init__(self, **kwargs):
         from _mysql import connect
-        if not kwargs.has_key('conv'): kwargs['conv'] = type_conv
+        if not kwargs.has_key('conv'): kwargs['conv'] = type_conv.copy()
         self.db = apply(connect, (), kwargs)
      
     def close(self):

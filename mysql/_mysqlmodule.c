@@ -363,6 +363,7 @@ _mysql_ResultObject_New(conn, result, use, conv)
 			fun = PyObject_GetItem(conv, tmp);
 			Py_XDECREF(tmp);
 			if (!fun) {
+				PyErr_Clear();
 				fun = Py_None;
 				Py_INCREF(Py_None);
 			}

@@ -1,0 +1,77 @@
+I gave ZMySQLDA a quick once-over and I THINK this will convert it from
+using MySQLmodule-1.4 to _mysql. Why _mysql and not MySQLdb? Well, look
+at the patch. :) It's basically puny. ZMySQLDA abstracts away the Python
+DB API interface anyway, so why wrap another wrapper? Plus, by default
+MySQLdb attempts to do type conversions, which Zope doesn't seem to expect.
+I made some changes, partially to help Zopistas, to both _mysql and MySQLdb.
+The main one is removing type_conv as part of _mysql. It now needs to be
+passed to _mysql.connect() as the conv keyword argument; if it is not present,
+it uses an empty dictionary (return everything as strings), which is the
+Zope-desired behavior. MySQLdb now owns type_conv, and passes as copy if
+you don't supply your own converter.
+
+Special note: Not only is the MySQLdb package provided WITH NO WARRANTY,
+this patch is DOUBLE-SECRET NO WARRRANTY. It may not work at all; I have
+not tested it PERIOD. I am using Zope-2.0.0a4, but I don't really have the
+time to whip up something to test with. The Digicool guys can figure out
+whether or not it works. If it makes your testicles fall off (or you grow
+some when you shouldn't have any), I am not responsible.
+
+Oh yeah, to apply the patch, you probably want to use:
+
+	patch -p1 <ZMySQLDA.patch
+
+Andy Dustman <adustman@comstar.net>
+1999-07-19
+
+diff -ur ZMySQLDA.orig/lib/python/Products/ZMySQLDA/db.py ZMySQLDA/lib/python/Products/ZMySQLDA/db.py
+--- ZMySQLDA.orig/lib/python/Products/ZMySQLDA/db.py	Mon Jan 25 10:42:45 1999
++++ ZMySQLDA/lib/python/Products/ZMySQLDA/db.py	Mon Jul 19 23:19:12 1999
+@@ -103,7 +103,7 @@
+ """Db connection implementation"""
+ __version__='$Revision$'[11:-2]
+ 
+-import MySQL, regex, sys
++import _mysql, regex, sys
+ from string import strip, split, find, join
+ from time import gmtime, strftime
+ 
+@@ -124,7 +124,7 @@
+         "timestamp": "d", "varchar": "t", "string": "t",
+         }
+ 
+-    Database_Error=MySQL.error
++    Database_Error=_mysql.error
+ 
+     def __init__(self,connection):
+         self.connection=connection
+@@ -138,8 +138,7 @@
+                 if len(dbhost) == 1: db, host = dbhost[0], 'localhost'
+                 else: [db, host] = dbhost
+                 
+-                c=MySQL.connect(host,user,pw)
+-                c.selectdb(db)
++                c=_mysql.connect(host=host,user=user,passwd=pw,db=db)
+                 self.db=c
+                 return
+ 
+@@ -170,8 +169,8 @@
+             for qs in queries:
+                 c=db.query(qs)
+                 try:
+-                    desc=c.fields()
+-                    r=c.fetchrows()
++                    desc=c.describe()
++                    r=c.fetch_all_rows()
+                 except: r=None
+                 if not r: continue
+                 if result:
+@@ -182,7 +181,7 @@
+         except self.Database_Error, mess:
+             raise sys.exc_type, sys.exc_value, sys.exc_traceback
+ 
+-        if desc is None: return (), ()
++        if not desc: return (), ()
+ 
+         items=[]
+         func=items.append

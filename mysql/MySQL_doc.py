@@ -78,6 +78,12 @@ def main():
 	P("This module requires Python 1.5.2. Earlier versions will not\n"\
 	  "work, because support for C long longs is required by MySQL.\n" \
 	  "Thanks to Nikolas Kauer for pointing this out."),
+        P("This version has been tested against MySQL-3.23.25, which seems\n" \
+          "to have a strange bug when handling TIME columns. For this\n" \
+          "reason, there is presently no type converter for TIME columns\n" \
+          "(the value is returned as a string)."),
+        P("The type converter dictionary is no longer stored within the\n", \
+          TT("_mysql"), " module. See below for more details."),
 	P("If you work out\n" \
 	  "an installation routine for Windows, please contact the author."),
 	P("This module works better if you have the ",
@@ -218,7 +224,9 @@ def main():
 		   BDT("passwd"),
 		   DD("password to authenticate with"),
 		   BDT("db"),
-		   DD("database to use")))),
+		   DD("database to use"),
+                   BDT("conv"),
+                   DD("type conversion dictionary")))),
 	   BDT("apilevel"),
 	   DD(P("String constant stating the supported DB API level. '2.0'")),
 	   BDT("threadsafety"),
@@ -256,16 +264,21 @@ def main():
 	   DD(P("A dictionary mapping MySQL types (from ",
 		TT("FIELD_TYPE.*"), ") to callable Python objects\n" \
 		"(usually functions) which convert from a string to\n" \
-		"the desired type. This is imported from the\n",
-		TT("_mysql"), " module, where it is initialized with\n" \
-		"reasonable defaults for most types. ", TT("MySQLdb"),
-		"\nalso adds a few additional functions, using some of\n" \
+		"the desired type. This is initialized with\n" \
+		"reasonable defaults for most types. When creating a\n" \
+                "Connection object, you can pass your own type converter\n" \
+                "dictionary as a keyword parameter. Otherwise, it uses a\n" \
+                "copy of ", TT("type_conv"), " which is safe\n" \
+                "to modify on a per-connection basis. The dictionary\n"\
+                "includes some of\n" \
 		"the factory functions from the\n",
 		A("DateTime",
 		  href="http://starship.skyport.net/~lemburg/mxDateTime.html"),
-		" module. Several non-standard types (SET, ENUM) are\n" \
+		" module, if it is available.\n" \
+                "Several non-standard types (SET, ENUM) are\n" \
 		"returned as strings, which is how MySQL returns all\n"
-		"columns."))),
+		"columns. Note: ", TT("TIME"), " columns are returned as\n" \
+                "strings presently. This should be a temporary condition."))),
 	H3("Connection Objects"),
 	DL(BDT("commit()"),
 	   DD(P("MySQL does not support transactions, so this method\n" \
