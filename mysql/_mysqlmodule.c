@@ -67,8 +67,7 @@ typedef struct {
 extern PyTypeObject _mysql_ResultObject_Type;
 
 PyObject *
-_mysql_Exception(c)
-	_mysql_ConnectionObject *c;
+_mysql_Exception(_mysql_ConnectionObject *c)
 {
 	PyObject *t, *e;
 	int merr;
@@ -364,11 +363,11 @@ static _mysql_Constant _mysql_Constant_er[] = {
 } ;
 
 static _mysql_ResultObject*
-_mysql_ResultObject_New(conn, result, use, conv)
-	_mysql_ConnectionObject *conn;
-	MYSQL_RES *result;
-	int use;
-	PyObject *conv;
+_mysql_ResultObject_New(
+	_mysql_ConnectionObject *conn,
+	MYSQL_RES *result,
+	int use,
+	PyObject *conv)
 {
 	int n, i;
 	MYSQL_FIELD *fields;
@@ -409,10 +408,10 @@ _mysql_ResultObject_New(conn, result, use, conv)
 }
 
 static PyObject *
-_mysql_connect(self, args, kwargs)
-	PyObject *self;
-	PyObject *args;
-	PyObject *kwargs;
+_mysql_connect(
+	PyObject *self,
+	PyObject *args,
+	PyObject *kwargs)
 {
 	MYSQL *conn;
 	PyObject *conv = NULL;
@@ -484,9 +483,9 @@ _mysql_connect(self, args, kwargs)
 }
 
 static PyObject *
-_mysql_ConnectionObject_close(self, args)
-	_mysql_ConnectionObject *self;
-	PyObject *args;
+_mysql_ConnectionObject_close(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
 {
 	if (!PyArg_NoArgs(args)) return NULL;
 	Py_BEGIN_ALLOW_THREADS
@@ -498,18 +497,18 @@ _mysql_ConnectionObject_close(self, args)
 }
 
 static PyObject *
-_mysql_ConnectionObject_affected_rows(self, args)
-	_mysql_ConnectionObject *self;
-	PyObject *args;
+_mysql_ConnectionObject_affected_rows(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
 {
 	if (!PyArg_NoArgs(args)) return NULL;
 	return PyLong_FromUnsignedLongLong(mysql_affected_rows(&(self->connection)));
 }
 
 static PyObject *
-_mysql_debug(self, args)
-	PyObject *self;
-	PyObject *args;
+_mysql_debug(
+	PyObject *self,
+	PyObject *args)
 {
 	char *debug;
 	if (!PyArg_ParseTuple(args, "s", &debug)) return NULL;
@@ -519,9 +518,9 @@ _mysql_debug(self, args)
 }
 
 static PyObject *
-_mysql_ConnectionObject_dump_debug_info(self, args)
-	_mysql_ConnectionObject *self;
-	PyObject *args;
+_mysql_ConnectionObject_dump_debug_info(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
 {
 	int err;
 	if (!PyArg_NoArgs(args)) return NULL;
@@ -534,27 +533,27 @@ _mysql_ConnectionObject_dump_debug_info(self, args)
 }
 
 static PyObject *
-_mysql_ConnectionObject_errno(self, args)
-	_mysql_ConnectionObject *self;
-	PyObject *args;
+_mysql_ConnectionObject_errno(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
 {
 	if (!PyArg_NoArgs(args)) return NULL;
 	return PyInt_FromLong((long)mysql_errno(&(self->connection)));
 }
 
 static PyObject *
-_mysql_ConnectionObject_error(self, args)
-	_mysql_ConnectionObject *self;
-	PyObject *args;
+_mysql_ConnectionObject_error(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
 {
 	if (!PyArg_NoArgs(args)) return NULL;
 	return PyString_FromString(mysql_error(&(self->connection)));
 }
 
 static PyObject *
-_mysql_escape_string(self, args)
-	_mysql_ConnectionObject *self;
-	PyObject *args;
+_mysql_escape_string(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
 {
 	PyObject *str;
 	char *in, *out;
@@ -583,9 +582,9 @@ _mysql_escape_string(self, args)
  */
 
 static PyObject *
-_mysql_string_literal(self, args)
-	_mysql_ConnectionObject *self;
-	PyObject *args;
+_mysql_string_literal(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
 {
 	PyObject *str;
 	char *in, *out;
@@ -610,9 +609,9 @@ _mysql_string_literal(self, args)
 static PyObject *_mysql_NULL;
 
 static PyObject *
-_mysql_escape_row(self, args)
-	PyObject *self;
-	PyObject *args;
+_mysql_escape_row(
+	PyObject *self,
+	PyObject *args)
 {
 	PyObject *o=NULL, *d=NULL, *r=NULL, *item, *quoted, 
 		*itemtype, *itemconv;
@@ -651,9 +650,9 @@ _mysql_escape_row(self, args)
 				
 
 static PyObject *
-_mysql_ResultObject_describe(self, args)
-	_mysql_ResultObject *self;
-	PyObject *args;
+_mysql_ResultObject_describe(
+	_mysql_ResultObject *self,
+	PyObject *args)
 {
 	PyObject *d;
 	MYSQL_FIELD *fields;
@@ -682,9 +681,9 @@ _mysql_ResultObject_describe(self, args)
 }
 	
 static PyObject *
-_mysql_ResultObject_field_flags(self, args)
-	_mysql_ResultObject *self;
-	PyObject *args;
+_mysql_ResultObject_field_flags(
+	_mysql_ResultObject *self,
+	PyObject *args)
 {
 	PyObject *d;
 	MYSQL_FIELD *fields;
@@ -705,10 +704,10 @@ _mysql_ResultObject_field_flags(self, args)
 }
 
 static PyObject *
-_mysql_field_to_python(converter, rowitem, length)
-	PyObject *converter;
-	char *rowitem;
-	unsigned long length;
+_mysql_field_to_python(
+	PyObject *converter,
+	char *rowitem,
+	unsigned long length)
 {
 	PyObject *v;
 	if (rowitem) {
@@ -730,9 +729,9 @@ _mysql_field_to_python(converter, rowitem, length)
 }
 
 static PyObject *
-_mysql_row_to_tuple(self, row)
-	_mysql_ResultObject *self;
-	MYSQL_ROW row;
+_mysql_row_to_tuple(
+	_mysql_ResultObject *self,
+	MYSQL_ROW row)
 {
 	unsigned int n, i;
 	unsigned long *length;
@@ -755,9 +754,9 @@ _mysql_row_to_tuple(self, row)
 }
 
 static PyObject *
-_mysql_row_to_dict(self, row)
-	_mysql_ResultObject *self;
-	MYSQL_ROW row;
+_mysql_row_to_dict(
+	_mysql_ResultObject *self,
+	MYSQL_ROW row)
 {
 	unsigned int n, i;
 	unsigned long *length;
@@ -794,9 +793,9 @@ _mysql_row_to_dict(self, row)
 }
 
 static PyObject *
-_mysql_row_to_dict_old(self, row)
-	_mysql_ResultObject *self;
-	MYSQL_ROW row;
+_mysql_row_to_dict_old(
+	_mysql_ResultObject *self,
+	MYSQL_ROW row)
 {
 	unsigned int n, i;
 	unsigned long *length;
@@ -831,11 +830,12 @@ _mysql_row_to_dict_old(self, row)
 }
 
 static PyObject *
-_mysql_ResultObject_fetch_row(self, args, kwargs)
-	_mysql_ResultObject *self;
-	PyObject *args, *kwargs;
+_mysql_ResultObject_fetch_row(
+	_mysql_ResultObject *self,
+	PyObject *args,
+	PyObject *kwargs)
 {
-	typedef PyObject *_PYFUNC();
+	typedef PyObject *_PYFUNC(_mysql_ResultObject *, MYSQL_ROW);
 	static char *kwlist[] = { "maxrows", "how", NULL };
 	static _PYFUNC *row_converters[] =
 	{
@@ -869,7 +869,7 @@ _mysql_ResultObject_fetch_row(self, args, kwargs)
 		}
 		if (!row && mysql_errno(self->connection)) {
 			Py_XDECREF(r);
-			return _mysql_Exception(self->connection);
+			return _mysql_Exception((_mysql_ConnectionObject *)self->conn);
 		}
 		if (!row) {
 			if (_PyTuple_Resize(&r, i, 0) == -1) goto error;
@@ -887,9 +887,10 @@ _mysql_ResultObject_fetch_row(self, args, kwargs)
 
 #if MYSQL_VERSION_ID >= 32303
 static PyObject *
-_mysql_ConnectionObject_change_user(self, args, kwargs)
-	_mysql_ConnectionObject *self;
-	PyObject *args, *kwargs;
+_mysql_ConnectionObject_change_user(
+	_mysql_ConnectionObject *self,
+	PyObject *args,
+	PyObject *kwargs)
 {
 	char *user, *pwd=NULL, *db=NULL;
 	int r;
@@ -909,9 +910,9 @@ _mysql_ConnectionObject_change_user(self, args, kwargs)
 
 #if MYSQL_VERSION_ID >= 32321
 static PyObject *
-_mysql_ConnectionObject_character_set_name(self, args)
-	_mysql_ConnectionObject *self;
-	PyObject *args;
+_mysql_ConnectionObject_character_set_name(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
 {
 	const char *s;
 	if (!PyArg_NoArgs(args)) return NULL;
@@ -921,18 +922,18 @@ _mysql_ConnectionObject_character_set_name(self, args)
 #endif
 
 static PyObject *
-_mysql_get_client_info(self, args)
-	PyObject *self;
-	PyObject *args;
+_mysql_get_client_info(
+	PyObject *self,
+	PyObject *args)
 {
 	if (!PyArg_NoArgs(args)) return NULL;
 	return PyString_FromString(mysql_get_client_info());
 }
 
 static PyObject *
-_mysql_ConnectionObject_commit(self, args)
-	_mysql_ConnectionObject *self;
-	PyObject *args;
+_mysql_ConnectionObject_commit(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
 {
 	if (!PyArg_NoArgs(args)) return NULL;
         Py_INCREF(Py_None);
@@ -940,36 +941,36 @@ _mysql_ConnectionObject_commit(self, args)
 }
 
 static PyObject *
-_mysql_ConnectionObject_get_host_info(self, args)
-	_mysql_ConnectionObject *self;
-	PyObject *args;
+_mysql_ConnectionObject_get_host_info(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
 {
 	if (!PyArg_NoArgs(args)) return NULL;
 	return PyString_FromString(mysql_get_host_info(&(self->connection)));
 }
 
 static PyObject *
-_mysql_ConnectionObject_get_proto_info(self, args)
-	_mysql_ConnectionObject *self;
-	PyObject *args;
+_mysql_ConnectionObject_get_proto_info(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
 {
 	if (!PyArg_NoArgs(args)) return NULL;
 	return PyInt_FromLong((long)mysql_get_proto_info(&(self->connection)));
 }
 
 static PyObject *
-_mysql_ConnectionObject_get_server_info(self, args)
-	_mysql_ConnectionObject *self;
-	PyObject *args;
+_mysql_ConnectionObject_get_server_info(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
 {
 	if (!PyArg_NoArgs(args)) return NULL;
 	return PyString_FromString(mysql_get_server_info(&(self->connection)));
 }
 
 static PyObject *
-_mysql_ConnectionObject_info(self, args)
-	_mysql_ConnectionObject *self;
-	PyObject *args;
+_mysql_ConnectionObject_info(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
 {
 	char *s;
 	if (!PyArg_NoArgs(args)) return NULL;
@@ -980,9 +981,9 @@ _mysql_ConnectionObject_info(self, args)
 }
 
 static PyObject *
-_mysql_ConnectionObject_insert_id(self, args)
-	_mysql_ConnectionObject *self;
-	PyObject *args;
+_mysql_ConnectionObject_insert_id(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
 {
 	my_ulonglong r;
 	if (!PyArg_NoArgs(args)) return NULL;
@@ -993,9 +994,9 @@ _mysql_ConnectionObject_insert_id(self, args)
 }
 
 static PyObject *
-_mysql_ConnectionObject_kill(self, args)
-	_mysql_ConnectionObject *self;
-	PyObject *args;
+_mysql_ConnectionObject_kill(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
 {
 	unsigned long pid;
 	int r;
@@ -1009,9 +1010,9 @@ _mysql_ConnectionObject_kill(self, args)
 }
 
 static PyObject *
-_mysql_ConnectionObject_list_dbs(self, args)
-	_mysql_ConnectionObject *self;
-	PyObject *args;
+_mysql_ConnectionObject_list_dbs(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
 {
 	MYSQL_RES *result;
 	char *wild = NULL;
@@ -1026,9 +1027,9 @@ _mysql_ConnectionObject_list_dbs(self, args)
 }
 
 static PyObject *
-_mysql_ConnectionObject_list_fields(self, args)
-	_mysql_ConnectionObject *self;
-	PyObject *args;
+_mysql_ConnectionObject_list_fields(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
 {
 	MYSQL_RES *result;
 	char *wild = NULL, *table;
@@ -1043,9 +1044,9 @@ _mysql_ConnectionObject_list_fields(self, args)
 }
 
 static PyObject *
-_mysql_ConnectionObject_list_processes(self, args)
-	_mysql_ConnectionObject *self;
-	PyObject *args;
+_mysql_ConnectionObject_list_processes(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
 {
 	MYSQL_RES *result;
 
@@ -1059,9 +1060,9 @@ _mysql_ConnectionObject_list_processes(self, args)
 }
 
 static PyObject *
-_mysql_ConnectionObject_list_tables(self, args)
-	_mysql_ConnectionObject *self;
-	PyObject *args;
+_mysql_ConnectionObject_list_tables(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
 {
 	MYSQL_RES *result;
 	char *wild = NULL;
@@ -1076,9 +1077,9 @@ _mysql_ConnectionObject_list_tables(self, args)
 }
 
 static PyObject *
-_mysql_ConnectionObject_field_count(self, args)
-	_mysql_ConnectionObject *self;
-	PyObject *args;
+_mysql_ConnectionObject_field_count(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
 {
 	if (!PyArg_NoArgs(args)) return NULL;
 #if MYSQL_VERSION_ID < 32224
@@ -1089,27 +1090,27 @@ _mysql_ConnectionObject_field_count(self, args)
 }	
 
 static PyObject *
-_mysql_ResultObject_num_fields(self, args)
-	_mysql_ResultObject *self;
-	PyObject *args;
+_mysql_ResultObject_num_fields(
+	_mysql_ResultObject *self,
+	PyObject *args)
 {
 	if (!PyArg_NoArgs(args)) return NULL;
 	return PyInt_FromLong((long)mysql_num_fields(self->result));
 }	
 
 static PyObject *
-_mysql_ResultObject_num_rows(self, args)
-	_mysql_ResultObject *self;
-	PyObject *args;
+_mysql_ResultObject_num_rows(
+	_mysql_ResultObject *self,
+	PyObject *args)
 {
 	if (!PyArg_NoArgs(args)) return NULL;
 	return PyLong_FromUnsignedLongLong(mysql_num_rows(self->result));
 }	
 
 static PyObject *
-_mysql_ConnectionObject_ping(self, args)
-	_mysql_ConnectionObject *self;
-	PyObject *args;
+_mysql_ConnectionObject_ping(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
 {
 	int r;
 	if (!PyArg_NoArgs(args)) return NULL;
@@ -1122,9 +1123,9 @@ _mysql_ConnectionObject_ping(self, args)
 }
 
 static PyObject *
-_mysql_ConnectionObject_query(self, args)
-	_mysql_ConnectionObject *self;
-	PyObject *args;
+_mysql_ConnectionObject_query(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
 {
 	char *query;
 	int len, r;
@@ -1138,9 +1139,9 @@ _mysql_ConnectionObject_query(self, args)
 }
 
 static PyObject *
-_mysql_ConnectionObject_select_db(self, args)
-	_mysql_ConnectionObject *self;
-	PyObject *args;
+_mysql_ConnectionObject_select_db(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
 {
 	char *db;
 	int r;
@@ -1154,9 +1155,9 @@ _mysql_ConnectionObject_select_db(self, args)
 }
 
 static PyObject *
-_mysql_ConnectionObject_shutdown(self, args)
-	_mysql_ConnectionObject *self;
-	PyObject *args;
+_mysql_ConnectionObject_shutdown(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
 {
 	int r;
 	if (!PyArg_NoArgs(args)) return NULL;
@@ -1169,9 +1170,9 @@ _mysql_ConnectionObject_shutdown(self, args)
 }
 
 static PyObject *
-_mysql_ConnectionObject_stat(self, args)
-	_mysql_ConnectionObject *self;
-	PyObject *args;
+_mysql_ConnectionObject_stat(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
 {
 	char *s;
 	if (!PyArg_NoArgs(args)) return NULL;
@@ -1183,9 +1184,9 @@ _mysql_ConnectionObject_stat(self, args)
 }
 
 static PyObject *
-_mysql_ConnectionObject_store_result(self, args)
-	_mysql_ConnectionObject *self;
-	PyObject *args;
+_mysql_ConnectionObject_store_result(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
 {
 	MYSQL_RES *result;
 
@@ -1202,9 +1203,9 @@ _mysql_ConnectionObject_store_result(self, args)
 }
 
 static PyObject *
-_mysql_ConnectionObject_thread_id(self, args)
-	_mysql_ConnectionObject *self;
-	PyObject *args;
+_mysql_ConnectionObject_thread_id(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
 {
 	unsigned long pid;
 	if (!PyArg_NoArgs(args)) return NULL;
@@ -1215,9 +1216,9 @@ _mysql_ConnectionObject_thread_id(self, args)
 }
 
 static PyObject *
-_mysql_ConnectionObject_use_result(self, args)
-	_mysql_ConnectionObject *self;
-	PyObject *args;
+_mysql_ConnectionObject_use_result(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
 {
 	MYSQL_RES *result;
 
@@ -1234,8 +1235,8 @@ _mysql_ConnectionObject_use_result(self, args)
 }
 
 static void
-_mysql_ConnectionObject_dealloc(self)
-	_mysql_ConnectionObject *self;
+_mysql_ConnectionObject_dealloc(
+	_mysql_ConnectionObject *self)
 {
 	if (self->open) {
 		Py_BEGIN_ALLOW_THREADS
@@ -1247,8 +1248,8 @@ _mysql_ConnectionObject_dealloc(self)
 }
 
 static PyObject *
-_mysql_ConnectionObject_repr(self)
-	_mysql_ConnectionObject *self;
+_mysql_ConnectionObject_repr(
+	_mysql_ConnectionObject *self)
 {
 	char buf[300];
 	sprintf(buf, "<%s connection to '%.256s' at %lx>",
@@ -1259,9 +1260,9 @@ _mysql_ConnectionObject_repr(self)
 }
 
 static PyObject *
-_mysql_ResultObject_data_seek(self, args)
-     _mysql_ResultObject *self;
-     PyObject *args;
+_mysql_ResultObject_data_seek(
+     _mysql_ResultObject *self,
+     PyObject *args)
 {
 	unsigned int row;
 	if (!PyArg_ParseTuple(args, "i:data_seek", &row)) return NULL;
@@ -1271,9 +1272,9 @@ _mysql_ResultObject_data_seek(self, args)
 }
 
 static PyObject *
-_mysql_ResultObject_row_seek(self, args)
-     _mysql_ResultObject *self;
-     PyObject *args;
+_mysql_ResultObject_row_seek(
+     _mysql_ResultObject *self,
+     PyObject *args)
 {
 	int offset;
         MYSQL_ROW_OFFSET r;
@@ -1285,9 +1286,9 @@ _mysql_ResultObject_row_seek(self, args)
 }
 
 static PyObject *
-_mysql_ResultObject_row_tell(self, args)
-	_mysql_ResultObject *self;
-	PyObject *args;
+_mysql_ResultObject_row_tell(
+	_mysql_ResultObject *self,
+	PyObject *args)
 {
 	MYSQL_ROW_OFFSET r;
 	if (!PyArg_NoArgs(args)) return NULL;
@@ -1296,8 +1297,8 @@ _mysql_ResultObject_row_tell(self, args)
 }
 
 static void
-_mysql_ResultObject_dealloc(self)
-	_mysql_ResultObject *self;
+_mysql_ResultObject_dealloc(
+	_mysql_ResultObject *self)
 {
 	mysql_free_result(self->result);
 	Py_DECREF(self->conn);
@@ -1306,8 +1307,8 @@ _mysql_ResultObject_dealloc(self)
 }
 
 static PyObject *
-_mysql_ResultObject_repr(self)
-	_mysql_ResultObject *self;
+_mysql_ResultObject_repr(
+	_mysql_ResultObject *self)
 {
 	char buf[300];
 	sprintf(buf, "<result object at %lx>",
@@ -1377,9 +1378,9 @@ static struct memberlist _mysql_ResultObject_memberlist[] = {
 };
 
 static PyObject *
-_mysql_ConnectionObject_getattr(self, name)
-	_mysql_ConnectionObject *self;
-	char *name;
+_mysql_ConnectionObject_getattr(
+	_mysql_ConnectionObject *self,
+	char *name)
 {
 	PyObject *res;
 
@@ -1395,9 +1396,9 @@ _mysql_ConnectionObject_getattr(self, name)
 }
 
 static PyObject *
-_mysql_ResultObject_getattr(self, name)
-	_mysql_ResultObject *self;
-	char *name;
+_mysql_ResultObject_getattr(
+	_mysql_ResultObject *self,
+	char *name)
 {
 	PyObject *res;
 
@@ -1409,10 +1410,10 @@ _mysql_ResultObject_getattr(self, name)
 }
 
 static int
-_mysql_ConnectionObject_setattr(c, name, v)
-	_mysql_ConnectionObject *c;
-	char *name;
-	PyObject *v;
+_mysql_ConnectionObject_setattr(
+	_mysql_ConnectionObject *c,
+	char *name,
+	PyObject *v)
 {
 	if (v == NULL) {
 		PyErr_SetString(PyExc_AttributeError,
@@ -1423,10 +1424,10 @@ _mysql_ConnectionObject_setattr(c, name, v)
 }
 
 static int
-_mysql_ResultObject_setattr(c, name, v)
-	_mysql_ResultObject *c;
-	char *name;
-	PyObject *v;
+_mysql_ResultObject_setattr(
+	_mysql_ResultObject *c,
+	char *name,
+	PyObject *v)
 {
 	if (v == NULL) {
 		PyErr_SetString(PyExc_AttributeError,
@@ -1484,9 +1485,10 @@ _mysql_methods[] = {
 };
 
 static PyObject *
-_mysql_NewException(PyObject *dict,
-		    char *name,
-		    PyObject *base)
+_mysql_NewException(
+	PyObject *dict,
+	char *name,
+	PyObject *base)
 {
 	PyObject *v;
 	char longname[256];
@@ -1499,10 +1501,10 @@ _mysql_NewException(PyObject *dict,
 }
 
 int
-_mysql_Constant_class(mdict, type, table)
-	PyObject *mdict;
-	char *type;
-	_mysql_Constant *table;
+_mysql_Constant_class(
+	PyObject *mdict,
+	char *type,
+	_mysql_Constant *table)
 {
 	PyObject *d, *c, *v;
 	int i;
@@ -1560,8 +1562,8 @@ according to type_conv.\n\
 \n\
 For everything else, check the MySQL docs." ;
 
-void
-init_mysql()
+DL_EXPORT(void)
+init_mysql(void)
 {
 	PyObject *dict, *module;
 	module = Py_InitModule3("_mysql", _mysql_methods, _mysql___doc__);
