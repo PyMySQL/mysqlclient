@@ -29,5 +29,5 @@ def mysql_timestamp_converter(s):
     s = s + "0"*(14-len(s)) # padding
     parts = map(int, filter(None, (s[:4],s[4:6],s[6:8],
                                    s[8:10],s[10:12],s[12:14])))
-    try: return apply(Timestamp, tuple(parts))
+    try: return Timestamp(*parts)
     except: return None

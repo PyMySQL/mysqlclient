@@ -133,7 +133,6 @@ class BaseCursor:
         execute().
 
         """
-        from string import join
         from sys import exc_info
         del self.messages[:]
         if not args: return
@@ -159,13 +158,14 @@ class BaseCursor:
             exc, value, tb = exc_info()
             del tb
             self.errorhandler(self, exc, value)
-        r = self._query(join(q,',\n'))
+        r = self._query(',\n'.join(q))
         self._executed = query
         return r
 
-    def __do_query(self, q):
+    def _do_query(self, q):
+        from warnings import warn
+        from string import atoi
 
-        from string import split, atoi
         db = self._get_db()
         db.query(q)
         self._result = self._get_result()
@@ -173,27 +173,14 @@ class BaseCursor:
         self.rownumber = 0
         self.description = self._result and self._result.describe() or None
         self.lastrowid = db.insert_id()
-        self._check_for_warnings()
+        info = db.info()
+        if info:
+            warnings = atoi(info.split()[-1])
+            if warnings:
+                warn(info, self.Warning, stacklevel=4)
         return self.rowcount
 
-    def _check_for_warnings(self): pass
-
-    _query = __do_query
-
-    def info(self):
-        """Return some information about the last query (db.info())
-        DEPRECATED: Use messages attribute"""
-        self._check_executed()
-        if self.messages:
-            return self.messages[-1]
-        else:
-            return ''
-        
-    def insert_id(self):
-        """Return the last inserted ID on an AUTO_INCREMENT columns.
-        DEPRECATED: use lastrowid attribute"""
-        self._check_executed()
-        return self.lastrowid
+    def _query(self, q): return self._do_query(q)
     
     def _fetch_row(self, size=1):
         if not self._result:
@@ -214,22 +201,6 @@ class BaseCursor:
     ProgrammingError = ProgrammingError
     NotSupportedError = NotSupportedError
    
-        
-class CursorWarningMixIn:
-
-    """This is a MixIn class that provides the capability of raising
-    the Warning exception when something went slightly wrong with your
-    query."""
-
-    def _check_for_warnings(self):
-        from string import atoi, split
-        info = self._get_db().info()
-        if not info:
-            return
-        warnings = atoi(split(info)[-1])
-        if warnings:
-            raise Warning, info
-
 
 class CursorStoreResultMixIn:
 
@@ -246,7 +217,7 @@ class CursorStoreResultMixIn:
         BaseCursor.close(self)
 
     def _query(self, q):
-        rowcount = self._BaseCursor__do_query(q)
+        rowcount = self._do_query(q)
         self._rows = self._fetch_row(0)
         self._result = None
         return rowcount
@@ -276,24 +247,6 @@ class CursorStoreResultMixIn:
         self.rownumber = len(self._rows)
         return result
     
-    def seek(self, row, whence=0):
-        """seek to a given row of the result set analogously to file.seek().
-        This is non-standard extension. DEPRECATED: Use scroll method"""
-        self._check_executed()
-        if whence == 0:
-            self.rownumber = row
-        elif whence == 1:
-            self.rownumber = self.rownumber + row
-        elif whence == 2:
-            self.rownumber = len(self._rows) + row
-     
-    def tell(self):
-        """Return the current position in the result set analogously to
-        file.tell(). This is a non-standard extension. DEPRECATED:
-        use rownumber attribute"""
-        self._check_executed()
-        return self.rownumber
-
     def scroll(self, value, mode='relative'):
         """Scroll the cursor in the result set to a new position according
         to mode.
@@ -400,58 +353,31 @@ class CursorOldDictRowsMixIn(CursorDictRowsMixIn):
     _fetch_type = 2
 
 
-class CursorNW(CursorStoreResultMixIn, CursorTupleRowsMixIn,
-               BaseCursor):
-
-    """This is a basic Cursor class that returns rows as tuples and
-    stores the result set in the client. Warnings are not raised."""
-
-
-class Cursor(CursorWarningMixIn, CursorNW):
+class Cursor(CursorStoreResultMixIn, CursorTupleRowsMixIn,
+             BaseCursor):
 
     """This is the standard Cursor class that returns rows as tuples
-    and stores the result set in the client. Warnings are raised as
-    necessary."""
+    and stores the result set in the client."""
 
 
-class DictCursorNW(CursorStoreResultMixIn, CursorDictRowsMixIn,
+class DictCursor(CursorStoreResultMixIn, CursorDictRowsMixIn,
+                 BaseCursor):
+
+     """This is a Cursor class that returns rows as dictionaries and
+    stores the result set in the client."""
+   
+
+class SSCursor(CursorUseResultMixIn, CursorTupleRowsMixIn,
+               BaseCursor):
+
+    """This is a Cursor class that returns rows as tuples and stores
+    the result set in the server."""
+
+
+class SSDictCursor(CursorUseResultMixIn, CursorDictRowsMixIn,
                    BaseCursor):
 
     """This is a Cursor class that returns rows as dictionaries and
-    stores the result set in the client. Warnings are not raised."""
-
-
-class DictCursor(CursorWarningMixIn, DictCursorNW):
-
-     """This is a Cursor class that returns rows as dictionaries and
-    stores the result set in the client. Warnings are raised as
-    necessary."""
-   
-
-class SSCursorNW(CursorUseResultMixIn, CursorTupleRowsMixIn,
-                 BaseCursor):
-
-    """This is a basic Cursor class that returns rows as tuples and
-    stores the result set in the server. Warnings are not raised."""
-
-
-class SSCursor(CursorWarningMixIn, SSCursorNW):
-
-    """This is a Cursor class that returns rows as tuples and stores
-    the result set in the server. Warnings are raised as necessary."""
-
-
-class SSDictCursorNW(CursorUseResultMixIn, CursorDictRowsMixIn,
-                     BaseCursor):
-
-    """This is a Cursor class that returns rows as dictionaries and
-    stores the result set in the server. Warnings are not raised."""
-
-
-class SSDictCursor(CursorWarningMixIn, SSDictCursorNW):
-
-    """This is a Cursor class that returns rows as dictionaries and
-    stores the result set in the server. Warnings are raised as
-    necessary."""
+    stores the result set in the server."""
 
 

@@ -38,14 +38,14 @@ if hasattr(types, "ObjectType"):
     class ConnectionBase(_mysql.connection):
 
         def _make_connection(self, args, kwargs):
-            apply(super(ConnectionBase, self).__init__, args, kwargs)
+            super(ConnectionBase, self).__init__(*args, **kwargs)
 
 else:
     
     class ConnectionBase:
         
         def _make_connection(self, args, kwargs):
-            self._db = apply(_mysql.connect, args, kwargs)
+            self._db = _mysql.connect(*args, **kwargs)
             
         def __getattr__(self, attr):
             if hasattr(self, "_db"):

@@ -17,8 +17,7 @@ class Set:
     
     def __str__(self):
         """Returns the values as a comma-separated string."""
-        from string import join
-        return join(map(str, self._values),',')
+        return ','.join([ str(x) for x in self._values])
 
     def __repr__(self):
         return "%s%s" % (self.__class__.__name__, `self._values`)
@@ -32,7 +31,7 @@ class Set:
                     values.append(v)
         elif other not in self._values:
             values.append(other)
-        return apply(self.__class__, values)
+        return self.__class__(*values)
 
     __add__ = __or__
     
@@ -44,7 +43,7 @@ class Set:
                     values.remove(v)
         elif other in self:
             values.remove(other)
-        return apply(self.__class__, tuple(values))
+        return self.__class__(*values)
 
     def __and__(self, other):
         "Intersection."
@@ -55,7 +54,7 @@ class Set:
                     values.append(v)
         elif other in self:
             values.append(other)
-        return apply(self.__class__, tuple(values))
+        return self.__class__(*values)
 
     __mul__ = __and__
     
