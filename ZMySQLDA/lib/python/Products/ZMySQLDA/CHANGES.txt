@@ -6,7 +6,16 @@ Z MySQL DA Releases
 
     Wrap queries with a lock to prevent multiple threads from using
     the connection simultaneously (this may or may not be happening).
-    If transactional, then the lock is held for the entire transaction.
+    If transactional, then there is an additional transaction lock,
+    acquired at the beginning of the transaction and released when
+    either finished or aborted.
+
+    A named lock can be specified by inserting *LOCKNAME at the start
+    of the connection string. This is probably best used only if you
+    must use non-transactional tables.
+
+    Some stuff will be logged as an error when bad things happen
+    during the transaction manager hooks.
 
   2.0.8
 
