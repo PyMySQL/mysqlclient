@@ -120,8 +120,18 @@ class DB(TM):
         FIELD_TYPE.TINY: "i", FIELD_TYPE.YEAR: "i",
         }
 
-    types={}
-    for k, v in FIELD_TYPE.__dict__.items(): types[v]=k
+    types={
+        FIELD_TYPE.CHAR: "CHAR", FIELD_TYPE.DATE: "DATE",
+        FIELD_TYPE.DATETIME: "DATETIME", FIELD_TYPE.DECIMAL: "DECIMAL",
+        FIELD_TYPE.DOUBLE: "DOUBLE", FIELD_TYPE.FLOAT: "FLOAT",
+	FIELD_TYPE.INT24: "MEDIUMINT", FIELD_TYPE.VAR_STRING: "VARCHAR",
+        FIELD_TYPE.LONG: "INT", FIELD_TYPE.LONGLONG: "LONGINT",
+        FIELD_TYPE.SHORT: "SMALLINT", FIELD_TYPE.TIMESTAMP: "TIMESTAMP",
+        FIELD_TYPE.TINY: "TINYINT", FIELD_TYPE.YEAR: "YEAR",
+	FIELD_TYPE.ENUM: "ENUM", FIELD_TYPE.SET: "SET",
+	FIELD_TYPE.TINY_BLOB: "TINYBLOB", FIELD_TYPE.MEDIUM_BLOB: "MEDIUMBLOB",
+	FIELD_TYPE.BLOB: "BLOB", FIELD_TYPE.STRING: "STRING",
+        }
 
     conv={
         FIELD_TYPE.TIMESTAMP: _mysql_timestamp_converter,
@@ -141,6 +151,7 @@ class DB(TM):
     _p_oid=_p_changed=_registered=None
 
     def __init__(self,connection):
+	from _mysql import CLIENT
         self.connection=connection
         self.kwargs = kwargs = self._parse_connection_string(connection)
         self.db=apply(self.Database_Connection, (), kwargs)
@@ -195,7 +206,7 @@ class DB(TM):
                 'Type': self.types.get(type, '?'),
                 'Precision': p,
                 'Scale': scale,
-                'Nullable': null_ok,
+                'Nullable': null_ok and ' ' or "NOT NULL",
                 })
 
         return r

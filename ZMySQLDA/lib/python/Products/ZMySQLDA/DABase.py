@@ -258,8 +258,8 @@ field_icons={
             "CHAR": "int", "DATE": "date",
             "DATETIME": "date", "DECIMAL": "float",
             "DOUBLE": "float", "FLOAT": "float",
-            "INT24": "int", "LONG": "int",
-            "LONGLONG": "int", "SHORT": "int",
-            "TIMESTAMP": "date", "TINY": "int",
+            "MEDIUMINT": "int", "INT": "int",
+            "LONGINT": "int", "SMALLINT": "int",
+            "TIMESTAMP": "date", "TINYINT": "int",
             "YEAR": "int"
             }
