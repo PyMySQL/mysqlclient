@@ -114,7 +114,7 @@ def main():
 	    CAPTION("MySQL C API function mapping"),
 	    TR(TH("C API"), TH("_mysql")),
 	    MapTR("mysql_affected_rows()",
-		  "_mysql.affected_rows()"),
+		  "conn.affected_rows()"),
 	    MapTR("mysql_close()",
 		  "conn.close()"),
 	    MapTR("mysql_connect()",

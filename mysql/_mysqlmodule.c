@@ -19,6 +19,7 @@ typedef struct {
 	PyObject_HEAD
 	MYSQL connection;
 	int open;
+	PyObject *converter;
 } _mysql_ConnectionObject;
 
 extern PyTypeObject _mysql_ConnectionObject_Type;
@@ -30,12 +31,10 @@ typedef struct {
 	MYSQL_RES *result;
 	int nfields;
 	int use;
-	PyObject **converter;
+	PyObject *converter;
 } _mysql_ResultObject;
 
 extern PyTypeObject _mysql_ResultObject_Type;
-
-static PyObject *_mysql_type_conv;
 
 PyObject *
 _mysql_Exception(c)
@@ -137,18 +136,6 @@ static _mysql_Constant _mysql_Constant_field_type[] = {
 	{ "STRING", FIELD_TYPE_STRING },
 	{ "CHAR", FIELD_TYPE_CHAR },
 	{ "INTERVAL", FIELD_TYPE_ENUM },
-	{ NULL } /* sentinel */
-} ;
-
-static _mysql_Constant _mysql_Constant_type_conv[] = {
-	{ "int", FIELD_TYPE_TINY },
-	{ "int", FIELD_TYPE_SHORT },
-	{ "int", FIELD_TYPE_LONG },
-	{ "float", FIELD_TYPE_FLOAT },
-	{ "float", FIELD_TYPE_DOUBLE },
-	{ "long", FIELD_TYPE_LONGLONG },
-	{ "int", FIELD_TYPE_INT24 },
-	{ "int", FIELD_TYPE_YEAR },
 	{ NULL } /* sentinel */
 } ;
 
@@ -343,10 +330,11 @@ static _mysql_Constant _mysql_Constant_er[] = {
 } ;
 
 static _mysql_ResultObject*
-_mysql_ResultObject_New(conn, result, use)
+_mysql_ResultObject_New(conn, result, use, conv)
 	_mysql_ConnectionObject *conn;
 	MYSQL_RES *result;
 	int use;
+	PyObject *conv;
 {
 	int n, i;
 	MYSQL_FIELD *fields;
@@ -358,21 +346,30 @@ _mysql_ResultObject_New(conn, result, use)
 	r->converter = NULL;
 	r->use = use;
 	Py_INCREF(conn);
+	Py_INCREF(conv);
 	r->result = result;
 	n = mysql_num_fields(result);
 	r->nfields = n;
         if (n) {
-		r->converter = PyMem_Malloc(n*sizeof(PyObject *));
+		if (!(r->converter = PyTuple_New(n))) {
+			Py_DECREF(conv);
+			Py_DECREF(conn);
+			return NULL;
+		}
 		fields = mysql_fetch_fields(result);
 		for (i=0; i<n; i++) {
 			PyObject *tmp, *fun;
 			tmp = PyInt_FromLong((long) fields[i].type);
-			fun = PyDict_GetItem(_mysql_type_conv, tmp);
-			r->converter[i] = fun;
-			Py_XINCREF(fun);
-			Py_DECREF(tmp);
+			fun = PyObject_GetItem(conv, tmp);
+			Py_XDECREF(tmp);
+			if (!fun) {
+				fun = Py_None;
+				Py_INCREF(Py_None);
+			}
+			PyTuple_SET_ITEM(r->converter, i, fun);
 		}
 	}
+	Py_DECREF(conv);
 	return r;
 }
 
@@ -383,21 +380,23 @@ _mysql_connect(self, args, kwargs)
 	PyObject *kwargs;
 {
 	MYSQL *conn;
+	PyObject *conv = NULL;
 	char *host = NULL, *user = NULL, *passwd = NULL,
 		*db = NULL, *unix_socket = NULL;
 	uint port = MYSQL_PORT;
 	uint client_flag = 0;
 	static char *kwlist[] = { "host", "user", "passwd", "db", "port",
-				  "unix_socket", "client_flag",
+				  "unix_socket", "client_flag", "conv",
 				  NULL } ;
 	_mysql_ConnectionObject *c = PyObject_NEW(_mysql_ConnectionObject,
 					      &_mysql_ConnectionObject_Type);
 	if (c == NULL) return NULL;
 	c->open = 0;
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|ssssisi:connect",
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|ssssisiO:connect",
 					 kwlist,
 					 &host, &user, &passwd, &db,
-					 &port, &unix_socket, &client_flag))
+					 &port, &unix_socket, &client_flag,
+					 &conv))
 		return NULL;
 	Py_BEGIN_ALLOW_THREADS ;
 	conn = mysql_init(&(c->connection));
@@ -410,6 +409,15 @@ _mysql_connect(self, args, kwargs)
 		return NULL;
 	}
 	c->open = 1;
+	if (conv) {
+		c->converter = conv;
+		Py_INCREF(conv);
+	} else {
+		if (!(c->converter = PyDict_New())) {
+			Py_DECREF(c);
+			return NULL;
+		}
+	}
 	return (PyObject *) c;
 }
 
@@ -614,7 +622,7 @@ _mysql_ResultObject_fetch_row(self, args)
 {
 	unsigned int n, i;
 	unsigned long *length;
-	PyObject *r;
+	PyObject *r, *c;
 	MYSQL_ROW row;
 	if (!args) {
 		if (!PyArg_NoArgs(args)) return NULL;
@@ -638,8 +646,9 @@ _mysql_ResultObject_fetch_row(self, args)
 	for (i=0; i<n; i++) {
 		PyObject *v;
 		if (row[i]) {
-			if (self->converter[i])
-				v = PyObject_CallFunction(self->converter[i],
+			c = PyTuple_GET_ITEM(self->converter, i);
+			if (c != Py_None)
+				v = PyObject_CallFunction(c,
 							  "s#",
 							  row[i],
 							  (int)length[i]);
@@ -986,7 +995,8 @@ _mysql_ConnectionObject_store_result(self, args)
 		Py_INCREF(Py_None);
 		return Py_None;
 	}
-	return (PyObject *) _mysql_ResultObject_New(self, result, 0);
+	return (PyObject *) _mysql_ResultObject_New(self, result, 0,
+						    self->converter);
 }
 
 static PyObject *
@@ -1017,7 +1027,8 @@ _mysql_ConnectionObject_use_result(self, args)
 		Py_INCREF(Py_None);
 		return Py_None;
 	}
-	return (PyObject *) _mysql_ResultObject_New(self, result, 1);
+	return (PyObject *) _mysql_ResultObject_New(self, result, 1,
+						    self->converter);
 }
 
 static void
@@ -1029,6 +1040,7 @@ _mysql_ConnectionObject_dealloc(self)
 		mysql_close(&(self->connection));
 		Py_END_ALLOW_THREADS
 	}
+	Py_DECREF(self->converter);
 	PyMem_Free((char *) self);
 }
 
@@ -1065,8 +1077,7 @@ _mysql_ResultObject_dealloc(self)
 	int i;
 	mysql_free_result(self->result);
 	Py_DECREF(self->conn);
-	for (i=0; i<self->nfields; i++) Py_XDECREF(self->converter[i]);
-	PyMem_Free((char *) self->converter);
+	Py_DECREF(self->converter);
 	PyMem_Free((char *) self);
 }
 
@@ -1112,6 +1123,7 @@ static PyMethodDef _mysql_ConnectionObject_methods[] = {
 static struct memberlist _mysql_ConnectionObject_memberlist[] = {
 	{"open", T_INT, 0, RO},
 	{"closed", T_INT, 0, RO},
+	{"converter", T_OBJECT, offsetof(_mysql_ConnectionObject,converter)},
 	{NULL} /* Sentinel */
 };
 
@@ -1128,6 +1140,7 @@ static PyMethodDef _mysql_ResultObject_methods[] = {
 };
 
 static struct memberlist _mysql_ResultObject_memberlist[] = {
+	{"converter", T_OBJECT, offsetof(_mysql_ResultObject,converter), RO},
 	{NULL} /* Sentinel */
 };
 
@@ -1177,6 +1190,20 @@ _mysql_ConnectionObject_setattr(c, name, v)
 	return PyMember_Set((char *)c, _mysql_ConnectionObject_memberlist, name, v);
 }
 
+static int
+_mysql_ResultObject_setattr(c, name, v)
+	_mysql_ResultObject *c;
+	char *name;
+	PyObject *v;
+{
+	if (v == NULL) {
+		PyErr_SetString(PyExc_AttributeError,
+				"can't delete connection attributes");
+		return -1;
+	}
+	return PyMember_Set((char *)c, _mysql_ResultObject_memberlist, name, v);
+}
+
 PyTypeObject _mysql_ConnectionObject_Type = {
 	PyObject_HEAD_INIT(&PyType_Type)
 	0,
@@ -1186,7 +1213,7 @@ PyTypeObject _mysql_ConnectionObject_Type = {
 	(destructor)_mysql_ConnectionObject_dealloc, /* tp_dealloc */
 	0, /*tp_print*/
 	(getattrfunc)_mysql_ConnectionObject_getattr, /* tp_getattr */
-	0, /* tp_setattr */
+	(setattrfunc)_mysql_ConnectionObject_setattr, /* tp_setattr */
 	0, /*tp_compare*/
 	(reprfunc)_mysql_ConnectionObject_repr, /* tp_repr */
 };
@@ -1200,7 +1227,7 @@ PyTypeObject _mysql_ResultObject_Type = {
 	(destructor)_mysql_ResultObject_dealloc, /* tp_dealloc */
 	0, /*tp_print*/
 	(getattrfunc)_mysql_ResultObject_getattr, /* tp_getattr */
-	0, /* tp_setattr */
+	(setattrfunc)_mysql_ResultObject_setattr, /* tp_setattr */
 	0, /*tp_compare*/
 	(reprfunc)_mysql_ResultObject_repr, /* tp_repr */
 };
@@ -1249,30 +1276,6 @@ _mysql_Constant_class(mdict, type, table)
 	return 0;
   error:
 	Py_XDECREF(d);
-	return -1;
-}
-
-int
-_mysql_Constant_type_converters(mdict)
-	PyObject *mdict;
-{
-	PyObject *d, *v, *k, *m, *e;
-	int i;
-	/* XXX This leaks memory if it fails, but then the whole module
-	   fails to import, so probably no big deal */
-	if (!(d = PyDict_New())) goto error;
-	if (PyDict_SetItemString(mdict, "type_conv", d)) goto error;
-	if (!(m = PyImport_AddModule("__main__"))) goto error;
-	if (!(e = PyModule_GetDict(m))) goto error;
-	for (i = 0; _mysql_Constant_type_conv[i].name; i++) {
-		if (!(k = PyInt_FromLong((long)_mysql_Constant_type_conv[i].value))) goto error;
-		if (!(v = PyRun_String(_mysql_Constant_type_conv[i].name, Py_eval_input, e, e))) goto error;
-		if (!PyCallable_Check(v)) goto error;
-		if (PyDict_SetItem(d, k, v)) goto error;
-	}
-	_mysql_type_conv = d;
-	return 0;
-  error:
 	return -1;
 }
 
@@ -1369,8 +1372,6 @@ init_mysql()
 	if (!(_mysql_NULL = PyString_FromString("NULL")))
 		goto error;
 	if (PyDict_SetItemString(dict, "NULL", _mysql_NULL)) goto error;
-	if (_mysql_Constant_type_converters(dict))
-		goto error;
   error:
 	if (PyErr_Occurred())
 		PyErr_SetString(PyExc_ImportError,

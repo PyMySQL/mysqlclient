@@ -24,6 +24,15 @@ threadsafety = 1
 apilevel = "2.0"
 paramstyle = "format"
 
+type_conv = { FIELD_TYPE.TINY: int,
+              FIELD_TYPE.SHORT: int,
+              FIELD_TYPE.LONG: int,
+              FIELD_TYPE.FLOAT: float,
+              FIELD_TYPE.DOUBLE: float,
+              FIELD_TYPE.LONGLONG: long,
+              FIELD_TYPE.INT24: int,
+              FIELD_TYPE.YEAR: int }
+
 try:
     from DateTime import Date, Time, Timestamp, ISO
 
@@ -242,6 +251,7 @@ class Connection:
     
     def __init__(self, **kwargs):
         from _mysql import connect
+        if not kwargs.has_key('conv'): kwargs['conv'] = type_conv
         self.db = apply(connect, (), kwargs)
      
     def close(self):
