@@ -1,4 +1,5 @@
-#include "_mysql_version.h"
+#define version_info "(0,9,0,'candidate',1)"
+#define __version__ "0.9.0c1"
 /*
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -1560,8 +1561,12 @@ init_mysql(void)
 	_mysql_ResultObject_Type.ob_type = &PyType_Type;
 #endif
 	if (!(dict = PyModule_GetDict(module))) goto error;
+	if (PyDict_SetItemString(dict, "version_info",
+			       PyRun_String(version_info, Py_eval_input,
+				       dict, dict)))
+		goto error;
 	if (PyDict_SetItemString(dict, "__version__",
-			       PyString_FromString(_mysql__version__)))
+			       PyString_FromString(__version__)))
 		goto error;
 	if (!(emod = PyImport_ImportModule("_mysql_exceptions")))
 		goto error;

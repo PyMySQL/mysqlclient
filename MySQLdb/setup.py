@@ -75,11 +75,12 @@ MySQLdb. MySQLdb is free software.
 
 setup (# Distribution meta-data
         name = "MySQL-python",
-        version = "0.9.0b3",
+        version = "0.9.0c1",
         description = "An interface to MySQL",
 	long_description=long_description,
         author = "Andy Dustman",
         author_email = "andy@dustman.net",
+	licence = "GPL",
         url = "http://dustman.net/andy/python/MySQLdb",
 
         # Description of the modules and packages in the distribution

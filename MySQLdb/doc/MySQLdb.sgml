@@ -68,8 +68,7 @@ must use a transaction-safe table (TST). Current TSTs are BDB and
 InnoDB. GEMINI tables are slated for MySQL-4.0.  Note that MySQL
 generally operates in <tt/AUTOCOMMIT/ mode by default, and MySQLdb
 assumes that <tt/AUTOCOMMIT/ is on by default. To change this, use the
-<tt/autocommit(n)/ method; otherwise MySQLdb will not know that that
-you have changed it.
+<tt/SET AUTOCOMMIT=0/ SQL statement.
 
 <sect1>DateTime <p>If you have the <htmlurl
 url="http://www.lemburg.com/files/python/mxDateTime.html"
@@ -515,10 +514,6 @@ Compatibility note: The older <ref id="MySQLmodule"> defines this method,
       transaction if one is not in progress. If AUTOCOMMIT is on, you
       can use <tt/begin()/ to temporarily turn it off. AUTOCOMMIT will
       resume after the next <tt/commit()/ or <tt/rollback/.
-
-<tag>autocommit(n)</tag> Turns AUTOCOMMIT mode on or off. This affects
-      how transactions are handled. By default, MySQL operates in
-      AUTOCOMMIT mode.
 
 </descrip>
 

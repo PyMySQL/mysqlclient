@@ -1,7 +1,6 @@
 prune CVS
 recursive-include doc *
 recursive-include examples *
-include _mysql_version.h
 include README.MySQLmodule
 include license.py
 include MANIFEST.in

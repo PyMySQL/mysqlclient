@@ -58,7 +58,6 @@ class Connection:
         self._db = apply(connect, args, kwargs2)
         self._db.converter[types.StringType] = self._db.string_literal
         self._transactional = self._db.server_capabilities & CLIENT.TRANSACTIONS
-        self._autocommit = 1
 
     def __del__(self):
         if hasattr(self, '_db'): self.close()
@@ -67,34 +66,21 @@ class Connection:
         """Close the connection. No further activity possible."""
         self._db.close()
 
-    def autocommit(self, v):
-        """Turn autocommit on or off."""
-        self._db.query("SET AUTOCOMMIT=%d"%v)
-        self._transactional = not v
-        self._autocommit = v
-        
     def begin(self):
         """Explicitly begin a transaction. Non-standard."""
         self._db.query("BEGIN")
-        self._transactional = 1
         
     def commit(self):
         """Commit the current transaction."""
-        try:
-            if self._transactional:
-                self._db.query("COMMIT")
-        finally:
-            self._transactional = not self._autocommit
+        if self._transactional:
+            self._db.query("COMMIT")
             
     def rollback(self):
         """Rollback the current transaction."""
-        try:
-            if self._transactional:
-                self._db.query("ROLLBACK")
-            else:
-                raise NotSupportedError, "Not supported by server"
-        finally:
-            self._transactional = not self._autocommit
+        if self._transactional:
+            self._db.query("ROLLBACK")
+        else:
+            raise NotSupportedError, "XXX Not supported by server"
             
     def cursor(self, cursorclass=None):
         

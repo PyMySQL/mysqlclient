@@ -19,17 +19,18 @@ version_info = (
     0,
     9,
     0,
-    "beta",
-    3)
+    "candidate",
+    1)
 if version_info[3] == "final": __version__ = "%d.%d.%d" % version_info[:3]
 else: __version__ = "%d.%d.%d%1.1s%d" % version_info[:5]
 
 import _mysql
 
-if __version__ != getattr(_mysql, '__version__', None):
+v = getattr(_mysql, 'version_info', None)
+if version_info != v:
     raise ImportError, "this is MySQLdb version %s, but _mysql is version %s" %\
-          (__version__, _mysql.__version__)
-
+          (version_info, v)
+del v
 
 threadsafety = 1
 apilevel = "2.0"
