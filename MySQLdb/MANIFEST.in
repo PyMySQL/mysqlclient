@@ -1,5 +1,5 @@
 prune CVS
-recursive-include doc *.txt *.html
+recursive-include doc *.txt *.html *.css
 include MANIFEST.in
 include MANIFEST
 include ChangeLog

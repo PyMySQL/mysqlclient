@@ -6,18 +6,25 @@ dictionary conversions maps some kind of type to a conversion function
 which returns the corresponding value:
 
 Key: FIELD_TYPE.* (from MySQLdb.constants)
+
 Conversion function:
-     Arguments: string
-     Returns: Python object
+
+    Arguments: string
+
+    Returns: Python object
 
 Key: Python type object (from types) or class
+
 Conversion function:
-     Arguments: Python object of indicated type or class AND 
-                conversion dictionary
-     Returns: SQL literal value
-     Notes: Most conversion functions can ignore the dictionary, but
-            it is a required parameter. It is necessary for converting
-            things like sequences and instances.
+
+    Arguments: Python object of indicated type or class AND 
+               conversion dictionary
+
+    Returns: SQL literal value
+
+    Notes: Most conversion functions can ignore the dictionary, but
+           it is a required parameter. It is necessary for converting
+           things like sequences and instances.
 
 Don't modify conversions if you can avoid it. Instead, make copies
 (with the copy() method), modify the copies, and then pass them to

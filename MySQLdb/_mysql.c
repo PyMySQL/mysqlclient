@@ -540,21 +540,46 @@ static char _mysql_connect__doc__[] =
 keyword parameters strongly recommended. Consult the\n\
 MySQL C API documentation for more details.\n\
 \n\
-host -- string, host to connect\n\
-user -- string, user to connect as\n\
-passwd -- string, password to use\n\
-db -- string, database to use\n\
-port -- integer, TCP/IP port to connect to\n\
-unix_socket -- string, location of unix_socket (UNIX-ish only)\n\
-conv -- mapping, maps MySQL FIELD_TYPE.* to Python functions which\n\
-        convert a string to the appropriate Python type\n\
-connect_timeout -- number of seconds to wait before the connection\n\
-        attempt fails.\n\
-compress -- if set, gzip compression is enabled\n\
-named_pipe -- if set, connect to server via named pipe (Windows only)\n\
-init_command -- command which is run once the connection is created\n\
-read_default_file -- see the MySQL documentation for mysql_options()\n\
-read_default_group -- see the MySQL documentation for mysql_options()\n\
+host\n\
+  string, host to connect\n\
+\n\
+user\n\
+  string, user to connect as\n\
+\n\
+passwd\n\
+  string, password to use\n\
+\n\
+db\n\
+  string, database to use\n\
+\n\
+port\n\
+  integer, TCP/IP port to connect to\n\
+\n\
+unix_socket\n\
+  string, location of unix_socket (UNIX-ish only)\n\
+\n\
+conv\n\
+  mapping, maps MySQL FIELD_TYPE.* to Python functions which\n\
+  convert a string to the appropriate Python type\n\
+\n\
+connect_timeout\n\
+  number of seconds to wait before the connection\n\
+  attempt fails.\n\
+\n\
+compress\n\
+  if set, gzip compression is enabled\n\
+\n\
+named_pipe\n\
+  if set, connect to server via named pipe (Windows only)\n\
+\n\
+init_command\n\
+  command which is run once the connection is created\n\
+\n\
+read_default_file\n\
+  see the MySQL documentation for mysql_options()\n\
+\n\
+read_default_group\n\
+  see the MySQL documentation for mysql_options()\n\
 ";
 
 static PyObject *
@@ -801,7 +826,7 @@ _mysql_ConnectionObject_set_server_option(
 static char _mysql_ConnectionObject_sqlstate__doc__[] =
 "Returns a string containing the SQLSTATE error code\n\
 for the last error. The error code consists of five characters.\n\
-'00000' means ``no error.'' The values are specified by ANSI SQL\n\
+'00000' means \"no error.\" The values are specified by ANSI SQL\n\
 and ODBC. For a list of possible values, see section 23\n\
 Error Handling in MySQL in the MySQL Manual.\n\
 \n\
