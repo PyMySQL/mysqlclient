@@ -670,7 +670,6 @@ _mysql_ConnectionObject_dump_debug_info(
 	return Py_None;
 }
 
-#if MYSQL_VERSION_ID >= 40100
 static char _mysql_ConnectionObject_autocommit__doc__[] =
 "Set the autocommit mode. True values enable; False value disable.\n\
 ";
@@ -682,7 +681,15 @@ _mysql_ConnectionObject_autocommit(
 	int flag, err;
 	if (!PyArg_ParseTuple(args, "i", &flag)) return NULL;
 	Py_BEGIN_ALLOW_THREADS
+#if MYSQL_VERSION_ID >= 40100
 	err = mysql_autocommit(&(self->connection), flag);
+#else
+	{
+		char query[256];
+		snprintf(query, 256, "SET AUTOCOMMIT=%d", flag);
+		err = mysql_query(&(self->connection), query);
+	}
+#endif
 	Py_END_ALLOW_THREADS
 	if (err) return _mysql_Exception(self);
 	Py_INCREF(Py_None);
@@ -700,7 +707,11 @@ _mysql_ConnectionObject_commit(
 	int err;
 	if (!PyArg_ParseTuple(args, "")) return NULL;
 	Py_BEGIN_ALLOW_THREADS
+#if MYSQL_VERSION_ID >= 40100
 	err = mysql_commit(&(self->connection));
+#else
+	err = mysql_query(&(self->connection), "COMMIT");
+#endif
 	Py_END_ALLOW_THREADS
 	if (err) return _mysql_Exception(self);
 	Py_INCREF(Py_None);
@@ -718,13 +729,16 @@ _mysql_ConnectionObject_rollback(
 	int err;
 	if (!PyArg_ParseTuple(args, "")) return NULL;
 	Py_BEGIN_ALLOW_THREADS
+#if MYSQL_VERSION_ID >= 40100
 	err = mysql_rollback(&(self->connection));
+#else
+	err = mysql_query(&(self->connection), "ROLLBACK");
+#endif
 	Py_END_ALLOW_THREADS
 	if (err) return _mysql_Exception(self);
 	Py_INCREF(Py_None);
 	return Py_None;
 }		
-#endif
 
 static char _mysql_ConnectionObject_errno__doc__[] =
 "Returns the error code for the most recently invoked API function\n\
@@ -1831,7 +1845,6 @@ static PyMethodDef _mysql_ConnectionObject_methods[] = {
 		METH_VARARGS,
 		_mysql_ConnectionObject_affected_rows__doc__
 	},
-#if MYSQL_VERSION_ID >= 40100
 	{
 		"autocommit",
 		(PyCFunction)_mysql_ConnectionObject_autocommit,
@@ -1850,7 +1863,6 @@ static PyMethodDef _mysql_ConnectionObject_methods[] = {
 		METH_VARARGS,
 		_mysql_ConnectionObject_rollback__doc__
 	},
-#endif
 #if MYSQL_VERSION_ID >= 32303
 	{
 		"change_user",

@@ -35,48 +35,50 @@ def defaulterrorhandler(connection, cursor, errorclass, errorvalue):
 
 class Connection(_mysql.connection):
 
-    """
-
-    Create a connection to the database. It is strongly recommended
-    that you only use keyword parameters. Consult the MySQL C API
-    documentation for more information.
-
-    host -- string, host to connect
-    user -- string, user to connect as
-    passwd -- string, password to use
-    db -- string, database to use
-    port -- integer, TCP/IP port to connect to
-    unix_socket -- string, location of unix_socket to use
-    conv -- conversion dictionary, see MySQLdb.converters
-    connect_time -- number of seconds to wait before the connection
-            attempt fails.
-    compress -- if set, compression is enabled
-    named_pipe -- if set, a named pipe is used to connect (Windows only)
-    init_command -- command which is run once the connection is created
-    read_default_file -- file from which default client values are read
-    read_default_group -- configuration group to use from the default file
-    cursorclass -- class object, used to create cursors (keyword only)
-    unicode -- If set to a string, character columns are returned as
-            unicode objects with this encoding. If set to None, the
-            default encoding is used. If not set at all, character
-            columns are returned as normal strings.
-    unicode_errors -- If set to a string, this is used as the errors
-            parameter to the unicode function; by default it is
-            'strict'. See documentation for unicode for more details.
-    client_flag -- integer, flags to use or 0 (see MySQL docs or constants/CLIENTS.py)
-    ssl -- dictionary or mapping, contains SSL connection parameters; see
-           the MySQL documentation for more details (mysql_ssl_set()).
-           If this is set, and the client does not support SSL,
-           UnsupportedError will be raised.
-           
-    There are a number of undocumented, non-standard methods. See the
-    documentation for the MySQL C API for some hints on what they do.
-
-    """
+    """MySQL Database Connection Object"""
 
     default_cursor = cursors.Cursor
     
     def __init__(self, *args, **kwargs):
+        """
+
+        Create a connection to the database. It is strongly recommended
+        that you only use keyword parameters. Consult the MySQL C API
+        documentation for more information.
+
+        host -- string, host to connect
+        user -- string, user to connect as
+        passwd -- string, password to use
+        db -- string, database to use
+        port -- integer, TCP/IP port to connect to
+        unix_socket -- string, location of unix_socket to use
+        conv -- conversion dictionary, see MySQLdb.converters
+        connect_time -- number of seconds to wait before the connection
+                attempt fails.
+        compress -- if set, compression is enabled
+        named_pipe -- if set, a named pipe is used to connect (Windows only)
+        init_command -- command which is run once the connection is created
+        read_default_file -- file from which default client values are read
+        read_default_group -- configuration group to use from the default file
+        cursorclass -- class object, used to create cursors (keyword only)
+        unicode -- If set to a string, character columns are returned as
+                unicode objects with this encoding. If set to None, the
+                default encoding is used. If not set at all, character
+                columns are returned as normal strings.
+        unicode_errors -- If set to a string, this is used as the errors
+                parameter to the unicode function; by default it is
+                'strict'. See documentation for unicode for more details.
+        client_flag -- integer, flags to use or 0
+               (see MySQL docs or constants/CLIENTS.py)
+        ssl -- dictionary or mapping, contains SSL connection parameters; see
+               the MySQL documentation for more details (mysql_ssl_set()).
+               If this is set, and the client does not support SSL,
+               UnsupportedError will be raised.
+
+        There are a number of undocumented, non-standard methods. See the
+        documentation for the MySQL C API for some hints on what they do.
+
+        """
         from constants import CLIENT, FIELD_TYPE
         from converters import conversions
         import types
@@ -119,32 +121,6 @@ class Connection(_mysql.connection):
         except:
             pass
 
-    def autocommit(self, flag):
-        """Set the autocommit stage. A True value enables autocommit;
-        a False value disables it. PEP-249 requires autocommit to be
-        initially off."""
-        flag = flag == True
-        s = super(Connection, self)
-        if hasattr(s, 'autocommit'):
-            s.autocommit(flag)
-        else:
-            self.query("SET AUTOCOMMIT=%d" % flag)
-            
-    if not hasattr(_mysql.connection, 'commit'):
-        
-        def commit(self):
-            """Commit the current transaction."""
-            if self._transactional:
-                self.query("COMMIT")
-
-        def rollback(self):
-            """Rollback the current transaction."""
-            if self._transactional:
-                self.query("ROLLBACK")
-            else:
-                self.errorhandler(None,
-                                  NotSupportedError, "Not supported by server")
-            
     def cursor(self, cursorclass=None):
         """
 
