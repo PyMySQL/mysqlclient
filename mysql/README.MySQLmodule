@@ -1,9 +1,0 @@
-If you have code that uses the old MySQLmodule's Mysqldb interface,
-try CompatMysqldb. It is the old module adapted to use _mysql instead
-of MySQL[module]. The original Mysqldb was written by James Henstridge.
-If it's broken, it's probably my fault: I haven't tested it very much.
-Consider it experimental.
-
-Andy Dustman
-<andy@dustman.net>
-2000-08-09
