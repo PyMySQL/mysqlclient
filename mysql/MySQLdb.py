@@ -149,7 +149,7 @@ def escape_dict(d, qc):
 def _fetchall(result, *args):
     rows = r = list(apply(result.fetch_row, args))
     while 1:
-        rows = list(apply(result.fetch_row, args))
+        rows = apply(result.fetch_row, args))
         if not rows: break
         r.extend(list(rows))
     return r
@@ -363,20 +363,20 @@ class CursorUseResultMixIn:
 
 class CursorTupleRowsMixIn:
 
-    def _fetch_row(self): return self._result.fetch_row(1)[0]
+    _fetch_type = 0
 
-    def _fetch_rows(self, size): return self._result.fetch_row(size)
+    def _fetch_row(self): return self._result.fetch_row(1, self._fetch_type)[0]
 
-    def _fetch_all_rows(self): return _fetchall(self._result, self.arraysize)
+    def _fetch_rows(self, size):
+        return self._result.fetch_row(size, self._fetch_type)
+
+    def _fetch_all_rows(self): 
+        return _fetchall(self._result, self.arraysize, self._fetch_type)
          
 
-class CursorDictRowsMixIn:
+class CursorDictRowsMixIn(CursorTupleRowsMixIn):
 
-    def _fetch_row(self): return self._result.fetch(1, 1)[0]
-
-    def _fetch_rows(self, size): return self._result.fetch(size, 1)
-
-    def _fetch_all_rows(self): return _fetchall(self._result, self.arraysize, 1)
+    _fetch_type = 1
 
     ## XXX Deprecated
     
@@ -388,6 +388,11 @@ class CursorDictRowsMixIn:
 
     def fetchallDict(self, *args, **kwargs):
         return apply(self.fetchall, args, kwargs)
+
+
+class CursorOldDictRowsMixIn(CursorDictRowsMixIn):
+
+    _fetch_type = 2
 
 
 class CursorNW(CursorStoreResultMixIn, CursorTupleRowsMixIn,
