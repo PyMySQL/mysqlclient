@@ -10,28 +10,15 @@ import string
 YES = 1
 NO = 0
 
-# set this to YES to use the special thread-safe mysqlclient_r library
-# Note that since MySQL 4.0, it appears the normal library is
-# thread-safe by default, so you can leave this set as NO.
-# If building an embedded server, this option is ignored.
-thread_safe_library = NO
-
-# set this to YES if you want an embedded server version
-embedded_server = NO
-
-# You probably don't have to do anything past this point. If you
-# do, please mail me the configuration for your platform. Don't
-# forget to include the value of sys.platform and os.name.
+mysqlclient = os.getenv('mysqlclient', 'mysqlclient')
+mysqlversion = tuple(map(int, string.split(os.getenv('mysqlversion', '3.23.32'), '.')))
+mysqloptlibs = string.split(os.getenv('mysqloptlibs', ''))
+embedded_server = (mysqlclient == 'mysqld')
 
 name = "MySQL-%s" % os.path.basename(sys.executable)
 if embedded_server:
     name = name + "-embedded"
 version = "0.9.3"
-
-if embedded_server:
-    mysqlclient = "mysqld"
-else:
-    mysqlclient = thread_safe_library and "mysqlclient_r" or "mysqlclient"
 
 # include files and library locations should cover most platforms
 include_dirs = [
@@ -43,9 +30,12 @@ library_dirs = [
     '/usr/local/mysql/lib/mysql'
     ]
 
+libraries = [mysqlclient] + mysqloptlibs
+
 # MySQL-3.23 and newer need libz
-libraries = [mysqlclient, "z"]
-if embedded_server:
+if mysqlversion > (3,23,0):
+    libraries.append("z")
+if mysqlversion > (4,0,0):
     libraries.append("crypt")
 
 # On some platorms, this can be used to find the shared libraries
@@ -74,8 +64,7 @@ elif sys.platform == "sunos5": # Solaris 2.8 + gcc
 elif sys.platform == "win32": # Ugh
     include_dirs = [r'c:\mysql\include']
     library_dirs = [r'c:\mysql\lib\opt']
-    libraries = [mysqlclient, 'zlib', 'msvcrt', 'libcmt',
-                 'wsock32', 'advapi32']
+    libraries.extend(['zlib', 'msvcrt', 'libcmt', 'wsock32', 'advapi32'])
     extra_objects = [r'c:\mysql\lib\opt\mysqlclient.lib']
 elif sys.platform == "cygwin":
     include_dirs = ['/c/mysql/include']
@@ -94,7 +83,7 @@ else:
           (sys.platform, os.name)
     
 long_description = \
-"""Python interface to MySQL-3.23
+"""Python interface to MySQL
 
 MySQLdb is an interface to the popular MySQL database server for Python.
 The design goals are:
@@ -102,7 +91,7 @@ The design goals are:
 -     Compliance with Python database API version 2.0 
 -     Thread-safety 
 -     Thread-friendliness (threads will not block each other) 
--     Compatibility with MySQL-3.23 and later
+-     Compatibility with MySQL-3.22 and later
 
 This module should be mostly compatible with an older interface
 written by Joe Skinner and others. However, the older version is
