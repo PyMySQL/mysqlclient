@@ -1,6 +1,6 @@
-%define ver 0.2.1
+%define ver 0.2.2
 %define rel 1
-Summary: Python interface to MySQL-3.22
+Summary: Python interface to MySQL-3.22 and 3.23
 Name: MySQL-python
 Version: %ver
 Release: %rel
