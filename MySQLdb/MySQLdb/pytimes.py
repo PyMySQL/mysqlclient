@@ -10,8 +10,8 @@ Date = date
 Time = time
 Timestamp = datetime
 
-DateTimeDeltaType = type(timedelta)
-DateTimeType = type(datetime)
+DateTimeDeltaType = timedelta
+DateTimeType = datetime
 
 def DateFromTicks(ticks):
     """Convert UNIX ticks into a date instance."""
