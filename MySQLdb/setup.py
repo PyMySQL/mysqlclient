@@ -24,24 +24,28 @@ if sys.platform in ("linux-i386", "linux2"): # most Linux
     libraries = [mysqlclient, "z"]
     runtime_library_dirs = []
     extra_objects = []
+    extra_link_args = []
 elif sys.platform in ("freebsd4", "openbsd2"): 
     include_dirs = ['/usr/local/include/mysql']
     library_dirs = ['/usr/local/lib/mysql']
     libraries = [mysqlclient, "z"]
     runtime_library_dirs = []
     extra_objects = []
+    extra_link_args = []
 elif sys.platform == "netbsd1":
     include_dirs = ['/usr/pkg/include/mysql']
     library_dirs = ['/usr/pkg/lib/mysql']
     libraries = [mysqlclient, "z"]
     runtime_library_dirs = []
     extra_objects = []
+    extra_link_args = []
 elif sys.platform == "sunos5": # Solaris 2.8 
     include_dirs = ['/usr/local/mysql/include/mysql'] 
     library_dirs = ['/usr/local/mysql/lib/mysql'] 
     libraries = [mysqlclient, "z"] 
     runtime_library_dirs = ['/usr/local/lib:/usr/openwin/lib:/usr/dt/lib'] 
     extra_objects = [] 
+    extra_link_args = []
 elif sys.platform == "win32":
     include_dirs = [r'c:\mysql\include']
     library_dirs = [r'c:\mysql\lib\opt']
@@ -49,12 +53,14 @@ elif sys.platform == "win32":
                  'wsock32', 'advapi32']
     runtime_library_dirs = []
     extra_objects = [r'c:\mysql\lib\opt\mysqlclient.lib']
+    extra_link_args = []
 elif sys.platform == "darwin1": # Mac OS X
     include_dirs = ['/usr/local/mysql/include/mysql']
     library_dirs = ['/usr/local/mysql/lib/mysql']
     libraries = [mysqlclient, "z"]
     runtime_library_dirs = []
     extra_objects = []
+    extra_link_args = ['-flat_namespace']
 elif os.name == "posix": # most Linux/UNIX platforms
     include_dirs = ['/usr/include/mysql']
     library_dirs = ['/usr/lib/mysql']
@@ -68,6 +74,7 @@ elif os.name == "posix": # most Linux/UNIX platforms
     # This can be used on Linux to force use of static mysqlclient lib
     ## extra_objects = ['/usr/lib/mysql/libmysqlclient.a']
     extra_objects = []
+    extra_link_args = []
 else:
     raise "UnknownPlatform", "sys.platform=%s, os.name=%s" % \
           (sys.platform, os.name)
@@ -127,5 +134,6 @@ setup (# Distribution meta-data
                 runtime_library_dirs=runtime_library_dirs,
                 libraries=libraries,
                 extra_objects=extra_objects,
+                extra_link_args=extra_link_args,
                 )],
 )
