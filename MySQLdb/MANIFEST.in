@@ -1,10 +1,8 @@
 prune CVS
 recursive-include doc *.txt *.html
-include license.py
 include MANIFEST.in
 include MANIFEST
 include ChangeLog
-include PKG-INFO
 include GPL
 include pymemcompat.h
 include dbapi20.py

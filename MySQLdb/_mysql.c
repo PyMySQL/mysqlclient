@@ -423,10 +423,9 @@ _mysql_ConnectionObject_Initialize(
 	PyObject *args,
 	PyObject *kwargs)
 {
-	MYSQL *conn=NULL;
+	MYSQL *conn = NULL;
 	PyObject *conv = NULL;
 	PyObject *ssl = NULL;
-	PyObject *value = NULL;
 #if HAVE_OPENSSL
 	char *key = NULL, *cert = NULL, *ca = NULL,
 		*capath = NULL, *cipher = NULL;
@@ -478,6 +477,7 @@ _mysql_ConnectionObject_Initialize(
 	
 	if (ssl) {
 #if HAVE_OPENSSL
+		PyObject *value = NULL;
 		_stringsuck(ca, value, ssl);
 		_stringsuck(capath, value, ssl);
 		_stringsuck(cert, value, ssl);
@@ -518,7 +518,7 @@ _mysql_ConnectionObject_Initialize(
 
 	conn = mysql_real_connect(&(self->connection), host, user, passwd, db,
 				  port, unix_socket, client_flag);
-  error:
+
 	Py_END_ALLOW_THREADS ;
 
 	if (!conn) {

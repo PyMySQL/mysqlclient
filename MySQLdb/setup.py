@@ -1,18 +1,36 @@
 #!/usr/bin/env python
 
-"""Setup script for the MySQLdb module distribution."""
+"""\
+=========================
+Python interface to MySQL
+=========================
+
+MySQLdb is an interface to the popular MySQL_ database server for
+Python.  The design goals are:
+
+- Compliance with Python database API version 2.0 [PEP-0249]_
+
+- Thread-safety
+
+- Thread-friendliness (threads will not block each other) 
+
+MySQL-3.22 through 4.1 and Python-2.3 through 2.4 are currently
+supported.
+
+MySQLdb is `Free Software`_.
+
+.. _MySQL: http://www.mysql.com/
+.. _`Free Software`: http://www.gnu.org/
+.. [PEP-0249] http://www.python.org/peps/pep-0249.html
+
+"""
 
 import os
 import sys
 from distutils.core import setup
 from distutils.extension import Extension
 
-YES = 1
-NO = 0
-
 mysqlclient = os.getenv('mysqlclient', 'mysqlclient')
-mysqlversion = tuple([ int(n)
-                       for n in os.getenv('mysqlversion','4.0.20').split('.')])
 mysqloptlibs = os.getenv('mysqloptlibs', '').split()
 embedded_server = (mysqlclient == 'mysqld')
 
@@ -36,12 +54,6 @@ library_dirs = [
     ]
 
 libraries = [mysqlclient] + mysqloptlibs
-
-# MySQL-3.23 and newer need libz
-if mysqlversion > (3,23,0):
-    libraries.append("z")
-if mysqlversion > (4,0,0):
-    libraries.append("crypt")
 
 # On some platorms, this can be used to find the shared libraries
 # at runtime, if they are in a non-standard location. Doesn't
@@ -69,8 +81,6 @@ elif sys.platform == "sunos5": # Solaris 2.8 + gcc
 elif sys.platform == "win32": # Ugh
     include_dirs = [r'c:\mysql\include']
     library_dirs = [r'c:\mysql\lib\opt']
-    libraries.remove('z')
-    libraries.remove('crypt')
     libraries.extend(['zlib', 'msvcrt', 'libcmt', 'wsock32', 'advapi32'])
     extra_objects = [r'c:\mysql\lib\opt\mysqlclient.lib']
 elif sys.platform == "cygwin":
@@ -93,65 +103,64 @@ else:
 include_dirs = [ d for d in include_dirs if os.path.isdir(d) ]
 library_dirs = [ d for d in library_dirs if os.path.isdir(d) ]
 
-long_description = \
-"""Python interface to MySQL
+classifiers = """\
+Development Status :: 5 - Production/Stable
+Environment :: Other Environment
+License :: OSI Approved :: GNU General Public License (GPL)
+Operating System :: MacOS :: MacOS X
+Operating System :: Microsoft :: Windows :: Windows NT/2000
+Operating System :: OS Independent
+Operating System :: POSIX
+Operating System :: POSIX :: Linux
+Operating System :: Unix
+Programming Language :: C
+Programming Language :: Python
+Topic :: Database
+Topic :: Database :: Database Engines/Servers""".split('\n')
 
-MySQLdb is an interface to the popular MySQL database server for Python.
-The design goals are:
+metadata = {
+    'name': name,
+    'version': version,
+    'description': "Python interface to MySQL",
+    'long_description': __doc__,
+    'author': "Andy Dustman",
+    'author_email': "andy@dustman.net",
+    'license': "GPL",
+    'platforms': "ALL",
+    'url': "http://sourceforge.net/projects/mysql-python",
+    'download_url': "http://prdownloads.sourceforge.net/mysql-python/" \
+                    "MySQL-python-%s.tar.gz" % version,
+    'classifiers': classifiers,
+    'py_modules': [
+        "_mysql_exceptions",
+        "MySQLdb.converters",
+        "MySQLdb.connections",
+        "MySQLdb.cursors",
+        "MySQLdb.sets",
+        "MySQLdb.times",
+        "MySQLdb.stringtimes",
+        "MySQLdb.mxdatetimes",
+        "MySQLdb.pytimes",
+        "MySQLdb.constants.CR",
+        "MySQLdb.constants.FIELD_TYPE",
+        "MySQLdb.constants.ER",
+        "MySQLdb.constants.FLAG",
+        "MySQLdb.constants.REFRESH",
+        "MySQLdb.constants.CLIENT",
+        ],
+    'ext_modules': [
+        Extension(
+            name='_mysql',
+            sources=['_mysql.c'],
+            include_dirs=include_dirs,
+            library_dirs=library_dirs,
+            runtime_library_dirs=runtime_library_dirs,
+            libraries=libraries,
+            extra_objects=extra_objects,
+            extra_link_args=extra_link_args,
+            extra_compile_args=extra_compile_args,
+            ),
+        ],
+    }
 
- - Compliance with Python database API version 2.0 
- - Thread-safety 
- - Thread-friendliness (threads will not block each other) 
- - Compatibility with MySQL-3.22 and later
-
-This module should be mostly compatible with an older interface
-written by Joe Skinner and others. However, the older version is
-a) not thread-friendly, b) written for MySQL 3.21, c) apparently
-not actively maintained. No code from that version is used in
-MySQLdb. MySQLdb is free software.
-
-"""
-
-setup (# Distribution meta-data
-        name = name,
-        version = version,
-        description = "Python interface to MySQL",
-        long_description=long_description,
-        author = "Andy Dustman",
-        author_email = "andy@dustman.net",
-        license = "GPL",
-        platforms = "ALL",
-        url = "http://sourceforge.net/projects/mysql-python",
-
-        # Description of the modules and packages in the distribution
-
-        py_modules = [
-                      "_mysql_exceptions",
-                      "MySQLdb.converters",
-                      "MySQLdb.connections",
-                      "MySQLdb.cursors",
-                      "MySQLdb.sets",
-                      "MySQLdb.times",
-                      "MySQLdb.stringtimes",
-                      "MySQLdb.mxdatetimes",
-                      "MySQLdb.pytimes",
-                      "MySQLdb.constants.CR",
-                      "MySQLdb.constants.FIELD_TYPE",
-                      "MySQLdb.constants.ER",
-                      "MySQLdb.constants.FLAG",
-                      "MySQLdb.constants.REFRESH",
-                      "MySQLdb.constants.CLIENT",
-                     ],
-
-        ext_modules = [Extension(
-                name='_mysql',
-                sources=['_mysql.c'],
-                include_dirs=include_dirs,
-                library_dirs=library_dirs,
-                runtime_library_dirs=runtime_library_dirs,
-                libraries=libraries,
-                extra_objects=extra_objects,
-                extra_link_args=extra_link_args,
-                extra_compile_args=extra_compile_args,
-                )],
-)
+setup(**metadata)
