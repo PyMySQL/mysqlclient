@@ -120,8 +120,11 @@ class Connection(ConnectionBase):
         self.messages = []
         
     def __del__(self):
-        self.close()
-
+        try:
+            self.close()
+        except:
+            pass
+        
     def begin(self):
         """Explicitly begin a transaction. Non-standard."""
         self.query("BEGIN")
