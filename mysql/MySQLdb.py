@@ -134,7 +134,7 @@ class _Cursor:
         self.description = None
         self.rowcount = -1
         self.result = None
-        self.arraysize = None
+        self.arraysize = 100
         self.warnings = warnings
 	self.use = use
         
@@ -210,10 +210,10 @@ class _Cursor:
             raise ProgrammingError, "no query executed yet"
              
     def fetchmany(self, size=None):
-        """cursor.fetchmany(size=cursor.inputsizes)
+        """cursor.fetchmany(size=cursor.arraysize)
         
         size -- integer, maximum number of rows to fetch."""
-        return self.result.fetch_rows(size or self.inputsizes or 1)
+        return self.result.fetch_rows(size or self.arraysize)
          
     def fetchall(self):
         """Fetchs all available rows from the cursor."""

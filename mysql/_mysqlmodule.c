@@ -846,7 +846,8 @@ _mysql_ConnectionObject_list_dbs(self, args)
         result = mysql_list_dbs(&(self->connection), wild);
 	Py_END_ALLOW_THREADS
         if (!result) return _mysql_Exception(self);
-	return (PyObject *) _mysql_ResultObject_New(self, result, 0);
+	return (PyObject *) _mysql_ResultObject_New(self, result, 0,
+                                                    self->converter);
 }
 
 static PyObject *
@@ -863,7 +864,8 @@ _mysql_ConnectionObject_list_fields(self, args)
         result = mysql_list_fields(&(self->connection), table, wild);
 	Py_END_ALLOW_THREADS
         if (!result) return _mysql_Exception(self);
-	return (PyObject *) _mysql_ResultObject_New(self, result, 0);
+	return (PyObject *) _mysql_ResultObject_New(self, result, 0,
+                                                    self->converter);
 }
 
 static PyObject *
@@ -878,7 +880,8 @@ _mysql_ConnectionObject_list_processes(self, args)
         result = mysql_list_processes(&(self->connection));
 	Py_END_ALLOW_THREADS
         if (!result) return _mysql_Exception(self);
-	return (PyObject *) _mysql_ResultObject_New(self, result, 0);
+	return (PyObject *) _mysql_ResultObject_New(self, result, 0,
+                                                    self->converter);
 }
 
 static PyObject *
@@ -894,7 +897,8 @@ _mysql_ConnectionObject_list_tables(self, args)
         result = mysql_list_tables(&(self->connection), wild);
 	Py_END_ALLOW_THREADS
         if (!result) return _mysql_Exception(self);
-	return (PyObject *) _mysql_ResultObject_New(self, result, 0);
+	return (PyObject *) _mysql_ResultObject_New(self, result, 0,
+                                                    self->converter);
 }
 
 static PyObject *

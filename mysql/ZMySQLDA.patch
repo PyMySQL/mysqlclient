@@ -1,63 +1,116 @@
-I gave ZMySQLDA a quick once-over and I THINK this will convert it from
-using MySQLmodule-1.4 to _mysql. Why _mysql and not MySQLdb? Well, look
-at the patch. :) It's basically puny. ZMySQLDA abstracts away the Python
-DB API interface anyway, so why wrap another wrapper? Plus, by default
-MySQLdb attempts to do type conversions, which Zope doesn't seem to expect.
+This patch should convert ZMySQLDA from using MySQLmodule-1.4 to _mysql.
+Why _mysql and not MySQLdb? Well, look at the patch. :) It's basically puny.
+ZMySQLDA ends up abstracting away the Python DB API interface anyway, so why
+wrap another wrapper? Plus, by default MySQLdb attempts to do type
+conversions, which Zope doesn't want at this point.
+
 I made some changes, partially to help Zopistas, to both _mysql and MySQLdb.
 The main one is removing type_conv as part of _mysql. It now needs to be
 passed to _mysql.connect() as the conv keyword argument; if it is not present,
-it uses an empty dictionary (return everything as strings), which is the
-Zope-desired behavior. MySQLdb now owns type_conv, and passes as copy if
-you don't supply your own converter.
+it uses an empty dictionary (return everything as strings). MySQLdb now owns
+type_conv, and passes a copy if you don't supply your own converter. Thanks
+to Thilo Mezger for pointing out that Zope DOES expect numbers to be returned
+as numbers, so now a minimal type converter dictionary is passed.
 
-Special note: Not only is the MySQLdb package provided WITH NO WARRANTY,
-this patch is DOUBLE-SECRET NO WARRRANTY. It may not work at all; I have
-not tested it PERIOD. I am using Zope-2.0.0a4, but I don't really have the
-time to whip up something to test with. The Digicool guys can figure out
-whether or not it works. If it makes your testicles fall off (or you grow
-some when you shouldn't have any), I am not responsible.
+To apply the patch, you probably want to do something like this:
 
-Oh yeah, to apply the patch, you probably want to use:
+        cd ZOPEHOME # whatever that is
+	tar xvfz ZMySQLDA.tar.gz # the original, unadulterated version
+	patch -p1 <ZMySQLDA.patch # adulterate it
 
-	patch -p1 <ZMySQLDA.patch
+Then, follow the README instructions for building MySQLdb and install
+it where Python can find it. Finally, you will need to restart Zope.
 
 Andy Dustman <adustman@comstar.net>
-1999-07-19
+1999-10-11
 
+diff -ur ZMySQLDA.orig/lib/python/Products/ZMySQLDA/DA.py ZMySQLDA/lib/python/Products/ZMySQLDA/DA.py
+--- ZMySQLDA.orig/lib/python/Products/ZMySQLDA/DA.py	Mon Jan 25 10:42:45 1999
++++ ZMySQLDA/lib/python/Products/ZMySQLDA/DA.py	Wed Sep 15 20:16:32 1999
+@@ -133,18 +133,6 @@
+ 
+     def factory(self): return DB
+ 
+-    def sql_quote__(self, v, escapes={
+-        '\\': '\\\\',
+-        '\"': '\\\"',
+-        '\'': '\\\'',
+-        '\0': '\\0',
+-        '\n': '\\n',
+-        '\t': '\\t',
+-        '\r': '\\r',
+-        '\b': '\\n',
+-        }):
+-        find=string.find
+-        for c in "\\\"\'\0\n\t\r\b":
+-            if find(v,c) > -1:
+-                v=string.join(string.split(v,c),escapes[c])
+-        return "'%s'" % v
++    def sql_quote__(self, v, escapes={}):
++        from _mysql import escape_string
++        return "'%s'" % escape_string(v)
 diff -ur ZMySQLDA.orig/lib/python/Products/ZMySQLDA/db.py ZMySQLDA/lib/python/Products/ZMySQLDA/db.py
 --- ZMySQLDA.orig/lib/python/Products/ZMySQLDA/db.py	Mon Jan 25 10:42:45 1999
-+++ ZMySQLDA/lib/python/Products/ZMySQLDA/db.py	Mon Jul 19 23:19:12 1999
-@@ -103,7 +103,7 @@
++++ ZMySQLDA/lib/python/Products/ZMySQLDA/db.py	Mon Oct 11 21:29:07 1999
+@@ -103,7 +103,8 @@
  """Db connection implementation"""
  __version__='$Revision$'[11:-2]
  
 -import MySQL, regex, sys
 +import _mysql, regex, sys
++from _mysql import FIELD_TYPE
  from string import strip, split, find, join
  from time import gmtime, strftime
  
-@@ -124,7 +124,7 @@
-         "timestamp": "d", "varchar": "t", "string": "t",
+@@ -118,13 +119,26 @@
+ class DB:
+ 
+     defs={
+-        "short": "i", "long": "i", "char": "s", "double": "n", "decimal": "n",
+-        "float": "n", "tiny blob": "t", "medium blob": "t", "long blob": "t",
+-        "blob": "t", "date": "d", "time": "s", "datetime": "d",
+-        "timestamp": "d", "varchar": "t", "string": "t",
++        FIELD_TYPE.CHAR: "i", FIELD_TYPE.DATE: "d",
++        FIELD_TYPE.DATETIME: "d", FIELD_TYPE.DECIMAL: "n",
++        FIELD_TYPE.DOUBLE: "n", FIELD_TYPE.FLOAT: "n", FIELD_TYPE.INT24: "i",
++        FIELD_TYPE.LONG: "i", FIELD_TYPE.LONGLONG: "l",
++        FIELD_TYPE.SHORT: "i", FIELD_TYPE.TIMESTAMP: "d",
++        FIELD_TYPE.TINY: "i", FIELD_TYPE.YEAR: "i",
          }
  
 -    Database_Error=MySQL.error
-+    Database_Error=_mysql.error
++    conv={
++        FIELD_TYPE.TINY: int,
++        FIELD_TYPE.SHORT: int,
++        FIELD_TYPE.LONG: int,
++        FIELD_TYPE.FLOAT: float,
++        FIELD_TYPE.DOUBLE: float,
++        FIELD_TYPE.LONGLONG: long,
++        FIELD_TYPE.INT24: int,
++        FIELD_TYPE.YEAR: int
++        }
++
++    Database_Error=_mysql.Error
  
      def __init__(self,connection):
          self.connection=connection
-@@ -138,8 +138,7 @@
+@@ -138,8 +152,7 @@
                  if len(dbhost) == 1: db, host = dbhost[0], 'localhost'
                  else: [db, host] = dbhost
                  
 -                c=MySQL.connect(host,user,pw)
 -                c.selectdb(db)
-+                c=_mysql.connect(host=host,user=user,passwd=pw,db=db)
++                c=_mysql.connect(host=host,user=user,passwd=pw,db=db,conv=self.conv)
                  self.db=c
                  return
  
-@@ -170,8 +169,8 @@
+@@ -168,10 +181,11 @@
+             result=()
+             desc=None
              for qs in queries:
-                 c=db.query(qs)
+-                c=db.query(qs)
++                db.query(qs)
++		c=db.store_result()
                  try:
 -                    desc=c.fields()
 -                    r=c.fetchrows()
@@ -66,7 +119,7 @@ diff -ur ZMySQLDA.orig/lib/python/Products/ZMySQLDA/db.py ZMySQLDA/lib/python/Pr
                  except: r=None
                  if not r: continue
                  if result:
-@@ -182,7 +181,7 @@
+@@ -182,15 +196,15 @@
          except self.Database_Error, mess:
              raise sys.exc_type, sys.exc_value, sys.exc_traceback
  
@@ -75,3 +128,13 @@ diff -ur ZMySQLDA.orig/lib/python/Products/ZMySQLDA/db.py ZMySQLDA/lib/python/Pr
  
          items=[]
          func=items.append
+         defs=self.defs
+         for d in desc:
+             item={'name': d[0],
+-                  'type': defs[d[2]],
+-                  'width': d[3],
++                  'type': defs.get(d[1],"t"),
++                  'width': d[2],
+                  }
+             func(item)
+         return items, result
