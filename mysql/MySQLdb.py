@@ -62,14 +62,29 @@ else:
 
 def None2NULL(o, d):
     """Convert None to NULL."""
-    return "NULL" # duh
+    return NULL # duh
 
 def Thing2Literal(o, d):
     """Convert something into a SQL string literal.
     If using MySQL-3.23 or newer, string_literal() is a method
     of the _mysql.MYSQL object, and this function will be overridden
     with that method when the connection is created."""
-    return string_literal(str(o))
+    return string_literal(o)
+
+def Instance2Str(o, d):
+    """Convert an Instance to a string representation.
+    If the __str__() method produces acceptable output,
+    then you don't need to add the class to quote_conv;
+    it will be handled by the default converter. If the
+    exact class is not found in d, it will use the first
+    class it can find for which o is an instance."""
+    if d.has_key(o.__class__):
+        return d[o.__class__](o, d)
+    cl = filter(lambda x,o=o: type(x)==types.ClassType and isinstance(o,x),
+                d.keys())
+    if not cl: return string_literal(o)
+    d[o.__class__] = d[cl[0]]
+    return d[cl[0]](o, d)
 
 quote_conv = { types.IntType: Thing2Str,
 	       types.LongType: Long2Int,
@@ -78,7 +93,8 @@ quote_conv = { types.IntType: Thing2Str,
                types.TupleType: escape_sequence,
                types.ListType: escape_sequence,
                types.DictType: escape_dict,
-	       types.StringType: Thing2Literal } # default
+               types.InstanceType: Instance2Str,
+               types.StringType: Thing2Literal } # default
 
 type_conv = { FIELD_TYPE.TINY: int,
               FIELD_TYPE.SHORT: int,
