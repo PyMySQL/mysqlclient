@@ -1,3 +1,14 @@
+0.9.2
+
+  * Minor RPM packaging cleanups.
+
+  * cursor.execute(query) with no args leaves the original query string
+    alone; it no longer tries to do query % (). This is to maintain
+    backwards compatibility. The only time this is an issue is if your
+    query has percent signs (%) in it, as in the SQL wildcard used for
+    LIKE comparisions. I strongly recommend passing any string literals
+    as parameters to avoid this issue.
+
 0.9.2c3
 
   * Did some more setup cleanups. Apparently on non-server versions of
