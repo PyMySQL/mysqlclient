@@ -1274,11 +1274,49 @@ _mysql_Constant_type_converters(mdict)
 	return -1;
 }
 
+static char _mysql___doc__[] =
+"_mysql: an adaptation of the MySQL C API (mostly)\n\
+\n\
+You probably are better off using MySQLdb instead of using this\n\
+module directly.\n\
+\n\
+In general, renaming goes from mysql_* to _mysql.*. _mysql.connect()
+returns a connection object (MYSQL). Functions which expect MYSQL * as
+an argument are now methods of the connection object. A number of things
+return result objects (MYSQL_RES). Functions which expect MYSQL_RES * as
+an argument are now methods of the result object. The mysql_real_*\n\
+functions are the ones used in place of not-real ones. The various\n\
+FLAG_*, CLIENT_*, FIELD_TYPE_*, etc. constants are renamed to FLAG.*,
+CLIENT.*, FIELD_TYPE.*, etc.\n\
+\n\
+type_conv is a dictionary which maps FIELD_TYPE.* to Python functions\n\
+which convert a string to some value. This is used by the various\n\
+fetch methods. Types not mapped are returned as strings. Numbers are\n\
+all converted reasonably, except DECIMAL.\n\
+\n\
+result.describe() produces a DB API description of the rows.\n\
+\n\
+escape_row() accepts a sequence of items, converts them to strings, does
+mysql_escape_string() on them, and returns them as a tuple.\n\
+\n\
+result.field_flags() returns the field flags for the result.\n\
+\n\
+result.fetch_row() fetches the next row as a tuple of objects. MySQL\n\
+returns strings, but fetch_row() does data conversion according to\n\
+type_conv.\n\
+\n\
+result.fetch_rows(n) is like fetch_row() but fetches up to n rows and\n\
+returns a tuple of rows.\n\
+\n\
+result.fetch_all_rows() is like fetch_rows() but fetchs all rows.\n\
+\n\
+For everything else, check the MySQL docs." ;
+
 void
 init_mysql()
 {
 	PyObject *dict, *module;
-	module = Py_InitModule("_mysql", _mysql_methods);
+	module = Py_InitModule3("_mysql", _mysql_methods, _mysql___doc__);
 
 	dict = PyModule_GetDict(module);
 	if (!(_mysql_Warning =

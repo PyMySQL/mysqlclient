@@ -1,4 +1,19 @@
-import _mysql
+"""MySQLdb - A DB API v2.0 compatible interface to MySQL.
+
+This module is a thin wrapper around _mysql, which mostly implements the
+MySQL C API. All symbols from that module are imported.
+
+connect() -- connects to server
+type_conv -- dictionary mapping SQL types to Python functions, which
+             convert a string into an appropriate data type. Reasonable
+             defaults are set for most items, and you can add your own.
+
+See the API specification and the MySQL documentation for more info
+on other items.
+
+This module uses the mxDateTime package for handling date/time types.
+"""
+
 from _mysql import *
 from DateTime import Date, Time, Timestamp, ISO
 from time import localtime
@@ -32,19 +47,19 @@ class DBAPITypeObject:
             return -1
 
 
-Set = DBAPITypeObject
+_Set = DBAPITypeObject
 
-STRING    = Set(FIELD_TYPE.CHAR, FIELD_TYPE.ENUM, FIELD_TYPE.INTERVAL,
-                FIELD_TYPE.SET, FIELD_TYPE.STRING, FIELD_TYPE.VAR_STRING)
-BINARY    = Set(FIELD_TYPE.BLOB, FIELD_TYPE.LONG_BLOB, FIELD_TYPE.MEDIUM_BLOB,
-                FIELD_TYPE.TINY_BLOB)
-NUMBER    = Set(FIELD_TYPE.DECIMAL, FIELD_TYPE.DOUBLE, FIELD_TYPE.FLOAT,
-	        FIELD_TYPE.INT24, FIELD_TYPE.LONG, FIELD_TYPE.LONGLONG,
-	        FIELD_TYPE.TINY, FIELD_TYPE.YEAR)
-DATE      = Set(FIELD_TYPE.DATE, FIELD_TYPE.NEWDATE)
-TIME      = Set(FIELD_TYPE.TIME)
-TIMESTAMP = Set(FIELD_TYPE.TIMESTAMP, FIELD_TYPE.DATETIME)
-ROWID     = Set()
+STRING    = _Set(FIELD_TYPE.CHAR, FIELD_TYPE.ENUM, FIELD_TYPE.INTERVAL,
+                 FIELD_TYPE.SET, FIELD_TYPE.STRING, FIELD_TYPE.VAR_STRING)
+BINARY    = _Set(FIELD_TYPE.BLOB, FIELD_TYPE.LONG_BLOB, FIELD_TYPE.MEDIUM_BLOB,
+                 FIELD_TYPE.TINY_BLOB)
+NUMBER    = _Set(FIELD_TYPE.DECIMAL, FIELD_TYPE.DOUBLE, FIELD_TYPE.FLOAT,
+	         FIELD_TYPE.INT24, FIELD_TYPE.LONG, FIELD_TYPE.LONGLONG,
+	         FIELD_TYPE.TINY, FIELD_TYPE.YEAR)
+DATE      = _Set(FIELD_TYPE.DATE, FIELD_TYPE.NEWDATE)
+TIME      = _Set(FIELD_TYPE.TIME)
+TIMESTAMP = _Set(FIELD_TYPE.TIMESTAMP, FIELD_TYPE.DATETIME)
+ROWID     = _Set()
 
 def Binary(x): return str(x)
 
@@ -68,7 +83,17 @@ def escape_dict(d):
     for k,v in d.items(): d2[k] = "'%s'" % escape_string(str(v))
     return d2
 
-class Cursor:
+class _Cursor:
+    
+    """Created by a Connection object. Useful attributes:
+    
+    description -- DB API 7-tuple describing columns in last query
+    arraysize -- default number of rows fetchmany() will fetch
+    warnings -- should MySQL warnings raise a Warning exception?
+    use -- should mysql_use_result be used instead of mysql_store_result?
+    
+    By default, warnings are issued, and mysql_store_result is used.
+    See the MySQL docs for more information."""
 
     def __init__(self, connection, name='', use=0, warnings=1):
         self.connection = connection
@@ -85,6 +110,10 @@ class Cursor:
     def setoutputsizes(self, *args): pass
          
     def execute(self, query, args=None):
+        """cursor.execute(query, args=None)
+        
+        query -- string, query to execute on server
+        args -- sequence or mapping, parameters to use with query."""
         from types import ListType, TupleType
         from string import rfind, join, split, atoi
         if not args:
@@ -97,12 +126,20 @@ class Cursor:
             except TypeError:
                 self._query(query % escape_dict(args))
 
-    def executemany(self, query, args=None):
+    def executemany(self, query, args):
+        """cursor.executemany(self, query, args)
+        
+        query -- string, query to execute on server
+        args -- sequence of sequences or mappings, parameters to use with
+            query. The query must contain the clause "values ( ... )".
+            The parenthetical portion will be repeated once for each
+            item in the sequence.
+        
+        This method performs multiple-row inserts and similar queries."""
         from string import join
         m = insert_values(query)
         if not m: raise ProgrammingError, "can't find values"
         p = m.start(1)
-        n = len(args)-1
         escape = escape_row
         try:
 	    q = [query % escape(args[0])]
@@ -133,34 +170,67 @@ class Cursor:
      	            raise Warning, w
 
     def fetchone(self):
+        """Fetches a single row from the cursor."""
         try:
             return self.result.fetch_row()
         except AttributeError:
             raise ProgrammingError, "no query executed yet"
              
     def fetchmany(self, size=None):
-        size = size or self.inputsizes or 1
-        return self.result.fetch_rows(size)
+        """cursor.fetchmany(size=cursor.inputsizes)
+        
+        size -- integer, maximum number of rows to fetch."""
+        return self.result.fetch_rows(size or self.inputsizes or 1)
          
-    def fetchall(self): return self.result.fetch_all_rows()
+    def fetchall(self):
+        """Fetchs all available rows from the cursor."""
+        return self.result.fetch_all_rows()
          
     def nextset(self): return None
      
      
 class Connection:
+
+    """Connection(host=NULL, user=NULL, passwd=NULL, db=NULL,
+                  port=<MYSQL_PORT>, unix_socket=NULL, client_flag=0)
     
-    CursorClass = Cursor
+    Note: This interface uses keyword arguments exclusively.
+    
+    host -- string, host to connect to or NULL pointer (localhost)
+    user -- string, user to connect as or NULL (your username)
+    passwd -- string, password to use or NULL (no password)
+    db -- string, database to use or NULL (no DB selected)
+    port -- integer, TCP/IP port to connect to or default MySQL port
+    unix_socket -- string, location of unix_socket to use or use TCP
+    client_flags -- integer, flags to use or 0 (see MySQL docs)
+    
+    Returns a Connection object.
+    
+    Useful attributes and methods:
+    
+    db -- connection object from _mysql. Good for accessing some of the
+        MySQL-specific calls.
+    close -- close the connection.
+    cursor -- create a cursor (emulated) for executing queries.
+    CursorClass -- class used to create cursors (_Cursor). If you subclass
+        the Connection object, you will probably want to override this.
+    """
+    
+    CursorClass = _Cursor
     
     def __init__(self, **kwargs):
-        self.db = apply(_mysql.connect, (), kwargs)
+        from _mysql import connect
+        self.db = apply(connect, (), kwargs)
      
     def close(self):
+        """Close the connection. No further activity possible."""
         self.db.close()
          
-    def commit(self): pass
+    def commit(self): """Does nothing as there are no transactions."""
     
-    def cursor(self, name=''):
-        return self.CursorClass(self, name)
+    def cursor(self, *args, **kwargs):
+        """Create a cursor on which queries may be performed."""
+        return apply(self.CursorClass, (self,)+args, kwargs)
 
 
 Connect = connect = Connection
