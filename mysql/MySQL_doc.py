@@ -118,7 +118,9 @@ def main():
 	  "requiring one of the other MySQL data structures are\n" \
 	  "generally not implemented. Deprecated functions are not\n" \
 	  "implemented. In all cases, the ", TT("mysql_"), " prefix\n" \
-	  "is dropped from the name."),
+	  "is dropped from the name. Most of the conn methods listed\n" \
+          "are also available as MySQLdb Connection object methods.\n" \
+          "Their use is explicitely non-portable.\n"),
 	CENTER(TABLE(
 	    CAPTION("MySQL C API function mapping"),
 	    TR(TH("C API"), TH("_mysql")),
@@ -229,7 +231,9 @@ def main():
 		   BDT("db"),
 		   DD("database to use"),
                    BDT("conv"),
-                   DD("type conversion dictionary")))),
+                   DD("literal-to-Python type conversion dictionary"),
+                   BDT("quote_conv"),
+                   DD("Python type-to-literal conversion dictionary")))),
 	   BDT("apilevel"),
 	   DD(P("String constant stating the supported DB API level. '2.0'")),
 	   BDT("threadsafety"),
@@ -281,7 +285,14 @@ def main():
                 "Several non-standard types (SET, ENUM) are\n" \
 		"returned as strings, which is how MySQL returns all\n"
 		"columns. Note: ", TT("TIME"), " columns are returned as\n" \
-                "strings presently. This should be a temporary condition."))),
+                "strings presently. This should be a temporary condition.")),
+           BDT("quote_conv"),
+           DD(P("A dictionary mapping Python types (from the standard\n",
+                TT("types"), " module or built-in function \n",
+                TT("type()"), " to MySQL literals. By default, the value\n",
+                "is treated as a string. When creating a Connection object,\n",
+                "you can pass your own quote converter dictionary as a\n",
+                "keyword parameter."))),
 	H3("Connection Objects"),
 	DL(BDT("commit()"),
 	   DD(P("MySQL does not support transactions, so this method\n" \
