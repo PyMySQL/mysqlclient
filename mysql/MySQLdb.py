@@ -221,7 +221,6 @@ class BaseCursor:
     def __do_query(self, q):
         from string import split, atoi
         db = self.connection.db
-        print q
         db.query(q)
         self._result = self._get_result()
      	self.rowcount = db.affected_rows()
