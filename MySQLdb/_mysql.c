@@ -1,4 +1,4 @@
-#define version_info "(0,9,3,'beta',2)"
+#define version_info "(0,9,3,'beta',3)"
 #define __version__ "0.9.3"
 /*
 This program is free software; you can redistribute it and/or modify
@@ -361,6 +361,38 @@ _mysql_ResultObject_Initialize(
 			PyErr_Clear();
 			fun = Py_None;
 			Py_INCREF(Py_None);
+		}
+		if (PySequence_Check(fun)) {
+			int j, n2=PySequence_Size(fun);
+			PyObject *fun2=NULL;
+			for (j=0; j<n2; j++) {
+				PyObject *t = PySequence_GetItem(fun, j);
+				if (!t) continue;
+				if (!PyTuple_Check(t)) goto cleanup;
+				if (PyTuple_GET_SIZE(t) == 2) {
+					long mask;
+					PyObject *pmask=NULL;
+					pmask = PyTuple_GET_ITEM(t, 0);
+					fun2 = PyTuple_GET_ITEM(t, 1);
+					if (PyInt_Check(pmask)) {
+						mask = PyInt_AS_LONG(pmask);
+						if (mask & fields[i].flags) {
+							break;
+						}
+						else {
+							continue;
+						}
+					} else {
+						break;
+					}
+				}
+			  cleanup:
+				Py_DECREF(t);
+			}
+			if (!fun2) fun2 = Py_None;
+			Py_INCREF(fun2);
+			Py_DECREF(fun);
+			fun = fun2;
 		}
 		PyTuple_SET_ITEM(self->converter, i, fun);
 	}
@@ -2370,7 +2402,7 @@ init_mysql(void)
 	PyObject *dict, *module, *emod, *edict;
 	module = Py_InitModule4("_mysql", _mysql_methods, _mysql___doc__,
 				(PyObject *)NULL, PYTHON_API_VERSION);
-
+	if (!module) return; /* this really should never happen */
 	_mysql_ConnectionObject_Type.ob_type = &PyType_Type;
 	_mysql_ResultObject_Type.ob_type = &PyType_Type;
 #if PY_VERSION_HEX >= 0x02020000

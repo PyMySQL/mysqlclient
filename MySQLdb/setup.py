@@ -18,7 +18,7 @@ embedded_server = (mysqlclient == 'mysqld')
 name = "MySQL-%s" % os.path.basename(sys.executable)
 if embedded_server:
     name = name + "-embedded"
-version = "0.9.3b2"
+version = "0.9.3b3"
 
 # include files and library locations should cover most platforms
 include_dirs = [
@@ -88,10 +88,10 @@ long_description = \
 MySQLdb is an interface to the popular MySQL database server for Python.
 The design goals are:
 
--     Compliance with Python database API version 2.0 
--     Thread-safety 
--     Thread-friendliness (threads will not block each other) 
--     Compatibility with MySQL-3.22 and later
+ - Compliance with Python database API version 2.0 
+ - Thread-safety 
+ - Thread-friendliness (threads will not block each other) 
+ - Compatibility with MySQL-3.22 and later
 
 This module should be mostly compatible with an older interface
 written by Joe Skinner and others. However, the older version is

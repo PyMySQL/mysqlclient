@@ -112,6 +112,7 @@ class Connection(ConnectionBase):
                 u = unicode
             conv[FIELD_TYPE.STRING] = u
             conv[FIELD_TYPE.VAR_STRING] = u
+            conv[FIELD_TYPE.BLOB].insert(-1, (None, u))
         self._make_connection(args, kwargs2)
         self.converter[types.StringType] = self.string_literal
         if hasattr(types, 'UnicodeType'):

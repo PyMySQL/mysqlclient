@@ -26,7 +26,7 @@ MySQL.connect().
 """
 
 from _mysql import string_literal, escape_sequence, escape_dict, escape, NULL
-from constants import FIELD_TYPE
+from constants import FIELD_TYPE, FLAG
 from sets import *
 from times import *
 from string import split
@@ -132,6 +132,10 @@ conversions = {
     FIELD_TYPE.DATETIME: DateTime_or_None,
     FIELD_TYPE.TIME: Time_or_None,
     FIELD_TYPE.DATE: Date_or_None,
+    FIELD_TYPE.BLOB: [
+        (FLAG.BINARY, char_array),
+        (None, None),
+    ],
     }
 
 
