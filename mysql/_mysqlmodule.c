@@ -1282,13 +1282,13 @@ static char _mysql___doc__[] =
 You probably are better off using MySQLdb instead of using this\n\
 module directly.\n\
 \n\
-In general, renaming goes from mysql_* to _mysql.*. _mysql.connect()
-returns a connection object (MYSQL). Functions which expect MYSQL * as
-an argument are now methods of the connection object. A number of things
-return result objects (MYSQL_RES). Functions which expect MYSQL_RES * as
+In general, renaming goes from mysql_* to _mysql.*. _mysql.connect()\n\
+returns a connection object (MYSQL). Functions which expect MYSQL * as\n\
+an argument are now methods of the connection object. A number of things\n\
+return result objects (MYSQL_RES). Functions which expect MYSQL_RES * as\n\
 an argument are now methods of the result object. The mysql_real_*\n\
 functions are the ones used in place of not-real ones. The various\n\
-FLAG_*, CLIENT_*, FIELD_TYPE_*, etc. constants are renamed to FLAG.*,
+FLAG_*, CLIENT_*, FIELD_TYPE_*, etc. constants are renamed to FLAG.*,\n\
 CLIENT.*, FIELD_TYPE.*, etc. Deprecated functions are NOT implemented.\n\
 \n\
 type_conv is a dictionary which maps FIELD_TYPE.* to Python functions\n\
@@ -1298,7 +1298,7 @@ all converted reasonably, except DECIMAL.\n\
 \n\
 result.describe() produces a DB API description of the rows.\n\
 \n\
-escape_row() accepts a sequence of items, converts them to strings, does
+escape_row() accepts a sequence of items, converts them to strings, does\n\
 mysql_escape_string() on them, and returns them as a tuple.\n\
 \n\
 result.field_flags() returns the field flags for the result.\n\

@@ -180,7 +180,7 @@ class _Cursor:
         else:        self.result = db.store_result()
 	if self.result:
      	    self.description = self.result.describe()
-     	    self.rowcount = self.result.num_rows()
+     	    self.rowcount = db.affected_rows()
      	else:
      	    self.description = None
      	    self.rowcount = -1
