@@ -29,7 +29,9 @@ much trouble on most UNIX-like platforms by using the <tt/build.py/ script.
 <p>
 Windows is <em/not/ a supported platform. 
 However, the <tt/compile.py/ script
-reportedly gets the job done, probably just on NT, maybe others.
+reportedly gets the job done.
+Be aware that this is a user-contributed script; the author
+cannot help you with compiling and running under Windows.
 <sect1>Python
 <p>
 MySQLdb requires Python 1.5.2. Earlier versions will not work, because
@@ -58,7 +60,12 @@ type.
 MySQLdb has only been lightly tested.
 MySQL-3.23 is presently in alpha (unstable) release. Several API
 additions have been made so far. These will be incorporated into
-MySQLdb as work progresses.
+MySQLdb as work progresses. As of 3.23.15, transactions are supported
+in MySQL using BDB tables. MySQLdb (0.2.2 and up) detects the
+server version upon connection and will issue <tt/COMMIT/ and <tt/ROLLBACK/
+statements when appropriate. Note that MySQL operates in
+<tt/AUTOCOMMIT/ mode by default; you will have to issue SQL to
+change this.
 
 <sect1>DateTime
 <p>If you have the <htmlurl
@@ -105,17 +112,15 @@ is not defined
 <caption>Mysqldb to MySQLdb changes</tabular></table>
 
 <sect1>Zope and ZMySQLDA
-<p>The distribution contains a patch to modify the
-<htmlurl url="http://www.zope.org/" name="Zope">
-<htmlurl url="http://www.zope.org/Members/MikeP/ZMySQLDA" name="ZMySQLDA">
-to use MySQLdb instead of MySQLmodule. Read the instructions in
-the patch. If that fails, read the FAQ.
+<p>I'm not distributing a ZMySQLDA patch any more. Somebody else
+has written a ZMySQLDA that works with MySQLdb. Find it at
+<htmlurl url="http://www.zope.org/" name="the Zope home site">.
 <sect1>Documentation
 <p>The web page documentation may be slightly ahead of the latest release
 and may reflect features of the next release.
 <sect1>FAQs
 <p>A FAQ is available at
-<htmlurl url="http://dustman.net/andy/python/MySQLdb-FAQ.html">.
+<htmlurl url="http://dustman.net/andy/python/MySQLdb/faq/MySQLdb-FAQ.html">.
 <sect>_mysql module<label id="_mysql">
 <P>
 If you want to write applications which are portable across databases,
@@ -298,16 +303,15 @@ attributes are defined within MySQLdb.
 <descrip>
 <tag>commit()</tag> If the database supports transactions, this
       commits the current transaction; otherwise this method
-      successfully does nothing.  <footnote>MySQL does not presently
-      support transactions.</footnote> 
+      successfully does nothing.  <footnote>MySQL supports transactions
+      as of version 3.23.15-alpha.</footnote> 
 
 <tag><label id="rollback">rollback()</tag> If the
       database supports transactions, this rolls back (cancels) the
       current transaction; otherwise a <tt>NotSupportedError</tt> is
-      raised.  This method is only defined if the MySQL client library
-      supports transactions.
+      raised.
 
-Compatibility note: The older <ref id="MySQLmodule"> does define this method,
+Compatibility note: The older <ref id="MySQLmodule"> defines this method,
       which sucessfully does nothing. This is dangerous behavior, as a
       successful rollback indicates that the current transaction was
       backed out, which is not true, and fails to notify the

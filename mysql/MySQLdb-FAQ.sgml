@@ -53,59 +53,9 @@ for Windows, but I can't test it.
 </sect1>
 <sect>
 Trouble with ZMySQLDA
-<p>There are a few tricks to getting Zope's ZMySQLDA to work with
-<tt/_mysql/. But it ain't that hard, really.
-Also see the
-<htmlurl url="http://www.zope.org/Members/alanpog/zmysqlda_steps"
-name="ZMySQLDA HOWTO">.
-<sect1>Building ZMySQLDA
-<p>
-The basic steps are:
-<enum>
-<item>Install MySQLdb first, so that it's on your <tt/PYTHONPATH/
-and Zope can find it.
-<item>Untar the ZMySQLDA tarball (available from
-<htmlurl url="http://www.zope.org/Members/MikeP/ZMySQLDA"
-name="zope.org">).
-<item>Patch it with the ZMySQLDA.patch included with the MySQLdb
-distribution. In the directory that you did the untar,
-<code>
-patch -p1 &lt;/path/to/ZMySQLDA.patch
-</code>
-<item>If you do a make, which is what the ZMySQLDA instructions
-tell you, it will try to compile the older
-MySQLmodule, which you don't need. Ignore stuff like:
-<code>
-./MySQLmodule.c: In function `pythonify_row':
-./MySQLmodule.c:238: warning: assignment from incompatible pointer type
-./MySQLmodule.c: In function `pythonify_res_fields':
-./MySQLmodule.c:384: invalid lvalue in unary `&'
-./MySQLmodule.c: In function `STH_fetchdict':
-./MySQLmodule.c:1125: invalid lvalue in unary `&'
-./MySQLmodule.c:1147: invalid lvalue in unary `&'
-make: *** [MySQLmodule.o] Error 1
-</code>
-MySQLmodule.c doesn't compile against
-MySQL-3.22 without patches. Which is why MySQLdb exists...
-<item>Restart Zope. You should have a ZMySQLDA Product in the
-Control Panel.
-</enum>
-<sect1>How do I use it?
-<P>I'm not the best person to ask. There are two main steps to getting
-started.
-<enum>
-<item>Create a ZMySQLDA Connection object somewhere.
-<item>The connect string syntax is "database@host user password".
-If the database is on the same host as the Zope server, you can leave
-out @host. You might be able to leave off user and password as well,
-depending on your GRANT tables. Whether or not this is a good idea is
-another question.
-<item>You're on your own. I recommend reading the
-<htmlurl url="http://www.zope.org/Documentation/Guides/ZSQL-HTML/ZSQL.html"
-name="Z SQL Method's User Guide"> and maybe
-<htmlurl url="http://www.zope.org/SiteIndex/search?text_content=sql"
-name="searching the Zope website for SQL">.
-</enum>
+<p>Not supported. By me, at least. There is a new version on
+<htmlurl url="http://www.zope.org" name="www.zope.org">
+that supports MySQLdb without any patching. Use that.
 <sect>Using MySQLdb
 <p>
 MySQLdb is a
