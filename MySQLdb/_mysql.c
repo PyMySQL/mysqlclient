@@ -401,6 +401,10 @@ _mysql_ConnectionObject_Initialize(
 {
 	MYSQL *conn=NULL;
 	PyObject *conv = NULL;
+	PyObject *ssl = NULL;
+	PyObject *value = NULL;;
+	char *key = NULL, *cert = NULL, *ca = NULL,
+		*capath = NULL, *cipher = NULL;
 	char *host = NULL, *user = NULL, *passwd = NULL,
 		*db = NULL, *unix_socket = NULL;
 	uint port = MYSQL_PORT;
@@ -410,7 +414,7 @@ _mysql_ConnectionObject_Initialize(
 				  "connect_timeout", "compress",
 				  "named_pipe", "init_command",
 				  "read_default_file", "read_default_group",
-				  "client_flag",
+				  "client_flag", "ssl",
 				  NULL } ;
 	int connect_timeout = 0;
 	int compress = -1, named_pipe = -1;
@@ -421,7 +425,7 @@ _mysql_ConnectionObject_Initialize(
 	self->converter = NULL;
 	self->open = 0;
 	check_server_init(-1);
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|ssssisOiiisssi:connect",
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|ssssisOiiisssiO:connect",
 					 kwlist,
 					 &host, &user, &passwd, &db,
 					 &port, &unix_socket, &conv,
@@ -429,7 +433,7 @@ _mysql_ConnectionObject_Initialize(
 					 &compress, &named_pipe,
 					 &init_command, &read_default_file,
 					 &read_default_group,
-					 &client_flag))
+					 &client_flag, &ssl))
 		return -1;
 
 	if (!conv) 
@@ -441,6 +445,18 @@ _mysql_ConnectionObject_Initialize(
 	if (!conv)
 		return -1;
 	self->converter = conv;
+
+#define _stringsuck(d,t,s) {t=PyMapping_GetItemString(s,#d);\
+        if(t){d=PyString_AsString(t);Py_DECREF(t);}\
+        PyErr_Clear();}
+	
+	if (ssl) {
+		_stringsuck(ca, value, ssl);
+		_stringsuck(capath, value, ssl);
+		_stringsuck(cert, value, ssl);
+		_stringsuck(key, value, ssl);
+		_stringsuck(cipher, value, ssl);
+	}
 
 	Py_BEGIN_ALLOW_THREADS ;
 	conn = mysql_init(&(self->connection));
@@ -461,6 +477,11 @@ _mysql_ConnectionObject_Initialize(
 		mysql_options(&(self->connection), MYSQL_READ_DEFAULT_FILE, read_default_file);
 	if (read_default_group != NULL)
 		mysql_options(&(self->connection), MYSQL_READ_DEFAULT_GROUP, read_default_group);
+#if MYSQL_VERSION_ID >= 40000
+	if (ssl)
+		mysql_ssl_set(&(self->connection),
+			      key, cert, ca, capath, cipher);
+#endif
 	conn = mysql_real_connect(&(self->connection), host, user, passwd, db,
 				  port, unix_socket, client_flag);
 	Py_END_ALLOW_THREADS ;
