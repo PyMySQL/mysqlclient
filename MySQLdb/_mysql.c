@@ -1926,11 +1926,7 @@ _mysql_ResultObject_setattr(
 }
 
 PyTypeObject _mysql_ConnectionObject_Type = {
-#ifndef MS_WIN32
-	PyObject_HEAD_INIT(&PyType_Type)
-#else
 	PyObject_HEAD_INIT(NULL)
-#endif
 	0,
 	"_mysql.connection", /* (char *)tp_name For printing */
 	sizeof(_mysql_ConnectionObject),
@@ -2002,9 +1998,9 @@ PyTypeObject _mysql_ConnectionObject_Type = {
 	0, /* (descrsetfunc) tp_descr_set */
 	0, /* (long) tp_dictoffset */
 	(initproc)_mysql_ConnectionObject_Initialize, /* tp_init */
-	(allocfunc)PyType_GenericAlloc, /* tp_alloc */
-	(newfunc)PyType_GenericNew, /* tp_new */
-	(destructor)_PyObject_GC_Del, /* tp_free Low-level free-memory routine */
+	NULL, /* tp_alloc */
+	NULL, /* tp_new */
+	NULL, /* tp_free Low-level free-memory routine */ 
 	0, /* (PyObject *) tp_bases */
 	0, /* (PyObject *) tp_mro method resolution order */
 	0, /* (PyObject *) tp_defined */
@@ -2014,11 +2010,7 @@ PyTypeObject _mysql_ConnectionObject_Type = {
 } ;
 
 PyTypeObject _mysql_ResultObject_Type = {
-#ifndef MS_WIN32
-	PyObject_HEAD_INIT(&PyType_Type)
-#else
 	PyObject_HEAD_INIT(NULL)
-#endif
 	0,
 	"_mysql.result",
 	sizeof(_mysql_ResultObject),
@@ -2091,9 +2083,9 @@ PyTypeObject _mysql_ResultObject_Type = {
 	0, /* (descrsetfunc) tp_descr_set */
 	0, /* (long) tp_dictoffset */
 	(initproc)_mysql_ResultObject_Initialize, /* tp_init */
-	(allocfunc)PyType_GenericAlloc, /* tp_alloc */
-	(newfunc)PyType_GenericNew, /* tp_new */
-	(destructor)_PyObject_GC_Del, /* tp_free Low-level free-memory routine */
+	NULL, /* tp_alloc */
+	NULL, /* tp_new */
+	NULL, /* tp_free Low-level free-memory routine */
 	0, /* (PyObject *) tp_bases */
 	0, /* (PyObject *) tp_mro method resolution order */
 	0, /* (PyObject *) tp_defined */
@@ -2197,10 +2189,18 @@ init_mysql(void)
 	PyObject *dict, *module, *emod, *edict;
 	module = Py_InitModule4("_mysql", _mysql_methods, _mysql___doc__,
 				(PyObject *)NULL, PYTHON_API_VERSION);
-#ifdef MS_WIN32
+
 	_mysql_ConnectionObject_Type.ob_type = &PyType_Type;
 	_mysql_ResultObject_Type.ob_type = &PyType_Type;
+#if PY_VERSION_HEX >= 0x02020000
+	_mysql_ConnectionObject_Type.tp_alloc = (allocfunc)PyType_GenericAlloc;
+	_mysql_ConnectionObject_Type.tp_new = (newfunc)PyType_GenericNew;
+	_mysql_ConnectionObject_Type.tp_free = (destructor)_PyObject_GC_Del; 
+	_mysql_ResultObject_Type.tp_alloc = (allocfunc)PyType_GenericAlloc;
+	_mysql_ResultObject_Type.tp_new = (newfunc)PyType_GenericNew;
+	_mysql_ResultObject_Type.tp_free = (destructor)_PyObject_GC_Del;
 #endif
+
 	if (!(dict = PyModule_GetDict(module))) goto error;
 	if (PyDict_SetItemString(dict, "version_info",
 			       PyRun_String(version_info, Py_eval_input,
