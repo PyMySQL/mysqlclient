@@ -49,7 +49,7 @@
     The connection string used for Z MySQL Database Connection
     is of the form:
 <pre>
-       database[@host[:port]] [user [password [unix_socket]]]
+       [+/-]database[@host[:port]] [user [password [unix_socket]]]
 </pre>
     or typically:
 <pre>
@@ -59,7 +59,15 @@
     Only specify host if the server is on a remote system. You can
     use a non-standard port, if necessary. If the UNIX socket is in
     a non-standard location, you can specify the full path to it
-    after the password.
+    after the password. A '-' in front of the database tells ZMySQLDA
+    to not use Zope's Transaction Manager, even if the server supports
+    transactions. A '+' in front of the database tells ZMySQLDA that
+    it must use transactions; an exception will be raised if they are
+    not supported by the server. If neither '-' or '+' are present,
+    then transactions will be enabled if the server supports them.
+    If you are using non-transaction safe tables (TSTs) on a server that
+    supports TSTs, use '-'. If you require transactions, use '+'. If
+    you aren't sure, don't use either.
 </dd></dl>
 
   </body>

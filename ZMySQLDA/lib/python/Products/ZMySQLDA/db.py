@@ -87,6 +87,7 @@
 __version__='$Revision$'[11:-2]
 
 import _mysql
+from MySQLdb.converters import conversions
 from MySQLdb.constants import FIELD_TYPE, CR, CLIENT
 from _mysql_exceptions import OperationalError
 from Shared.DC.ZRDB.TM import TM
@@ -100,6 +101,8 @@ hosed_connection = (
     CR.SERVER_GONE_ERROR,
     CR.SERVER_LOST
     )
+
+MySQLdb_version_required = (0,9,0)
 
 def _mysql_timestamp_converter(s):
 	if len(s) < 14:
@@ -139,19 +142,10 @@ class DB(TM):
 	FIELD_TYPE.BLOB: "BLOB", FIELD_TYPE.STRING: "STRING",
         }
 
-    conv={
-        FIELD_TYPE.TIMESTAMP: _mysql_timestamp_converter,
-        FIELD_TYPE.TINY: int,
-        FIELD_TYPE.SHORT: int,
-        FIELD_TYPE.LONG: long,
-        FIELD_TYPE.FLOAT: float,
-        FIELD_TYPE.DOUBLE: float,
-        FIELD_TYPE.LONGLONG: long,
-        FIELD_TYPE.INT24: int,
-        FIELD_TYPE.YEAR: int,
-	FIELD_TYPE.DATETIME: DateTime_or_None,
-	FIELD_TYPE.DATE: DateTime_or_None,
-        }
+    conv=conversions.copy()
+    conv[FIELD_TYPE.DATETIME] = DateTime_or_None
+    conv[FIELD_TYPE.DATE] = DateTime_or_None
+    del conv[FIELD_TYPE.TIME]
 
     _p_oid=_p_changed=_registered=None
 
@@ -159,7 +153,16 @@ class DB(TM):
         self.connection=connection
         self.kwargs = kwargs = self._parse_connection_string(connection)
         self.db=apply(self.Database_Connection, (), kwargs)
+        v = self.db.hasattr('version_info', (0,0,0))
+        if v < MySQLdb_version_required:
+            raise NotSupportedError, \
+                "ZMySQLDA requires at least MySQLdb %s, %s found" % \
+                (MySQLdb_version_required, v)
 	self.transactions = self.db.server_capabilities & CLIENT.TRANSACTIONS
+        if self._try_transactions == '-':
+            self.transactions = 0
+        elif not self.transactions and self._try_transactions == '+':
+            raise NotSupportedError, "transactions supported by this server"
 
     def _parse_connection_string(self, connection):
         kwargs = {'conv': self.conv}
@@ -175,6 +178,11 @@ class DB(TM):
             kwargs['host'] = host
         else:
             kwargs['db'] = db_host
+        if kwargs['db'][0] in ('+', '-'):
+            self._try_transactions = kwargs['db'][0]
+            kwargs['db'] = kwargs['db'][1:]
+        else:
+            self._try_transactions = None
         if not items: return kwargs
         kwargs['user'], items = items[0], items[1:]
         if not items: return kwargs
