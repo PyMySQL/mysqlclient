@@ -1,5 +1,10 @@
 #!/usr/bin/python
 
+__version__ = """$Revision$"""[11:-2]
+
+# No, HyperText is not publicly available, yet.
+# Let me know if it looks useful.
+
 from HyperText.HTML40 import STYLE, CSSRule
 from HyperText.Documents import Document
 
@@ -55,7 +60,7 @@ def main():
 	  "design goals are:"),
 	UL(LI("Compliance with Python ",
 	      A("database API version 2.0",
-		href="http://starship.skyport.net/~lemburg/DatabaseAPI-2.0.html"),
+		href="http://www.python.org/topics/database/DatabaseAPI-2.0.html"),
 	      ),
 	   LI("Thread-safety"),
 	   LI("Thread-friendliness (threads will not block each other)"),
@@ -66,6 +71,17 @@ def main():
 	  "apparently not actively maintained. No code from that version\n" \
 	  "is used in MySQLdb. MySQLdb is distributed free of charge\n" \
 	  "under a license derived from the Python license."),
+	P("Notes: MySQL 3.22.11 is known NOT to work. Only versions\n" \
+	  "3.22.19 and up are known to work. If you have an older version\n" \
+	  "you should seriously consider upgrading for it's own sake.\n"),
+	P("If you work out\n" \
+	  "an installation routine for Windows, please contact the author."),
+	P("This module works better if you have the ",
+	  A("DateTime",
+	    href="http://starship.skyport.net/~lemburg/mxDateTime.html"),
+	  "\nmodule, but will function without it."),
+	P("The web page documentation may be slightly ahead of the\n" \
+	  "latest release and may reflect features of the next release."),
 	H2("_mysql -- low-level interface"),
 	P("If you want to write applications which are portable across\n" \
 	  "databases, avoid using this module directly. ", TT("_mysql"),
@@ -176,7 +192,7 @@ def main():
 	  "of the code which implements the API is in ",
 	  TT("_mysql"), " for the sake of efficiency."),
 	P(A("The DB API specification",
-	    href="http://starship.skyport.net/~lemburg/DatabaseAPI-2.0.html"),
+	    href="http://www.python.org/topics/database/DatabaseAPI-2.0.html"),
 	  " should be your primary guide for\n" \
 	  "using this module. Only deviations from the spec and other\n" \
 	  "database-dependent things will be documented here.\n" \
@@ -275,7 +291,7 @@ def main():
 	      "true value will cause it to use\n",
 	      TT("mysql_use_result()"), " instead. See the MySQL\n" \
 	      "documentation for more information."),
-	   BDT("warn=1"),
+	   BDT("warnings=1"),
 	   DD("If true, detects warnings and raises the ",
 	      TT("Warning"), " exception.")),
 	P("While it is possible to create Cursor objects with the\n" \
@@ -331,7 +347,8 @@ def main():
 	  "relatively simple matter of creating a new subclass,\n" \
 	  "assuming the new database is reasonably standard."),
 	H2("License"),
-	P(PRE(license.__doc__)))
+	P(PRE(license.__doc__)),
+	P("$Id$"))
     print d
 
 if __name__ == "__main__": main()
