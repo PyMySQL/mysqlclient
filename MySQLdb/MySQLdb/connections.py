@@ -1,4 +1,4 @@
-"""MySQLdb Connections Module
+"""
 
 This module implements connections for MySQLdb. Presently there is
 only one class: Connection. Others are unlikely. However, you might
@@ -74,8 +74,10 @@ class Connection(ConnectionBase):
     read_default_file -- file from which default client values are read
     read_default_group -- configuration group to use from the default file
     cursorclass -- class object, used to create cursors (keyword only)
-    unicode -- string, character set. If set, character columns are
-            returned as unicode objects with this encoding
+    unicode -- If set to a string, character columns are returned as
+            unicode objects with this encoding. If set to None, the
+            default encoding is used. If not set at all, character
+            columns are returned as normal strings.
 
     There are a number of undocumented, non-standard methods. See the
     documentation for the MySQL C API for some hints on what they do.
@@ -85,29 +87,31 @@ class Connection(ConnectionBase):
     default_cursor = cursors.Cursor
     
     def __init__(self, *args, **kwargs):
-        from constants import CLIENT
+        from constants import CLIENT, FIELD_TYPE
         from converters import conversions
         import types
         kwargs2 = kwargs.copy()
         if not kwargs.has_key('conv'):
-            kwargs2['conv'] = conversions.copy()
+            kwargs2['conv'] = conv = conversions.copy()
         if kwargs.has_key('cursorclass'):
             self.cursorclass = kwargs['cursorclass']
             del kwargs2['cursorclass']
         else:
             self.cursorclass = self.default_cursor
-        charset = ''
         if kwargs.has_key('unicode'):
             charset = kwargs['unicode']
             del kwargs2['unicode']
+            if charset:
+                u = lambda s, c=charset: unicode(s, c)
+            else:
+                u = unicode
+            conv[FIELD_TYPE.CHAR] = u
+            conv[FIELD_TYPE.STRING] = u
+            conv[FIELD_TYPE.VAR_STRING] = u
         self._make_connection(args, kwargs2)
         self.converter[types.StringType] = self.string_literal
         if hasattr(types, 'UnicodeType'):
             self.converter[types.UnicodeType] = self.unicode_literal
-        if charset:
-            u = lambda s, c=charset: unicode(s, c)
-            self.converter[FIELD_TYPE.CHAR] = u
-            self.converter[FIELD_TYPE.VAR_STRING] = u
         self._transactional = self.server_capabilities & CLIENT.TRANSACTIONS
         self.messages = []
         
