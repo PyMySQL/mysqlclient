@@ -115,7 +115,7 @@ class Connection(_mysql.connection):
         flag = flag == True
         s = super(Connection, self)
         if hasattr(s, 'autocommit'):
-            s.autocommit(self, flag)
+            s.autocommit(flag)
         else:
             self.query("SET AUTOCOMMIT=%d" % flag)
             

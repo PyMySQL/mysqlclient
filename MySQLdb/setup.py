@@ -18,18 +18,20 @@ embedded_server = (mysqlclient == 'mysqld')
 name = "MySQL-%s" % os.path.basename(sys.executable)
 if embedded_server:
     name = name + "-embedded"
-version = "1.1.3"
+version = "1.1.4"
 
 # include files and library locations should cover most platforms
 include_dirs = [
-    '/usr/include/mysql', '/usr/local/include/mysql',
+    '/usr/local/include/mysql',
     '/usr/local/mysql/include',
     '/usr/local/mysql/include/mysql'
+    '/usr/include/mysql', 
     ]
 library_dirs = [
-    '/usr/lib/mysql', '/usr/local/lib/mysql',
+    '/usr/local/lib/mysql',
     '/usr/local/mysql/lib',
-    '/usr/local/mysql/lib/mysql'
+    '/usr/local/mysql/lib/mysql',
+    '/usr/lib/mysql',
     ]
 
 libraries = [mysqlclient] + mysqloptlibs
