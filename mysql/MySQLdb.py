@@ -14,23 +14,57 @@ on other items.
 This module uses the mxDateTime package for handling date/time types.
 """
 
+__version__ = """$Revision$"""[11:-2]
+
 from _mysql import *
-from DateTime import Date, Time, Timestamp, ISO
 from time import localtime
 import re
 
 threadsafety = 1
-apllevel = "2.0"
+apilevel = "2.0"
 paramstyle = "format"
 
-def DateFromTicks(ticks):
-    return apply(Date, localtime(ticks)[:3])
+try:
+    from DateTime import Date, Time, Timestamp, ISO
 
-def TimeFromTicks(ticks):
-    return apply(Time, localtime(ticks)[3:6])
+    def DateFromTicks(ticks):
+	return apply(Date, localtime(ticks)[:3])
 
-def TimestampFromTicks(ticks):
-    return apply(Timestamp, localtime(ticks)[:6])
+    def TimeFromTicks(ticks):
+	return apply(Time, localtime(ticks)[3:6])
+
+    def TimestampFromTicks(ticks):
+	return apply(Timestamp, localtime(ticks)[:6])
+
+    def format_DATE(d):      return d.Format("%Y-%m-%d")
+    def format_TIME(d):      return d.Format("%H:%M:%S")
+    def format_TIMESTAMP(d): return d.Format("%Y-%m-%d %H:%M:%S")
+
+    def mysql_timestamp_converter(s):
+	parts = map(int, filter(None, (s[:4],s[4:6],s[6:8],
+				       s[8:10],s[10:12],s[12:14])))
+	return apply(Timestamp, tuple(parts))
+
+    type_conv[FIELD_TYPE.TIMESTAMP] = mysql_timestamp_converter
+    type_conv[FIELD_TYPE.DATETIME] = ISO.ParseDateTime
+    type_conv[FIELD_TYPE.TIME] = ISO.ParseTime
+    type_conv[FIELD_TYPE.DATE] = ISO.ParseDate
+
+except ImportError:
+    # no DateTime? We'll muddle through somehow.
+    from time import strftime
+
+    def DateFromTicks(ticks):
+	return strftime("%Y-%m-%d", localtime(ticks))
+
+    def TimeFromTicks(ticks):
+	return strftime("%H:%M:%S", localtime(ticks))
+
+    def TimestampFromTicks(ticks):
+	return strftime("%Y-%m-%d %H:%M:%S", localtime(ticks))
+
+    def format_DATE(d): return d
+    format_TIME = format_TIMESTAMP = format_DATE
 
 
 class DBAPITypeObject:
@@ -63,25 +97,13 @@ ROWID     = _Set()
 
 def Binary(x): return str(x)
 
-def format_DATE(d):      return d.Format("%Y-%m-%d")
-def format_TIME(d):      return d.Format("%H:%M:%S")
-def format_TIMESTAMP(d): return d.Format("%Y-%m-%d %H:%M:%S")
-
-def mysql_timestamp_converter(s):
-    parts = map(int, filter(None, (s[:4],s[4:6],s[6:8],s[8:10],s[10:12],s[12:14])))
-    return apply(Timestamp, tuple(parts))
-    
-type_conv[FIELD_TYPE.TIMESTAMP] = mysql_timestamp_converter
-type_conv[FIELD_TYPE.DATETIME] = ISO.ParseDateTime
-type_conv[FIELD_TYPE.TIME] = ISO.ParseTime
-type_conv[FIELD_TYPE.DATE] = ISO.ParseDate
-
 insert_values = re.compile(r'values\s(\(.+\))', re.IGNORECASE)
 
 def escape_dict(d):
     d2 = {}
     for k,v in d.items(): d2[k] = "'%s'" % escape_string(str(v))
     return d2
+
 
 class _Cursor:
     
