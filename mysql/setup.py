@@ -24,7 +24,7 @@ if sys.platform == "linux-i386": # Red Hat
     libraries = [mysqlclient, "z"]
     runtime_library_dirs = []
     extra_objects = []
-elif sys.platform == "freebsd4": 
+elif sys.platform in ("freebsd4", "openbsd2"): 
     include_dirs = ['/usr/local/include/mysql']
     library_dirs = ['/usr/local/lib/mysql']
     libraries = [mysqlclient, "z"]
@@ -85,6 +85,7 @@ setup (# Distribution meta-data
         # Description of the modules and packages in the distribution
 
         py_modules = ["MySQLdb", "CompatMysqldb",
+		      "_mysql_const.exc",
 		      "_mysql_const.CR",
 		      "_mysql_const.FIELD_TYPE",
 		      "_mysql_const.ER",

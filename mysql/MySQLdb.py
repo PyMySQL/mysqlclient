@@ -4,22 +4,38 @@ This module is a thin wrapper around _mysql, which mostly implements the
 MySQL C API. All symbols from that module are imported.
 
 connect() -- connects to server
-type_conv -- dictionary mapping SQL types to Python functions, which
-             convert a string into an appropriate data type. Reasonable
-             defaults are set for most items, and you can add your own.
+
+type_conv -- dictionary mapping SQL types (FIELD_TYPE) to Python functions,
+    which convert a string into an appropriate data type. Reasonable
+    defaults are set for most items, and you can add your own.
+
+quote_conv -- dictionary mapping Python types to functions. Function takes
+    one argument of the indicated type and a mapping argument, and returns
+    an SQL-quoted string. The mapping argument is only used for recursive
+    quoting (i.e. when quoting sequences). Most simple converters
+    will not need this and can ignore it.
 
 See the API specification and the MySQL documentation for more info
 on other items.
 
-This module uses the mxDateTime package for handling date/time types.
+This module uses the mx.DateTime package for handling date/time types,
+if it is available. Otherwise, date types are returned as strings.
 """
 
-__version__ = """$Revision$"""[11:-2]
+__author__ = "Andy Dustman <andy@dustman.net>"
+__version__ = "0.3.6"
+__revision__ = """$Revision$"""[11:-2]
 
 import _mysql
 from _mysql import *
 from time import localtime
 import re, types
+from types import ListType, TupleType
+from string import rfind, join, split, atoi
+
+if __version__ != _mysql.__version__:
+    raise ImportError, "this is MySQLdb version %s, but _mysql is version %s" %\
+          (__version__, _mysql.__version__)
 
 threadsafety = 2
 apilevel = "2.0"
@@ -32,15 +48,28 @@ try:
 except ImportError:
     _threading = None
 
-def Thing2Str(s, d={}): return str(s)
-def Long2Int(l, d={}): s = str(l); return s[-1] == 'L' and s[:-1] or s
-def None2NULL(o, d={}): return "NULL"
-def Thing2Literal(o, d={}): return string_literal(str(o))
+def Thing2Str(s, d):
+    """Convert something into a string via str()."""
+    return str(s)
 
-# MySQL-3.23.xx now has a new escape_string function that uses
-# the connection to determine what character set is in use and
-# quote accordingly. So this will be overridden by the connect()
-# method.
+# Python 1.5.2 compatibility hack
+if str(0L)[-1]=='L':
+    def Long2Int(l, d):
+        """Convert a long integer to a string, chopping the L."""
+        return str(l)[:-1]
+else:
+    Long2Int = Thing2Str
+
+def None2NULL(o, d):
+    """Convert None to NULL."""
+    return "NULL" # duh
+
+def Thing2Literal(o, d):
+    """Convert something into a SQL string literal.
+    If using MySQL-3.23 or newer, string_literal() is a method
+    of the _mysql.MYSQL object, and this function will be overridden
+    with that method when the connection is created."""
+    return string_literal(str(o))
 
 quote_conv = { types.IntType: Thing2Str,
 	       types.LongType: Long2Int,
@@ -62,28 +91,40 @@ type_conv = { FIELD_TYPE.TINY: int,
 
 try:
     try:
-        from mx import DateTime # new packaging
+        # new packaging
         from mx.DateTime import Date, Time, Timestamp, ISO, \
             DateTimeType, DateTimeDeltaType
     except ImportError:
-        import DateTime # old packaging
+        # old packaging
         from DateTime import Date, Time, Timestamp, ISO, \
             DateTimeType, DateTimeDeltaType
 
     def DateFromTicks(ticks):
+        """Convert UNIX ticks into a mx.DateTime.Date."""
 	return apply(Date, localtime(ticks)[:3])
 
     def TimeFromTicks(ticks):
+        """Convert UNIX ticks into a mx.DateTime.Time."""
 	return apply(Time, localtime(ticks)[3:6])
 
     def TimestampFromTicks(ticks):
+        """Convert UNIX ticks into a mx.DateTime.Timestamp."""
 	return apply(Timestamp, localtime(ticks)[:6])
 
-    def format_DATE(d):      return d.strftime("%Y-%m-%d")
-    def format_TIME(d):      return d.strftime("%H:%M:%S")
-    def format_TIMESTAMP(d): return d.strftime("%Y-%m-%d %H:%M:%S")
+    def format_DATE(d):
+        """Format a DateTime object as an ISO date."""
+        return d.strftime("%Y-%m-%d")
+    
+    def format_TIME(d):
+        """Format a DateTime object as a time value."""
+        return d.strftime("%H:%M:%S")
+    
+    def format_TIMESTAMP(d):
+        """Format a DateTime object as an ISO timestamp."""
+        return d.strftime("%Y-%m-%d %H:%M:%S")
 
     def mysql_timestamp_converter(s):
+        """Convert a MySQL TIMESTAMP to a mx.DateTime.Timestamp."""
 	parts = map(int, filter(None, (s[:4],s[4:6],s[6:8],
 				       s[8:10],s[10:12],s[12:14])))
 	return apply(Timestamp, tuple(parts))
@@ -93,8 +134,13 @@ try:
     type_conv[FIELD_TYPE.TIME] = ISO.ParseTimeDelta
     type_conv[FIELD_TYPE.DATE] = ISO.ParseDate
 
-    def DateTime2literal(d, c={}): return "'%s'" % format_TIMESTAMP(d)
-    def DateTimeDelta2literal(d, c={}): return "'%s'" % format_TIME(d)
+    def DateTime2literal(d, c):
+        """Format a DateTime object as an ISO timestamp."""
+        return "'%s'" % format_TIMESTAMP(d)
+    
+    def DateTimeDelta2literal(d, c):
+        """Format a DateTimeDelta object as a time."""
+        return "'%s'" % format_TIME(d)
 
     quote_conv[DateTimeType] = DateTime2literal
     quote_conv[DateTimeDeltaType] = DateTimeDelta2literal
@@ -104,19 +150,27 @@ except ImportError:
     from time import strftime
 
     def DateFromTicks(ticks):
+        """Convert UNIX ticks to ISO date format."""
 	return strftime("%Y-%m-%d", localtime(ticks))
 
     def TimeFromTicks(ticks):
+        """Convert UNIX ticks to time format."""
 	return strftime("%H:%M:%S", localtime(ticks))
 
     def TimestampFromTicks(ticks):
+        """Convert UNIX ticks to ISO timestamp format."""
 	return strftime("%Y-%m-%d %H:%M:%S", localtime(ticks))
 
-    def format_DATE(d): return d
+    def format_DATE(d):
+        """Format a date as a date (does nothing, you don't have mx.DateTime)."""
+        return d
+    
     format_TIME = format_TIMESTAMP = format_DATE
 
 
 class DBAPITypeObject:
+
+    """Helper class for determining column types; required by DB API."""
     
     def __init__(self,*values):
         self.values = values
@@ -165,26 +219,27 @@ class BaseCursor:
         self._thequery = ''
 
     def close(self):
+        """Close the cursor. No further queries will be possible."""
         self.connection = None
 
     def _check_open(self):
         if not self.connection:
             raise ProgrammingError, "cursor closed"
         
-    def setinputsizes(self, *args): pass
+    def setinputsizes(self, *args):
+        """Does nothing, required by DB API."""
       
-    def setoutputsizes(self, *args): pass
+    def setoutputsizes(self, *args):
+        """Does nothing, required by DB API."""
          
     def execute(self, query, args=None):
-        """rows=cursor.execute(query, args=None)
+        """Execute a query.
         
         query -- string, query to execute on server
         args -- sequence or mapping, parameters to use with query.
-        rows -- rows affected, if any"""
+        returns long integer rows affected, if any"""
         self._check_open()
         self._thequery = query
-        from types import ListType, TupleType
-        from string import rfind, join, split, atoi
         qc = self.connection.quote_conv
         if not args:
             return self._query(query)
@@ -201,13 +256,14 @@ class BaseCursor:
                     raise
 
     def executemany(self, query, args):
-        """cursor.executemany(self, query, args)
+        """Execute a multi-row query.
         
         query -- string, query to execute on server
         args -- sequence of sequences or mappings, parameters to use with
             query. The query must contain the clause "values ( ... )".
             The parenthetical portion will be repeated once for each
             item in the sequence.
+        returns long integer rows affected, if any
         
         This method performs multiple-row inserts and similar queries."""
         self._check_open()
@@ -246,14 +302,18 @@ class BaseCursor:
     _query = __do_query
 
     def info(self):
+        """Return some information about the last query (db.info())"""
         try: return self._info
         except AttributeError: raise ProgrammingError, "execute() first"
     
     def insert_id(self):
+        """Return the last inserted ID on an AUTO_INCREMENT columns."""
         try: return self._insert_id
         except AttributeError: raise ProgrammingError, "execute() first"
     
-    def nextset(self): return None
+    def nextset(self):
+        """Does nothing. Required by DB API."""
+        return None
 
     def _fetch_row(self):
         r = self._result.fetch_row(1, self._fetch_type)
@@ -268,6 +328,10 @@ class BaseCursor:
 
 class CursorWarningMixIn:
 
+    """This is a MixIn class that provides the capability of raising
+    the Warning exception when something went slightly wrong with your
+    query."""
+
     def _check_for_warnings(self):
         from string import atoi, split
         if self._info:
@@ -278,9 +342,15 @@ class CursorWarningMixIn:
 
 class CursorStoreResultMixIn:
 
+    """This is a MixIn class which causes the entire result set to be
+    stored on the client side, i.e. it uses mysql_store_result(). If the
+    result set can be very large, consider adding a LIMIT clause to your
+    query, or using CursorUseResultMixIn instead."""
+
     def _get_result(self): return self.connection.db.store_result()
 
     def close(self):
+        """Close the cursor. Further queries will not be possible."""
         self.connection = None
         self._rows = ()
 
@@ -304,9 +374,8 @@ class CursorStoreResultMixIn:
         return result
 
     def fetchmany(self, size=None):
-        """cursor.fetchmany(size=cursor.arraysize)
-        
-        size -- integer, maximum number of rows to fetch."""
+        """Fetch up to size rows from the cursor. Result set may be smaller
+        than size. If size is not defined, cursor.arraysize is used."""
         if not self._thequery: raise ProgrammingError, "execute() first"
         end = self._pos + size or self.arraysize
         result = self._rows[self._pos:end]
@@ -321,6 +390,8 @@ class CursorStoreResultMixIn:
         return result
     
     def seek(self, row, whence=0):
+        """seek to a given row of the result set analogously to file.seek().
+        This is non-standard extension."""
         if whence == 0:
             self._pos = row
         elif whence == 1:
@@ -328,10 +399,18 @@ class CursorStoreResultMixIn:
         elif whence == 2:
             self._pos = len(self._rows) + row
      
-    def tell(self): return self._pos
+    def tell(self):
+        """Return the current position in the result set analogously to
+        file.tell(). This is a non-standard extension."""
+        return self._pos
 
 
 class CursorUseResultMixIn:
+
+    """This is a MixIn class which causes the result set to be stored in
+    the server and sent row-by-row to client side, i.e. it uses
+    mysql_use_result(). You MUST retrieve the entire result set and close()
+    the cursor before additional queries can be peformed on the connection."""
 
     def __init__(self, connection):
         BaseCursor.__init__(self, connection)
@@ -339,6 +418,7 @@ class CursorUseResultMixIn:
             raise ProgrammingError, "would deadlock"
 
     def close(self):
+        """Close the cursor. No further queries can be executed."""
         if self.connection: self.connection._release()
         self.connection = None
         
@@ -357,9 +437,8 @@ class CursorUseResultMixIn:
         return self._fetch_row()
              
     def fetchmany(self, size=None):
-        """cursor.fetchmany(size=cursor.arraysize)
-        
-        size -- integer, maximum number of rows to fetch."""
+        """Fetch up to size rows from the cursor. Result set may be smaller
+        than size. If size is not defined, cursor.arraysize is used."""
         self._check_open()
         if not self._thequery: raise ProgrammingError, "execute() first"
         return self._fetch_rows(size or self.arraysize)
@@ -373,57 +452,85 @@ class CursorUseResultMixIn:
 
 class CursorTupleRowsMixIn:
 
+    """This is a MixIn class that causes all rows to be returned as tuples,
+    which is the standard form required by DB API."""
+
     _fetch_type = 0
 
 
 class CursorDictRowsMixIn:
 
+    """This is a MixIn class that causes all rows to be returned as
+    dictionaries. This is a non-standard feature."""
+
     _fetch_type = 1
 
-    ## XXX Deprecated
-    
     def fetchoneDict(self, *args, **kwargs):
+        """Fetch a single row as a dictionary. Deprecated:
+        Use fetchone() instead."""
         return apply(self.fetchone, args, kwargs)
 
     def fetchmanyDict(self, *args, **kwargs):
+        """Fetch several rows as a list of dictionaries. Deprecated:
+        Use fetchmany() instead."""
         return apply(self.fetchmany, args, kwargs)
 
     def fetchallDict(self, *args, **kwargs):
+        """Fetch all available rows as a list of dictionaries. Deprecated:
+        Use fetchall() instead."""
         return apply(self.fetchall, args, kwargs)
 
 
 class CursorOldDictRowsMixIn(CursorDictRowsMixIn):
 
+    """This is a MixIn class that returns rows as dictionaries with
+    the same key convention as the old Mysqldb (MySQLmodule). Don't
+    use this."""
+
     _fetch_type = 2
 
 
 class CursorNW(CursorStoreResultMixIn, CursorTupleRowsMixIn,
-               BaseCursor): pass
+               BaseCursor):
+    """This is a basic Cursor class that returns rows as tuples and
+    stores the result set in the client. Warnings are not raised."""
 
-class Cursor(CursorWarningMixIn, CursorNW): pass
+class Cursor(CursorWarningMixIn, CursorNW):
+    """This is the standard Cursor class that returns rows as tuples and
+    stores the result set in the client. Warnings are raised as necessary."""
 
 class DictCursorNW(CursorStoreResultMixIn, CursorDictRowsMixIn,
-                   BaseCursor): pass
+                   BaseCursor):
+    """This is a Cursor class that returns rows as dictionaries and
+    stores the result set in the client. Warnings are not raised."""
 
-class DictCursor(CursorWarningMixIn, DictCursorNW): pass
-
+class DictCursor(CursorWarningMixIn, DictCursorNW):
+     """This is a Cursor class that returns rows as dictionaries and
+    stores the result set in the client. Warnings are raised as necessary."""
+   
 class SSCursorNW(CursorUseResultMixIn, CursorTupleRowsMixIn,
-                 BaseCursor): pass
+                 BaseCursor):
+    """This is a basic Cursor class that returns rows as tuples and
+    stores the result set in the server. Warnings are not raised."""
 
-class SSCursor(CursorWarningMixIn, SSCursorNW): pass
+class SSCursor(CursorWarningMixIn, SSCursorNW):
+    """This is a Cursor class that returns rows as tuples and
+    stores the result set in the server. Warnings are raised as necessary."""
 
 class SSDictCursorNW(CursorUseResultMixIn, CursorDictRowsMixIn,
-                     BaseCursor): pass
+                     BaseCursor):
+    """This is a Cursor class that returns rows as dictionaries and
+    stores the result set in the server. Warnings are not raised."""
 
-class SSDictCursor(CursorWarningMixIn, SSDictCursorNW): pass
+class SSDictCursor(CursorWarningMixIn, SSDictCursorNW):
+     """This is a Cursor class that returns rows as dictionaries and
+    stores the result set in the server. Warnings are raised as necessary."""
 
 
 class Connection:
 
-    """Connection(host=NULL, user=NULL, passwd=NULL, db=NULL,
-                  port=<MYSQL_PORT>, unix_socket=NULL, client_flag=0)
-    
-    Note: This interface uses keyword arguments exclusively.
+    """Create a connection to the database. Note that this interface
+    uses keyword arguments exclusively.
     
     host -- string, host to connect to or NULL pointer (localhost)
     user -- string, user to connect as or NULL (your username)
@@ -434,12 +541,18 @@ class Connection:
     client_flags -- integer, flags to use or 0 (see MySQL docs)
     conv -- dictionary, maps MySQL FIELD_TYPE.* to Python functions which
             convert a string to the appropriate Python type
+    connect_time -- number of seconds to wait before the connection
+            attempt fails.
+    compress -- if set, compression is enabled
+    init_command -- command which is run once the connection is created
+    read_default_file -- see the MySQL documentation for mysql_options()
+    read_default_group -- see the MySQL documentation for mysql_options()
     
     Returns a Connection object.
     
     Useful attributes and methods:
     
-    db -- connection object from _mysql. Good for accessing some of the
+    db -- _mysql.MYSQL connection object. Good for accessing some of the
         MySQL-specific calls.
     close -- close the connection.
     cursor -- create a cursor (emulated) for executing queries.
@@ -467,7 +580,10 @@ class Connection:
         def _acquire(self, blocking=1): return 1
         def _release(self): return 1
         
-    def Thing2Literal(self, o, d={}): return self.db.string_literal(str(o))
+    def Thing2Literal(self, o, d={}):
+        """Convert a thing to a string literal using the current
+        character set."""
+        return self.db.string_literal(str(o))
     
     def close(self):
         """Close the connection. No further activity possible."""
@@ -485,7 +601,9 @@ class Connection:
         else: raise NotSupportedError, "Not supported by server"
 
     def cursor(self, cursorclass=None):
-        """Create a cursor on which queries may be performed."""
+        """Create a cursor on which queries may be performed.
+        The optional cursorclass parameter is used to create
+        the Cursor. By default, self.cursorclass=Cursor is used."""
         return (cursorclass or self.cursorclass)(self)
 
     # Non-portable MySQL-specific stuff
