@@ -18,7 +18,7 @@ __revision__ = """$Revision$"""[11:-2]
 version_info = (
     1,
     1,
-    1,
+    2,
     "final",
     1)
 if version_info[3] == "final": __version__ = "%d.%d.%d" % version_info[:3]

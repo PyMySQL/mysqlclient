@@ -6,11 +6,11 @@ This module provides some Date and Time classes for dealing with MySQL data.
 from _mysql import string_literal
 
 try:
-    from mxdatetimes import *
+    from pytimes import *
 
 except ImportError:
     try:
-        from pytimes import *
+        from mxdatetimes import *
 
     except ImportError:
         # no DateTime? We'll muddle through somehow.
@@ -26,6 +26,8 @@ def DateTimeDelta2literal(d, c):
 
 def mysql_timestamp_converter(s):
     """Convert a MySQL TIMESTAMP to a Timestamp object."""
+    # MySQL>4.1 returns TIMESTAMP in the same format as DATETIME
+    if s[4] == '-': return DateTime_or_None(s)
     s = s + "0"*(14-len(s)) # padding
     parts = map(int, filter(None, (s[:4],s[4:6],s[6:8],
                                    s[8:10],s[10:12],s[12:14])))

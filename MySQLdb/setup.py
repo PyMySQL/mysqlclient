@@ -18,7 +18,7 @@ embedded_server = (mysqlclient == 'mysqld')
 name = "MySQL-%s" % os.path.basename(sys.executable)
 if embedded_server:
     name = name + "-embedded"
-version = "1.1.1"
+version = "1.1.2"
 
 # include files and library locations should cover most platforms
 include_dirs = [
@@ -57,7 +57,7 @@ if sys.platform == "netbsd1":
     include_dirs = ['/usr/pkg/include/mysql']
     library_dirs = ['/usr/pkg/lib/mysql']
 elif sys.platform in ("freebsd4", "openbsd3"):
-    LOCALBASE = os.environ.get('LOCALBASE', '/usr/local')
+    LOCALBASE = os.getenv('LOCALBASE', '/usr/local')
     include_dirs = ['%s/include/mysql' % LOCALBASE]
     library_dirs = ['%s/lib/mysql' % LOCALBASE]
 elif sys.platform == "sunos5": # Solaris 2.8 + gcc
@@ -66,6 +66,8 @@ elif sys.platform == "sunos5": # Solaris 2.8 + gcc
 elif sys.platform == "win32": # Ugh
     include_dirs = [r'c:\mysql\include']
     library_dirs = [r'c:\mysql\lib\opt']
+    libraries.remove('z')
+    libraries.remove('crypt')
     libraries.extend(['zlib', 'msvcrt', 'libcmt', 'wsock32', 'advapi32'])
     extra_objects = [r'c:\mysql\lib\opt\mysqlclient.lib']
 elif sys.platform == "cygwin":
@@ -76,7 +78,7 @@ elif sys.platform[:6] == "darwin": # Mac OS X
     include_dirs.append('/sw/include/mysql')
     library_dirs.append('/sw/lib/mysql')
     extra_link_args.append('-flat_namespace')
-elif sys.platform == 'linux2' and os.environ.get('HOSTTYPE') == 'alpha':
+elif sys.platform == 'linux2' and os.getenv('HOSTTYPE') == 'alpha':
     libraries.extend(['ots', 'cpml'])
 elif os.name == "posix": # UNIX-ish platforms not covered above
     pass # default should work

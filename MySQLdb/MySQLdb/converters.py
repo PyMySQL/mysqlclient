@@ -45,13 +45,7 @@ def Unicode2Str(s, d):
     """Convert a unicode object to a string using latin1 encoding."""
     return s.encode('latin')
 
-# Python 1.5.2 compatibility hack
-if str(0L)[-1]=='L':
-    def Long2Int(l, d):
-        """Convert a long integer to a string, chopping the L."""
-        return str(l)[:-1]
-else:
-    Long2Int = Thing2Str
+Long2Int = Thing2Str
 
 def Float2Str(o, d):
     return '%.15g' % o
@@ -115,6 +109,8 @@ conversions = {
     types.InstanceType: Instance2Str,
     array.ArrayType: array2Str,
     types.StringType: Thing2Literal, # default
+    types.UnicodeType: Unicode2Str,
+    types.ObjectType: Instance2Str,
     DateTimeType: DateTime2literal,
     DateTimeDeltaType: DateTimeDelta2literal,
     FIELD_TYPE.TINY: int,
@@ -136,10 +132,3 @@ conversions = {
         (None, None),
     ],
     }
-
-
-if hasattr(types, 'UnicodeType'):
-    conversions[types.UnicodeType] = Unicode2Str
-
-if hasattr(types, 'ObjectType'):
-    conversions[types.ObjectType] = Instance2Str

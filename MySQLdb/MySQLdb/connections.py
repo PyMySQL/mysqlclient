@@ -97,6 +97,9 @@ class Connection(_mysql.connection):
         self.converter[types.StringType] = self.string_literal
         self.converter[types.UnicodeType] = self.unicode_literal
         self._transactional = self.server_capabilities & CLIENT.TRANSACTIONS
+        if self._transactional:
+            # PEP-249 requires autocommit to be initially off
+            self.autocommit(0)
         self.messages = []
         
     def __del__(self):
@@ -104,23 +107,32 @@ class Connection(_mysql.connection):
             self.close()
         except:
             pass
-        
-    def begin(self):
-        """Explicitly begin a transaction. Non-standard."""
-        self.query("BEGIN")
-        
-    def commit(self):
-        """Commit the current transaction."""
-        if self._transactional:
-            self.query("COMMIT")
-            
-    def rollback(self):
-        """Rollback the current transaction."""
-        if self._transactional:
-            self.query("ROLLBACK")
+
+    def autocommit(self, flag):
+        """Set the autocommit stage. A True value enables autocommit;
+        a False value disables it. PEP-249 requires autocommit to be
+        initially off."""
+        flag = flag == True
+        s = super(Connection, self)
+        if hasattr(s, 'autocommit'):
+            s.autocommit(self, flag)
         else:
-            self.errorhandler(None,
-                              NotSupportedError, "Not supported by server")
+            self.query("SET AUTOCOMMIT=%d" % flag)
+            
+    if not hasattr(_mysql.connection, 'commit'):
+        
+        def commit(self):
+            """Commit the current transaction."""
+            if self._transactional:
+                self.query("COMMIT")
+
+        def rollback(self):
+            """Rollback the current transaction."""
+            if self._transactional:
+                self.query("ROLLBACK")
+            else:
+                self.errorhandler(None,
+                                  NotSupportedError, "Not supported by server")
             
     def cursor(self, cursorclass=None):
         """

@@ -1,5 +1,5 @@
-#define version_info "(1,1,1,'final',1)"
-#define __version__ "1.1.1"
+#define version_info "(1,1,2,'final',1)"
+#define __version__ "1.1.2"
 /*
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -32,10 +32,10 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #ifdef MS_WIN32
 #include <windows.h>
+#endif /* MS_WIN32 */
 #ifndef uint
 #define uint unsigned int
 #endif
-#endif /* MS_WIN32 */
 
 #include "structmember.h"
 #include "mysql.h"
@@ -114,15 +114,6 @@ _mysql_Exception(_mysql_ConnectionObject *c)
 		Py_DECREF(t);
 		return NULL;
 	}
-/* 	if (!(c->open)) { */
-/* 		e = _mysql_InternalError; */
-/* 		PyTuple_SET_ITEM(t, 0, PyInt_FromLong(-1L)); */
-/* 		PyTuple_SET_ITEM(t, 1, PyString_FromString("connection is closed")); */
-/* 		PyErr_SetObject(e, t); */
-/* 		Py_DECREF(t); */
-/* 		return NULL; */
-/* 	} */
-	merr = mysql_errno(&(c->connection));
 	if (!merr)
 		e = _mysql_InterfaceError;
 	else if (merr > CR_MAX_ERROR) {
@@ -254,7 +245,7 @@ static PyObject *_mysql_server_init(
 			}
 			groups_c[i] = s;
 		}
-		groups_c[groupc+1] = (char *)NULL;
+		groups_c[groupc] = (char *)NULL;
 	}
 	/* even though this may block, don't give up the interpreter lock
 	   so that the server can't be initialized multiple times. */
@@ -666,6 +657,62 @@ _mysql_ConnectionObject_dump_debug_info(
 	Py_INCREF(Py_None);
 	return Py_None;
 }
+
+#if MYSQL_VERSION_ID >= 40100
+static char _mysql_ConnectionObject_autocommit__doc__[] =
+"Set the autocommit mode. True values enable; False value disable.\n\
+";
+static PyObject *
+_mysql_ConnectionObject_autocommit(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
+{
+	int flag, err;
+	if (!PyArg_ParseTuple(args, "i", &flag)) return NULL;
+	Py_BEGIN_ALLOW_THREADS
+	err = mysql_autocommit(&(self->connection), flag);
+	Py_END_ALLOW_THREADS
+	if (err) return _mysql_Execption(self);
+	Py_INCREF(Py_None);
+	return Py_None;
+}		
+
+static char _mysql_ConnectionObject_commit__doc__[] =
+"Commits the current transaction\n\
+";
+static PyObject *
+_mysql_ConnectionObject_commit(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
+{
+	int err;
+	if (!PyArg_ParseTuple(args, "")) return NULL;
+	Py_BEGIN_ALLOW_THREADS
+	err = mysql_commit(&(self->connection));
+	Py_END_ALLOW_THREADS
+	if (err) return _mysql_Execption(self);
+	Py_INCREF(Py_None);
+	return Py_None;
+}		
+
+static char _mysql_ConnectionObject_rollback__doc__[] =
+"Rolls backs the current transaction\n\
+";
+static PyObject *
+_mysql_ConnectionObject_rollback(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
+{
+	int err;
+	if (!PyArg_ParseTuple(args, "")) return NULL;
+	Py_BEGIN_ALLOW_THREADS
+	err = mysql_rollback(&(self->connection));
+	Py_END_ALLOW_THREADS
+	if (err) return _mysql_Execption(self);
+	Py_INCREF(Py_None);
+	return Py_None;
+}		
+#endif
 
 static char _mysql_ConnectionObject_errno__doc__[] =
 "Returns the error code for the most recently invoked API function\n\
@@ -1542,7 +1589,11 @@ _mysql_ConnectionObject_shutdown(
 	if (!PyArg_ParseTuple(args, "")) return NULL;
 	check_connection(self);
 	Py_BEGIN_ALLOW_THREADS
-	r = mysql_shutdown(&(self->connection));
+	r = mysql_shutdown(&(self->connection)
+#if MYSQL_VERSION_ID >= 40103
+		, SHUTDOWN_DEFAULT
+#endif
+		);
 	Py_END_ALLOW_THREADS
 	if (r) return _mysql_Exception(self);
 	Py_INCREF(Py_None);
@@ -1770,6 +1821,26 @@ static PyMethodDef _mysql_ConnectionObject_methods[] = {
 		METH_VARARGS,
 		_mysql_ConnectionObject_affected_rows__doc__
 	},
+#if MYSQL_VERSION_ID >= 40100
+	{
+		"autocommit",
+		(PyCFunction)_mysql_ConnectionObject_autocommit,
+		METH_VARARGS,
+		_mysql_ConnectionObject_autocommit__doc__
+	},
+	{
+		"commit",
+		(PyCFunction)_mysql_ConnectionObject_commit,
+		METH_VARARGS,
+		_mysql_ConnectionObject_commit__doc__
+	},
+	{
+		"rollback",
+		(PyCFunction)_mysql_ConnectionObject_rollback,
+		METH_VARARGS,
+		_mysql_ConnectionObject_rollback__doc__
+	},
+#endif
 #if MYSQL_VERSION_ID >= 32303
 	{
 		"change_user",

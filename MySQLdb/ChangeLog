@@ -1,0 +1,563 @@
+2004-09-06  adustman  <adustman@tweek.neosouth.net>
+
+	* setup.py: Don't include z and crypt libs on Windows.
+
+	* _mysql.c: Conditionally define uint on all platforms.
+
+	* MySQLdb/cursors.py: Fix indentation error (again)
+
+	* _mysql.c: Fix bug #992756:
+
+	 * Embedded server: List of groups was not NULL-terminated correctly.
+
+	* MySQLdb/cursors.py: Fix bug #989262:
+
+	 * Changed errant tab to spaces in cursors.py
+
+	* _mysql.c, setup.py, MySQLdb/__init__.py: Fixes for bug #999588:
+
+	 * Use os.environ.get() instead of os.getenv() in setup.py
+
+	 * Use PySequence_Length() instead of PySequence_Check() in _mysql.c
+
+	Bump version to 1.0.1b1
+
+2004-06-07  adustman  <adustman@tweek.neosouth.net>
+
+	* MySQLdb/__init__.py, MySQLdb/connections.py, MySQLdb/cursors.py, README, _mysql.c, setup.py:
+	Bump version. Update README. Convert all classes to new-style.
+
+2004-06-06  adustman  <adustman@tweek.neosouth.net>
+
+	* README, _mysql.c, setup.py, MySQLdb/__init__.py: 1.0.0 (D-Day)
+
+2004-05-19  adustman  <adustman@tweek.neosouth.net>
+
+	* MySQLdb/__init__.py, MySQLdb/connections.py, MySQLdb/converters.py, MySQLdb/cursors.py, MySQLdb/mxdatetimes.py, MySQLdb/pytimes.py, MySQLdb/sets.py, MySQLdb/times.py, _mysql.c, _mysql_exceptions.py, setup.cfg, setup.py:
+	Initial conversion to modern Python.
+
+	* _mysql.c, setup.py, MySQLdb/__init__.py: Version bump (1.0.0c2)
+
+2004-05-18  adustman  <adustman@tweek.neosouth.net>
+
+	* MySQLdb/pytimes.py: Fix bug #933911
+
+	* _mysql.c: Fix bug #955031
+
+	* setup.cfg: Fix bug #955032
+
+2004-05-16  adustman  <adustman@tweek.neosouth.net>
+
+	* MySQLdb/__init__.py, _mysql.c, setup.py: Version Bump
+
+2004-02-29  adustman  <adustman@tweek.neosouth.net>
+
+	* setup.py: Fix bug #897344
+
+	* MySQLdb/__init__.py: Fix bug #902024
+
+2003-12-30  adustman  <adustman@tweek.neosouth.net>
+
+	* _mysql.c, setup.py, MySQLdb/__init__.py, MySQLdb/connections.py, MySQLdb/converters.py:
+	 * Check for module initialization failure (extremely rare)
+
+	 * The MySQL FIELD_TYPE converter can now be a sequence of 2-tuples.
+	   Item 0 is a bit mask (using FLAG.*) which must be matched. This should
+	   be an integer. Item 1 is the conversion function. If item 0 is not an
+	   integer, then this function is considered the default converter for
+	   this FIELD_TYPE. Note that these tuples are considered when the query
+	   has been executed and the result is available, so it doesn't add a
+	   per-row overhead.
+
+	 * As a result of the above, BINARY BLOB fields are now returned as
+	   character arrays using the array.array class. Non-BINARY BLOB fields
+	   (i.e. TEXT) are returned as strings. If unicode is enabled, they are
+	   returned as unicode strings.
+
+	 * Bump version to 0.9.3b3.
+
+2003-12-13  adustman  <adustman@tweek.neosouth.net>
+
+	* MySQLdb/converters.py:
+	https://sourceforge.net/tracker/?func=detail&aid=850174&group_id=22307&atid=374932
+
+	Use more precision for floats; str(<float>) doesn't return full precision.
+
+2003-11-27  adustman  <adustman@tweek.neosouth.net>
+
+	* _mysql.c: Preliminary SSL support. Adds a ssl parameter to connect().
+	ssl should be a mapping. These are the recognized keys:
+
+	ca*, cert*, capath, key*, cipher
+
+	Items marked with * are required. All values must be strings.
+	They are described here:
+
+	http://www.mysql.com/doc/en/SSL_options.html
+
+	You're probably better off putting these variables into an
+	option file and using read_option_file instead.
+
+	SSL is supported in MySQL-4.0 and newer. Even if you don't
+	specify all the required parameters, the connection will probably
+	succeed, although without SSL.
+
+	This is not yet tested in any significant way.
+
+2003-11-23  adustman  <adustman@tweek.neosouth.net>
+
+	* _mysql.c, setup.py, MySQLdb/__init__.py: Version bump
+
+	* MySQLdb/converters.py, MySQLdb/mxdatetimes.py, MySQLdb/pytimes.py, MySQLdb/stringtimes.py, MySQLdb/times.py:
+	Time-handling updates. New load order is:
+
+	mxdatetime (wrapper around mx.DateTime)
+	pytimes (wrapper around Python-2.3+ datetime)
+	stringtimes (minimal string implementation)
+
+	The logic is, if you're running Python-2.3 and are have mx.Datetime,
+	you probably want to use that instead of datetime.
+
+2003-11-22  adustman  <adustman@tweek.neosouth.net>
+
+	* MySQLdb/pytimes.py: Bug #816721
+
+	* _mysql.c: Bug #811636 fix (?)
+
+2003-09-07  adustman  <adustman@tweek.neosouth.net>
+
+	* MySQLdb/cursors.py: info() might return None or empty string
+
+	* MySQLdb/connections.py:
+	Don't treat FIELD_TYPE.CHAR as a character type, it's really
+	a TINYINT (FIELD_TYPE.TINY).
+
+	* MySQLdb/connections.py, _mysql.c: Bug#778822
+
+	* setup.py: Fix version number correctly
+
+	* setup.py, MySQLdb/__init__.py, _mysql.c: Version bump
+
+2003-07-11  adustman  <adustman@tweek.neosouth.net>
+
+	* setup.py: Include new time handling modules
+
+	* MySQLdb/mxdatetimes.py, MySQLdb/stringtimes.py:
+	Split out old Date/Time handling classes into separate modules
+
+	* MySQLdb/pytimes.py: Finish up TimeDelta_or_None
+
+2003-07-10  adustman  <adustman@tweek.neosouth.net>
+
+	* CHANGELOG, MySQLdb/times.py:
+	Add support for Python 2.3 datetime classes.
+
+2003-07-08  adustman  <adustman@tweek.neosouth.net>
+
+	* CHANGELOG, MySQLdb/__init__.py, setup.py: Bump version numbers.
+
+	* _mysql.c: Bump version and remove some unneccesary casts that seem to
+	break things when using Python 2.3.
+
+2003-07-07  adustman  <adustman@tweek.neosouth.net>
+
+	* MySQLdb/converters.py: Fix bug 605849 (I hope).
+
+	* _mysql.c: Fix member access problems
+
+2003-04-21  adustman  <adustman@tweek.neosouth.net>
+
+	* _mysql.c: Eliminate use of deprecated PyArg_NoArgs()
+
+	* _mysql.c: Dumb typo
+
+2003-04-19  adustman  <adustman@tweek.neosouth.net>
+
+	* README, setup.py: Build and documentation updates
+
+2002-08-22  adustman  <adustman@tweek.neosouth.net>
+
+	* MySQLdb/__init__.py, CHANGELOG, _mysql.c, setup.py:
+	Embedded server support
+
+	* _mysql.c: Clean up compiler warnings about
+	assignment discards qualifiers from pointer target type
+
+2002-08-02  adustman  <adustman@tweek.neosouth.net>
+
+	* _mysql.c: Windows (blech) compatibility changes. (Gerhard Häring)
+
+2002-08-01  adustman  <adustman@tweek.neosouth.net>
+
+	* CHANGELOG: CHANGELOG
+
+	* _mysql.c: Not supporting GC for python < 2.2
+
+	* MANIFEST.in, pymemcompat.h: Memory API updates
+
+	* MySQLdb/connections.py: Ignore exception from close() in __del__
+
+	* _mysql.c: GC for Python 2.2+
+
+2002-07-21  adustman  <adustman@tweek.neosouth.net>
+
+	* MySQLdb/__init__.py, CHANGELOG, _mysql.c, setup.py: 0.9.2 (finally)
+
+2002-07-16  adustman  <adustman@tweek.neosouth.net>
+
+	* MySQLdb/cursors.py:
+	Revert execute behavior: Do not use % operator when there are no args
+
+2002-07-10  adustman  <adustman@tweek.neosouth.net>
+
+	* README: Rewrite
+
+	* setup.cfg: Packaging cleanups
+
+	* MySQLdb/__init__.py, MySQLdb/cursors.py, CHANGELOG, _mysql.c, setup.py:
+	Version 0.9.2c3, see CHANGELOG
+
+2002-07-03  adustman  <adustman@tweek.neosouth.net>
+
+	* MySQLdb/converters.py:
+	Revert returning BLOBs as arrays, since MySQL doesn't distinquish
+	between TEXT and BLOB types. (Skip Montanaro)
+
+	* MySQLdb/connections.py:
+	Passing both conv and unicode to connect was broken (Skip Montanaro)
+
+2002-07-02  adustman  <adustman@tweek.neosouth.net>
+
+	* setup.py: FreeBSD/OpenBSD update
+
+2002-07-01  adustman  <adustman@tweek.neosouth.net>
+
+	* MySQLdb/cursors.py: Fix dumb (but working) iterator implementation
+
+	* doc/MySQLdb.sgml: Doc updates
+
+2002-06-26  adustman  <adustman@tweek.neosouth.net>
+
+	* _mysql.c:
+	Add _mysql.thread_safe() (boolean, true if linked with thread-safe lib)
+
+2002-06-24  adustman  <adustman@tweek.neosouth.net>
+
+	* MySQLdb/__init__.py, _mysql.c, setup.py: Smack my version up
+
+2002-06-23  adustman  <adustman@tweek.neosouth.net>
+
+	* MySQLdb/connections.py, MySQLdb/cursors.py, CHANGELOG:
+	Some errorhandler cleanups
+
+2002-06-20  adustman  <adustman@tweek.neosouth.net>
+
+	* CHANGELOG: *** empty log message ***
+
+	* MySQLdb/connections.py: Make the new unicode option actually work
+
+	* MySQLdb/cursors.py: Add nextset() dummy stub
+
+	* MySQLdb/converters.py: BLOBs as array support
+
+	* MySQLdb/connections.py:
+	More Python 2.2 and doc updates. Return blobs as array.
+	The unicode option to connect() causes (VAR)CHAR columns
+	to be returned as unicode stings.
+
+	* _mysql.c: Lots of Python 2.2 updates, especially documentation
+
+2002-06-18  adustman  <adustman@tweek.neosouth.net>
+
+	* MySQLdb/__init__.py, MySQLdb/connections.py, MySQLdb/converters.py, _mysql.c, MANIFEST.in:
+	Mostly documentation updates, and some code cleanups
+
+2002-06-15  adustman  <adustman@tweek.neosouth.net>
+
+	* MySQLdb/cursors.py:
+	Make executemany iterate over queries that don't use multiple VALUES
+
+2002-04-28  adustman  <adustman@tweek.neosouth.net>
+
+	* CHANGELOG, _mysql.c, setup.py:
+	packaging changes, pre-emptive version bump
+
+	* setup.py: Bump version
+
+	* MySQLdb/cursors.py:
+	Errorhandler was broken in cursor
+	CVSr ----------------------------------------------------------------------
+
+	* CHANGELOG: changelog
+
+	* MySQLdb/__init__.py: Version bump
+
+	* _mysql.c: Macro cleanups
+
+2002-04-27  adustman  <adustman@tweek.neosouth.net>
+
+	* _mysql.c: Fix memory leak in _mysql_escape_dict. (Danny Yoo)
+
+	SSCursor.fetchall() (_mysql_ResultObject_fetch_row) didn't properly
+	increase the size of the result tuple if the result set was more than
+	1000 rows. (Danny Yoo)
+
+2002-03-19  adustman  <adustman@tweek.neosouth.net>
+
+	* _mysql.c: More (de)allocation cleanups, based on suggestions from
+	python-dev and Skip Montanaro
+
+	* _mysql.c: Use modern allocation with modern Python
+
+2002-03-14  adustman  <adustman@tweek.neosouth.net>
+
+	* MySQLdb/connections.py: Elminate debugging statement.
+
+	* MySQLdb/__init__.py, MySQLdb/connections.py, MySQLdb/cursors.py, _mysql.c, setup.py:
+	Bump version. Minor Alpha Linux update. Clear errorhandler on close.
+
+2002-03-01  adustman  <adustman@tweek.neosouth.net>
+
+	* _mysql.c: Fix a memory leak if the connect fails
+
+2002-01-29  adustman  <adustman@tweek.neosouth.net>
+
+	* MySQLdb/cursors.py: Stricter regex for finding INSERT values
+	([ #505295 ] Wrong regexp in executemany() function.)
+
+2002-01-25  adustman  <adustman@tweek.neosouth.net>
+
+	* CHANGELOG: changes
+
+	* MySQLdb/__init__.py: Verision bump.
+
+	* _mysql.c:
+	Use modern memory deallocation on modern versions of Python.
+
+	* setup.py:
+	Rework platform config a bit, default to thread-safe client.
+
+2001-12-29  adustman  <adustman@tweek.neosouth.net>
+
+	* MySQLdb/cursors.py: Fix fetchmany().
+
+2001-12-24  adustman  <adustman@tweek.neosouth.net>
+
+	* setup.py: Fix version.
+
+	* MySQLdb/connections.py, MySQLdb/cursors.py, doc/.cvsignore, .cvsignore, CHANGELOG, setup.py:
+	Version 0.9.2a1. Unicode + DB-API extensions.
+
+2001-12-23  adustman  <adustman@tweek.neosouth.net>
+
+	* _mysql.c, MySQLdb/__init__.py: 0.9.2 alpha 1
+
+	* MySQLdb/converters.py: Unicode support.
+
+2001-12-22  adustman  <adustman@tweek.neosouth.net>
+
+	* _mysql.c: str() can fail in some cases, particularly unicode.
+	Watch for it to prevent core dumps.
+
+2001-12-03  adustman  <adustman@tweek.neosouth.net>
+
+	* MySQLdb/cursors.py:
+	Fix cursor.rownumber for CursorStoreResultMixIn.fetchmany()
+	and implement cursor.rownumber for CursorUseResultMixIn.fetchXXX().
+
+2001-11-28  adustman  <adustman@tweek.neosouth.net>
+
+	* setup.py: Catch more *bsd platforms. (Suggested by Ragnar Beer)
+
+2001-11-07  adustman  <adustman@tweek.neosouth.net>
+
+	* setup.py: Simplify the various configurations.
+
+	Solaris might be fixed for gcc and broken for standard compiler.
+
+2001-10-31  adustman  <adustman@tweek.neosouth.net>
+
+	* README: Some additional Zope notes.
+
+	* CHANGELOG: Mac OS X updates
+
+	* setup.py: Link with -flat_namespace on Mac OS X/darwin. (Dan Grassi)
+
+2001-10-25  adustman  <adustman@tweek.neosouth.net>
+
+	* MySQLdb/cursors.py:
+	Do some renaming suggested by recent DB-SIG discussions.
+
+	This should not break anything unless you are using private members.
+
+2001-10-23  adustman  <adustman@tweek.neosouth.net>
+
+	* CHANGELOG, setup.py: netbsd config
+
+2001-10-17  adustman  <adustman@tweek.neosouth.net>
+
+	* CHANGELOG, MySQLdb/__init__.py, README, _mysql.c, setup.py:
+	0.9.0 updates
+
+2001-10-13  adustman  <adustman@tweek.neosouth.net>
+
+	* MySQLdb/__init__.py: import Set
+
+2001-09-29  adustman  <adustman@tweek.neosouth.net>
+
+	* setup.py: Catch more Linux platforms in the config.
+
+2001-09-21  adustman  <adustman@tweek.neosouth.net>
+
+	* setup.py: Solaris config (Bent NAgstrup Terp)
+
+2001-09-20  adustman  <adustman@tweek.neosouth.net>
+
+	* README: Good to update this at least once a year.
+
+	* CHANGELOG, MySQLdb/__init__.py, _mysql.c, setup.py:
+	Update to 0.9.1c2.
+
+2001-09-13  adustman  <adustman@tweek.neosouth.net>
+
+	* _mysql.c: Fix exception handling in connect() (broken by 0.9.1.c1)
+
+2001-09-12  adustman  <adustman@tweek.neosouth.net>
+
+	* MANIFEST.in: Added CHANGELOG. (John Bowe)
+
+2001-09-07  adustman  <adustman@tweek.neosouth.net>
+
+	* setup.py:
+	OSX config (Paul DuBois); tab/space cleanups; more package info
+
+	* PKG-INFO: Generated by distutils.
+
+	* CHANGELOG: More stuff I forgot about.
+
+	* _mysql.c: Use two arg _PyTuple_Resize() for Python 2.2 and newer.
+
+	* setup.py: Version 0.9.1c1
+
+	* MySQLdb/converters.py: Return DECIMAL/NUMERIC as floating point.
+
+2001-09-06  adustman  <adustman@tweek.neosouth.net>
+
+	* CHANGELOG: Added a CHANGELOG, for people who like that sort of thing.
+
+	* _mysql.c:
+	Kill bastardly refcount bug that occurs starting with Python 2.0.1.
+	PyArgs_ParseTupleAndKeywords() returns borrowed references for O format
+	starting in 2.0.1, prior to that it returns new references, so it's
+	necessary to test the Python version to determine whether or not we
+	should Py_INCREF() it. If we always Py_INCREF() it, this produces a
+	memory leak in versions prior to 2.0.1.
+
+	* MySQLdb/__init__.py, _mysql.c, setup.py:
+	Change version number, back out memory changes.
+
+	* _mysql.c:
+	Memory allocation cleanups. Add missing newline in docstring.
+
+2001-07-29  adustman  <adustman@tweek.neosouth.net>
+
+	* _mysql.c: ER_PARSE_ERROR -> ProgrammingError;
+	#ifdef around some recent error types
+
+2001-07-12  adustman  <adustman@tweek.neosouth.net>
+
+	* _mysql.c: Fix leak on converter dictionary. (Ted Wright)
+
+2001-07-11  adustman  <adustman@tweek.neosouth.net>
+
+	* MANIFEST.in, MySQLdb/__init__.py, MySQLdb/connections.py, MySQLdb/cursors.py, PKG-INFO, _mysql.c, doc/MySQLdb.sgml, setup.py:
+	Minor fixes for 1.0.0.
+
+2001-06-20  adustman  <adustman@tweek.neosouth.net>
+
+	* doc/MySQLdb.sgml: Clarify use of host parameter to connect().
+
+	* doc/MySQLdb-FAQ.sgml, doc/MySQLdb.sgml:
+	Some corrections courtesy of Paul DuBois.
+
+2001-06-04  adustman  <adustman@tweek.neosouth.net>
+
+	* MySQLdb/__init__.py, _mysql.c, setup.py: Update version number.
+
+2001-05-28  adustman  <adustman@tweek.neosouth.net>
+
+	* .cvsignore, MySQLdb/.cvsignore, MySQLdb/constants/.cvsignore, doc/.cvsignore:
+	Ignore stuff.
+
+2001-05-25  adustman  <adustman@tweek.neosouth.net>
+
+	* MySQLdb/connections.py, _mysql.c, doc/MySQLdb.sgml, setup.py:
+	Rip out _mysql.field_*() methods, as MySQL recommends using SQL
+	instead. See C API docs.
+
+2001-05-24  adustman  <adustman@tweek.neosouth.net>
+
+	* PKG-INFO: Update version.
+
+	* MySQLdb/__init__.py, _mysql.c:
+	Clean up some import statements, bump versions to 0.9.0c2.
+
+2001-05-23  adustman  <adustman@tweek.neosouth.net>
+
+	* MySQLdb/times.py: Fix the case where there is no mx.DateTime.
+
+	* MySQLdb/connections.py: Remove a debug string.
+
+	* MANIFEST.in, MySQLdb/__init__.py, MySQLdb/connections.py, _mysql.c, _mysql_version.h, doc/MySQLdb.sgml, setup.cfg, setup.py:
+	0.9.0c1 minor edit.
+
+2001-05-14  adustman  <adustman@tweek.neosouth.net>
+
+	* _mysql.c: PyObject_Length() == -1 on error. Thanks, Jon Ribbens.
+
+2001-05-12  adustman  <adustman@tweek.neosouth.net>
+
+	* MySQLdb/__init__.py, MySQLdb/converters.py, MySQLdb/data.py, MySQLdb/sets.py, MySQLdb/times.py, _mysql_version.h, setup.py:
+	Smash data into two separate modules: sets and times. I never liked
+	that name anyway.
+
+	Set has been extended somewhat. The comparision operators really only
+	work properly with Python 2.1, due to the limitations of __cmp__.
+	Set also uses the binary operators (&, |, ^), since these make somewhat
+	more sense than the arithmetic ones, though there is no good analog for
+	- (if only there were a nand operator...)
+
+	Bump the version to 0.9.0b3. This is not the actual 0.9.0b3 release yet,
+	however. I want to do some more insanity checking. But almost ready for
+	some candidate releases.
+
+2001-05-11  adustman  <adustman@tweek.neosouth.net>
+
+	* MySQLdb/__init__.py, MySQLdb/connections.py, MySQLdb/converters.py, MySQLdb/cursors.py, MySQLdb/data.py, doc/MySQLdb.sgml, _mysql_version.h, setup.py:
+	More major code heaving.
+
+	All the threading stuff is ripped out and burned.
+	Too much code for not enough benefit. Still thread-safe,
+	just don't share connections.
+
+	Made a nice Set class for SET columns.
+
+	Updated the docs.
+
+2001-05-10  adustman  <adustman@tweek.neosouth.net>
+
+	* doc/MySQLdb-FAQ.sgml, doc/MySQLdb.sgml: Revamped docs.
+
+2001-05-09  adustman  <adustman@tweek.neosouth.net>
+
+	* MySQLdb/__init__.py, MySQLdb/connections.py, MySQLdb/constants/CLIENT.py, MySQLdb/constants/CR.py, MySQLdb/constants/ER.py, MySQLdb/constants/FIELD_TYPE.py, MySQLdb/constants/FLAG.py, MySQLdb/constants/REFRESH.py, MySQLdb/constants/__init__.py, MySQLdb/converters.py, MySQLdb/cursors.py, PKG-INFO, _mysql_exceptions.py, _mysql_version.h:
+	Initial import of 0.9.0 series (pre-1.0.0).
+
+	* MySQLdb/__init__.py, MySQLdb/connections.py, MySQLdb/constants/CLIENT.py, MySQLdb/constants/CR.py, MySQLdb/constants/ER.py, MySQLdb/constants/FIELD_TYPE.py, MySQLdb/constants/FLAG.py, MySQLdb/constants/REFRESH.py, MySQLdb/constants/__init__.py, MySQLdb/converters.py, MySQLdb/cursors.py, PKG-INFO, _mysql_exceptions.py, _mysql_version.h:
+	New file.
+
+	* CompatMysqldb.py, MANIFEST.in, README, _mysql.c, setup.py:
+	Initial import of 0.9.0 series (pre-1.0.0).
+
+	* CompatMysqldb.py, MANIFEST.in, README, _mysql.c, setup.py: New file.
+

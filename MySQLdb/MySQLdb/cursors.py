@@ -147,8 +147,8 @@ class BaseCursor(object):
         qargs = self.connection.literal(args)
         try:
             q = [ query % qargs[0] ]
-            for a in qargs[1:]: q.append( qv % a )
-	except TypeError, msg:
+            q.extend([ qv % a for a in qargs[1:] ])
+        except TypeError, msg:
             if msg.args[0] in ("not enough arguments for format string",
                                "not all arguments converted"):
                 self.errorhandler(self, ProgrammingError, msg.args[0])
