@@ -39,71 +39,47 @@ if embedded_server:
     name = name + "-embedded"
 version = "1.1.8"
 
-# include files and library locations should cover most platforms
-include_dirs = [
-    '/usr/local/include/mysql',
-    '/usr/local/mysql/include',
-    '/usr/local/mysql/include/mysql',
-    '/usr/include/mysql', 
-    ]
-library_dirs = [
-    '/usr/local/lib/mysql',
-    '/usr/local/mysql/lib',
-    '/usr/local/mysql/lib/mysql',
-    '/usr/lib/mysql',
-    ]
+def config(what):
+    if sys.platform == "win32":
+        try:
+            from win32pipe import popen
+        except ImportError:
+            print "win32pipe is required for building on Windows."
+            print "Get it here: http://www.python.org/windows/win32/"
+            raise
+    else:
+        from os import popen
+    return popen("mysql_config --%s" % what).read().strip().split()
 
-libraries = [mysqlclient] + mysqloptlibs
+include_dirs = [ i[2:] for i in config('include') ]
 
-# On some platorms, this can be used to find the shared libraries
-# at runtime, if they are in a non-standard location. Doesn't
-# work for Linux gcc.
-runtime_library_dirs = []
+if mysqlclient == "mysqlclient":
+    libs = config("libs")
+elif mysqlclient == "mysqlclient_r":
+    libs = config("libs_r")
+elif mysqlclient == "mysqld":
+    libs = config("embedded")
+library_dirs = [ i[2:] for i in libs if i[:2] == "-L" ]
+libraries = [ i[2:] for i in libs if i[:2] == "-l" ]
 
-# This can be used to force linking against static libraries.
-extra_objects = []
+# For reasons I do not understand, mysql_client --libs includes -lz
+# but --libs_r does *not*. This has to be a bug...
+# http://bugs.mysql.com/bug.php?id=6273
 
-# Sometimes the compiler or linker needs an extra switch to make
-# things work.
-extra_compile_args = []
-extra_link_args = []
-
-if sys.platform == "netbsd1":
-    include_dirs = ['/usr/pkg/include/mysql']
-    library_dirs = ['/usr/pkg/lib/mysql']
-elif sys.platform in ("freebsd4", "openbsd3"):
-    LOCALBASE = os.getenv('LOCALBASE', '/usr/local')
-    include_dirs = ['%s/include/mysql' % LOCALBASE]
-    library_dirs = ['%s/lib/mysql' % LOCALBASE]
-elif sys.platform == "sunos5": # Solaris 2.8 + gcc
-    runtime_library_dirs.append('/usr/local/lib:/usr/openwin/lib:/usr/dt/lib') 
-    extra_compile_args.append("-fPIC")
-elif sys.platform == "win32": # Ugh
-    include_dirs = [r'c:\mysql\include']
-    library_dirs = [r'c:\mysql\lib\opt']
-    libraries.extend(['zlib', 'msvcrt', 'libcmt', 'wsock32', 'advapi32'])
-    extra_objects = [r'c:\mysql\lib\opt\mysqlclient.lib']
-elif sys.platform == "cygwin":
-    include_dirs = ['/c/mysql/include']
-    library_dirs = ['/c/mysql/lib']
-    extra_compile_args.append('-DMS_WIN32')
-elif sys.platform[:6] == "darwin": # Mac OS X
-    include_dirs.append('/sw/include/mysql')
-    library_dirs.append('/sw/lib/mysql')
-    extra_link_args.append('-flat_namespace')
-elif sys.platform == 'linux2' and os.getenv('HOSTTYPE') == 'alpha':
-    libraries.extend(['ots', 'cpml'])
-elif os.name == "posix": # UNIX-ish platforms not covered above
-    pass # default should work
+if sys.platform == "win32":
+    if "zlib" not in libraries:
+        libraries.append("zlib")
 else:
-    raise "UnknownPlatform", "sys.platform=%s, os.name=%s" % \
-          (sys.platform, os.name)
+    if "z" not in libraries:
+        libraries.append("z")
+
+extra_compile_args = config("cflags")
 
 # avoid frightening noobs with warnings about missing directories
 include_dirs = [ d for d in include_dirs if os.path.isdir(d) ]
 library_dirs = [ d for d in library_dirs if os.path.isdir(d) ]
 
-classifiers = """\
+classifiers = """
 Development Status :: 5 - Production/Stable
 Environment :: Other Environment
 License :: OSI Approved :: GNU General Public License (GPL)
@@ -116,7 +92,8 @@ Operating System :: Unix
 Programming Language :: C
 Programming Language :: Python
 Topic :: Database
-Topic :: Database :: Database Engines/Servers""".split('\n')
+Topic :: Database :: Database Engines/Servers
+"""
 
 metadata = {
     'name': name,
@@ -130,7 +107,7 @@ metadata = {
     'url': "http://sourceforge.net/projects/mysql-python",
     'download_url': "http://prdownloads.sourceforge.net/mysql-python/" \
                     "MySQL-python-%s.tar.gz" % version,
-    'classifiers': classifiers,
+    'classifiers': [ c for c in classifiers.split('\n') if c ],
     'py_modules': [
         "_mysql_exceptions",
         "MySQLdb.converters",
@@ -154,10 +131,7 @@ metadata = {
             sources=['_mysql.c'],
             include_dirs=include_dirs,
             library_dirs=library_dirs,
-            runtime_library_dirs=runtime_library_dirs,
             libraries=libraries,
-            extra_objects=extra_objects,
-            extra_link_args=extra_link_args,
             extra_compile_args=extra_compile_args,
             ),
         ],
