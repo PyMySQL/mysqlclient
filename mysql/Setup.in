@@ -1,2 +1,3 @@
 *shared*
+# Adjust -L and -I as necessary for your local configuration.
 _mysql _mysqlmodule.c -L/usr/lib/mysql -I/usr/include/mysql -lmysqlclient

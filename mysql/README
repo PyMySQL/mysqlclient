@@ -1,0 +1,23 @@
+Check Setup.in and make sure it has the right paths for your system.
+
+To build:	python build.py
+To install: 	follow additional instructions after build.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Uh, that's it.
