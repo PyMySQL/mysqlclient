@@ -85,7 +85,6 @@ setup (# Distribution meta-data
         # Description of the modules and packages in the distribution
 
         py_modules = ["MySQLdb", "CompatMysqldb",
-		      "_mysql_const.__init__",
 		      "_mysql_const.CR",
 		      "_mysql_const.FIELD_TYPE",
 		      "_mysql_const.ER",
