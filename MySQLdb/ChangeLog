@@ -1,4 +1,81 @@
+2004-09-08  adustman  <adustman@tweek.neosouth.net>
+
+	* _mysql.c, setup.py, MySQLdb/__init__.py: Version 1.1.3
+
+	 * _mysql.c: restored missing mysql_errno() call (bug #1023466)
+
+	 * _mysql.c: Only try to use SSL support if HAVE_OPENSSL is defined.
+	   Raise NotSupportedError if ssl is requested but not available.
+
 2004-09-06  adustman  <adustman@tweek.neosouth.net>
+
+	* ChangeLog, _mysql.c, setup.py, MySQLdb/__init__.py, MySQLdb/connections.py, MySQLdb/converters.py, MySQLdb/cursors.py, MySQLdb/times.py:
+	General cleanups.
+
+	 * Turn autocommit off initially
+
+	 * Add support for mysql_autocommit, _commit, and _rollback API functions
+	   (new in MySQL-4.1)
+
+	 * Remove Connection.begin(); use SQL BEGIN or START TRANSACTION instead
+
+	 * pytimes (standard datetime module) is now the default implementation
+
+	 * Detect and handle MySQL-4.1 and newer TIMESTAMP (looks like DATETIME)
+
+	 * UnicodeType and ObjectType now always handled (required features)
+
+	 * Ditch support for L at the end of long integer
+
+	 * Remove z and crypt libs if building for Windows
+
+	 * Version 1.1.2
+
+	* setup.py: Don't include z and crypt libs on Windows.
+
+	* _mysql.c: Conditionally define uint on all platforms.
+
+	* MySQLdb/cursors.py: Fix indentation error (again)
+
+	* _mysql.c: Fix bug #992756:
+
+	 * Embedded server: List of groups was not NULL-terminated correctly.
+
+	* MySQLdb/cursors.py: Fix bug #989262:
+
+	 * Changed errant tab to spaces in cursors.py
+
+	* _mysql.c, setup.py, MySQLdb/__init__.py: Fixes for bug #999588:
+
+	 * Use os.environ.get() instead of os.getenv() in setup.py
+
+	 * Use PySequence_Length() instead of PySequence_Check() in _mysql.c
+
+	Bump version to 1.0.1b1
+
+2004-09-06  adustman  <adustman@tweek.neosouth.net>
+
+	* ChangeLog, _mysql.c, setup.py, MySQLdb/__init__.py, MySQLdb/connections.py, MySQLdb/converters.py, MySQLdb/cursors.py, MySQLdb/times.py:
+	General cleanups.
+
+	 * Turn autocommit off initially
+
+	 * Add support for mysql_autocommit, _commit, and _rollback API functions
+	   (new in MySQL-4.1)
+
+	 * Remove Connection.begin(); use SQL BEGIN or START TRANSACTION instead
+
+	 * pytimes (standard datetime module) is now the default implementation
+
+	 * Detect and handle MySQL-4.1 and newer TIMESTAMP (looks like DATETIME)
+
+	 * UnicodeType and ObjectType now always handled (required features)
+
+	 * Ditch support for L at the end of long integer
+
+	 * Remove z and crypt libs if building for Windows
+
+	 * Version 1.1.2
 
 	* setup.py: Don't include z and crypt libs on Windows.
 
