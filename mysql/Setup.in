@@ -1,0 +1,2 @@
+*shared*
+_mysql _mysqlmodule.c -L/usr/lib/mysql -I/usr/include/mysql -lmysqlclient
