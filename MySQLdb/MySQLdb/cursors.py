@@ -191,7 +191,7 @@ class CursorStoreResultMixIn:
         self._check_executed()
         end = self.rownumber + size or self.arraysize
         result = self._rows[self.rownumber:end]
-        self.rownumber = end
+        self.rownumber = min(end, len(self._rows))
         return result
 
     def fetchall(self):
@@ -238,20 +238,23 @@ class CursorUseResultMixIn:
         """Fetches a single row from the cursor."""
         self._check_executed()
         r = self._fetch_row(1)
-        if r: return r[0]
-        return None
+        if not r: return None
+        self.rownumber = self.rownumber + 1
+        return r[0]
              
     def fetchmany(self, size=None):
         """Fetch up to size rows from the cursor. Result set may be smaller
         than size. If size is not defined, cursor.arraysize is used."""
         self._check_executed()
         r = self._fetch_row(size or self.arraysize)
+        self.rownumber = self.rownumber + len(r)
         return r
          
     def fetchall(self):
         """Fetchs all available rows from the cursor."""
         self._check_executed()
         r = self._fetch_row(0)
+        self.rownumber = self.rownumber + len(r)
         return r
     
 
