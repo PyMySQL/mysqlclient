@@ -31,6 +31,7 @@ from sets import *
 from times import *
 from string import split
 import types
+import array
 
 
 def Str2Set(s):
@@ -93,6 +94,11 @@ def Instance2Str(o, d):
     d[o.__class__] = d[cl[0]]
     return d[cl[0]](o, d)
 
+def char_array(s):
+    return array.array('c', s)
+
+def array2Str(o, d):
+    return Thing2Literal(o.tostring(), d)
 
 conversions = {
     types.IntType: Thing2Str,
@@ -103,6 +109,7 @@ conversions = {
     types.ListType: escape_sequence,
     types.DictType: escape_dict,
     types.InstanceType: Instance2Str,
+    array.ArrayType: array2Str,
     types.StringType: Thing2Literal, # default
     DateTimeType: DateTime2literal,
     DateTimeDeltaType: DateTimeDelta2literal,
@@ -120,6 +127,10 @@ conversions = {
     FIELD_TYPE.DATETIME: DateTime_or_None,
     FIELD_TYPE.TIME: TimeDelta_or_None,
     FIELD_TYPE.DATE: Date_or_None,
+    FIELD_TYPE.BLOB: char_array,
+    FIELD_TYPE.LONG_BLOB: char_array,
+    FIELD_TYPE.MEDIUM_BLOB: char_array,
+    FIELD_TYPE.TINY_BLOB: char_array,
     }
 
 
