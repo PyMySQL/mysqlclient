@@ -253,7 +253,6 @@ table_icons={
     'SYSTEM_TABLE': 'stable',
     }
 
-from _mysql import FIELD_TYPE
 field_icons={
             "CHAR": "int", "DATE": "date",
             "DATETIME": "date", "DECIMAL": "float",

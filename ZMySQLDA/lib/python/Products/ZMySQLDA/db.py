@@ -87,9 +87,17 @@
 __version__='$Revision$'[11:-2]
 
 import _mysql
+MySQLdb_version_required = (0,9,0)
+
+_v = getattr(_mysql, 'version_info', (0,0,0))
+if _v < MySQLdb_version_required:
+    raise NotSupportedError, \
+	"ZMySQLDA requires at least MySQLdb %s, %s found" % \
+	(MySQLdb_version_required, _v)
+
 from MySQLdb.converters import conversions
 from MySQLdb.constants import FIELD_TYPE, CR, CLIENT
-from _mysql_exceptions import OperationalError
+from _mysql_exceptions import OperationalError, NotSupportedError
 from Shared.DC.ZRDB.TM import TM
 from DateTime import DateTime
 
@@ -102,8 +110,6 @@ hosed_connection = (
     CR.SERVER_LOST
     )
 
-MySQLdb_version_required = (0,9,0)
-
 def _mysql_timestamp_converter(s):
 	if len(s) < 14:
 		s = s + "0"*(14-len(s))
@@ -114,6 +120,10 @@ def _mysql_timestamp_converter(s):
 def DateTime_or_None(s):
     try: return DateTime(s)
     except: return None
+
+def int_or_long(s):
+    try: return int(s)
+    except: return long(s)
 
 class DB(TM):
 
@@ -143,6 +153,7 @@ class DB(TM):
         }
 
     conv=conversions.copy()
+    conv[FIELD_TYPE.LONG] = int_or_long
     conv[FIELD_TYPE.DATETIME] = DateTime_or_None
     conv[FIELD_TYPE.DATE] = DateTime_or_None
     del conv[FIELD_TYPE.TIME]
@@ -153,16 +164,11 @@ class DB(TM):
         self.connection=connection
         self.kwargs = kwargs = self._parse_connection_string(connection)
         self.db=apply(self.Database_Connection, (), kwargs)
-        v = self.db.hasattr('version_info', (0,0,0))
-        if v < MySQLdb_version_required:
-            raise NotSupportedError, \
-                "ZMySQLDA requires at least MySQLdb %s, %s found" % \
-                (MySQLdb_version_required, v)
 	self.transactions = self.db.server_capabilities & CLIENT.TRANSACTIONS
         if self._try_transactions == '-':
             self.transactions = 0
         elif not self.transactions and self._try_transactions == '+':
-            raise NotSupportedError, "transactions supported by this server"
+            raise NotSupportedError, "transactions not supported by this server"
 
     def _parse_connection_string(self, connection):
         kwargs = {'conv': self.conv}
@@ -271,7 +277,7 @@ class DB(TM):
         self.db.query("BEGIN")
 	self.db.store_result()
         
-    def _commit(self, *ignored):
+    def _finish(self, *ignored):
         self.db.query("COMMIT")
 	self.db.store_result()
 
