@@ -1,5 +1,7 @@
 post-0.9.1
 
+  * Mac OS X configuration linkage fix (Dan Grassi)
+
   * netbsd configuration (Tage Stabell-Kuloe)
 
 0.9.1
