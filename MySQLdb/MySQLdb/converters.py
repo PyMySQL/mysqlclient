@@ -27,7 +27,8 @@ MySQL.connect().
 
 from _mysql import string_literal, escape_sequence, escape_dict, escape, NULL
 from constants import FIELD_TYPE
-from data import *
+from sets import *
+from times import *
 from string import split
 import types
 

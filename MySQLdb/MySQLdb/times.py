@@ -1,88 +1,10 @@
-"""data module
+"""times module
 
-This module provides some useful classes for dealing with MySQL data.
+This module provides some Date and Time classes for dealing with MySQL data.
 """
 
 from time import strftime, localtime
 from _mysql import string_literal
-
-class Set:
-
-    """A simple class for handling sets. Sets are immutable in the same
-    way numbers are."""
-    
-    def __init__(self, *values):
-        """Use values to initialize the Set."""
-        self._values = values
-
-    def contains(self, value):
-        """Returns true if the value is contained within the Set."""
-        return value in self._values
-
-    def __str__(self):
-        """Returns the values as a comma-separated string."""
-        from string import join
-        return join(map(str, self._values),',')
-
-    def __repr__(self):
-        return "Set%s" % `self._values`
-    
-    def __add__(self, other):
-        """Union."""
-        if isinstance(other, Set):
-            for v in other._values:
-                self = self + v
-        elif other not in self._values:
-            self = apply(Set, self._values+(other,))
-        return self
-
-    def __sub__(self, other):
-        if isinstance(other, Set):
-            for v in other._values:
-                if v in self:
-                    self = self - v
-        elif other in self:
-            values = list(self._values)
-            values.remove(other)
-            return apply(Set, tuple(values))
-        return self
-
-    def __mul__(self, other):
-        "Intersection."
-        intersection = Set()
-        if isinstance(other, Set):
-            union = self + other
-            intersection = union
-            for v in union._values:
-                if v not in self or v not in other:
-                    intersection = intersection - v
-        elif other in self:
-            intersection = apply(Set, (other,))
-        return intersection
-
-    def __mod__(self, other):
-        "Disjoint."
-        return (self+other)-(self*other)
-
-    def __getitem__(self, n):
-        return self._values[n]
-
-    def __len__(self):
-        return len(self._values)
-    
-    def __hash__(self):
-        return hash(self._values)
-    
-    def __cmp__(self, other):
-        if isinstance(other, Set):
-            d = self % other
-            if d._values:
-                return 1
-            else:
-                return 0
-        if other in self._values:
-            return 0
-        return -1
 
 try:
     try:
