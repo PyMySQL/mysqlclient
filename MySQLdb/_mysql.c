@@ -114,14 +114,14 @@ _mysql_Exception(_mysql_ConnectionObject *c)
 		Py_DECREF(t);
 		return NULL;
 	}
-	if (!(c->open)) {
-		e = _mysql_InternalError;
-		PyTuple_SET_ITEM(t, 0, PyInt_FromLong(-1L));
-		PyTuple_SET_ITEM(t, 1, PyString_FromString("connection is closed"));
-		PyErr_SetObject(e, t);
-		Py_DECREF(t);
-		return NULL;
-	}
+/* 	if (!(c->open)) { */
+/* 		e = _mysql_InternalError; */
+/* 		PyTuple_SET_ITEM(t, 0, PyInt_FromLong(-1L)); */
+/* 		PyTuple_SET_ITEM(t, 1, PyString_FromString("connection is closed")); */
+/* 		PyErr_SetObject(e, t); */
+/* 		Py_DECREF(t); */
+/* 		return NULL; */
+/* 	} */
 	merr = mysql_errno(&(c->connection));
 	if (!merr)
 		e = _mysql_InterfaceError;
@@ -440,7 +440,6 @@ _mysql_ConnectionObject_Initialize(
 		return -1;
 	self->converter = conv;
 
-	self->open = 1;
 	Py_BEGIN_ALLOW_THREADS ;
 	conn = mysql_init(&(self->connection));
 	if (connect_timeout) {
@@ -474,6 +473,7 @@ _mysql_ConnectionObject_Initialize(
 	  be done here. tp_dealloc still needs to call PyObject_GC_UnTrack(),
 	  however.
 	*/
+	self->open = 1;
 	return 0;
 }
 
@@ -544,6 +544,7 @@ _mysql_ConnectionObject_close(
 	_mysql_ConnectionObject *self,
 	PyObject *args)
 {
+	if (!args) return NULL;
 	if (!PyArg_ParseTuple(args, "")) return NULL;
 	if (self->open) {
 		Py_BEGIN_ALLOW_THREADS
@@ -1963,7 +1964,7 @@ static MyMemberlist(_mysql_ResultObject_memberlist)[] = {
 		),
 	{NULL} /* Sentinel */
 };
-
+                                                                        
 static PyObject *
 _mysql_ConnectionObject_getattr(
 	_mysql_ConnectionObject *self,
@@ -1977,13 +1978,18 @@ _mysql_ConnectionObject_getattr(
 	PyErr_Clear();
 	if (strcmp(name, "closed") == 0)
 		return PyInt_FromLong((long)!(self->open));
-/*         if (strcmp(name, "__members__") == 0) */
-/*                 return listmembers(_mysql_ConnectionObject_memberlist); */
 #if PY_VERSION_HEX < 0x02020000
 	return PyMember_Get((char *)self, _mysql_ConnectionObject_memberlist, name);
 #else
-        PyErr_SetString(PyExc_AttributeError, name);
-        return NULL;	
+	{
+		MyMemberlist(*l);
+		for (l = _mysql_ConnectionObject_memberlist; l->name != NULL; l++) {
+			if (strcmp(l->name, name) == 0)
+				return PyMember_GetOne((char *)self, l);
+		}
+		PyErr_SetString(PyExc_AttributeError, name);
+		return NULL;
+	}
 #endif
 }
 
@@ -1999,12 +2005,17 @@ _mysql_ResultObject_getattr(
 		return res;
 	PyErr_Clear();
 #if PY_VERSION_HEX < 0x02020000
-/*         if (strcmp(name, "__members__") == 0) */
-/*                 return listmembers(_mysql_ResultObject_memberlist); */
 	return PyMember_Get((char *)self, _mysql_ResultObject_memberlist, name);
 #else
-        PyErr_SetString(PyExc_AttributeError, name);
-        return NULL;
+	{
+		MyMemberlist(*l);
+		for (l = _mysql_ResultObject_memberlist; l->name != NULL; l++) {
+			if (strcmp(l->name, name) == 0)
+				return PyMember_GetOne((char *)self, l);
+		}
+		PyErr_SetString(PyExc_AttributeError, name);
+		return NULL;
+	}
 #endif
 }
 
