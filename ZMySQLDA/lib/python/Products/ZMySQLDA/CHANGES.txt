@@ -1,5 +1,25 @@
 Z MySQL DA Releases
 
+  2.0.8
+
+    More information about columns is available from the table
+    browser. This is primarily to support SQL Blender.
+
+    DECIMAL and NUMERIC columns now returned as floating-point numbers
+    (was string). This has also been fixed in MySQLdb-0.9.1, but the
+    fix is included here just in case you don't upgrade. Upgrading is
+    a good idea anyway, because some memory-related bugs are fixed,
+    particularly if using Zope 2.4 and Python 2.1.
+
+  2.0.7
+
+    Transaction support tweaked some more. A plus (+) or minus (-)
+    at the beginning of the connection string will force transactions
+    on or off respectively. By default, transactions are enabled if
+    the server supports them. Beware: If you are using non-TST tables
+    on a server that supports transactions, you should probably force
+    transactions off.
+
   2.0.6
 
     This version finally should have all the transaction support
@@ -12,7 +32,6 @@ Z MySQL DA Releases
   2.0.5
 
     Transactions don't really work right in this and prior versions.
-
 
   2.0.4
 
