@@ -159,7 +159,7 @@ class _Cursor:
         
         This method performs multiple-row inserts and similar queries."""
         from string import join
-        m = insert_values(query)
+        m = insert_values.search(query)
         if not m: raise ProgrammingError, "can't find values"
         p = m.start(1)
         escape = escape_row
