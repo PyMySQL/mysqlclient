@@ -30,7 +30,7 @@ import sys
 from distutils.core import setup
 from distutils.extension import Extension
 
-mysqlclient = os.getenv('mysqlclient', 'mysqlclient')
+mysqlclient = os.getenv('mysqlclient', 'mysqlclient_r')
 mysqloptlibs = os.getenv('mysqloptlibs', '').split()
 embedded_server = (mysqlclient == 'mysqld')
 
@@ -39,41 +39,40 @@ if embedded_server:
     name = name + "-embedded"
 version = "1.1.9"
 
-def config(what):
-    if sys.platform == "win32":
-        try:
-            from win32pipe import popen
-        except ImportError:
-            print "win32pipe is required for building on Windows."
-            print "Get it here: http://www.python.org/windows/win32/"
-            raise
-    else:
-        from os import popen
-    return popen("mysql_config --%s" % what).read().strip().split()
-
-include_dirs = [ i[2:] for i in config('include') ]
-
-if mysqlclient == "mysqlclient":
-    libs = config("libs")
-elif mysqlclient == "mysqlclient_r":
-    libs = config("libs_r")
-elif mysqlclient == "mysqld":
-    libs = config("embedded")
-library_dirs = [ i[2:] for i in libs if i[:2] == "-L" ]
-libraries = [ i[2:] for i in libs if i[:2] == "-l" ]
-
-# For reasons I do not understand, mysql_client --libs includes -lz
-# but --libs_r does *not*. This has to be a bug...
-# http://bugs.mysql.com/bug.php?id=6273
-
 if sys.platform == "win32":
-    if "zlib" not in libraries:
-        libraries.append("zlib")
+    mysqlroot = os.getenv('mysqlroot', None)
+    if mysqlroot is None:
+        print "You need to set the environment variable mysqlroot!"
+        print "This should be the path to your MySQL installation."
+        print "Probably C:\Program Files\MySQL 4.1\ or something like that."
+        sys.exit(1)
+
+    include_dirs = [os.path.join(mysqlroot, "include")]
+    library_dirs = [os.path.join(mysqlroot, "libs")]
+    libraries.extend(['zlib', 'msvcrt', 'libcmt', 'wsock32', 'advapi32'])
+
 else:
+    
+    def config(what):
+        from os import popen
+        return popen("mysql_config --%s" % what).read().strip().split()
+
+    include_dirs = [ i[2:] for i in config('include') ]
+
+    if mysqlclient == "mysqlclient":
+        libs = config("libs")
+    elif mysqlclient == "mysqlclient_r":
+        libs = config("libs_r")
+    elif mysqlclient == "mysqld":
+        libs = config("embedded")
+    library_dirs = [ i[2:] for i in libs if i[:2] == "-L" ]
+    libraries = [ i[2:] for i in libs if i[:2] == "-l" ]
+
+    # Workaround for a pre-4.1.9 bug
     if "z" not in libraries:
         libraries.append("z")
 
-extra_compile_args = config("cflags")
+    extra_compile_args = config("cflags")
 
 # avoid frightening noobs with warnings about missing directories
 include_dirs = [ d for d in include_dirs if os.path.isdir(d) ]
