@@ -768,8 +768,53 @@ _mysql_ConnectionObject_next_result(
 #endif
 	Py_END_ALLOW_THREADS
 	if (err > 0) return _mysql_Exception(self);
+	Py_INCREF(Py_None);
+	return Py_None;
+}		
+
+#if MYSQL_VERSION_ID >= 40100
+static char _mysql_ConnectionObject_set_server_option__doc__[] =
+"set_server_option(option) -- Enables or disables an option\n\
+for the connection.\n\
+\n\
+Non-standard.\n\
+";
+static PyObject *
+_mysql_ConnectionObject_set_server_option(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
+{
+	int err, flags=0;
+	if (!PyArg_ParseTuple(args, "i", &flags))
+		return NULL;
+	Py_BEGIN_ALLOW_THREADS
+	err = mysql_set_server_option(&(self->connection), flags);
+	Py_END_ALLOW_THREADS
+	if (err) return _mysql_Exception(self);
 	return PyInt_FromLong(err);
 }		
+
+static char _mysql_ConnectionObject_sqlstate__doc__[] =
+"Returns a string containing the SQLSTATE error code\n\
+for the last error. The error code consists of five characters.\n\
+'00000' means ``no error.'' The values are specified by ANSI SQL\n\
+and ODBC. For a list of possible values, see section 23\n\
+Error Handling in MySQL in the MySQL Manual.\n\
+\n\
+Note that not all MySQL errors are yet mapped to SQLSTATE's.\n\
+The value 'HY000' (general error) is used for unmapped errors.\n\
+\n\
+Non-standard.\n\
+";
+static PyObject *
+_mysql_ConnectionObject_sqlstate(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
+{
+	if (!PyArg_ParseTuple(args, "")) return NULL;
+	return PyString_FromString(mysql_sqlstate(&(self->connection)));
+}		
+#endif
 
 static char _mysql_ConnectionObject_errno__doc__[] =
 "Returns the error code for the most recently invoked API function\n\
@@ -1898,6 +1943,20 @@ static PyMethodDef _mysql_ConnectionObject_methods[] = {
 		METH_VARARGS,
 		_mysql_ConnectionObject_next_result__doc__
 	},
+#if MYSQL_VERSION_ID >= 40100
+	{
+		"set_server_option",
+		(PyCFunction)_mysql_ConnectionObject_set_server_option,
+		METH_VARARGS,
+		_mysql_ConnectionObject_set_server_option__doc__
+	},
+	{
+		"sqlstate",
+		(PyCFunction)_mysql_ConnectionObject_sqlstate,
+		METH_VARARGS,
+		_mysql_ConnectionObject_sqlstate__doc__
+	},
+#endif
 #if MYSQL_VERSION_ID >= 32303
 	{
 		"change_user",
