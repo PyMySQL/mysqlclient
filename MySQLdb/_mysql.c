@@ -1,4 +1,4 @@
-#define version_info "(0,9,3,'alpha',1)"
+#define version_info "(0,9,3,'alpha',2)"
 #define __version__ "0.9.3"
 /*
 This program is free software; you can redistribute it and/or modify
@@ -2351,12 +2351,12 @@ init_mysql(void)
 	_mysql_ConnectionObject_Type.ob_type = &PyType_Type;
 	_mysql_ResultObject_Type.ob_type = &PyType_Type;
 #if PY_VERSION_HEX >= 0x02020000
-	_mysql_ConnectionObject_Type.tp_alloc = (allocfunc)PyType_GenericAlloc;
-	_mysql_ConnectionObject_Type.tp_new = (newfunc)PyType_GenericNew;
-	_mysql_ConnectionObject_Type.tp_free = (destructor)_PyObject_GC_Del; 
-	_mysql_ResultObject_Type.tp_alloc = (allocfunc)PyType_GenericAlloc;
-	_mysql_ResultObject_Type.tp_new = (newfunc)PyType_GenericNew;
-	_mysql_ResultObject_Type.tp_free = (destructor)_PyObject_GC_Del;
+	_mysql_ConnectionObject_Type.tp_alloc = PyType_GenericAlloc;
+	_mysql_ConnectionObject_Type.tp_new = PyType_GenericNew;
+	_mysql_ConnectionObject_Type.tp_free = _PyObject_GC_Del; 
+	_mysql_ResultObject_Type.tp_alloc = PyType_GenericAlloc;
+	_mysql_ResultObject_Type.tp_new = PyType_GenericNew;
+	_mysql_ResultObject_Type.tp_free = _PyObject_GC_Del;
 #endif
 
 	if (!(dict = PyModule_GetDict(module))) goto error;
