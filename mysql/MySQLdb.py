@@ -34,13 +34,13 @@ except ImportError:
 
 def Long2Int(l): return str(l)[:-1] # drop the trailing L
 def None2NULL(d): return "NULL"
-def String2literal(s): return "'%s'" % escape_string(str(s))
+String2Literal = string_literal
 
 quote_conv = { types.IntType: str,
 	       types.LongType: Long2Int,
 	       types.FloatType: str,
 	       types.NoneType: None2NULL,
-	       types.StringType: String2literal }
+	       types.StringType: String2Literal }
 
 type_conv = { FIELD_TYPE.TINY: int,
               FIELD_TYPE.SHORT: int,
@@ -260,7 +260,7 @@ class CursorStoreResultMixIn:
         self.connection._acquire()
         try:
             BaseCursor._do_query(self, q)
-            self.__rows = self.result and self._fetch_all_rows() or ((),)
+            self.__rows = self.result and self._fetch_all_rows() or ()
             self.__pos = 0
             del self.result
         finally:
@@ -423,7 +423,7 @@ class Connection:
         """Close the connection. No further activity possible."""
         self.db.close()
          
-    if hasattr(_mysql, 'transactions'):
+    if hasattr(_mysql, 'rollback'):
         def commit(self):
             """Commit the current transaction."""
             return self.db.commit()

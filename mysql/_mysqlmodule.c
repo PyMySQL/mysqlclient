@@ -550,6 +550,24 @@ _mysql_escape_string(self, args)
 	return (str);
 }
 
+static PyObject *
+_mysql_string_literal(self, args)
+	PyObject *self;
+	PyObject *args;
+{
+	PyObject *str;
+	char *in, *out;
+	int len, size;
+	if (!PyArg_ParseTuple(args, "s#:string_literal", &in, &size)) return NULL;
+	str = PyString_FromStringAndSize((char *) NULL, size*2+3);
+	if (!str) return PyErr_NoMemory();
+	out = PyString_AS_STRING(str);
+	len = mysql_escape_string(out+1, in, size);
+	*out = *(out+len+1) = '\'';
+	if (_PyString_Resize(&str, len+2) < 0) return NULL;
+	return (str);
+}
+
 static PyObject *_mysql_NULL;
 
 static PyObject *
@@ -905,6 +923,16 @@ _mysql_get_client_info(self, args)
 {
 	if (!PyArg_NoArgs(args)) return NULL;
 	return PyString_FromString(mysql_get_client_info());
+}
+
+static PyObject *
+_mysql_ConnectionObject_commit(self, args)
+	_mysql_ConnectionObject *self;
+	PyObject *args;
+{
+	if (!PyArg_NoArgs(args)) return NULL;
+        Py_INCREF(Py_None);
+	return Py_None;
 }
 
 static PyObject *
@@ -1289,6 +1317,7 @@ static PyMethodDef _mysql_ConnectionObject_methods[] = {
 	{"change_user",     (PyCFunction)_mysql_ConnectionObject_change_user, METH_VARARGS | METH_KEYWORDS},
 #endif
 	{"close",           (PyCFunction)_mysql_ConnectionObject_close, 0},
+	{"commit",          (PyCFunction)_mysql_ConnectionObject_commit, 0},
 	{"dump_debug_info", (PyCFunction)_mysql_ConnectionObject_dump_debug_info, 0},
 	{"error",           (PyCFunction)_mysql_ConnectionObject_error, 0},
 	{"errno",           (PyCFunction)_mysql_ConnectionObject_errno, 0},
@@ -1445,6 +1474,7 @@ _mysql_methods[] = {
         { "debug", _mysql_debug, METH_VARARGS },
 	{ "escape_row", _mysql_escape_row, METH_VARARGS },
 	{ "escape_string", _mysql_escape_string, METH_VARARGS },
+	{ "string_literal", _mysql_string_literal, METH_VARARGS },
 	{ "get_client_info", _mysql_get_client_info },
 	{NULL, NULL} /* sentinel */
 };
