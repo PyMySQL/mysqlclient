@@ -11,11 +11,6 @@ from _mysql_exceptions import Warning, Error, InterfaceError, DataError, \
      DatabaseError, OperationalError, IntegrityError, InternalError, \
      NotSupportedError, ProgrammingError
 
-import exceptions
-if hasattr(exceptions, "StopIteration"):
-    _EndOfData = exceptions.StopIteration
-else:
-    _EndOfData = exceptions.IndexError
 
 class BaseCursor:
     
@@ -197,16 +192,8 @@ class BaseCursor:
             return ()
         return self._result.fetch_row(size, self._fetch_type)
 
-    def next(self):
-        """Fetches the next row. StopIteration is raised when there
-        are no more rows, if Python has iterator support. Otherwise,
-        IndexError is raised."""
-        result = self.fetchone()
-        if result is None:
-            raise _EndOfData
-        return result
-
-    def __iter__(self): return self # XXX
+    def __iter__(self):
+        return iter(self.fetchone, None)
 
     Warning = Warning
     Error = Error
@@ -317,7 +304,12 @@ class CursorStoreResultMixIn:
         if r < 0 or r >= len(self._rows):
             self.errorhandler(self, IndexError, "out of range")
         self.rownumber = r
-        
+
+    def __iter__(self):
+        self._check_executed()
+        result = self.rownumber and self._rows[self.rownumber:] or self._rows
+        return iter(result)
+    
 
 class CursorUseResultMixIn:
 
