@@ -1,3 +1,10 @@
+"""MySQL REFRESH Constants
+
+These constants seem to mostly deal with things internal to the
+MySQL server. Forget you saw this.
+
+"""
+
 GRANT = 1
 LOG = 2
 TABLES = 4

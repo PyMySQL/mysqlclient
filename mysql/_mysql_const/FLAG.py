@@ -1,3 +1,10 @@
+"""MySQL FLAG Constants
+
+These flags are used along with the FIELD_TYPE to indicate various
+properties of columns in a result set.
+
+"""
+
 NOT_NULL = 1
 PRI_KEY = 2
 UNIQUE_KEY = 4

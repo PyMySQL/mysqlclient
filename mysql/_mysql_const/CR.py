@@ -1,3 +1,10 @@
+"""MySQL Connection Errors
+
+Nearly all of these raise OperationalError. COMMANDS_OUT_OF_SYNC
+raises ProgrammingError.
+
+"""
+
 MIN_ERROR = 2000
 MAX_ERROR = 2999
 UNKNOWN_ERROR = 2000

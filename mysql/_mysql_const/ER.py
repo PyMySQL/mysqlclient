@@ -1,3 +1,10 @@
+"""MySQL ER Constants
+
+These constants are error codes for the bulk of the error conditions
+that may occur.
+
+"""
+
 HASHCHK = 1000
 NISAMCHK = 1001
 NO = 1002
