@@ -317,6 +317,15 @@ class CursorUseResultMixIn(object):
         r = self._fetch_row(0)
         self.rownumber = self.rownumber + len(r)
         return r
+
+    def __iter__(self):
+        return self
+
+    def next(self):
+        row = self.fetchone()
+        if row is None:
+            raise StopIteration
+        return row
     
 
 class CursorTupleRowsMixIn(object):
@@ -336,17 +345,26 @@ class CursorDictRowsMixIn(object):
 
     def fetchoneDict(self):
         """Fetch a single row as a dictionary. Deprecated:
-        Use fetchone() instead."""
+        Use fetchone() instead. Will be removed in 1.3."""
+        from warnings import warn
+        warn("fetchoneDict() is non-standard and will be removed in 1.3",
+             DeprecationWarning)
         return self.fetchone()
 
     def fetchmanyDict(self, size=None):
         """Fetch several rows as a list of dictionaries. Deprecated:
-        Use fetchmany() instead."""
+        Use fetchmany() instead. Will be removed in 1.3."""
+        from warnings import warn
+        warn("fetchmanyDict() is non-standard and will be removed in 1.3",
+             DeprecationWarning)
         return self.fetchmany(size)
 
     def fetchallDict(self):
         """Fetch all available rows as a list of dictionaries. Deprecated:
-        Use fetchall() instead."""
+        Use fetchall() instead. Will be removed in 1.3."""
+        from warnings import warn
+        warn("fetchallDict() is non-standard and will be removed in 1.3",
+             DeprecationWarning)
         return self.fetchall()
 
 
