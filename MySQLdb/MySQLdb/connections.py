@@ -16,18 +16,20 @@ import types, _mysql
 def defaulterrorhandler(connection, cursor, errorclass, errorvalue):
     """
 
-    If cursor is not None, errorvalue is appended to cursor.messages;
-    otherwise it is appended to connection.messages. Then errorclass
-    is raised with errorvalue as the value.
+    If cursor is not None, (errorclass, errorvalue) is appended to
+    cursor.messages; otherwise it is appended to
+    connection.messages. Then errorclass is raised with errorvalue as
+    the value.
 
     You can override this with your own error handler by assigning it
     to the instance.
 
     """
+    error = errorclass, errorvalue
     if cursor:
-        cursor.messages.append(errorvalue)
+        cursor.messages.append(error)
     else:
-        connection.messages.append(errorvalue)
+        connection.messages.append(error)
     raise errorclass, errorvalue
 
 
@@ -132,7 +134,8 @@ class Connection(ConnectionBase):
         if self._transactional:
             self.query("ROLLBACK")
         else:
-            raise NotSupportedError, "Not supported by server"
+            self.errorhandler(None,
+                              NotSupportedError, "Not supported by server")
             
     def cursor(self, cursorclass=None):
         """

@@ -17,7 +17,6 @@ if hasattr(exceptions, "StopIteration"):
 else:
     _EndOfData = exceptions.IndexError
 
-
 class BaseCursor:
     
     """A base for Cursor classes. Useful attributes:
@@ -40,24 +39,36 @@ class BaseCursor:
         self.lastrowid = None
         self.messages = []
         self.errorhandler = connection.errorhandler
-
+        self._result = None
+        
     def __del__(self):
         self.close()
         
     def close(self):
         """Close the cursor. No further queries will be possible."""
+        if not self.connection: return
+        del self.messages[:]
+        self.nextset()
         self.connection = None
         self.errorhandler = None
+        self._result = None
 
     def _check_executed(self):
         if not self._executed:
-            self.errorhandler(self.connection, self,
-                              ProgrammingError, "execute() first")
+            self.errorhandler(self, ProgrammingError, "execute() first")
 
     def nextset(self):
-        """Advance to the next result set. Returns None if there are
-        no more result sets. Note that MySQL does not support multiple
-        result sets at this time."""
+        """Advance to the next result set.
+
+        Returns None if there are no more result sets.
+
+        Note that MySQL does not support multiple result sets at this
+        time.
+
+        """
+        del self.messages[:]
+        if self._executed:
+            self.fetchall()
         return None
     
     def setinputsizes(self, *args):
@@ -68,32 +79,37 @@ class BaseCursor:
 
     def _get_db(self):
         if not self.connection:
-            self.errorhandler(self.connection, self,
-                              ProgrammingError, "cursor closed")
+            self.errorhandler(self, ProgrammingError, "cursor closed")
         return self.connection
     
-    def execute(self, query, args=None):
+    def execute(self, query, args=()):
 
         """Execute a query.
         
         query -- string, query to execute on server
         args -- optional sequence or mapping, parameters to use with query.
-        returns long integer rows affected, if any"""
 
+        Note: If args is a sequence, then %s must be used as the
+        parameter placeholder in the query. If a mapping is used,
+        %(key)s must be used as the placeholder.
+
+        Returns long integer rows affected, if any
+
+        """
         from types import ListType, TupleType
-        if args is None:
-            r = self._query(query)
-        elif type(args) is ListType and type(args[0]) is TupleType:
- 	    r = self.executemany(query, args) # deprecated
- 	else:
-            try:
-                r = self._query(query % self.connection.literal(args))
-	    except TypeError, m:
-                if m.args[0] in ("not enough arguments for format string",
-                                 "not all arguments converted"):
-                    self.errorhandler(self, ProgrammingError, m.args[0])
-                else:
-                    raise
+        from sys import exc_info
+        del self.messages[:]
+        try:
+            r = self._query(query % self.connection.literal(args))
+        except TypeError, m:
+            if m.args[0] in ("not enough arguments for format string",
+                             "not all arguments converted"):
+                self.errorhandler(self, ProgrammingError, m.args[0])
+            else:
+                self.errorhandler(self, TypeError, m)
+        except:
+            e = exc_info()
+            self.errorhandler(self, e[0], e[1])
         self._executed = query
         return r
 
@@ -102,15 +118,22 @@ class BaseCursor:
         """Execute a multi-row query.
         
         query -- string, query to execute on server
-        args -- sequence of sequences or mappings, parameters to use with
-            query. The query must contain the clause "values ( ... )".
-            The parenthetical portion will be repeated once for each
-            item in the sequence.
-        returns long integer rows affected, if any
-        
-        This method performs multiple-row inserts and similar queries."""
 
+        args
+
+            Sequence of sequences or mappings, parameters to use with
+            query.
+            
+        Returns long integer rows affected, if any.
+        
+        This method improves performance on multiple-row INSERT and
+        REPLACE. Otherwise it is equivalent to looping over args with
+        execute().
+
+        """
         from string import join
+        from sys import exc_info
+        del self.messages[:]
         if not args: return
         m = insert_values.search(query)
         if not m:
@@ -127,10 +150,12 @@ class BaseCursor:
 	except TypeError, msg:
             if msg.args[0] in ("not enough arguments for format string",
                                "not all arguments converted"):
-                self.errorhandler(self.connection, self,
-                                  ProgrammingError, msg.args[0])
+                self.errorhandler(self, ProgrammingError, msg.args[0])
             else:
-                raise
+                self.errorhandler(self, TypeError, msg)
+        except:
+            e = exc_info()
+            self.errorhandler(self, e[0], e[1])
         r = self._query(join(q,',\n'))
         self._executed = query
         return r
@@ -145,8 +170,6 @@ class BaseCursor:
         self.rownumber = 0
         self.description = self._result and self._result.describe() or None
         self.lastrowid = db.insert_id()
-        message = db.info()
-        if message: self.messages.append(message)
         self._check_for_warnings()
         return self.rowcount
 
@@ -159,7 +182,7 @@ class BaseCursor:
         DEPRECATED: Use messages attribute"""
         self._check_executed()
         if self.messages:
-            return self.messages[0]
+            return self.messages[-1]
         else:
             return ''
         
@@ -170,6 +193,8 @@ class BaseCursor:
         return self.lastrowid
     
     def _fetch_row(self, size=1):
+        if not self._result:
+            return ()
         return self._result.fetch_row(size, self._fetch_type)
 
     def next(self):
@@ -203,10 +228,12 @@ class CursorWarningMixIn:
 
     def _check_for_warnings(self):
         from string import atoi, split
-        if self.messages:
-            warnings = atoi(split(self.messages[0])[-1])
-    	    if warnings:
-     	        raise Warning, self.messages[0]
+        info = self._get_db().info()
+        if info is None:
+            return
+        warnings = atoi(split(info)[-1])
+        if warnings:
+            raise Warning, info
 
 
 class CursorStoreResultMixIn:
@@ -225,12 +252,13 @@ class CursorStoreResultMixIn:
 
     def _query(self, q):
         rowcount = self._BaseCursor__do_query(q)
-        self._rows = self._result and self._fetch_row(0) or ()
-        del self._result
+        self._rows = self._fetch_row(0)
+        self._result = None
         return rowcount
             
     def fetchone(self):
-        """Fetches a single row from the cursor."""
+        """Fetches a single row from the cursor. None indicates that
+        no more rows are available."""
         self._check_executed()
         if self.rownumber >= len(self._rows): return None
         result = self._rows[self.rownumber]
@@ -284,9 +312,10 @@ class CursorStoreResultMixIn:
         elif mode == 'absolute':
             r = value
         else:
-            raise ProgrammingError, "unknown scroll mode %s" % `mode`
+            self.errorhandler(self, ProgrammingError,
+                              "unknown scroll mode %s" % `mode`)
         if r < 0 or r >= len(self._rows):
-            raise IndexError, "out of range"
+            self.errorhandler(self, IndexError, "out of range")
         self.rownumber = r
         
 
@@ -300,6 +329,8 @@ class CursorUseResultMixIn:
 
     def close(self):
         """Close the cursor. No further queries can be executed."""
+        del self.messages[:]
+        self.nextset()
         self._result = None
         BaseCursor.close(self)
 

@@ -1,3 +1,7 @@
+0.9.2c2
+
+  * errorhandler cleanups (Rob Steele)
+
 0.9.2c1
 
   * If using Python 2.2 or newer, the _mysql connection object is
