@@ -1,6 +1,8 @@
 #include "Python.h"
 #include "structmember.h"
 #include "mysql.h"
+#include "mysqld_error.h"
+#include "errmsg.h"
 
 static PyObject *_mysql_Warning;
 static PyObject *_mysql_Error;
@@ -28,26 +30,289 @@ typedef struct {
 
 extern PyTypeObject _mysql_ResultObject_Type;
 
-typedef struct {
-	PyObject_HEAD
-	_mysql_ResultObject *result;
-	MYSQL_FIELD *field;
-} _mysql_FieldObject;
-
-extern PyTypeObject _mysql_FieldObject_Type;
-
 PyObject *
 _mysql_Exception(c)
 	_mysql_ConnectionObject *c;
 {
-	PyObject *t;
+	PyObject *t, *e;
+	int merr;
+
 	if (!(t = PyTuple_New(2))) return NULL;
-	PyTuple_SET_ITEM(t, 0, PyInt_FromLong((long)mysql_errno(&(c->connection))));
+	merr = mysql_errno(&(c->connection));
+	if (!merr)
+		e = _mysql_InterfaceError;
+	else if (merr < CR_MIN_ERROR)
+		e = _mysql_InternalError;
+	else if (merr > CR_MAX_ERROR) {
+		PyTuple_SET_ITEM(t, 0, PyInt_FromLong(-1L));
+		PyTuple_SET_ITEM(t, 1, PyString_FromString("error totally whack"));
+		PyErr_SetObject(_mysql_Error, t);
+		return NULL;
+	}
+	else if (merr == CR_COMMANDS_OUT_OF_SYNC)
+		e = _mysql_ProgrammingError;
+	else
+		e = _mysql_OperationalError;
+	PyTuple_SET_ITEM(t, 0, PyInt_FromLong((long)merr));
 	PyTuple_SET_ITEM(t, 1, PyString_FromString(mysql_error(&(c->connection))));
-	PyErr_SetObject(_mysql_Error, t);
-	Py_DECREF(t);
+	PyErr_SetObject(e, t);
 	return NULL;
 }
+
+typedef struct {
+	char *name;
+	int value;
+} _mysql_Constant;
+
+static _mysql_Constant _mysql_Constant_flag[] = {
+	{ "NOT_NULL", NOT_NULL_FLAG },
+	{ "PRI_KEY", PRI_KEY_FLAG },
+	{ "UNIQUE_KEY", UNIQUE_KEY_FLAG },
+	{ "MULTIPLE_KEY", MULTIPLE_KEY_FLAG },
+	{ "BLOB", BLOB_FLAG },
+	{ "UNSIGNED", UNSIGNED_FLAG },
+	{ "ZEROFILL", ZEROFILL_FLAG },
+	{ "BINARY", BINARY_FLAG },
+	{ "ENUM", ENUM_FLAG },
+	{ "AUTO_INCREMENT", AUTO_INCREMENT_FLAG },
+	{ "TIMESTAMP", TIMESTAMP_FLAG },
+	{ "SET", SET_FLAG },
+	{ "PART_KEY", PART_KEY_FLAG },
+	{ "GROUP", GROUP_FLAG },
+	{ NULL } /* sentinel */
+} ;
+
+static _mysql_Constant _mysql_Constant_client[] = {
+	{ "LONG_PASSWORD", CLIENT_LONG_PASSWORD },
+	{ "FOUND_ROWS", CLIENT_FOUND_ROWS },
+	{ "LONG_FLAG", CLIENT_LONG_FLAG },
+	{ "CONNECT_WITH_DB", CLIENT_CONNECT_WITH_DB },
+	{ "NO_SCHEMA", CLIENT_NO_SCHEMA },
+	{ "COMPRESS", CLIENT_COMPRESS },
+	{ "ODBC", CLIENT_ODBC },
+	{ "LOCAL_FILES", CLIENT_LOCAL_FILES },
+	{ "IGNORE_SPACE", CLIENT_IGNORE_SPACE },
+	{ NULL } /* Sentinel */
+} ;
+
+static _mysql_Constant _mysql_Constant_field_type[] = {
+	{ "DECIMAL", FIELD_TYPE_DECIMAL },
+	{ "TINY", FIELD_TYPE_TINY },
+	{ "SHORT", FIELD_TYPE_SHORT },
+	{ "LONG", FIELD_TYPE_LONG },
+	{ "FLOAT", FIELD_TYPE_FLOAT },
+	{ "DOUBLE", FIELD_TYPE_DOUBLE },
+	{ "NULL", FIELD_TYPE_NULL },
+	{ "TIMESTAMP", FIELD_TYPE_TIMESTAMP },
+	{ "LONGLONG", FIELD_TYPE_LONGLONG },
+	{ "INT24", FIELD_TYPE_INT24 },
+	{ "DATE", FIELD_TYPE_DATE },
+	{ "TIME", FIELD_TYPE_TIME },
+	{ "DATETIME", FIELD_TYPE_DATETIME },
+	{ "YEAR", FIELD_TYPE_YEAR },
+	{ "NEWDATE", FIELD_TYPE_NEWDATE },
+	{ "ENUM", FIELD_TYPE_ENUM },
+	{ "SET", FIELD_TYPE_SET },
+	{ "TINY_BLOB", FIELD_TYPE_TINY_BLOB },
+	{ "MEDIUM_BLOB", FIELD_TYPE_MEDIUM_BLOB },
+	{ "LONG_BLOB", FIELD_TYPE_LONG_BLOB },
+	{ "BLOB", FIELD_TYPE_BLOB },
+	{ "VAR_STRING", FIELD_TYPE_VAR_STRING },
+	{ "STRING", FIELD_TYPE_STRING },
+	{ "CHAR", FIELD_TYPE_CHAR },
+	{ "INTERVAL", FIELD_TYPE_ENUM },
+	{ NULL } /* sentinel */
+} ;
+
+static _mysql_Constant _mysql_Constant_cr[] = {
+	{ "UNKNOWN_ERROR", CR_UNKNOWN_ERROR },
+	{ "SOCKET_CREATE_ERROR", CR_SOCKET_CREATE_ERROR },
+	{ "CONNECTION_ERROR", CR_CONNECTION_ERROR },
+	{ "CONN_HOST_ERROR", CR_CONN_HOST_ERROR },
+	{ "IPSOCK_ERROR", CR_IPSOCK_ERROR },
+	{ "UNKNOWN_HOST", CR_UNKNOWN_HOST },
+	{ "SERVER_GONE_ERROR", CR_SERVER_GONE_ERROR },
+	{ "VERSION_ERROR", CR_VERSION_ERROR },
+	{ "OUT_OF_MEMORY", CR_OUT_OF_MEMORY },
+	{ "WRONG_HOST_INFO", CR_WRONG_HOST_INFO },
+	{ "LOCALHOST_CONNECTION", CR_LOCALHOST_CONNECTION },
+	{ "TCP_CONNECTION", CR_TCP_CONNECTION },
+	{ "SERVER_HANDSHAKE_ERR", CR_SERVER_HANDSHAKE_ERR },
+	{ "SERVER_LOST", CR_SERVER_LOST },
+	{ "COMMANDS_OUT_OF_SYNC", CR_COMMANDS_OUT_OF_SYNC },
+	{ "NAMEDPIPE_CONNECTION", CR_NAMEDPIPE_CONNECTION },
+	{ "NAMEDPIPEWAIT_ERROR", CR_NAMEDPIPEWAIT_ERROR },
+	{ "NAMEDPIPEOPEN_ERROR", CR_NAMEDPIPEOPEN_ERROR },
+	{ "NAMEDPIPESETSTATE_ERROR", CR_NAMEDPIPEOPEN_ERROR },
+	{ NULL } /* sentinel */
+} ;
+
+static _mysql_Constant _mysql_Constant_er[] = {
+	{ "HASHCHK", ER_HASHCHK },
+	{ "NISAMCHK", ER_NISAMCHK },
+	{ "NO", ER_NO },
+	{ "YES", ER_YES },
+	{ "CANT_CREATE_FILE", ER_CANT_CREATE_FILE },
+	{ "CANT_CREATE_TABLE", ER_CANT_CREATE_TABLE },
+	{ "CANT_CREATE_DB", ER_CANT_CREATE_DB },
+	{ "DB_CREATE_EXISTS", ER_DB_CREATE_EXISTS },
+	{ "DB_DROP_EXISTS", ER_DB_DROP_EXISTS },
+	{ "DB_DROP_DELETE", ER_DB_DROP_DELETE },
+	{ "DB_DROP_RMDIR", ER_DB_DROP_RMDIR },
+	{ "CANT_DELETE_FILE", ER_CANT_DELETE_FILE },
+	{ "CANT_FIND_SYSTEM_REC", ER_CANT_FIND_SYSTEM_REC },
+	{ "CANT_GET_STAT", ER_CANT_GET_STAT },
+	{ "CANT_GET_WD", ER_CANT_GET_WD },
+	{ "CANT_LOCK", ER_CANT_LOCK },
+	{ "CANT_OPEN_FILE", ER_CANT_OPEN_FILE },
+	{ "FILE_NOT_FOUND", ER_FILE_NOT_FOUND },
+	{ "CANT_READ_DIR", ER_CANT_READ_DIR },
+	{ "CANT_SET_WD", ER_CANT_SET_WD },
+	{ "CHECKREAD", ER_CHECKREAD },
+	{ "DISK_FULL", ER_DISK_FULL },
+	{ "DUP_KEY", ER_DUP_KEY },
+	{ "ERROR_ON_CLOSE", ER_ERROR_ON_CLOSE },
+	{ "ERROR_ON_READ", ER_ERROR_ON_READ },
+	{ "ERROR_ON_RENAME", ER_ERROR_ON_RENAME },
+	{ "ERROR_ON_WRITE", ER_ERROR_ON_WRITE },
+	{ "FILE_USED", ER_FILE_USED },
+	{ "FILSORT_ABORT", ER_FILSORT_ABORT },
+	{ "FORM_NOT_FOUND", ER_FORM_NOT_FOUND },
+	{ "GET_ERRNO", ER_GET_ERRNO },
+	{ "ILLEGAL_HA", ER_ILLEGAL_HA },
+	{ "KEY_NOT_FOUND", ER_KEY_NOT_FOUND },
+	{ "NOT_FORM_FILE", ER_NOT_FORM_FILE },
+	{ "NOT_KEYFILE", ER_NOT_KEYFILE },
+	{ "OLD_KEYFILE", ER_OLD_KEYFILE },
+	{ "OPEN_AS_READONLY", ER_OPEN_AS_READONLY },
+	{ "OUTOFMEMORY", ER_OUTOFMEMORY },
+	{ "OUT_OF_SORTMEMORY", ER_OUT_OF_SORTMEMORY },
+	{ "UNEXPECTED_EOF", ER_UNEXPECTED_EOF },
+	{ "CON_COUNT_ERROR", ER_CON_COUNT_ERROR },
+	{ "OUT_OF_RESOURCES", ER_OUT_OF_RESOURCES },
+	{ "BAD_HOST_ERROR", ER_BAD_HOST_ERROR },
+	{ "HANDSHAKE_ERROR", ER_HANDSHAKE_ERROR },
+	{ "DBACCESS_DENIED_ERROR", ER_DBACCESS_DENIED_ERROR },
+	{ "ACCESS_DENIED_ERROR", ER_ACCESS_DENIED_ERROR },
+	{ "NO_DB_ERROR", ER_NO_DB_ERROR },
+	{ "UNKNOWN_COM_ERROR", ER_UNKNOWN_COM_ERROR },
+	{ "BAD_NULL_ERROR", ER_BAD_NULL_ERROR },
+	{ "BAD_DB_ERROR", ER_BAD_DB_ERROR },
+	{ "TABLE_EXISTS_ERROR", ER_TABLE_EXISTS_ERROR },
+	{ "BAD_TABLE_ERROR", ER_BAD_TABLE_ERROR },
+	{ "NON_UNIQ_ERROR", ER_NON_UNIQ_ERROR },
+	{ "SERVER_SHUTDOWN", ER_SERVER_SHUTDOWN },
+	{ "BAD_FIELD_ERROR", ER_BAD_FIELD_ERROR },
+	{ "WRONG_FIELD_WITH_GROUP", ER_WRONG_FIELD_WITH_GROUP },
+	{ "WRONG_GROUP_FIELD", ER_WRONG_GROUP_FIELD },
+	{ "WRONG_SUM_SELECT", ER_WRONG_SUM_SELECT },
+	{ "WRONG_VALUE_COUNT", ER_WRONG_VALUE_COUNT },
+	{ "TOO_LONG_IDENT", ER_TOO_LONG_IDENT },
+	{ "DUP_FIELDNAME", ER_DUP_FIELDNAME },
+	{ "DUP_KEYNAME", ER_DUP_KEYNAME },
+	{ "DUP_ENTRY", ER_DUP_ENTRY },
+	{ "WRONG_FIELD_SPEC", ER_WRONG_FIELD_SPEC },
+	{ "PARSE_ERROR", ER_PARSE_ERROR },
+	{ "EMPTY_QUERY", ER_EMPTY_QUERY },
+	{ "NONUNIQ_TABLE", ER_NONUNIQ_TABLE },
+	{ "INVALID_DEFAULT", ER_INVALID_DEFAULT },
+	{ "MULTIPLE_PRI_KEY", ER_MULTIPLE_PRI_KEY },
+	{ "TOO_MANY_KEYS", ER_TOO_MANY_KEYS },
+	{ "TOO_MANY_KEY_PARTS", ER_TOO_MANY_KEY_PARTS },
+	{ "TOO_LONG_KEY", ER_TOO_LONG_KEY },
+	{ "KEY_COLUMN_DOES_NOT_EXITS", ER_KEY_COLUMN_DOES_NOT_EXITS },
+	{ "BLOB_USED_AS_KEY", ER_BLOB_USED_AS_KEY },
+	{ "TOO_BIG_FIELDLENGTH", ER_TOO_BIG_FIELDLENGTH },
+	{ "WRONG_AUTO_KEY", ER_WRONG_AUTO_KEY },
+	{ "READY", ER_READY },
+	{ "NORMAL_SHUTDOWN", ER_NORMAL_SHUTDOWN },
+	{ "GOT_SIGNAL", ER_GOT_SIGNAL },
+	{ "SHUTDOWN_COMPLETE", ER_SHUTDOWN_COMPLETE },
+	{ "FORCING_CLOSE", ER_FORCING_CLOSE },
+	{ "IPSOCK_ERROR", ER_IPSOCK_ERROR },
+	{ "NO_SUCH_INDEX", ER_NO_SUCH_INDEX },
+	{ "WRONG_FIELD_TERMINATORS", ER_WRONG_FIELD_TERMINATORS },
+	{ "BLOBS_AND_NO_TERMINATED", ER_BLOBS_AND_NO_TERMINATED },
+	{ "TEXTFILE_NOT_READABLE", ER_TEXTFILE_NOT_READABLE },
+	{ "FILE_EXISTS_ERROR", ER_FILE_EXISTS_ERROR },
+	{ "LOAD_INFO", ER_LOAD_INFO },
+	{ "ALTER_INFO", ER_ALTER_INFO },
+	{ "WRONG_SUB_KEY", ER_WRONG_SUB_KEY },
+	{ "CANT_REMOVE_ALL_FIELDS", ER_CANT_REMOVE_ALL_FIELDS },
+	{ "CANT_DROP_FIELD_OR_KEY", ER_CANT_DROP_FIELD_OR_KEY },
+	{ "INSERT_INFO", ER_INSERT_INFO },
+	{ "INSERT_TABLE_USED", ER_INSERT_TABLE_USED },
+	{ "NO_SUCH_THREAD", ER_NO_SUCH_THREAD },
+	{ "KILL_DENIED_ERROR", ER_KILL_DENIED_ERROR },
+	{ "NO_TABLES_USED", ER_NO_TABLES_USED },
+	{ "TOO_BIG_SET", ER_TOO_BIG_SET },
+	{ "NO_UNIQUE_LOGFILE", ER_NO_UNIQUE_LOGFILE },
+	{ "TABLE_NOT_LOCKED_FOR_WRITE", ER_TABLE_NOT_LOCKED_FOR_WRITE },
+	{ "TABLE_NOT_LOCKED", ER_TABLE_NOT_LOCKED },
+	{ "BLOB_CANT_HAVE_DEFAULT", ER_BLOB_CANT_HAVE_DEFAULT },
+	{ "WRONG_DB_NAME", ER_WRONG_DB_NAME },
+	{ "WRONG_TABLE_NAME", ER_WRONG_TABLE_NAME },
+	{ "TOO_BIG_SELECT", ER_TOO_BIG_SELECT },
+	{ "UNKNOWN_ERROR", ER_UNKNOWN_ERROR },
+	{ "UNKNOWN_PROCEDURE", ER_UNKNOWN_PROCEDURE },
+	{ "WRONG_PARAMCOUNT_TO_PROCEDURE", ER_WRONG_PARAMCOUNT_TO_PROCEDURE },
+	{ "WRONG_PARAMETERS_TO_PROCEDURE", ER_WRONG_PARAMETERS_TO_PROCEDURE },
+	{ "UNKNOWN_TABLE", ER_UNKNOWN_TABLE },
+	{ "FIELD_SPECIFIED_TWICE", ER_FIELD_SPECIFIED_TWICE },
+	{ "INVALID_GROUP_FUNC_USE", ER_INVALID_GROUP_FUNC_USE },
+	{ "UNSUPPORTED_EXTENSION", ER_UNSUPPORTED_EXTENSION },
+	{ "TABLE_MUST_HAVE_COLUMNS", ER_TABLE_MUST_HAVE_COLUMNS },
+	{ "RECORD_FILE_FULL", ER_RECORD_FILE_FULL },
+	{ "UNKNOWN_CHARACTER_SET", ER_UNKNOWN_CHARACTER_SET },
+	{ "TOO_MANY_TABLES", ER_TOO_MANY_TABLES },
+	{ "TOO_MANY_FIELDS", ER_TOO_MANY_FIELDS },
+	{ "TOO_BIG_ROWSIZE", ER_TOO_BIG_ROWSIZE },
+	{ "STACK_OVERRUN", ER_STACK_OVERRUN },
+	{ "WRONG_OUTER_JOIN", ER_WRONG_OUTER_JOIN },
+	{ "NULL_COLUMN_IN_INDEX", ER_NULL_COLUMN_IN_INDEX },
+	{ "CANT_FIND_UDF", ER_CANT_FIND_UDF },
+	{ "CANT_INITIALIZE_UDF", ER_CANT_INITIALIZE_UDF },
+	{ "UDF_NO_PATHS", ER_UDF_NO_PATHS },
+	{ "UDF_EXISTS", ER_UDF_EXISTS },
+	{ "CANT_OPEN_LIBRARY", ER_CANT_OPEN_LIBRARY },
+	{ "CANT_FIND_DL_ENTRY", ER_CANT_FIND_DL_ENTRY },
+	{ "FUNCTION_NOT_DEFINED", ER_FUNCTION_NOT_DEFINED },
+	{ "HOST_IS_BLOCKED", ER_HOST_IS_BLOCKED },
+	{ "HOST_NOT_PRIVILEGED", ER_HOST_NOT_PRIVILEGED },
+	{ "PASSWORD_ANONYMOUS_USER", ER_PASSWORD_ANONYMOUS_USER },
+	{ "PASSWORD_NOT_ALLOWED", ER_PASSWORD_NOT_ALLOWED },
+	{ "PASSWORD_NO_MATCH", ER_PASSWORD_NO_MATCH },
+	{ "UPDATE_INFO", ER_UPDATE_INFO },
+	{ "CANT_CREATE_THREAD", ER_CANT_CREATE_THREAD },
+	{ "WRONG_VALUE_COUNT_ON_ROW", ER_WRONG_VALUE_COUNT_ON_ROW },
+	{ "CANT_REOPEN_TABLE", ER_CANT_REOPEN_TABLE },
+	{ "INVALID_USE_OF_NULL", ER_INVALID_USE_OF_NULL },
+	{ "REGEXP_ERROR", ER_REGEXP_ERROR },
+	{ "MIX_OF_GROUP_FUNC_AND_FIELDS", ER_MIX_OF_GROUP_FUNC_AND_FIELDS },
+	{ "NONEXISTING_GRANT", ER_NONEXISTING_GRANT },
+	{ "TABLEACCESS_DENIED_ERROR", ER_TABLEACCESS_DENIED_ERROR },
+	{ "COLUMNACCESS_DENIED_ERROR", ER_COLUMNACCESS_DENIED_ERROR },
+	{ "ILLEGAL_GRANT_FOR_TABLE", ER_ILLEGAL_GRANT_FOR_TABLE },
+	{ "GRANT_WRONG_HOST_OR_USER", ER_GRANT_WRONG_HOST_OR_USER },
+	{ "NO_SUCH_TABLE", ER_NO_SUCH_TABLE },
+	{ "NONEXISTING_TABLE_GRANT", ER_NONEXISTING_TABLE_GRANT },
+	{ "NOT_ALLOWED_COMMAND", ER_NOT_ALLOWED_COMMAND },
+	{ "SYNTAX_ERROR", ER_SYNTAX_ERROR },
+	{ "DELAYED_CANT_CHANGE_LOCK", ER_DELAYED_CANT_CHANGE_LOCK },
+	{ "TOO_MANY_DELAYED_THREADS", ER_TOO_MANY_DELAYED_THREADS },
+	{ "ABORTING_CONNECTION", ER_ABORTING_CONNECTION },
+	{ "NET_PACKET_TOO_LARGE", ER_NET_PACKET_TOO_LARGE },
+	{ "NET_READ_ERROR_FROM_PIPE", ER_NET_READ_ERROR_FROM_PIPE },
+	{ "NET_FCNTL_ERROR", ER_NET_FCNTL_ERROR },
+	{ "NET_PACKETS_OUT_OF_ORDER", ER_NET_PACKETS_OUT_OF_ORDER },
+	{ "NET_UNCOMPRESS_ERROR", ER_NET_UNCOMPRESS_ERROR },
+	{ "NET_READ_ERROR", ER_NET_READ_ERROR },
+	{ "NET_READ_INTERRUPTED", ER_NET_READ_INTERRUPTED },
+	{ "NET_ERROR_ON_WRITE", ER_NET_ERROR_ON_WRITE },
+	{ "NET_WRITE_INTERRUPTED", ER_NET_WRITE_INTERRUPTED },
+	{ "ERROR_MESSAGES", ER_ERROR_MESSAGES },
+	{ NULL } /* sentinel */
+} ;
 
 static PyObject *
 _mysql_connect(self, args, kwargs)
@@ -58,7 +323,7 @@ _mysql_connect(self, args, kwargs)
 	MYSQL *conn;
 	char *host = NULL, *user = NULL, *passwd = NULL,
 		*db = NULL, *unix_socket = NULL;
-	uint port = 3306;
+	uint port = MYSQL_PORT;
 	uint client_flag = 0;
 	static char *kwlist[] = { "host", "user", "passwd", "db", "port",
 				  "unix_socket", "client_flag",
@@ -155,7 +420,7 @@ _mysql_ConnectionObject_error(self, args)
 }
 
 static PyObject *
-_mysql_escape(self, args)
+_mysql_escape_string(self, args)
 	PyObject *self;
 	PyObject *args;
 {
@@ -163,7 +428,7 @@ _mysql_escape(self, args)
 	char *in, *out;
 	int len, size;
 	PyObject *o;
-	if (!PyArg_ParseTuple(args, "s#:escape", &in, &size)) return NULL;
+	if (!PyArg_ParseTuple(args, "s#:escape_string", &in, &size)) return NULL;
 	str = PyString_FromStringAndSize((char *) NULL, size*2+1);
 	if (!str) return PyErr_NoMemory();
 	out = PyString_AS_STRING(str);
@@ -204,12 +469,26 @@ _mysql_ResultObject_describe(self, args)
 }
 	
 static PyObject *
-_mysql_get_client_info(self, args)
-	PyObject *self;
+_mysql_ResultObject_field_flags(self, args)
+	_mysql_ResultObject *self;
 	PyObject *args;
 {
+	PyObject *d;
+	MYSQL_FIELD *fields;
+	unsigned int i, n;
 	if (!PyArg_NoArgs(args)) return NULL;
-	return PyString_FromString(mysql_get_client_info());
+	n = mysql_num_fields(self->result);
+	fields = mysql_fetch_fields(self->result);
+	if (!(d = PyTuple_New(n))) return NULL;
+	for (i=0; i<n; i++) {
+		PyObject *f;
+		if (!(f = PyInt_FromLong((long)fields[i].flags))) goto error;
+		PyTuple_SET_ITEM(d, i, f);
+	}
+	return d;
+  error:
+	Py_XDECREF(d);
+	return NULL;
 }
 
 static PyObject *
@@ -250,6 +529,15 @@ _mysql_ResultObject_fetch_row(self, args)
   error:
 	Py_XDECREF(r);
 	return NULL;
+}
+
+static PyObject *
+_mysql_get_client_info(self, args)
+	PyObject *self;
+	PyObject *args;
+{
+	if (!PyArg_NoArgs(args)) return NULL;
+	return PyString_FromString(mysql_get_client_info());
 }
 
 static PyObject *
@@ -332,6 +620,9 @@ _mysql_ConnectionObject_list_dbs(self, args)
 	if (!PyArg_ParseTuple(args, "|s:list_dbs", &wild)) return NULL;
 	if (!(r = PyObject_NEW(_mysql_ResultObject, &_mysql_ResultObject_Type)))
 		return NULL;
+	r->connection = &(self->connection);
+	r->conn = (PyObject *) self;
+	Py_INCREF(self);
 	Py_BEGIN_ALLOW_THREADS
         r->result = mysql_list_dbs(&(self->connection), wild);
 	Py_END_ALLOW_THREADS
@@ -339,9 +630,6 @@ _mysql_ConnectionObject_list_dbs(self, args)
 		Py_DECREF(r);
 		return _mysql_Exception(self);
 	}
-	r->connection = &(self->connection);
-	r->conn = (PyObject *) self;
-	Py_INCREF(self);
 	return (PyObject *) r;
 }
 
@@ -356,6 +644,9 @@ _mysql_ConnectionObject_list_fields(self, args)
 	if (!PyArg_ParseTuple(args, "s|s:list_fields", &table, &wild)) return NULL;
 	if (!(r = PyObject_NEW(_mysql_ResultObject, &_mysql_ResultObject_Type)))
 		return NULL;
+	r->connection = &(self->connection);
+	r->conn = (PyObject *) self;
+	Py_INCREF(self);
 	Py_BEGIN_ALLOW_THREADS
         r->result = mysql_list_fields(&(self->connection), table, wild);
 	Py_END_ALLOW_THREADS
@@ -363,9 +654,6 @@ _mysql_ConnectionObject_list_fields(self, args)
 		Py_DECREF(r);
 		return _mysql_Exception(self);
 	}
-	r->connection = &(self->connection);
-	r->conn = (PyObject *) self;
-	Py_INCREF(self);
 	return (PyObject *) r;
 }
 
@@ -379,6 +667,9 @@ _mysql_ConnectionObject_list_processes(self, args)
 	if (!PyArg_NoArgs(args)) return NULL;
 	if (!(r = PyObject_NEW(_mysql_ResultObject, &_mysql_ResultObject_Type)))
 		return NULL;
+	r->connection = &self->connection;
+	r->conn = (PyObject *) self;
+	Py_INCREF(self);
 	Py_BEGIN_ALLOW_THREADS
         r->result = mysql_list_processes(&(self->connection));
 	Py_END_ALLOW_THREADS
@@ -386,9 +677,6 @@ _mysql_ConnectionObject_list_processes(self, args)
 		Py_DECREF(r);
 		return _mysql_Exception(self);
 	}
-	r->connection = &self->connection;
-	r->conn = (PyObject *) self;
-	Py_INCREF(self);
 	return (PyObject *) r;
 }
 
@@ -403,6 +691,9 @@ _mysql_ConnectionObject_list_tables(self, args)
 	if (!PyArg_ParseTuple(args, "|s:list_tables", &wild)) return NULL;
 	if (!(r = PyObject_NEW(_mysql_ResultObject, &_mysql_ResultObject_Type)))
 		return NULL;
+	r->connection = &self->connection;
+	r->conn = (PyObject *) self;
+	Py_INCREF(self);
 	Py_BEGIN_ALLOW_THREADS
         r->result = mysql_list_tables(&(self->connection), wild);
 	Py_END_ALLOW_THREADS
@@ -410,11 +701,26 @@ _mysql_ConnectionObject_list_tables(self, args)
 		Py_DECREF(r);
 		return _mysql_Exception(self);
 	}
-	r->connection = &self->connection;
-	r->conn = (PyObject *) self;
-	Py_INCREF(self);
 	return (PyObject *) r;
 }
+
+static PyObject *
+_mysql_ConnectionObject_num_fields(self, args)
+	_mysql_ConnectionObject *self;
+	PyObject *args;
+{
+	if (!PyArg_NoArgs(args)) return NULL;
+	return PyInt_FromLong((long)mysql_num_fields(&(self->connection)));
+}	
+
+static PyObject *
+_mysql_ResultObject_num_fields(self, args)
+	_mysql_ResultObject *self;
+	PyObject *args;
+{
+	if (!PyArg_NoArgs(args)) return NULL;
+	return PyInt_FromLong((long)mysql_num_fields(self->result));
+}	
 
 static PyObject *
 _mysql_ResultObject_num_rows(self, args)
@@ -525,17 +831,17 @@ _mysql_ConnectionObject_store_result(self, args)
 	if (!PyArg_NoArgs(args)) return NULL;
 	if (!(r = PyObject_NEW(_mysql_ResultObject, &_mysql_ResultObject_Type)))
 		return NULL;
-	Py_BEGIN_ALLOW_THREADS
-        r->result = mysql_store_result(&(self->connection));
-	Py_END_ALLOW_THREADS
-	n = mysql_num_fields(&(self->connection));
-        if (!(r->result) && n) {
-		Py_DECREF(r);
-		return _mysql_Exception(self);
-	}
 	r->connection = &self->connection;
 	r->conn = (PyObject *) self;
 	Py_INCREF(self);
+	Py_BEGIN_ALLOW_THREADS
+        r->result = mysql_store_result(&(self->connection));
+	Py_END_ALLOW_THREADS
+        if (!(r->result)) {
+		Py_DECREF(r);
+		Py_INCREF(Py_None);
+		return Py_None;
+	}
 	return (PyObject *) r;
 }
 
@@ -562,16 +868,17 @@ _mysql_ConnectionObject_use_result(self, args)
 	if (!PyArg_NoArgs(args)) return NULL;
 	if (!(r = PyObject_NEW(_mysql_ResultObject, &_mysql_ResultObject_Type)))
 		return NULL;
+	r->connection = &(self->connection);
+	r->conn = (PyObject *) self;
+	Py_INCREF(self);
 	Py_BEGIN_ALLOW_THREADS
         r->result = mysql_use_result(&(self->connection));
 	Py_END_ALLOW_THREADS
         if (!(r->result)) {
 		Py_DECREF(r);
-		return _mysql_Exception(self);
+		Py_INCREF(Py_None);
+		return Py_None;
 	}
-	r->connection = &(self->connection);
-	r->conn = (PyObject *) self;
-	Py_INCREF(self);
 	return (PyObject *) r;
 }
 
@@ -600,12 +907,12 @@ _mysql_ConnectionObject_repr(self)
 }
 
 static PyObject *
-_mysql_ResultObject_seek(self, args)
+_mysql_ResultObject_data_seek(self, args)
      _mysql_ResultObject *self;
      PyObject *args;
 {
 	unsigned int offset;
-	if (!PyArg_ParseTuple(args, "i:seek", &offset)) return NULL;
+	if (!PyArg_ParseTuple(args, "i:data_seek", &offset)) return NULL;
 	Py_BEGIN_ALLOW_THREADS
 	mysql_data_seek(self->result, offset);
 	Py_END_ALLOW_THREADS
@@ -617,7 +924,7 @@ static void
 _mysql_ResultObject_dealloc(self)
 	_mysql_ResultObject *self;
 {
-	mysql_free_result(self->result);
+	if (self->result) mysql_free_result(self->result);
 	Py_DECREF(self->conn);
 	PyMem_Free((char *) self);
 }
@@ -632,24 +939,6 @@ _mysql_ResultObject_repr(self)
 	return PyString_FromString(buf);
 }
 
-static void
-_mysql_FieldObject_dealloc(self)
-	_mysql_FieldObject *self;
-{
-	Py_DECREF(self->result);
-	PyMem_Free((char *)self);
-}
-
-static PyObject *
-_mysql_FieldObject_repr(self)
-	_mysql_ResultObject *self;
-{
-	char buf[300];
-	sprintf(buf, "<field object at %lx>",
-		(long)self);
-	return PyString_FromString(buf);
-}
-
 static PyMethodDef _mysql_ConnectionObject_methods[] = {
 	{"affected_rows",   (PyCFunction)_mysql_ConnectionObject_affected_rows, 0},
 	{"close",           (PyCFunction)_mysql_ConnectionObject_close, 0},
@@ -660,10 +949,13 @@ static PyMethodDef _mysql_ConnectionObject_methods[] = {
 	{"get_proto_info",  (PyCFunction)_mysql_ConnectionObject_get_proto_info, 0},
 	{"get_server_info", (PyCFunction)_mysql_ConnectionObject_get_server_info, 0},
 	{"info",            (PyCFunction)_mysql_ConnectionObject_info, 0},
+	{"insert_id",       (PyCFunction)_mysql_ConnectionObject_insert_id, 0},
+	{"kill",            (PyCFunction)_mysql_ConnectionObject_kill, 1},
 	{"list_dbs",        (PyCFunction)_mysql_ConnectionObject_list_dbs, 1},
 	{"list_fields",     (PyCFunction)_mysql_ConnectionObject_list_fields, 1},
-	{"list_processes",  (PyCFunction)_mysql_ConnectionObject_list_processes, 1},
+	{"list_processes",  (PyCFunction)_mysql_ConnectionObject_list_processes, 0},
 	{"list_tables",     (PyCFunction)_mysql_ConnectionObject_list_tables, 1},
+	{"num_fields",      (PyCFunction)_mysql_ConnectionObject_num_fields, 0},
 	{"ping",            (PyCFunction)_mysql_ConnectionObject_ping, 0},
 	{"query",           (PyCFunction)_mysql_ConnectionObject_query, 1},
 	{"row_tell",        (PyCFunction)_mysql_ConnectionObject_row_tell, 0},
@@ -683,24 +975,18 @@ static struct memberlist _mysql_ConnectionObject_memberlist[] = {
 };
 
 static PyMethodDef _mysql_ResultObject_methods[] = {
+	{"data_seek",       (PyCFunction)_mysql_ResultObject_data_seek, 1},
 	{"describe",        (PyCFunction)_mysql_ResultObject_describe, 0},
-	{"num_rows",        (PyCFunction)_mysql_ResultObject_num_rows, 0},
 	{"fetch_row",       (PyCFunction)_mysql_ResultObject_fetch_row, 0},
+	{"field_flags",     (PyCFunction)_mysql_ResultObject_field_flags, 0},
+	{"num_fields",      (PyCFunction)_mysql_ResultObject_num_fields, 0},
+	{"num_rows",        (PyCFunction)_mysql_ResultObject_num_rows, 0},
 	{NULL,              NULL} /* sentinel */
 };
 
 static struct memberlist _mysql_ResultObject_memberlist[] = {
 	{NULL} /* Sentinel */
 };
-
-static PyMethodDef _mysql_FieldObject_methodsp[] = {
-	{NULL,              NULL} /* sentinel */
-};
-
-static struct memberlist _mysql_FieldObject_memberlist[] = {
-	{NULL} /* Sentinel */
-};
-
 
 static PyObject *
 _mysql_ConnectionObject_getattr(self, name)
@@ -776,24 +1062,10 @@ PyTypeObject _mysql_ResultObject_Type = {
 	(reprfunc)_mysql_ResultObject_repr, /* tp_repr */
 };
 
-PyTypeObject _mysql_FieldObject_Type = {
-	PyObject_HEAD_INIT(&PyType_Type)
-	0,
-	"result",
-	sizeof(_mysql_FieldObject),
-	0,
-	(destructor)_mysql_FieldObject_dealloc, /* tp_dealloc */
-	0, /*tp_print*/
-	0, /*(getattrfunc)_mysql_FieldObject_getattr, /* tp_getattr */
-	0, /* tp_setattr */
-	0, /*tp_compare*/
-	(reprfunc)_mysql_FieldObject_repr, /* tp_repr */
-};
-
 static PyMethodDef
 _mysql_methods[] = {
 	{ "connect", _mysql_connect, METH_VARARGS | METH_KEYWORDS },
-	{ "escape", _mysql_escape, METH_VARARGS },
+	{ "escape_string", _mysql_escape_string, METH_VARARGS },
 	{ "get_client_info", _mysql_get_client_info, METH_VARARGS },
 	{NULL, NULL} /* sentinel */
 };
@@ -813,6 +1085,28 @@ _mysql_NewException(PyObject *dict,
 	return v;
 }
 
+int
+_mysql_Constant_class(mdict, type, table)
+	PyObject *mdict;
+	char *type;
+	_mysql_Constant *table;
+{
+	PyObject *d, *c, *v;
+	int i;
+	/* XXX This leaks memory if it fails, but then the whole module
+	   fails to import, so probably no big deal */
+	if (!(d = PyDict_New())) goto error;
+	for (i = 0; table[i].name; i++) {
+		if (!(v = PyInt_FromLong((long)table[i].value))) goto error;
+		if (PyDict_SetItemString(d, table[i].name, v)) goto error;
+	}
+	if (!(c = PyClass_New(NULL,d,PyString_InternFromString(type)))) goto error;
+	if (PyDict_SetItemString(mdict, type, c)) goto error;
+	return 0;
+  error:
+	return -1;
+}
+
 void
 init_mysql()
 {
@@ -820,13 +1114,40 @@ init_mysql()
 	module = Py_InitModule("_mysql", _mysql_methods);
 
 	dict = PyModule_GetDict(module);
-	if ((_mysql_Warning = _mysql_NewException(dict, "Warning", NULL)) == NULL) goto error;
-	if ((_mysql_Error = _mysql_NewException(dict, "Error", NULL)) == NULL) goto error;
-	if ((_mysql_DataError = _mysql_NewException(dict, "DataError", _mysql_Error)) == NULL) goto error;
-	if ((_mysql_OperationalError = _mysql_NewException(dict, "OperationalError", _mysql_Error)) == NULL) goto error;
-	if ((_mysql_IntegrityError = _mysql_NewException(dict, "IntegrityError", _mysql_Error)) == NULL) goto error;
-	if ((_mysql_InternalError = _mysql_NewException(dict, "InternalError", _mysql_Error)) == NULL) goto error;
-	if ((_mysql_ProgrammingError = _mysql_NewException(dict, "ProgrammingError", _mysql_Error)) == NULL) goto error;
+	if (!(_mysql_Warning =
+	      _mysql_NewException(dict, "Warning", NULL)))
+		goto error;
+	if (!(_mysql_Error =
+	      _mysql_NewException(dict, "Error", NULL)))
+		goto error;
+	if (!(_mysql_InterfaceError =
+	      _mysql_NewException(dict, "InterfaceError", _mysql_Error)))
+		goto error;
+	if (!(_mysql_DataError =
+	      _mysql_NewException(dict, "DataError", _mysql_Error)))
+		goto error;
+	if (!(_mysql_OperationalError =
+	      _mysql_NewException(dict, "OperationalError", _mysql_Error)))
+		goto error;
+	if (!(_mysql_IntegrityError =
+	      _mysql_NewException(dict, "IntegrityError", _mysql_Error)))
+		goto error;
+	if (!(_mysql_InternalError =
+	      _mysql_NewException(dict, "InternalError", _mysql_Error)))
+		goto error;
+	if (!(_mysql_ProgrammingError =
+	      _mysql_NewException(dict, "ProgrammingError", _mysql_Error)))
+		goto error;
+	if (_mysql_Constant_class(dict, "FLAG", _mysql_Constant_flag))
+		goto error;
+	if (_mysql_Constant_class(dict, "CLIENT", _mysql_Constant_client))
+		goto error;
+	if (_mysql_Constant_class(dict, "FIELD_TYPE", _mysql_Constant_field_type))
+		goto error;
+	if (_mysql_Constant_class(dict, "CR", _mysql_Constant_cr))
+		goto error;
+	if (_mysql_Constant_class(dict, "ER", _mysql_Constant_er))
+		goto error;
   error:
 	if (PyErr_Occurred())
 		PyErr_SetString(PyExc_ImportError,
