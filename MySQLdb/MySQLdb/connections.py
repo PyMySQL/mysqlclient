@@ -92,6 +92,7 @@ class Connection(_mysql.connection):
             del kwargs2['cursorclass']
         else:
             self.cursorclass = self.default_cursor
+        self.charset = None
         if kwargs.has_key('unicode'):
             charset = kwargs['unicode']
             errors = kwargs.get('unicode_errors', 'strict')
@@ -100,7 +101,7 @@ class Connection(_mysql.connection):
                 del kwargs2['unicode_errors']
             if charset:
                 self.charset = charset
-                u = lambda s, c=charset, e=errors: unicode(s, c, e)
+                def u(s, c=charset, e=errors): return unicode(s, c, e)
             else:
                 u = unicode
             conv[FIELD_TYPE.STRING] = u
