@@ -1,7 +1,5 @@
 prune CVS
-recursive-include doc *.html *.sgml
-recursive-include examples *
-include README.MySQLmodule
+recursive-include doc *.txt *.html
 include license.py
 include MANIFEST.in
 include MANIFEST
