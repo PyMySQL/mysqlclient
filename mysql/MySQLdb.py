@@ -82,7 +82,7 @@ def Instance2Str(o, d):
         return d[o.__class__](o, d)
     cl = filter(lambda x,o=o: type(x)==types.ClassType and isinstance(o,x),
                 d.keys())
-    if not cl: return string_literal(o)
+    if not cl: return d[types.StringType](o,d)
     d[o.__class__] = d[cl[0]]
     return d[cl[0]](o, d)
 
