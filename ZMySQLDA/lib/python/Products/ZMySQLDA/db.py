@@ -88,7 +88,7 @@ __version__='$Revision$'[11:-2]
 
 import _mysql
 from _mysql_exceptions import OperationalError, NotSupportedError
-MySQLdb_version_required = (0,9,0)
+MySQLdb_version_required = (0,9,2)
 
 _v = getattr(_mysql, 'version_info', (0,0,0))
 if _v < MySQLdb_version_required:
@@ -100,7 +100,7 @@ from MySQLdb.converters import conversions
 from MySQLdb.constants import FIELD_TYPE, CR, CLIENT
 from Shared.DC.ZRDB.TM import TM
 from DateTime import DateTime
-from zLOG import LOG, ERROR
+from zLOG import LOG, ERROR, INFO
 
 import string, sys
 from string import strip, split, find, upper, rfind
@@ -188,6 +188,8 @@ class DB(TM):
         self.connection=connection
         self.kwargs = kwargs = self._parse_connection_string(connection)
         self.db=apply(self.Database_Connection, (), kwargs)
+        LOG("ZMySQLDA", INFO, "Opened new connection %s: %s" \
+            % (self.db, connection)) 
         transactional = self.db.server_capabilities & CLIENT.TRANSACTIONS
         if self._try_transactions == '-':
             transactional = 0
@@ -199,6 +201,12 @@ class DB(TM):
         if self._use_TM:
             self._tlock = allocate_lock()
         self._lock = allocate_lock()
+
+    def __del__(self):
+        LOG("ZMySQLDA", INFO, "Closing connection %s: %s" \
+            % (self.db, self.connection))
+        self.db.close()
+        self.db = None
         
     def _parse_connection_string(self, connection):
         kwargs = {'conv': self.conv}
