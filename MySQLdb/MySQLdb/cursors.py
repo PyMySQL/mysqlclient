@@ -348,7 +348,7 @@ class CursorDictRowsMixIn(object):
         Use fetchone() instead. Will be removed in 1.3."""
         from warnings import warn
         warn("fetchoneDict() is non-standard and will be removed in 1.3",
-             DeprecationWarning)
+             DeprecationWarning, 2)
         return self.fetchone()
 
     def fetchmanyDict(self, size=None):
@@ -356,7 +356,7 @@ class CursorDictRowsMixIn(object):
         Use fetchmany() instead. Will be removed in 1.3."""
         from warnings import warn
         warn("fetchmanyDict() is non-standard and will be removed in 1.3",
-             DeprecationWarning)
+             DeprecationWarning, 2)
         return self.fetchmany(size)
 
     def fetchallDict(self):
@@ -364,7 +364,7 @@ class CursorDictRowsMixIn(object):
         Use fetchall() instead. Will be removed in 1.3."""
         from warnings import warn
         warn("fetchallDict() is non-standard and will be removed in 1.3",
-             DeprecationWarning)
+             DeprecationWarning, 2)
         return self.fetchall()
 
 
