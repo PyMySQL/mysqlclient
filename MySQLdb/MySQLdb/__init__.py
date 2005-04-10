@@ -18,8 +18,8 @@ __revision__ = """$Revision$"""[11:-2]
 version_info = (
     1,
     2,
-    0,
-    "final",
+    1,
+    "gamma",
     1)
 if version_info[3] == "final": __version__ = "%d.%d.%d" % version_info[:3]
 else: __version__ = "%d.%d.%d%1.1s%d" % version_info[:5]
