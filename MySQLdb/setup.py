@@ -67,6 +67,11 @@ else:
         if f.close(): data = []
         return data
 
+    def stripquotes(s):
+        if s[0] in ("'", '"') and s[0] == s[-1]:
+            return s[1:-1]
+        return s
+    
     include_dirs = [ i[2:] for i in config('include') if i.startswith('-i') ]
 
     if mysqlclient == "mysqlclient":
@@ -75,8 +80,8 @@ else:
         libs = config("libs_r")
     elif mysqlclient == "mysqld":
         libs = config("embedded")
-    library_dirs = [ i[2:] for i in libs if i.startswith("-L") ]
-    libraries = [ i[2:] for i in libs if i.startswith("-l") ]
+    library_dirs = [ stripquotes(i[2:]) for i in libs if i.startswith("-L") ]
+    libraries = [ stripquotes(i[2:]) for i in libs if i.startswith("-l") ]
 
     # Workaround for a pre-4.1.9 bug
     if "z" not in libraries:
