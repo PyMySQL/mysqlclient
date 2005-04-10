@@ -37,7 +37,7 @@ embedded_server = (mysqlclient == 'mysqld')
 name = "MySQL-%s" % os.path.basename(sys.executable)
 if embedded_server:
     name = name + "-embedded"
-version = "1.1.9"
+version = "1.2.1c1"
 
 extra_objects = []
 
@@ -62,9 +62,17 @@ else:
     
     def config(what):
         from os import popen
-        return popen("mysql_config --%s" % what).read().strip().split()
+        f = popen("mysql_config --%s" % what)
+        data = f.read().strip().split()
+        if f.close(): data = []
+        return data
 
-    include_dirs = [ i[2:] for i in config('include') ]
+    def stripquotes(s):
+        if s[0] in ("'", '"') and s[0] == s[-1]:
+            return s[1:-1]
+        return s
+    
+    include_dirs = [ i[2:] for i in config('include') if i.startswith('-i') ]
 
     if mysqlclient == "mysqlclient":
         libs = config("libs")
@@ -72,8 +80,8 @@ else:
         libs = config("libs_r")
     elif mysqlclient == "mysqld":
         libs = config("embedded")
-    library_dirs = [ i[2:] for i in libs if i[:2] == "-L" ]
-    libraries = [ i[2:] for i in libs if i[:2] == "-l" ]
+    library_dirs = [ stripquotes(i[2:]) for i in libs if i.startswith("-L") ]
+    libraries = [ stripquotes(i[2:]) for i in libs if i.startswith("-l") ]
 
     # Workaround for a pre-4.1.9 bug
     if "z" not in libraries:

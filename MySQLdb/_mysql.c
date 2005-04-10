@@ -1,5 +1,5 @@
-#define version_info "(1,1,9,'final',1)"
-#define __version__ "1.1.9"
+#define version_info "(1,2,1,'gamma',1)"
+#define __version__ "1.2.1c1"
 /*
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -640,8 +640,9 @@ _mysql_ConnectionObject_close(
 	_mysql_ConnectionObject *self,
 	PyObject *args)
 {
-	if (!args) return NULL;
-	if (!PyArg_ParseTuple(args, "")) return NULL;
+	if (args) {
+		if (!PyArg_ParseTuple(args, "")) return NULL;
+	}
 	if (self->open) {
 		Py_BEGIN_ALLOW_THREADS
 		mysql_close(&(self->connection));
