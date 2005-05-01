@@ -204,11 +204,11 @@ build your own RPM packages as described above.
 Debian GNU/Linux
 ................
 
-Packaged as `python-mysql`_::
+Packaged as `python-mysqldb`_::
 
-	# apt-get install python-mysql
+	# apt-get install python-mysqldb
 
-.. _`python-mysql`: http://packages.debian.org/cgi-bin/search_packages.pl?keywords=python-mysql&searchon=names&subword=1&version=all&release=all
+.. _`python-mysqldb`: http://packages.debian.org/python-mysqldb
 
 
 Gentoo Linux
