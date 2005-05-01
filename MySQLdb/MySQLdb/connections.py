@@ -116,10 +116,10 @@ class Connection(_mysql.connection):
         from constants import CLIENT, FIELD_TYPE
         from converters import conversions
         import types
-        from weakref import proxy
+
         kwargs2 = kwargs.copy()
         if kwargs.has_key('conv'):
-            kwargs2['conv'] = conv = kwargs['conv']
+            kwargs2['conv'] = conv = kwargs['conv'].copy()
         else:
             kwargs2['conv'] = conv = conversions.copy()
         if kwargs.has_key('cursorclass'):
@@ -136,16 +136,16 @@ class Connection(_mysql.connection):
         self.charset = self.character_set_name().split('_')[0]
 
         if use_unicode:
-            def u(s, self=proxy(self)):
+            def u(s):
                 return s.decode(self.charset)
             conv[FIELD_TYPE.STRING] = u
             conv[FIELD_TYPE.VAR_STRING] = u
             conv[FIELD_TYPE.BLOB].insert(-1, (None, u))
 
-        def string_literal(obj, dummy=None, self=proxy(self)):
+        def string_literal(obj, dummy=None):
             return self.string_literal(obj)
         
-        def unicode_literal(u, dummy=None, self=proxy(self)):
+        def unicode_literal(u, dummy=None):
             return self.literal(u.encode(self.charset))
          
         self.converter[types.StringType] = string_literal

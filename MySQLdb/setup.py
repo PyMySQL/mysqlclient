@@ -37,7 +37,7 @@ embedded_server = (mysqlclient == 'mysqld')
 name = "MySQL-%s" % os.path.basename(sys.executable)
 if embedded_server:
     name = name + "-embedded"
-version = "1.2.1c1"
+version = "1.2.1c2"
 
 extra_objects = []
 
@@ -67,11 +67,6 @@ else:
         if f.close(): data = []
         return data
 
-    def stripquotes(s):
-        if s[0] in ("'", '"') and s[0] == s[-1]:
-            return s[1:-1]
-        return s
-    
     include_dirs = [ i[2:] for i in config('include') if i.startswith('-i') ]
 
     if mysqlclient == "mysqlclient":
@@ -80,8 +75,8 @@ else:
         libs = config("libs_r")
     elif mysqlclient == "mysqld":
         libs = config("embedded")
-    library_dirs = [ stripquotes(i[2:]) for i in libs if i.startswith("-L") ]
-    libraries = [ stripquotes(i[2:]) for i in libs if i.startswith("-l") ]
+    library_dirs = [ i[2:] for i in libs if i.startswith("-L") ]
+    libraries = [ i[2:] for i in libs if i.startswith("-l") ]
 
     # Workaround for a pre-4.1.9 bug
     if "z" not in libraries:
@@ -95,9 +90,6 @@ else:
     else:
         libraries.append(mysqlclient)
 
-# avoid frightening noobs with warnings about missing directories
-include_dirs = [ d for d in include_dirs if os.path.isdir(d) ]
-library_dirs = [ d for d in library_dirs if os.path.isdir(d) ]
 
 classifiers = """
 Development Status :: 5 - Production/Stable
