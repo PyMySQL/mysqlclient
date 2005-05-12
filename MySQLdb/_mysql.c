@@ -1,5 +1,5 @@
-#define version_info "(1,2,1,'gamma',2)"
-#define __version__ "1.2.1c2"
+#define version_info "(1,2,1,'gamma',3)"
+#define __version__ "1.2.1c3"
 /*
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -1931,6 +1931,11 @@ _mysql_ResultObject_row_seek(
         MYSQL_ROW_OFFSET r;
 	if (!PyArg_ParseTuple(args, "i:row_seek", &offset)) return NULL;
 	check_result_connection(self);
+	if (self->use) {
+		PyErr_SetString(_mysql_ProgrammingError,
+				"cannot be used with connection.use_result()");
+		return NULL;
+	}
 	r = mysql_row_tell(self->result);
 	mysql_row_seek(self->result, r+offset);
 	Py_INCREF(Py_None);
@@ -1947,6 +1952,11 @@ _mysql_ResultObject_row_tell(
 	MYSQL_ROW_OFFSET r;
 	if (!PyArg_ParseTuple(args, "")) return NULL;
 	check_result_connection(self);
+	if (self->use) {
+		PyErr_SetString(_mysql_ProgrammingError,
+				"cannot be used with connection.use_result()");
+		return NULL;
+	}
 	r = mysql_row_tell(self->result);
 	return PyInt_FromLong(r-self->result->data->data);
 }

@@ -190,7 +190,10 @@ class BaseCursor(object):
         return r
 
     def _do_query(self, q):
+        from types import UnicodeType
         db = self._get_db()
+        if type(q) is UnicodeType:
+            q = q.encode(db.charset)
         db.query(q)
         self._do_get_result()
         return self.rowcount
