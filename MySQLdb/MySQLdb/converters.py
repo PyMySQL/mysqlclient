@@ -128,6 +128,7 @@ conversions = {
     FIELD_TYPE.FLOAT: float,
     FIELD_TYPE.DOUBLE: float,
     FIELD_TYPE.DECIMAL: float,
+    FIELD_TYPE.NEWDECIMAL: float,
     FIELD_TYPE.LONGLONG: long,
     FIELD_TYPE.INT24: int,
     FIELD_TYPE.YEAR: int,
@@ -145,6 +146,7 @@ conversions = {
 try:
     from decimal import Decimal
     conversions[FIELD_TYPE.DECIMAL] = Decimal
+    conversions[FIELD_TYPE.NEWDECIMAL] = Decimal
 except ImportError:
     pass
 
