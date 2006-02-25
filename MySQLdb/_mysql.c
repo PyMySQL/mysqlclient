@@ -39,6 +39,7 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "structmember.h"
 #include "mysql.h"
+#include "my_config.h"
 #include "mysqld_error.h"
 #include "errmsg.h"
 
