@@ -189,7 +189,7 @@ class BaseCursor(object):
         self._warning_check()
         return r
     
-    def callproc(self, procname, *args):
+    def callproc(self, procname, args):
 
         """Execute stored procedure procname with args
         
@@ -211,11 +211,17 @@ class BaseCursor(object):
         have been fetched, you can issue a SELECT @_procname_0, ...
         query using .execute() to get any OUT or INOUT values.
         """
-        
+
+        from types import UnicodeType
         db = self._get_db()
         for index, arg in enumerate(args):
-            db.query("SET @_%s_%d=%s" % (procname, index,
-                                         db.literal(arg)))
+            q = "SET @_%s_%d=%s" % (procname, index,
+                                         db.literal(arg))
+            if type(q) is UnicodeType:
+                q = q.encode(db.charset)
+            db.query(q)
+            self._do_get_result()
+
         q = "CALL %s(%s)" % (procname,
                              ','.join(['@_%s_%d' % (procname, i)
                                        for i in range(len(args))]))
@@ -295,7 +301,10 @@ class CursorStoreResultMixIn(object):
     def fetchall(self):
         """Fetchs all available rows from the cursor."""
         self._check_executed()
-        result = self.rownumber and self._rows[self.rownumber:] or self._rows
+        if self.rownumber:
+            result = self._rows[self.rownumber:]
+        else:
+            result = self._rows
         self.rownumber = len(self._rows)
         return result
     
