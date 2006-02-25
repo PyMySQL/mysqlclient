@@ -141,6 +141,14 @@ conversions = {
         (FLAG.BINARY, char_array),
         (None, None),
     ],
+    FIELD_TYPE.STRING: [
+        (FLAG.BINARY, char_array),
+        (None, None),
+    ],
+    FIELD_TYPE.VAR_STRING: [
+        (FLAG.BINARY, char_array),
+        (None, None),
+    ],
     }
 
 try:

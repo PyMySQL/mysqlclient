@@ -138,8 +138,8 @@ class Connection(_mysql.connection):
         if use_unicode:
             def u(s):
                 return s.decode(self.charset)
-            conv[FIELD_TYPE.STRING] = u
-            conv[FIELD_TYPE.VAR_STRING] = u
+            conv[FIELD_TYPE.STRING].insert(-1, (None, u))
+            conv[FIELD_TYPE.VAR_STRING].insert(-1, (None, u))
             conv[FIELD_TYPE.BLOB].insert(-1, (None, u))
 
         def string_literal(obj, dummy=None):
