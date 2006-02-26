@@ -37,6 +37,7 @@ class BaseCursor(object):
         self._result = None
         self._warnings = 0
         self._info = None
+        self.rownumber = None
         
     def __del__(self):
         self.close()
@@ -117,11 +118,11 @@ class BaseCursor(object):
         from types import ListType, TupleType
         from sys import exc_info
         del self.messages[:]
+        query = query.encode(self.connection.charset)
+        if args is not None:
+            query = query % self.connection.literal(args)
         try:
-            if args is None:
-                r = self._query(query)
-            else:
-                r = self._query(query % self.connection.literal(args))
+            r = self._query(query)
         except TypeError, m:
             if m.args[0] in ("not enough arguments for format string",
                              "not all arguments converted"):
@@ -166,6 +167,7 @@ class BaseCursor(object):
                 r = r + self.execute(query, a)
             return r
         p = m.start(1)
+        query = query.encode(self.connection.charset)
         qv = query[p:]
         qargs = self.connection.literal(args)
         try:
@@ -185,7 +187,6 @@ class BaseCursor(object):
             del tb
             self.errorhandler(self, exc, value)
         r = self._query(',\n'.join(q))
-        self._executed = query
         self._warning_check()
         return r
     
@@ -232,10 +233,8 @@ class BaseCursor(object):
         return args
     
     def _do_query(self, q):
-        from types import UnicodeType
         db = self._get_db()
-        if type(q) is UnicodeType:
-            q = q.encode(db.charset)
+        self._last_executed = q
         db.query(q)
         self._do_get_result()
         return self.rowcount
