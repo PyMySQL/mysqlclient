@@ -1,6 +1,10 @@
 ====================
 MySQLdb User's Guide
 ====================
+
+.. contents::
+..
+
 Introduction
 ------------
 
@@ -24,7 +28,7 @@ for this module is intentionally weak because you probably should use
 the higher-level MySQLdb module. If you really need it, use the
 standard MySQL docs and transliterate as necessary.
 
-.. _`MySQL documentation`: http://dev.mysql.com/doc/mysql/en/index.html
+.. _`MySQL documentation`: http://dev.mysql.com/doc/
 
 
 MySQL C API translation
@@ -310,16 +314,19 @@ connect(parameters...)
             overridden. Default: ``MySQLdb.cursors.Cursor``.  *This
             must be a keyword parameter.*
 
-         unicode
-            If set, CHAR and VARCHAR columns are returned as Unicode
-            strings, using the specified character set.  None means to
-            use a default encoding. *This must be a keyword
-            parameter.*
+         use_unicode
+            If True, CHAR and VARCHAR and TEXT columns are returned as
+            Unicode strings, using the configured character set. It is
+            best to set the default encoding in the server
+            configuration, or client configuration (read with
+            read_default_file).  If you change the character set after
+            connecting (MySQL-4.1 and later), you'll need to put the
+            correct character set name in connection.charset.
 
-         unicode_errors
-            If set, this is used as the errors parameter to the
-	    ``unicode()`` function. Default: "strict". *This must be a
-	    keyword parameter.*
+	    If False, text-like columns are returned as normal strings,
+	    but you can always write Unicode strings.
+
+	    *This must be a keyword parameter.*
 
 	 ssl
 	    This parameter takes a dictionary or mapping, where the
@@ -369,6 +376,13 @@ threadsafety
       This can be done using the `Pool module`_.
 
       .. _`Pool module`: http://dustman.net/andy/python/Pool
+
+charset
+      The character set used by the connection. In MySQL-4.1 and newer,
+      it is possible (but not recommended) to change the connection's
+      character set with an SQL statement. If you do this, you'll also
+      need to change this attribute. Otherwise, you'll get encoding
+      errors.
 
 paramstyle
       String constant stating the type of parameter marker formatting
@@ -448,8 +462,25 @@ documentation using ``pydoc``.
 Cursor Objects
 ..............
 
-callproc()
-      Not implemented.
+callproc(procname, args)
+      Calls stored procedure procname with the sequence of arguments
+      in args. Returns the original arguments. Stored procedure
+      support only works with MySQL-5.0 and newer.
+
+      **Compatibility note:** PEP-249_ specifies that if there are
+      OUT or INOUT parameters, the modified values are to be
+      returned. This is not consistently possible with MySQL. Stored
+      procedure arguments must be passed as server variables, and
+      can only be returned with a SELECT statement. Since a stored
+      procedure may return zero or more result sets, it is impossible
+      for MySQLdb to determine if there are result sets to fetch
+      before the modified parmeters are accessible.
+
+      The parameters are stored in the server as @_*procname*_*n*,
+      where *n* is the position of the parameter. I.e., if you
+      cursor.callproc('foo', (a, b, c)), the parameters will be
+      accessible by a SELECT statement as @_foo_0, @_foo_1, and
+      @_foo_2.
 
 close()
       Closes the cursor. Future operations raise ``ProgrammingError``.
@@ -459,14 +490,18 @@ close()
 
 insert_id()
       Returns the last ``AUTO_INCREMENT`` field value inserted
-      into the database. (Non-standard)
+      into the database. Non-standard; use the lastrowid attribute
+      instead (defined by PEP-249_).
 
 info()
       Returns some information about the last query. Normally
-      you don't need to check this. With the default cursor, any MySQL
-      warnings cause ``Warning`` to be raised. If you are using a
-      cursor class without warnings, then you might want to use
-      this. See the MySQL docs for ``mysql_info()``. (Non-standard)
+      you don't need to check this. If there are any MySQL 
+      warnings, it will cause a Warning to be issued through
+      the Python warning module. By default, Warning causes a
+      message to appear on the console. However, it is possible
+      to filter these out or cause Warning to be raised as exception.
+      See the MySQL docs for ``mysql_info()``, and the Python warning
+      module. (Non-standard)
 
 setinputsizes()
       Does nothing, successfully.
@@ -479,8 +514,8 @@ nextset()
       rows in the current result set. If there are no additional result
       sets, it returns None; otherwise it returns a true value.
 
-      Note that MySQL doesn't support multiple result sets until 4.1;
-      there is currently no support for this in MySQLdb.
+      Note that MySQL doesn't support multiple result sets until 4.1.
+      
 
 Some examples
 .............
@@ -504,7 +539,10 @@ is the string '5'. When it's finished, the query will actually say,
 "...WHERE price < 5".
 
 Why the tuple? Because the DB API requires you to pass in any
-parameters as a sequence.
+parameters as a sequence. Due to the design of the parser, (max_price)
+is interpreted as using algebraic grouping and simply as max_price and
+not a tuple. Adding a comma, i.e. (max_price,) forces it to make a
+tuple.
 
 And now, the results::
 
@@ -522,7 +560,7 @@ these values are converted to Python long integers instead.
 If you wanted more rows, you could use ``c.fetchmany(n)`` or
 ``c.fetchall()``. These do exactly what you think they do. On
 ``c.fetchmany(n)``, the ``n`` is optional and defaults to
-``c.arraysize``, which is normally 100. Both of these methods return a
+``c.arraysize``, which is normally 1. Both of these methods return a
 sequence of rows, or an empty sequence if there are no more rows.  If
 you use a weird cursor class, the rows themselves might not be tuples.
 
@@ -614,6 +652,33 @@ SSCursor
 
 SSDictCursor
     Like ``SSCursor`` except it returns rows as dictionaries.
+
+
+Embedded Server
+---------------
+
+Instead of connecting to a stand-alone server over the network,
+the embedded server support lets you run a full server right in
+your Python code or application server.
+
+If you have built MySQLdb with embedded server support, there
+are two additional functions you will need to make use of:
+
+  server_init(args, groups)
+    Initialize embedded server. If this client is not linked against
+    the embedded server library, this function does nothing.
+
+    args
+	sequence of command-line arguments
+    groups
+	sequence of groups to use in defaults files
+
+  server_end()
+    Shut down embedded server. If not using an embedded server, this
+    does nothing.
+
+See the MySQL documentation for more information on the embedded
+server.
 
 
 
