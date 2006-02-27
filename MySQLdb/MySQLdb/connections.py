@@ -130,7 +130,16 @@ class Connection(_mysql.connection):
         use_unicode = kwargs.get('use_unicode', 0)
         if kwargs.has_key('use_unicode'):
             del kwargs2['use_unicode']
-                
+
+        client_flag = kwargs.get('client_flag', 0)
+        client_version = [ int(n) for n in _mysql.get_client_info().split('.')[:2] ]
+        if client_version >= (4, 1):
+            client_version |= CLIENT.MULTI_STATEMENTS
+        if client_version >= (5, 0):
+            client_version |= CLIENT.MULTI_RESULTS
+            
+        kwargs2['client_flag'] = client_flag
+    
         super(Connection, self).__init__(*args, **kwargs2)
 
         self.charset = self.character_set_name().split('_')[0]
