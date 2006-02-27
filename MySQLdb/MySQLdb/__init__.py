@@ -43,7 +43,7 @@ from MySQLdb.times import Date, Time, Timestamp, \
     DateFromTicks, TimeFromTicks, TimestampFromTicks
 
 
-STRING    = DBAPISet(FIELD_TYPE.CHAR, FIELD_TYPE.ENUM, FIELD_TYPE.STRING,
+STRING    = DBAPISet(FIELD_TYPE.ENUM, FIELD_TYPE.STRING,
                      FIELD_TYPE.VAR_STRING)
 BINARY    = DBAPISet(FIELD_TYPE.BLOB, FIELD_TYPE.LONG_BLOB,
                      FIELD_TYPE.MEDIUM_BLOB, FIELD_TYPE.TINY_BLOB)
