@@ -132,16 +132,17 @@ class Connection(_mysql.connection):
             del kwargs2['use_unicode']
 
         client_flag = kwargs.get('client_flag', 0)
-        client_version = [ int(n) for n in _mysql.get_client_info().split('.')[:2] ]
+        client_version = tuple([ int(n) for n in _mysql.get_client_info().split('.')[:2] ])
         if client_version >= (4, 1):
-            client_version |= CLIENT.MULTI_STATEMENTS
+            client_flag |= CLIENT.MULTI_STATEMENTS
         if client_version >= (5, 0):
-            client_version |= CLIENT.MULTI_RESULTS
+            client_flag |= CLIENT.MULTI_RESULTS
             
         kwargs2['client_flag'] = client_flag
-    
+
         super(Connection, self).__init__(*args, **kwargs2)
 
+        self._server_version = tuple([ int(n) for n in self.get_server_info().split('.')[:2] ])
         self.charset = self.character_set_name().split('_')[0]
 
         if use_unicode:
@@ -209,7 +210,19 @@ class Connection(_mysql.connection):
                 return atoi(info.split()[-1])
             else:
                 return 0
-            
+
+    def show_warnings(self):
+        """Return detailed information about warnings as a
+        sequence of tuples of (Level, Code, Message). This
+        is only supported in MySQL-4.1 and up. If your server
+        is an earlier version, an empty sequence is returned."""
+        if self._server_version < (4,1): return ()
+        self.query("SHOW WARNINGS")
+        r = self.store_result()
+        warnings = r.fetch_row(0)
+        return [ (level.tostring(), int(code), message.tostring())
+                 for level, code, message in warnings ]
+    
     Warning = Warning
     Error = Error
     InterfaceError = InterfaceError
