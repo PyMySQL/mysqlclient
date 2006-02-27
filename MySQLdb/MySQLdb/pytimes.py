@@ -50,8 +50,8 @@ def TimeDelta_or_None(s):
     from math import modf
     try:
         h, m, s = s.split(':')
-        td = timedelta(hours=int(h), minutes=int(m), seconds=int(s),
-                       microseconds=int(modf(float(s))[0])*1000000)
+        td = timedelta(hours=int(h), minutes=int(m), seconds=int(float(s)),
+                       microseconds=int(modf(float(s))[0]*1000000))
         if h < 0:
             return -td
         else:
@@ -63,8 +63,8 @@ def Time_or_None(s):
     from math import modf
     try:
         h, m, s = s.split(':')
-        return time(hour=int(h), minute=int(m), second=int(s),
-                    microsecond=int(modf(float(s))[0])*1000000)
+        return time(hour=int(h), minute=int(m), second=int(float(s)),
+                    microsecond=int(modf(float(s))[0]*1000000))
     except:
         return None
 
