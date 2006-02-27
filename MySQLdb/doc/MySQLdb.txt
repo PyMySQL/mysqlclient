@@ -488,11 +488,6 @@ close()
       close the cursor when you are done with it and before creating a
       new one.
 
-insert_id()
-      Returns the last ``AUTO_INCREMENT`` field value inserted
-      into the database. Non-standard; use the lastrowid attribute
-      instead (defined by PEP-249_).
-
 info()
       Returns some information about the last query. Normally
       you don't need to check this. If there are any MySQL 
