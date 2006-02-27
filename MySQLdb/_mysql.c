@@ -149,13 +149,31 @@ _mysql_Exception(_mysql_ConnectionObject *c)
 #ifdef ER_PRIMARY_CANT_HAVE_NULL
 	case ER_PRIMARY_CANT_HAVE_NULL:
 #endif
+#ifdef ER_NO_REFERENCED_ROW
+	case ER_NO_REFERENCED_ROW:
+#endif
+#ifdef ER_ROW_IS_REFERENCED
+	case ER_ROW_IS_REFERENCED:
+#endif
+#ifdef ER_CANNOT_ADD_FOREIGN
+	case ER_CANNOT_ADD_FOREIGN:
+#endif
 		e = _mysql_IntegrityError;
 		break;
 #ifdef ER_WARNING_NOT_COMPLETE_ROLLBACK
 	case ER_WARNING_NOT_COMPLETE_ROLLBACK:
+#endif
+#ifdef ER_NOT_SUPPORTED_YET
+	case ER_NOT_SUPPORTED_YET:
+#endif
+#ifdef ER_FEATURE_DISABLED
+	case ER_FEATURE_DISABLED:
+#endif
+#ifdef ER_UNKNOWN_STORAGE_ENGINE
+	case ER_UNKNOWN_STORAGE_ENGINE:
+#endif
 		e = _mysql_NotSupportedError;
 		break;
-#endif
 	default:
 		if (merr < 1000)
 			e = _mysql_InternalError;
