@@ -34,7 +34,7 @@ MySQL.connect().
 
 from _mysql import string_literal, escape_sequence, escape_dict, escape, NULL
 from constants import FIELD_TYPE, FLAG
-from sets import BaseSet
+from sets import BaseSet, Set
 from times import *
 import types
 import array
@@ -42,8 +42,7 @@ import array
 def Bool2Str(s, d): return str(int(s))
 
 def Str2Set(s):
-    values = s.split(',')
-    return Set(*values)
+    return Set(s.split(','))
 
 def Set2Str(s, d):
     return string_literal(','.join(s), d)
@@ -127,7 +126,7 @@ conversions = {
     types.BooleanType: Bool2Str,
     DateTimeType: DateTime2literal,
     DateTimeDeltaType: DateTimeDelta2literal,
-    BaseSet: Set2Str,
+    Set: Set2Str,
     FIELD_TYPE.TINY: int,
     FIELD_TYPE.SHORT: int,
     FIELD_TYPE.LONG: long,
