@@ -17,8 +17,8 @@ config.read(['metadata.cfg', 'site.cfg'])
 metadata = dict(config.items('metadata'))
 options = dict(config.items('options'))
 
-metadata['py_modules'] = filter(None, metadata['py_modules'].split())
-metadata['classifiers'] = filter(None, metadata['classifiers'].split())
+metadata['py_modules'] = filter(None, metadata['py_modules'].split('\n'))
+metadata['classifiers'] = filter(None, metadata['classifiers'].split('\n'))
 
 def mysql_config(what):
     from os import popen
