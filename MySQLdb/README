@@ -2,7 +2,8 @@
 MySQLdb Installation
 ====================
 
-
+.. contents::
+..
 
 Prerequisites
 -------------
@@ -11,12 +12,10 @@ Prerequisites
 
   * http://www.python.org/
 
-  * Versions lower than 2.2 WON'T WORK.
+  * Versions lower than 2.3 WON'T WORK.
 
-  * 2.2.x MIGHT work, or have partial functionality.
-
-  * 2.4 is tested and works.
-
+  * 2.4 is the primary test environment.
+  
   * Red Hat Linux:
 
     - Make sure you have the Python development headers and libraries
@@ -30,17 +29,16 @@ Prerequisites
 
   * Versions lower than 3.22.19 might not work.
 
-  * MySQL-3.22 is deprecated in favor of 3.23, but still supported.
+  * MySQL-3.22 might work but isn't supported anymore. It's very old.
 
-  * MySQL-3.23 is supported, but slightly deprecated.
+  * MySQL-3.23 ought to work, but it's pretty elderly.
 
-  * MySQL-4.0 is supported.
+  * MySQL-4.0 is supported, but not tested and slightly discouraged.
 
-  * MySQL-4.1 is mostly supported; the new prepared statements API
-    is not yet supported, and probably won't be until MySQLdb-1.3 or
-    2.0.
+  * MySQL-4.1 is supported and tested. The prepared statements API is not
+    supported, and won't be until MySQLdb-1.3 or 2.0.
 
-  * MySQL-5.0 and newer are not currently supported, but might work.
+  * MySQL-5.0 is supported and tested, including stored procedures.
       
   * MaxDB, formerly known as SAP DB (and maybe Adabas D?), is a
     completely different animal. Use the sapdb.sql module that comes
@@ -64,10 +62,7 @@ Prerequisites
 
   * Transactions (particularly InnoDB tables) are supported for
     MySQL-3.23 and up. You may need a special package from your vendor
-    with this support turned on. If you have Gentoo Linux, set either
-    of the berkdb or innodb USE flags on your server, and comment out
-    "skip-innodb" in /etc/mysql/my.cnf for InnoDB table support.
-      
+    with this support turned on.
 
 +  zlib
 
@@ -82,7 +77,9 @@ Prerequisites
 + openssl
 
   * May be needed for MySQL-4.0 or newer, depending on compilation
-    options.
+    options. If you need it, you probably already have it.
+    
+    - you may need openssl-devel on some platforms
 
 + C compiler
 
@@ -106,39 +103,34 @@ options, and should work as is on any POSIX-like platform, so long as
 mysql_config is in your path.
 
 Depending on which version of MySQL you have, you may have the option
-of using three different client libraries:
+of using three different client libraries. To select the client library,
+edit the [options] section of site.cfg:
 
-mysqlclient
-	 mostly but not guaranteed thread-safe
+    embedded
+        use embedded server library (libmysqld) if True; otherwise use
+	one of the client libraries (default).
 
-mysqlclient_r
-	thread-safe, use if you can
+    threadsafe
+        thread-safe client library (libmysqlclient_r) if True (default);
+	otherwise use non-thread-safe (libmysqlclient). You should
+	always use the thread-safe library if you have the option;
+	otherwise you *may* have problems.
 
-mysqld
-	embedded server
-
-mysqlclient_r is used by default. To use one of the others, set
-the environment variable mysqlclient to the name of the library
-you want to use. In a Bourne-style shell, use::
-
-    $ export mysqlclient=mysqlclient
-
-Only do this if you don't have the thread-safe library (mysqlclient_r)
-or you want to use the embedded server (mysqld).
+    static
+        if True, try to link against a static library; otherwise link
+	against dynamic libraries (default). You may need static linking
+	to use the embedded server.
+	
 
 Finally, putting it together::
 
-  $ tar xfz MySQL-python-1.2.0.tar.gz
-  $ cd MySQL-python-1.2.0
+  $ tar xfz MySQL-python-1.2.1.tar.gz
+  $ cd MySQL-python-1.2.1
+  $ # edit site.cfg if necessary
   $ python setup.py build
-  $ su # or use sudo
-  # python setup.py install
+  $ sudo python setup.py install # or su first
 
-NOTE: You must export environment variables for setup.py to see them.
-Depending on what shell you prefer, you may need to use "export" or
-"set -x" (bash and other Bourne-like shells) or "setenv" (csh-like
-shells).
-  
+
 Windows
 .......
 
@@ -158,6 +150,10 @@ which is the path to your MySQL installation. In theory, it would be
 possible to get this information out of the registry, but like I said,
 I don't do Windows, but I'll accept a patch that does this.
 
+On Windows, you will definitely have to edit site.cfg since there is
+no mysql_config in the MySQL package.
+
+
 Zope
 ....
 
@@ -165,12 +161,6 @@ If you are using a binary package of Zope, you need run setup.py with
 the python executable that came with Zope. Otherwise, you'll install
 into the wrong Python tree and Zope (ZMySQLDA) will not be able to
 find _mysql.
-
-With zope.org's Zope-2.5.1-linux2-x86 binary tarball, you'd do
-something like this::
-
-    $ export ZOPEBIN=".../Zope-2.5.1-linux2-x86/bin" # wherever you unpacked it
-    $ $ZOPEBIN/python setup.py install # builds and installs
 
 
 Binary Packages
@@ -187,17 +177,18 @@ RPMs
 If you prefer to install RPMs, you can use the bdist_rpm command with
 setup.py. This only builds the RPM; it does not install it. You may
 want to use the --python=XXX option, where XXX is the name of the
-Python executable, i.e. python, python2, python2.1; the default is
+Python executable, i.e. python, python2, python2.4; the default is
 python. Using this will incorporate the Python executable name into
 the package name for the RPM so you have install the package multiple
-times if you need to support more than one version of Python.
+times if you need to support more than one version of Python. You can
+also set this in setup.cfg.
 
 
 Red Hat Linux
 .............
 
 MySQL-python is pre-packaged in Red Hat Linux 7.x and newer. This
-likely includes Fedora Core and Red Hat Enterprise Linux. You can also
+includes Fedora Core and Red Hat Enterprise Linux. You can also
 build your own RPM packages as described above.
 
 
@@ -208,13 +199,22 @@ Packaged as `python-mysqldb`_::
 
 	# apt-get install python-mysqldb
 
+Or use Synaptic.
+
 .. _`python-mysqldb`: http://packages.debian.org/python-mysqldb
+
+
+Ubuntu
+......
+
+Same as with Debian.
 
 
 Gentoo Linux
 ............
 
-Packaged as `mysql-python`_. Gentoo is also my development platform::
+Packaged as `mysql-python`_. Gentoo is also my preferred development platform,
+though I have also done some with Ubuntu lately. ::
 
       # emerge sync
       # emerge mysql-python
