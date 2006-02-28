@@ -61,6 +61,11 @@ else:
     libs = mysql_config("libs")
     client = "mysqlclient"
 
+name = "MySQL-%s" % os.path.basename(sys.executable)
+if enabled('embedded'):
+    name = name + "-embedded"
+metadata['name'] = name
+
 library_dirs = [ dequote(i[2:]) for i in libs if i.startswith("-L") ]
 libraries = [ dequote(i[2:]) for i in libs if i.startswith("-l") ]
 
