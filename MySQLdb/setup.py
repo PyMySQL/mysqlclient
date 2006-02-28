@@ -52,7 +52,7 @@ include_dirs = [ dequote(i[2:])
 extra_objects = []
 static = enabled('static')
 if enabled('embedded'):
-    libs = mysql_config("libmysqld_libs")
+    libs = mysql_config("libmysqld-libs")
     client = "mysqld"
 elif enabled('threadsafe'):
     libs = mysql_config("libs_r")
