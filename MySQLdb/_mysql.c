@@ -1,5 +1,3 @@
-#define version_info "(1,2,1,'gamma',3)"
-#define __version__ "1.2.1c3"
 /*
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

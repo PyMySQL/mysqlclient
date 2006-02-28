@@ -13,31 +13,20 @@ MySQLdb.converters module.
 
 """
 
-__author__ = "Andy Dustman <andy@dustman.net>"
 __revision__ = """$Revision$"""[11:-2]
-version_info = (
-    1,
-    2,
-    1,
-    "gamma",
-    3)
-if version_info[3] == "final": __version__ = "%d.%d.%d" % version_info[:3]
-else: __version__ = "%d.%d.%d%1.1s%d" % version_info[:5]
+from release import __version__, version_info, __author__
 
 import _mysql
 
-v = getattr(_mysql, 'version_info', None)
-if version_info != v:
-    raise ImportError, "this is MySQLdb version %s, but _mysql is version %s" %\
-          (version_info, v)
-del v
+if version_info != _mysql.version_info:
+    raise ImportError, "this is MySQLdb version %s, but _mysql is version %r" %\
+          (version_info, _mysql.version_info)
 
 threadsafety = 1
 apilevel = "2.0"
 paramstyle = "format"
 
 from _mysql import *
-#from MySQLdb.sets import DBAPISet, Set
 from MySQLdb.constants import FIELD_TYPE
 from MySQLdb.times import Date, Time, Timestamp, \
     DateFromTicks, TimeFromTicks, TimestampFromTicks

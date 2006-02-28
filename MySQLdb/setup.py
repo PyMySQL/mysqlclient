@@ -70,6 +70,17 @@ if static:
     extra_objects.append(os.path.join(
         library_dirs[0],'lib%s.a' % client))
 
+extra_compile_args.append("-Dversion_info=\"%s\"" % metadata['version_info'])
+extra_compile_args.append("-D__version__=\"%s\"" % metadata['version'])
+
+rel = open("MySQLdb/release.py",'w')
+rel.write("""
+__author__ = "%(author)s <%(author_email)s>"
+version_info = %(version_info)s
+__version__ = "%(version)s"
+""" % metadata)
+rel.close()
+
 ext_mysql_metadata = dict(
     name="_mysql",
     include_dirs=include_dirs,
