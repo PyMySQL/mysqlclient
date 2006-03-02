@@ -86,6 +86,8 @@ __version__ = "%(version)s"
 """ % metadata)
 rel.close()
 
+del metadata['version_info']
+
 ext_mysql_metadata = dict(
     name="_mysql",
     include_dirs=include_dirs,

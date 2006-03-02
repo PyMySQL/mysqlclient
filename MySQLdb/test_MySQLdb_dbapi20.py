@@ -140,11 +140,62 @@ class test_MySQLdb(dbapi20.DatabaseAPI20Test):
             con.close()
 
     def test_callproc(self):
+        pass # performed in test_MySQL_capabilities
+
+    def help_nextset_setUp(self,cur):
+        ''' Should create a procedure called deleteme
+            that returns two result sets, first the 
+	    number of rows in booze then "name from booze"
+        '''
+        sql="""
+           create procedure deleteme()
+           begin
+               select count(*) from %(tp)sbooze;
+               select name from %(tp)sbooze;
+           end
+        """ % dict(tp=self.table_prefix)
+        cur.execute(sql)
+
+    def help_nextset_tearDown(self,cur):
+        'If cleaning up is needed after nextSetTest'
+        cur.execute("drop procedure deleteme")
+
+    def test_nextset(self):
+        from warnings import warn
+        con = self._connect()
         try:
-            dbapi20.DatabaseAPI20Test.test_callproc(self)
-        except MySQLdb.ProgrammingError:
-            # not supported by server
-            pass
+            cur = con.cursor()
+            if not hasattr(cur,'nextset'):
+                return
+
+            try:
+                self.executeDDL1(cur)
+                sql=self._populate()
+                for sql in self._populate():
+                    cur.execute(sql)
+
+                self.help_nextset_setUp(cur)
+
+                cur.callproc('deleteme')
+                numberofrows=cur.fetchone()
+                assert numberofrows[0]== len(self.samples)
+                assert cur.nextset()
+                names=cur.fetchall()
+                assert len(names) == len(self.samples)
+                s=cur.nextset()
+                if s:
+                    empty = cur.fetchall()
+                    self.assertEquals(len(empty), 0,
+                                      "non-empty result set after other result sets")
+                    warn("Incompatibility: MySQL returns an empty result set for the CALL itself",
+                         Warning)
+                #assert s == None,'No more return sets, should return None'
+            finally:
+                self.help_nextset_tearDown(cur)
+
+        finally:
+            con.close()
+
     
 if __name__ == '__main__':
     unittest.main()
