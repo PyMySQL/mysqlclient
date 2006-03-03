@@ -96,6 +96,11 @@ class Connection(_mysql.connection):
           normal strings. Unicode objects will always be encoded to
           the connection's character set regardless of this setting.
 
+        charset
+          If supplied, the connection character set will be changed
+          to this character set (MySQL-4.1 and newer). This implies
+          use_unicode=True.
+          
         client_flag
           integer, flags to use or 0
           (see MySQL docs or constants/CLIENTS.py)
@@ -127,10 +132,18 @@ class Connection(_mysql.connection):
             del kwargs2['cursorclass']
         else:
             self.cursorclass = self.default_cursor
-        use_unicode = kwargs.get('use_unicode', 0)
+
+        charset = kwargs.get('charset', '')
+        if kwargs.has_key('charset'):
+            del kwargs2['charset']
+        if charset:
+            use_unicode = True
+        else:
+            use_unicode = False
+        use_unicode = kwargs.get('use_unicode', use_unicode)
         if kwargs.has_key('use_unicode'):
             del kwargs2['use_unicode']
-
+            
         client_flag = kwargs.get('client_flag', 0)
         client_version = tuple([ int(n) for n in _mysql.get_client_info().split('.')[:2] ])
         if client_version >= (4, 1):
@@ -143,11 +156,20 @@ class Connection(_mysql.connection):
         super(Connection, self).__init__(*args, **kwargs2)
 
         self._server_version = tuple([ int(n) for n in self.get_server_info().split('.')[:2] ])
-        self.charset = self.character_set_name().split('_')[0]
+        self.charset = self.character_set_name()
+
+        if charset and self.charset != charset:
+            if self._server_version < (4, 1):
+                raise UnsupportedError, "server is too old to change charset"
+            self.set_character_set(charset)
+            self.charset = charset
 
         if use_unicode:
             def u(s):
-                return s.decode(self.charset)
+                # can't refer to self.character_set_name()
+                # because this results in reference cycles
+                # and memory leaks
+                return s.decode(charset)
             conv[FIELD_TYPE.STRING].insert(-1, (None, u))
             conv[FIELD_TYPE.VAR_STRING].insert(-1, (None, u))
             conv[FIELD_TYPE.BLOB].insert(-1, (None, u))
@@ -211,6 +233,17 @@ class Connection(_mysql.connection):
             else:
                 return 0
 
+    if not hasattr(_mysql.connection, 'set_character_set'):
+
+        def set_character_set(self, charset):
+            """Set the connection character set. This version
+            uses the SET NAMES <charset> SQL statement.
+
+            You probably shouldn't try to change character sets
+            after opening the connection."""
+            self.query('SET NAMES %s' % charset)
+            self.store_result()
+            
     def show_warnings(self):
         """Return detailed information about warnings as a
         sequence of tuples of (Level, Code, Message). This

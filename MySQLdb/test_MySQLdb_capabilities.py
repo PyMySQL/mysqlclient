@@ -11,7 +11,7 @@ class test_MySQLdb(test_capabilities.DatabaseTest):
     db_module = MySQLdb
     connect_args = ()
     connect_kwargs = dict(db='test', read_default_file='~/.my.cnf',
-                          use_unicode=True)
+                          charset='utf8')
     create_table_extra = "ENGINE=INNODB CHARACTER SET UTF8"
 
     def quote_identifier(self, ident):
