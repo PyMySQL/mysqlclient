@@ -42,7 +42,7 @@ import array
 def Bool2Str(s, d): return str(int(s))
 
 def Str2Set(s):
-    return Set(s.split(','))
+    return Set([ i for i in s.split(',') if i ])
 
 def Set2Str(s, d):
     return string_literal(','.join(s), d)
@@ -147,11 +147,11 @@ conversions = {
         (None, None),
     ],
     FIELD_TYPE.STRING: [
-        (FLAG.BINARY, char_array),
+        (FLAG.SET, Str2Set),
         (None, None),
     ],
     FIELD_TYPE.VAR_STRING: [
-        (FLAG.BINARY, char_array),
+        (FLAG.SET, Str2Set),
         (None, None),
     ],
     }

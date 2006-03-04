@@ -37,7 +37,6 @@ class test_MySQLdb(test_capabilities.DatabaseTest):
             generator)
 
     def test_SET(self):
-	if True: return
         things = 'ash birch cedar larch pine'.split()
         def generator(row, col):
             from sets import Set
@@ -46,7 +45,6 @@ class test_MySQLdb(test_capabilities.DatabaseTest):
                 if (row >> i) & 1:
                     s.add(things[i])
             return s
-        self.debug = True
         self.check_data_integrity(
             ('col1 SET(%s)' % ','.join(["'%s'" % t for t in things]),),
             generator)
