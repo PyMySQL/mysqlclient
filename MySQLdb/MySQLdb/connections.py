@@ -253,7 +253,7 @@ class Connection(_mysql.connection):
         self.query("SHOW WARNINGS")
         r = self.store_result()
         warnings = r.fetch_row(0)
-        return [ (level.tostring(), int(code), message.tostring())
+        return [ (level, code, message)
                  for level, code, message in warnings ]
     
     Warning = Warning

@@ -31,7 +31,7 @@ def mysql_config(what):
 # of mysql_config
 
 def dequote(s):
-    if (s[0] == "'" or s[0] == '"') and (s[0] == s[-1]):
+    if s[0] in "\"'" and s[0] == s[-1]:
         s = s[1:-1]
     return s
 
@@ -44,10 +44,6 @@ def enabled(option):
         return False
     else:
         raise Abort, "Unknown value %s for option %s" % (value, option)
-
-include_dirs = [ dequote(i[2:])
-                 for i in mysql_config('include')
-                 if i.startswith('-i') ]
 
 extra_objects = []
 static = enabled('static')
@@ -69,7 +65,16 @@ metadata['name'] = name
 library_dirs = [ dequote(i[2:]) for i in libs if i.startswith("-L") ]
 libraries = [ dequote(i[2:]) for i in libs if i.startswith("-l") ]
 
-extra_compile_args = mysql_config("cflags")
+removable_compile_args = '-I -L -l'.split()
+extra_compile_args = [ i for i in mysql_config("cflags")
+                       if i[:2] not in removable_compile_args ]
+include_dirs = [ dequote(i[2:])
+                 for i in mysql_config('include')
+                 if i.startswith('-I') ]
+if not include_dirs: # fix for MySQL-3.23
+    include_dirs = [ dequote(i[2:])
+		     for i in mysql_config('cflags')
+		     if i.startswith('-I') ]
 
 if static:
     extra_objects.append(os.path.join(

@@ -97,11 +97,9 @@ class DatabaseTest(unittest.TestCase):
 	insert_statement = ('INSERT INTO %s VALUES (%s)' % 
 			    (self.table,
 			     ','.join(['%s'] * len(columndefs))))
-	for i in range(self.rows):
-	    data = []
-	    for j in range(len(columndefs)):
-		data.append(generator(i,j))
-	    self.cursor.execute(insert_statement,tuple(data))
+        data = [ [ generator(i,j) for j in range(len(columndefs)) ]
+                 for i in range(self.rows) ]
+        self.cursor.executemany(insert_statement, data)
 	# verify
         self.connection.commit()
 	self.cursor.execute('select * from %s' % self.table)
@@ -121,6 +119,50 @@ class DatabaseTest(unittest.TestCase):
                             (self.table, 0))
         l = self.cursor.fetchall()
         self.failUnless(len(l) == 1, "ROLLBACK didn't work")
+	self.cursor.execute('drop table %s' % (self.table))
+
+    def test_truncation(self):
+        columndefs = ( 'col1 INT', 'col2 VARCHAR(255)')
+        def generator(row, col):
+            if col == 0: return row
+            else: return ('%i' % (row%10))*((255-self.rows/2)+row)
+        self.create_table(columndefs)
+	insert_statement = ('INSERT INTO %s VALUES (%s)' % 
+			    (self.table,
+			     ','.join(['%s'] * len(columndefs))))
+
+        try:
+            self.cursor.execute(insert_statement, (0, '0'*256))
+        except Warning:
+            if self.debug: print self.cursor.messages
+        else:
+            self.fail("Over-long column did not generate warnings with single insert")
+
+        self.connection.rollback()
+        
+        try:
+            for i in range(self.rows):
+                data = []
+                for j in range(len(columndefs)):
+                    data.append(generator(i,j))
+                self.cursor.execute(insert_statement,tuple(data))
+        except Warning:
+            if self.debug: print self.cursor.messages
+        else:
+            self.fail("Over-long columns did not generate warnings with execute()")
+
+        self.connection.rollback()
+        
+        try:
+            data = [ [ generator(i,j) for j in range(len(columndefs)) ]
+                     for i in range(self.rows) ]
+            self.cursor.executemany(insert_statement, data)
+        except Warning:
+            if self.debug: print self.cursor.messages
+        else:
+            self.fail("Over-long columns did not generate warnings with executemany()")
+
+        self.connection.rollback()
 	self.cursor.execute('drop table %s' % (self.table))
 
     def test_CHAR(self):

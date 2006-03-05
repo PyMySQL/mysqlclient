@@ -16,10 +16,20 @@ class BaseCursor(object):
     
     """A base for Cursor classes. Useful attributes:
     
-    description -- DB API 7-tuple describing columns in last query
-    arraysize -- default number of rows fetchmany() will fetch
+    description
+        A tuple of DB API 7-tuples describing the columns in
+        the last executed query; see PEP-249 for details.
+
+    description_flags
+        Tuple of column flags for last query, one entry per column
+        in the result set. Values correspond to those in
+        MySQLdb.constants.FLAG. See MySQL documentation (C API)
+        for more information. Non-standard extension.
     
-    See the MySQL docs for more information."""
+    arraysize
+        default number of rows fetchmany() will fetch
+
+    """
 
     from _mysql_exceptions import MySQLError, Warning, Error, InterfaceError, \
          DatabaseError, DataError, OperationalError, IntegrityError, \
@@ -28,6 +38,7 @@ class BaseCursor(object):
     def __init__(self, connection):
         self.connection = connection
         self.description = None
+        self.description_flags = None
         self.rowcount = -1
         self.arraysize = 1
         self._executed = None
@@ -95,6 +106,7 @@ class BaseCursor(object):
         self.rowcount = db.affected_rows()
         self.rownumber = 0
         self.description = self._result and self._result.describe() or None
+        self.description_flags = self._result and self._result.field_flags() or None
         self.lastrowid = db.insert_id()
         self._warnings = db.warning_count()
         self._info = db.info()
