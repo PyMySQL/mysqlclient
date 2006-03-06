@@ -349,6 +349,15 @@ connect(parameters...)
 
 	    *This must be a keyword parameter.*
 
+	 sql_mode
+	    If present, the session SQL mode will be set to the given
+	    string. For more information on sql_mode, see the MySQL
+	    documentation. Only available for 4.1 and newer servers.
+
+	    If not present, the session SQL mode will be unchanged.
+
+	    *This must be a keyword parameter.*
+
 	 ssl
 	    This parameter takes a dictionary or mapping, where the
 	    keys are parameter names used by the mysql_ssl_set_ MySQL

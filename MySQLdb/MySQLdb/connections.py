@@ -100,6 +100,11 @@ class Connection(_mysql.connection):
           If supplied, the connection character set will be changed
           to this character set (MySQL-4.1 and newer). This implies
           use_unicode=True.
+
+        sql_mode
+          If supplied, the session SQL mode will be changed to this
+          setting (MySQL-4.1 and newer). For more details and legal
+          values, see the MySQL documentation.
           
         client_flag
           integer, flags to use or 0
