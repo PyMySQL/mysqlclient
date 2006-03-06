@@ -140,12 +140,32 @@ _mysql_Exception(_mysql_ConnectionObject *c)
 #endif
 		e = _mysql_ProgrammingError;
 		break;
-	case ER_DUP_ENTRY:
-#ifdef ER_DUP_UNIQUE
-	case ER_DUP_UNIQUE:
+#ifdef WARN_DATA_TRUNCATED
+	case WARN_DATA_TRUNCATED:
+#ifdef WARN_NULL_TO_NOTNULL
+	case WARN_NULL_TO_NOTNULL:
+#endif
+#ifdef ER_WARN_DATA_OUT_OF_RANGE
+	case ER_WARN_DATA_OUT_OF_RANGE:
+#endif
+#ifdef ER_NO_DEFAULT
+	case ER_NO_DEFAULT:
 #endif
 #ifdef ER_PRIMARY_CANT_HAVE_NULL
 	case ER_PRIMARY_CANT_HAVE_NULL:
+#endif
+#ifdef ER_DATA_TOO_LONG
+	case ER_DATA_TOO_LONG:
+#endif
+#ifdef ER_DATETIME_FUNCTION_OVERFLOW
+	case ER_DATETIME_FUNCTION_OVERFLOW:
+#endif
+		e = _mysql_DataError;
+		break;
+#endif
+	case ER_DUP_ENTRY:
+#ifdef ER_DUP_UNIQUE
+	case ER_DUP_UNIQUE:
 #endif
 #ifdef ER_NO_REFERENCED_ROW
 	case ER_NO_REFERENCED_ROW:

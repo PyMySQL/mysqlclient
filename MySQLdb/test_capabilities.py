@@ -135,8 +135,10 @@ class DatabaseTest(unittest.TestCase):
             self.cursor.execute(insert_statement, (0, '0'*256))
         except Warning:
             if self.debug: print self.cursor.messages
+        except self.connection.DataError:
+            pass
         else:
-            self.fail("Over-long column did not generate warnings with single insert")
+            self.fail("Over-long column did not generate warnings/exception with single insert")
 
         self.connection.rollback()
         
@@ -148,8 +150,10 @@ class DatabaseTest(unittest.TestCase):
                 self.cursor.execute(insert_statement,tuple(data))
         except Warning:
             if self.debug: print self.cursor.messages
+        except self.connection.DataError:
+            pass
         else:
-            self.fail("Over-long columns did not generate warnings with execute()")
+            self.fail("Over-long columns did not generate warnings/exception with execute()")
 
         self.connection.rollback()
         
@@ -159,8 +163,10 @@ class DatabaseTest(unittest.TestCase):
             self.cursor.executemany(insert_statement, data)
         except Warning:
             if self.debug: print self.cursor.messages
+        except self.connection.DataError:
+            pass
         else:
-            self.fail("Over-long columns did not generate warnings with executemany()")
+            self.fail("Over-long columns did not generate warnings/exception with executemany()")
 
         self.connection.rollback()
 	self.cursor.execute('drop table %s' % (self.table))

@@ -144,6 +144,10 @@ class Connection(_mysql.connection):
         if kwargs.has_key('use_unicode'):
             del kwargs2['use_unicode']
             
+        sql_mode = kwargs.get('sql_mode', '')
+        if kwargs.has_key('sql_mode'):
+            del kwargs2['sql_mode']
+
         client_flag = kwargs.get('client_flag', 0)
         client_version = tuple([ int(n) for n in _mysql.get_client_info().split('.')[:2] ])
         if client_version >= (4, 1):
@@ -156,13 +160,14 @@ class Connection(_mysql.connection):
         super(Connection, self).__init__(*args, **kwargs2)
 
         self._server_version = tuple([ int(n) for n in self.get_server_info().split('.')[:2] ])
-        self.charset = self.character_set_name()
 
-        if charset and self.charset != charset:
-            if self._server_version < (4, 1):
-                raise UnsupportedError, "server is too old to change charset"
+        self.charset = self.character_set_name()
+        if charset:
             self.set_character_set(charset)
             self.charset = charset
+
+        if sql_mode:
+            self.set_sql_mode(sql_mode)
 
         if use_unicode:
             def u(s):
@@ -241,9 +246,18 @@ class Connection(_mysql.connection):
 
             You probably shouldn't try to change character sets
             after opening the connection."""
+            if self._server_version < (4, 1):
+                raise UnsupportedError, "server is too old to set charset"
+            if self.charset == charset: return
             self.query('SET NAMES %s' % charset)
             self.store_result()
-            
+
+    def set_sql_mode(self, sql_mode):
+        if self._server_version < (4, 1):
+            raise UnsupportedError, "server is too old to set sql_mode"
+        self.query("SET SESSION sql_mode='%s'" % sql_mode)
+        self.store_result()
+        
     def show_warnings(self):
         """Return detailed information about warnings as a
         sequence of tuples of (Level, Code, Message). This
@@ -253,8 +267,7 @@ class Connection(_mysql.connection):
         self.query("SHOW WARNINGS")
         r = self.store_result()
         warnings = r.fetch_row(0)
-        return [ (level, code, message)
-                 for level, code, message in warnings ]
+        return warnings
     
     Warning = Warning
     Error = Error
