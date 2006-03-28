@@ -13,21 +13,22 @@ class test_MySQLdb(test_capabilities.DatabaseTest):
     connect_kwargs = dict(db='test', read_default_file='~/.my.cnf',
                           charset='utf8', sql_mode="ANSI,STRICT_TRANS_TABLES,TRADITIONAL")
     create_table_extra = "ENGINE=INNODB CHARACTER SET UTF8"
-
+    leak_test = True
+    
     def quote_identifier(self, ident):
         return "`%s`" % ident
 
     def test_TIME(self):
         from datetime import timedelta
-	def generator(row,col):
+        def generator(row,col):
             return timedelta(0, row*8000)
         self.check_data_integrity(
-		 ('col1 TIME',),
-		 generator)
+                 ('col1 TIME',),
+                 generator)
 
     def test_TINYINT(self):
-	# Number data
-	def generator(row,col):
+        # Number data
+        def generator(row,col):
             v = (row*row) % 256
             if v > 127:
                 v = v-256
@@ -76,5 +77,9 @@ class test_MySQLdb(test_capabilities.DatabaseTest):
 
         
 if __name__ == '__main__':
+    if test_MySQLdb.leak_test:
+        import gc
+        gc.enable()
+        gc.set_debug(gc.DEBUG_LEAK)
     unittest.main()
     print '''"Huh-huh, he said 'unit'." -- Butthead'''

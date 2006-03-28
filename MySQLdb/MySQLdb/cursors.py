@@ -36,7 +36,9 @@ class BaseCursor(object):
          InternalError, ProgrammingError, NotSupportedError
 
     def __init__(self, connection):
-        self.connection = connection
+        from weakref import proxy
+    
+        self.connection = proxy(connection)
         self.description = None
         self.description_flags = None
         self.rowcount = -1
@@ -68,7 +70,7 @@ class BaseCursor(object):
     def _warning_check(self):
         from warnings import warn
         if self._warnings:
-            warnings = self.connection.show_warnings()
+            warnings = self._get_db().show_warnings()
             if warnings:
                 # This is done in two loops in case
                 # Warnings are set to raise exceptions.
@@ -101,7 +103,7 @@ class BaseCursor(object):
     def _post_get_result(self): pass
     
     def _do_get_result(self):
-        db = self.connection
+        db = self._get_db()
         self._result = self._get_result()
         self.rowcount = db.affected_rows()
         self.rownumber = 0
@@ -139,9 +141,11 @@ class BaseCursor(object):
         from types import ListType, TupleType
         from sys import exc_info
         del self.messages[:]
-        query = query.encode(self.connection.charset)
+        db = self._get_db()
+        charset = db.character_set_name()
+        query = query.encode(charset)
         if args is not None:
-            query = query % self.connection.literal(args)
+            query = query % db.literal(args)
         try:
             r = self._query(query)
         except TypeError, m:
@@ -180,6 +184,7 @@ class BaseCursor(object):
 
         """
         del self.messages[:]
+        db = self._get_db()
         if not args: return
         m = insert_values.search(query)
         if not m:
@@ -188,9 +193,10 @@ class BaseCursor(object):
                 r = r + self.execute(query, a)
             return r
         p = m.start(1)
-        query = query.encode(self.connection.charset)
+        charset = db.character_set_name()
+        query = query.encode(charset)
         qv = query[p:]
-        qargs = self.connection.literal(args)
+        qargs = db.literal(args)
         try:
             q = [ query % qargs[0] ]
             q.extend([ qv % a for a in qargs[1:] ])
@@ -243,11 +249,12 @@ class BaseCursor(object):
 
         from types import UnicodeType
         db = self._get_db()
+        charset = db.character_set_name()
         for index, arg in enumerate(args):
             q = "SET @_%s_%d=%s" % (procname, index,
                                          db.literal(arg))
             if type(q) is UnicodeType:
-                q = q.encode(db.charset)
+                q = q.encode(charset)
             self._query(q)
             self.nextset()
             
@@ -255,7 +262,7 @@ class BaseCursor(object):
                              ','.join(['@_%s_%d' % (procname, i)
                                        for i in range(len(args))]))
         if type(q) is UnicodeType:
-            q = q.encode(db.charset)
+            q = q.encode(charset)
         self._query(q)
         self._warning_check()
         return args

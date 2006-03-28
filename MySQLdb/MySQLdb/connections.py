@@ -30,6 +30,8 @@ def defaulterrorhandler(connection, cursor, errorclass, errorvalue):
         cursor.messages.append(error)
     else:
         connection.messages.append(error)
+    del cursor
+    del connection
     raise errorclass, errorvalue
 
 
@@ -125,33 +127,30 @@ class Connection(_mysql.connection):
         """
         from constants import CLIENT, FIELD_TYPE
         from converters import conversions
+        from weakref import proxy, WeakValueDictionary
+        
         import types
 
         kwargs2 = kwargs.copy()
+        
         if kwargs.has_key('conv'):
-            kwargs2['conv'] = conv = kwargs['conv'].copy()
+            conv = kwargs['conv']
         else:
-            kwargs2['conv'] = conv = conversions.copy()
-        if kwargs.has_key('cursorclass'):
-            self.cursorclass = kwargs['cursorclass']
-            del kwargs2['cursorclass']
-        else:
-            self.cursorclass = self.default_cursor
+            conv = conversions
 
-        charset = kwargs.get('charset', '')
-        if kwargs.has_key('charset'):
-            del kwargs2['charset']
+        kwargs2['conv'] = dict([ (k, v) for k, v in conv.items()
+                                 if type(k) is int ])
+    
+        self.cursorclass = kwargs2.pop('cursorclass', self.default_cursor)
+        charset = kwargs2.pop('charset', '')
+
         if charset:
             use_unicode = True
         else:
             use_unicode = False
-        use_unicode = kwargs.get('use_unicode', use_unicode)
-        if kwargs.has_key('use_unicode'):
-            del kwargs2['use_unicode']
             
-        sql_mode = kwargs.get('sql_mode', '')
-        if kwargs.has_key('sql_mode'):
-            del kwargs2['sql_mode']
+        use_unicode = kwargs2.pop('use_unicode', use_unicode)
+        sql_mode = kwargs2.pop('sql_mode', '')
 
         client_flag = kwargs.get('client_flag', 0)
         client_version = tuple([ int(n) for n in _mysql.get_client_info().split('.')[:2] ])
@@ -164,38 +163,48 @@ class Connection(_mysql.connection):
 
         super(Connection, self).__init__(*args, **kwargs2)
 
+        self.encoders = dict([ (k, v) for k, v in conv.items()
+                               if type(k) is not int ])
+        
         self._server_version = tuple([ int(n) for n in self.get_server_info().split('.')[:2] ])
 
-        self.charset = self.character_set_name()
-        if charset:
-            self.set_character_set(charset)
-            self.charset = charset
+        db = proxy(self)
+        def _get_string_literal():
+            def string_literal(obj, dummy=None):
+                return db.string_literal(obj)
+            return string_literal
+
+        def _get_unicode_literal():
+            def unicode_literal(u, dummy=None):
+                return db.literal(u.encode(unicode_literal.charset))
+            return unicode_literal
+
+        def _get_string_decoder():
+            def string_decoder(s):
+                return s.decode(string_decoder.charset)
+            return string_decoder
+        
+        string_literal = _get_string_literal()
+        self.unicode_literal = unicode_literal = _get_unicode_literal()
+        self.string_decoder = string_decoder = _get_string_decoder()
+        if not charset:
+            charset = self.character_set_name()
+        self.set_character_set(charset)
 
         if sql_mode:
             self.set_sql_mode(sql_mode)
 
         if use_unicode:
-            def u(s):
-                # can't refer to self.character_set_name()
-                # because this results in reference cycles
-                # and memory leaks
-                return s.decode(charset)
-            conv[FIELD_TYPE.STRING].insert(-1, (None, u))
-            conv[FIELD_TYPE.VAR_STRING].insert(-1, (None, u))
-            conv[FIELD_TYPE.BLOB].insert(-1, (None, u))
+            self.converter[FIELD_TYPE.STRING].insert(-1, (None, string_decoder))
+            self.converter[FIELD_TYPE.VAR_STRING].insert(-1, (None, string_decoder))
+            self.converter[FIELD_TYPE.BLOB].insert(-1, (None, string_decoder))
 
-        def string_literal(obj, dummy=None):
-            return self.string_literal(obj)
-        
-        def unicode_literal(u, dummy=None):
-            return self.literal(u.encode(self.charset))
-         
-        self.converter[types.StringType] = string_literal
-        self.converter[types.UnicodeType] = unicode_literal
+        self.encoders[types.StringType] = string_literal
+        self.encoders[types.UnicodeType] = unicode_literal
         self._transactional = self.server_capabilities & CLIENT.TRANSACTIONS
         if self._transactional:
             # PEP-249 requires autocommit to be initially off
-            self.autocommit(0)
+            self.autocommit(False)
         self.messages = []
         
     def cursor(self, cursorclass=None):
@@ -220,7 +229,7 @@ class Connection(_mysql.connection):
         applications.
 
         """
-        return self.escape(o, self.converter)
+        return self.escape(o, self.encoders)
 
     def begin(self):
         """Explicitly begin a connection. Non-standard.
@@ -243,21 +252,22 @@ class Connection(_mysql.connection):
             else:
                 return 0
 
-    if not hasattr(_mysql.connection, 'set_character_set'):
-
-        def set_character_set(self, charset):
-            """Set the connection character set. This version
-            uses the SET NAMES <charset> SQL statement.
-
-            You probably shouldn't try to change character sets
-            after opening the connection."""
+    def set_character_set(self, charset):
+        """Set the connection character set to charset."""
+        try:
+            super(Connection, self).set_character_set(charset)
+        except AttributeError:
             if self._server_version < (4, 1):
                 raise UnsupportedError, "server is too old to set charset"
-            if self.charset == charset: return
-            self.query('SET NAMES %s' % charset)
-            self.store_result()
+            if self.character_set_name() != charset:
+                self.query('SET NAMES %s' % charset)
+                self.store_result()
+        self.string_decoder.charset = charset
+        self.unicode_literal.charset = charset
 
     def set_sql_mode(self, sql_mode):
+        """Set the connection sql_mode. See MySQL documentation for
+        legal values."""
         if self._server_version < (4, 1):
             raise UnsupportedError, "server is too old to set sql_mode"
         self.query("SET SESSION sql_mode='%s'" % sql_mode)
