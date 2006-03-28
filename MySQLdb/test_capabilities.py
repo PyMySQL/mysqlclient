@@ -30,9 +30,8 @@ class DatabaseTest(unittest.TestCase):
 
     leak_test = True
     
-    if leak_test:
-        
-        def tearDown(self):    
+    def tearDown(self):
+        if self.leak_test:
             import gc
             del self.cursor
             orphans = gc.collect()
