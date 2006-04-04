@@ -116,7 +116,7 @@ class Connection(_mysql.connection):
           dictionary or mapping, contains SSL connection parameters;
           see the MySQL documentation for more details
           (mysql_ssl_set()).  If this is set, and the client does not
-          support SSL, UnsupportedError will be raised.
+          support SSL, NotSupportedError will be raised.
 
         local_infile
           integer, non-zero enables LOAD LOCAL INFILE; zero disables
@@ -253,13 +253,16 @@ class Connection(_mysql.connection):
                 return 0
 
     def set_character_set(self, charset):
-        """Set the connection character set to charset."""
-        try:
-            super(Connection, self).set_character_set(charset)
-        except AttributeError:
-            if self._server_version < (4, 1):
-                raise UnsupportedError, "server is too old to set charset"
-            if self.character_set_name() != charset:
+        """Set the connection character set to charset. The character
+        set can only be changed in MySQL-4.1 and newer. If you try
+        to change the character set from the current value in an
+        older version, NotSupportedError will be raised."""
+        if self.character_set_name() != charset:
+            try:
+                super(Connection, self).set_character_set(charset)
+            except AttributeError:
+                if self._server_version < (4, 1):
+                    raise NotSupportedError, "server is too old to set charset"
                 self.query('SET NAMES %s' % charset)
                 self.store_result()
         self.string_decoder.charset = charset
@@ -269,7 +272,7 @@ class Connection(_mysql.connection):
         """Set the connection sql_mode. See MySQL documentation for
         legal values."""
         if self._server_version < (4, 1):
-            raise UnsupportedError, "server is too old to set sql_mode"
+            raise NotSupportedError, "server is too old to set sql_mode"
         self.query("SET SESSION sql_mode='%s'" % sql_mode)
         self.store_result()
         
