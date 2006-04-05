@@ -2738,7 +2738,6 @@ _mysql_methods[] = {
 		_mysql_thread_safe__doc__
 	},
 #endif
-#if MYSQL_VERSION_ID >= 40000
 	{
 		"server_init",
 		(PyCFunction)_mysql_server_init,
@@ -2751,7 +2750,6 @@ _mysql_methods[] = {
 		METH_VARARGS,
 		_mysql_server_end__doc__
 	},
-#endif
 	{NULL, NULL} /* sentinel */
 };
 
