@@ -3,7 +3,7 @@ recursive-include doc *.txt
 include MANIFEST.in
 include MANIFEST
 include ChangeLog
-include CHANGES-1.2.1
+include HISTORY
 include GPL
 include pymemcompat.h
 include dbapi20.py
