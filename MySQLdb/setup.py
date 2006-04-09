@@ -53,6 +53,9 @@ if enabled('embedded'):
 elif enabled('threadsafe'):
     libs = mysql_config("libs_r")
     client = "mysqlclient_r"
+    if not libs:
+        libs = mysql_config("libs")
+        client = "mysqlclient"
 else:
     libs = mysql_config("libs")
     client = "mysqlclient"
