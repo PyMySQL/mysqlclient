@@ -66,8 +66,7 @@ DATETIME  = TIMESTAMP
 ROWID     = DBAPISet()
 
 def Binary(x):
-    from array import array
-    return array('c', x)
+    return str(x)
 
 def Connect(*args, **kwargs):
     """Factory function for connections.Connection."""

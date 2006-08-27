@@ -69,7 +69,7 @@ class Connection(_mysql.connection):
         conv
           conversion dictionary, see MySQLdb.converters
 
-        connect_time
+        connect_timeout
           number of seconds to wait before the connection attempt
           fails.
 
@@ -195,9 +195,10 @@ class Connection(_mysql.connection):
             self.set_sql_mode(sql_mode)
 
         if use_unicode:
-            self.converter[FIELD_TYPE.STRING].insert(-1, (None, string_decoder))
-            self.converter[FIELD_TYPE.VAR_STRING].insert(-1, (None, string_decoder))
-            self.converter[FIELD_TYPE.BLOB].insert(-1, (None, string_decoder))
+            self.converter[FIELD_TYPE.STRING].append((None, string_decoder))
+            self.converter[FIELD_TYPE.VAR_STRING].append((None, string_decoder))
+            self.converter[FIELD_TYPE.VARCHAR].append((None, string_decoder))
+            self.converter[FIELD_TYPE.BLOB].append((None, string_decoder))
 
         self.encoders[types.StringType] = string_literal
         self.encoders[types.UnicodeType] = unicode_literal

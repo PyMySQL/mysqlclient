@@ -170,8 +170,14 @@ _mysql_Exception(_mysql_ConnectionObject *c)
 #ifdef ER_NO_REFERENCED_ROW
 	case ER_NO_REFERENCED_ROW:
 #endif
+#ifdef ER_NO_REFERENCED_ROW_2
+	case ER_NO_REFERENCED_ROW_2:
+#endif
 #ifdef ER_ROW_IS_REFERENCED
 	case ER_ROW_IS_REFERENCED:
+#endif
+#ifdef ER_ROW_IS_REFERENCED_2
+	case ER_ROW_IS_REFERENCED_2:
 #endif
 #ifdef ER_CANNOT_ADD_FOREIGN
 	case ER_CANNOT_ADD_FOREIGN:

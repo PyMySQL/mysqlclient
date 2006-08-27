@@ -143,17 +143,18 @@ conversions = {
     FIELD_TYPE.TIME: TimeDelta_or_None,
     FIELD_TYPE.DATE: Date_or_None,
     FIELD_TYPE.BLOB: [
-        (FLAG.BINARY, char_array),
-        (None, None),
-    ],
+        (FLAG.BINARY, str),
+        ],
     FIELD_TYPE.STRING: [
+        (FLAG.BINARY, str),
         (FLAG.SET, Str2Set),
-        (None, None),
-    ],
+        ],
     FIELD_TYPE.VAR_STRING: [
-        (FLAG.SET, Str2Set),
-        (None, None),
-    ],
+        (FLAG.BINARY, str),
+        ],
+    FIELD_TYPE.VARCHAR: [
+        (FLAG.BINARY, str),
+        ],
     }
 
 try:

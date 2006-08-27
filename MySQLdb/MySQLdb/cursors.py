@@ -34,7 +34,9 @@ class BaseCursor(object):
     from _mysql_exceptions import MySQLError, Warning, Error, InterfaceError, \
          DatabaseError, DataError, OperationalError, IntegrityError, \
          InternalError, ProgrammingError, NotSupportedError
-
+    
+    _defer_warnings = False
+    
     def __init__(self, connection):
         from weakref import proxy
     
@@ -143,7 +145,8 @@ class BaseCursor(object):
         del self.messages[:]
         db = self._get_db()
         charset = db.character_set_name()
-        query = query.encode(charset)
+        if isinstance(query, unicode):
+            query = query.encode(charset)
         if args is not None:
             query = query % db.literal(args)
         try:
@@ -162,7 +165,7 @@ class BaseCursor(object):
             self.messages.append((exc, value))
             self.errorhandler(self, exc, value)
         self._executed = query
-        self._warning_check()
+        if not self._defer_warnings: self._warning_check()
         return r
 
     def executemany(self, query, args):
@@ -214,7 +217,7 @@ class BaseCursor(object):
             del tb
             self.errorhandler(self, exc, value)
         r = self._query(',\n'.join(q))
-        self._warning_check()
+        if not self._defer_warnings: self._warning_check()
         return r
     
     def callproc(self, procname, args=()):
@@ -253,7 +256,7 @@ class BaseCursor(object):
         for index, arg in enumerate(args):
             q = "SET @_%s_%d=%s" % (procname, index,
                                          db.literal(arg))
-            if type(q) is UnicodeType:
+            if isinstance(q, unicode):
                 q = q.encode(charset)
             self._query(q)
             self.nextset()
@@ -264,7 +267,8 @@ class BaseCursor(object):
         if type(q) is UnicodeType:
             q = q.encode(charset)
         self._query(q)
-        self._warning_check()
+        self._executed = q
+        if not self._defer_warnings: self._warning_check()
         return args
     
     def _do_query(self, q):
@@ -375,13 +379,17 @@ class CursorUseResultMixIn(object):
     close() the cursor before additional queries can be peformed on
     the connection."""
 
+    _defer_warnings = True
+    
     def _get_result(self): return self._get_db().use_result()
 
     def fetchone(self):
         """Fetches a single row from the cursor."""
         self._check_executed()
         r = self._fetch_row(1)
-        if not r: return None
+        if not r:
+            self._warning_check()
+            return None
         self.rownumber = self.rownumber + 1
         return r[0]
              
@@ -391,6 +399,8 @@ class CursorUseResultMixIn(object):
         self._check_executed()
         r = self._fetch_row(size or self.arraysize)
         self.rownumber = self.rownumber + len(r)
+        if not r:
+            self._warning_check()
         return r
          
     def fetchall(self):
@@ -398,6 +408,7 @@ class CursorUseResultMixIn(object):
         self._check_executed()
         r = self._fetch_row(0)
         self.rownumber = self.rownumber + len(r)
+        self._warning_check()
         return r
 
     def __iter__(self):

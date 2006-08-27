@@ -49,7 +49,7 @@ class test_MySQLdb(test_capabilities.DatabaseTest):
         self.check_data_integrity(
             ('col1 SET(%s)' % ','.join(["'%s'" % t for t in things]),),
             generator)
-
+        
     def test_stored_procedures(self):
         db = self.connection
         c = self.cursor

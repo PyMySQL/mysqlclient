@@ -30,6 +30,12 @@ def TimestampFromTicks(ticks):
 
 format_TIME = format_DATE = str
 
+def format_TIMEDELTA(v):
+    seconds = int(v.seconds) % 60
+    minutes = int(v.seconds / 60) % 60
+    hours = int(v.seconds / 3600) % 24
+    return '%d %d:%d:%d' % (v.days, hours, minutes, seconds)
+
 def format_TIMESTAMP(d):
     return d.strftime("%Y-%m-%d %H:%M:%S")
 
@@ -80,7 +86,7 @@ def DateTime2literal(d, c):
     
 def DateTimeDelta2literal(d, c):
     """Format a DateTimeDelta object as a time."""
-    return string_literal(format_TIME(d),c)
+    return string_literal(format_TIMEDELTA(d),c)
 
 def mysql_timestamp_converter(s):
     """Convert a MySQL TIMESTAMP to a Timestamp object."""
