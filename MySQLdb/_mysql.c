@@ -27,17 +27,17 @@ PERFORMANCE OF THIS SOFTWARE.
 */
 
 #include "pymemcompat.h"
-
-#ifdef MS_WIN32
+#include "structmember.h"
+#if defined(_WIN32) || defined(_WIN64) || defined(__WIN32__) || defined(WIN32) || defined(MS_WIN32)
 #include <windows.h>
-#endif /* MS_WIN32 */
+#include <config-win.h>
+#else
+#include "my_config.h"
+#endif
 #ifndef uint
 #define uint unsigned int
 #endif
-
-#include "structmember.h"
 #include "mysql.h"
-#include "my_config.h"
 #include "mysqld_error.h"
 #include "errmsg.h"
 
