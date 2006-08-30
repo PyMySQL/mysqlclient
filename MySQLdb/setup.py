@@ -45,6 +45,13 @@ def enabled(option):
     else:
         raise Abort, "Unknown value %s for option %s" % (value, option)
 
+if os.name == "posix":
+    flag_prefix = "-"
+else: # assume windows
+    flag_prefix = "/"
+
+def compiler_flag(f): return flag_prefix + f
+
 extra_objects = []
 static = enabled('static')
 if enabled('embedded'):
@@ -65,26 +72,26 @@ if enabled('embedded'):
     name = name + "-embedded"
 metadata['name'] = name
 
-library_dirs = [ dequote(i[2:]) for i in libs if i.startswith("-L") ]
-libraries = [ dequote(i[2:]) for i in libs if i.startswith("-l") ]
+library_dirs = [ dequote(i[2:]) for i in libs if i.startswith(compiler_flag("L")) ]
+libraries = [ dequote(i[2:]) for i in libs if i.startswith(compiler_flag("l")) ]
 
-removable_compile_args = '-I -L -l'.split()
+removable_compile_args = [ compiler_flag(f) for f in "ILl" ]
 extra_compile_args = [ i for i in mysql_config("cflags")
                        if i[:2] not in removable_compile_args ]
 include_dirs = [ dequote(i[2:])
                  for i in mysql_config('include')
-                 if i.startswith('-I') ]
+                 if i.startswith(compiler_flag('I')) ]
 if not include_dirs: # fix for MySQL-3.23
     include_dirs = [ dequote(i[2:])
 		     for i in mysql_config('cflags')
-		     if i.startswith('-I') ]
+		     if i.startswith(compiler_flag('I')) ]
 
 if static:
     extra_objects.append(os.path.join(
         library_dirs[0],'lib%s.a' % client))
 
-extra_compile_args.append("-Dversion_info=\"%s\"" % metadata['version_info'])
-extra_compile_args.append("-D__version__=\"%s\"" % metadata['version'])
+extra_compile_args.append(compiler_flag("Dversion_info=%s" % metadata['version_info']))
+extra_compile_args.append(compiler_flag("D__version__=%s" % metadata['version']))
 
 rel = open("MySQLdb/release.py",'w')
 rel.write("""
