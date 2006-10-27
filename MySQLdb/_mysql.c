@@ -1132,7 +1132,7 @@ _mysql_escape_dict(
 	PyObject *args)
 {
 	PyObject *o=NULL, *d=NULL, *r=NULL, *item, *quoted, *pkey; 
-	int ppos = 0;
+	Py_ssize_t ppos = 0;
 	if (!PyArg_ParseTuple(args, "O!O:escape_dict", &PyDict_Type, &o, &d))
 		goto error;
 	if (!PyMapping_Check(d)) {

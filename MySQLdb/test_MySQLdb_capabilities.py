@@ -75,6 +75,16 @@ class test_MySQLdb(test_capabilities.DatabaseTest):
         c.execute("DROP PROCEDURE test_sp")
         c.execute('drop table %s' % (self.table))
 
+    def test_small_CHAR(self):
+        # Character data
+        def generator(row,col):
+            i = (row*col+62)%256
+            if i == 62: return ''
+            if i == 63: return None
+            return chr(i)
+        self.check_data_integrity(
+            ('col1 char(1)','col2 char(1)'),
+            generator)
         
 if __name__ == '__main__':
     if test_MySQLdb.leak_test:
