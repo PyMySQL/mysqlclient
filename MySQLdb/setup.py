@@ -90,8 +90,10 @@ if static:
     extra_objects.append(os.path.join(
         library_dirs[0],'lib%s.a' % client))
 
-extra_compile_args.append(compiler_flag("Dversion_info=%s" % metadata['version_info']))
-extra_compile_args.append(compiler_flag("D__version__=%s" % metadata['version']))
+define_macros = [
+  ('version_info', metadata['version_info']),
+  ('__version__', metadata['version']),
+]
 
 rel = open("MySQLdb/release.py",'w')
 rel.write("""
@@ -105,6 +107,7 @@ del metadata['version_info']
 
 ext_mysql_metadata = dict(
     name="_mysql",
+    define_macros=define_macros,
     include_dirs=include_dirs,
     library_dirs=library_dirs,
     libraries=libraries,
