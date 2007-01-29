@@ -147,7 +147,6 @@ conversions = {
         ],
     FIELD_TYPE.STRING: [
         (FLAG.BINARY, str),
-        (FLAG.SET, Str2Set),
         ],
     FIELD_TYPE.VAR_STRING: [
         (FLAG.BINARY, str),

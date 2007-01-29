@@ -75,12 +75,13 @@ def get_config():
     create_release_file(metadata)
     del metadata['version_info']
     ext_options = dict(
-        name = name,
+        name = "_mysql",
         library_dirs = library_dirs,
         libraries = libraries,
         extra_compile_args = extra_compile_args,
         include_dirs = include_dirs,
         extra_objects = extra_objects,
+        define_macros = define_macros,
         )
     return metadata, ext_options
 
