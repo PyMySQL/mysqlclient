@@ -489,10 +489,10 @@ _mysql_ConnectionObject_Initialize(
 				  "named_pipe", "init_command",
 				  "read_default_file", "read_default_group",
 				  "client_flag", "ssl",
-				  "local_infile",
+				  "local_infile", "reconnect", 
 				  NULL } ;
 	int connect_timeout = 0;
-	int compress = -1, named_pipe = -1, local_infile = -1;
+	int compress = -1, named_pipe = -1, local_infile = -1, reconnect = -1;
 	char *init_command=NULL,
 	     *read_default_file=NULL,
 	     *read_default_group=NULL;
@@ -500,7 +500,7 @@ _mysql_ConnectionObject_Initialize(
 	self->converter = NULL;
 	self->open = 0;
 	check_server_init(-1);
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|ssssisOiiisssiOi:connect",
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|ssssisOiiisssiOii:connect",
 					 kwlist,
 					 &host, &user, &passwd, &db,
 					 &port, &unix_socket, &conv,
@@ -509,7 +509,7 @@ _mysql_ConnectionObject_Initialize(
 					 &init_command, &read_default_file,
 					 &read_default_group,
 					 &client_flag, &ssl,
-					 &local_infile
+					 &local_infile, &reconnect
 					 ))
 		return -1;
 
@@ -553,6 +553,7 @@ _mysql_ConnectionObject_Initialize(
 		mysql_options(&(self->connection), MYSQL_OPT_COMPRESS, 0);
 		client_flag |= CLIENT_COMPRESS;
 	}
+
 	if (named_pipe != -1)
 		mysql_options(&(self->connection), MYSQL_OPT_NAMED_PIPE, 0);
 	if (init_command != NULL)
@@ -573,6 +574,12 @@ _mysql_ConnectionObject_Initialize(
 
 	conn = mysql_real_connect(&(self->connection), host, user, passwd, db,
 				  port, unix_socket, client_flag);
+
+	/* Needs to come after real_connect per mysql API manual */
+	if (reconnect > 0) {
+		my_bool bool = reconnect;
+		mysql_options(conn, MYSQL_OPT_RECONNECT, &bool);
+	}
 
 	Py_END_ALLOW_THREADS ;
 
@@ -641,6 +648,10 @@ client_flag\n\
 \n\
 load_infile\n\
   int, non-zero enables LOAD LOCAL INFILE, zero disables\n\
+reconnect\n\
+  boolean, True enables automatic reconnections (default\n\
+  True for MySQL<5.0.3, False thereafter). *Don't use this\n\
+  unless you absolutely know the consequences for transactions!*\n\
 \n\
 ";
 
