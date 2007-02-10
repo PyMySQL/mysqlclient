@@ -1786,7 +1786,9 @@ _mysql_ResultObject_num_rows(
 static char _mysql_ConnectionObject_ping__doc__[] =
 "Checks whether or not the connection to the server is\n\
 working. If it has gone down, an automatic reconnection is\n\
-attempted.\n\
+attempted if the reconnect option has been set (the default\n\
+in MySQL<5.0.3). The reconnect option to connect() or\n\
+autoreconnect() can change this setting.\n\
 \n\
 This function can be used by clients that remain idle for a\n\
 long while, to check whether or not the server has closed the\n\
@@ -1811,6 +1813,32 @@ _mysql_ConnectionObject_ping(
 	return Py_None;
 }
 
+static char _mysql_ConnectionObject_autoreconnect__doc__[] =
+"Set reconnect option. If the optional parameter is True, ping()\n\
+will cause the client to automatically try reconnecting; if it's\n\
+False, ping() will raise OperationError if the connection has\n\
+\"gone away\"; if no parameter is given, the value is unchanged.\n\
+Always returns the current value (after setting).\n\
+\n\
+If you set this, you should always assume ping()\n\
+causes an implicit rollback. You have been warned.\n";
+
+static PyObject *
+_mysql_ConnectionObject_autoreconnect(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
+{
+	int reconnect = -1;
+	if (!PyArg_ParseTuple(args, "|I", &reconnect)) return NULL;
+	check_connection(self);
+	Py_BEGIN_ALLOW_THREADS
+	if (reconnect > -1)
+		self->connection.reconnect = reconnect;
+	reconnect = self->connection.reconnect;
+	Py_END_ALLOW_THREADS
+	return PyInt_FromLong((long)reconnect);
+}
+	
 static char _mysql_ConnectionObject_query__doc__[] =
 "Execute a query. store_result() or use_result() will get the\n\
 result set, if any. Non-standard. Use cursor() to create a cursor,\n\
@@ -2277,6 +2305,12 @@ static PyMethodDef _mysql_ConnectionObject_methods[] = {
 		(PyCFunction)_mysql_ConnectionObject_ping,
 		METH_VARARGS,
 		_mysql_ConnectionObject_ping__doc__
+	},
+	{
+		"autoreconnect",
+		(PyCFunction)_mysql_ConnectionObject_autoreconnect,
+		METH_VARARGS,
+		_mysql_ConnectionObject_autoreconnect__doc__
 	},
 	{
 		"query",
