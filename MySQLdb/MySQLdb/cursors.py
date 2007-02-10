@@ -6,7 +6,7 @@ default, MySQLdb uses the Cursor class.
 """
 
 import re
-insert_values = re.compile(r'\svalues\s*(\(.+\))', re.IGNORECASE)
+insert_values = re.compile(r"\svalues\s*(\(((?<!\\)'.*?\).*(?<!\\)?'|.)+?\))", re.IGNORECASE)
 from _mysql_exceptions import Warning, Error, InterfaceError, DataError, \
      DatabaseError, OperationalError, IntegrityError, InternalError, \
      NotSupportedError, ProgrammingError
@@ -189,6 +189,8 @@ class BaseCursor(object):
         del self.messages[:]
         db = self._get_db()
         if not args: return
+        charset = db.character_set_name()
+        if isinstance(query, unicode): query = query.encode(charset)
         m = insert_values.search(query)
         if not m:
             r = 0
@@ -196,13 +198,11 @@ class BaseCursor(object):
                 r = r + self.execute(query, a)
             return r
         p = m.start(1)
-        charset = db.character_set_name()
-        query = query.encode(charset)
-        qv = query[p:]
+        e = m.end(1)
+        qv = m.group(1)
         qargs = db.literal(args)
         try:
-            q = [ query % qargs[0] ]
-            q.extend([ qv % a for a in qargs[1:] ])
+            q = [ qv % a for a in qargs ]
         except TypeError, msg:
             if msg.args[0] in ("not enough arguments for format string",
                                "not all arguments converted"):
@@ -216,7 +216,7 @@ class BaseCursor(object):
             exc, value, tb = exc_info()
             del tb
             self.errorhandler(self, exc, value)
-        r = self._query(',\n'.join(q))
+        r = self._query('\n'.join([query[:p], ',\n'.join(q), query[e:]]))
         if not self._defer_warnings: self._warning_check()
         return r
     
