@@ -138,9 +138,15 @@ class Connection(_mysql.connection):
         else:
             conv = conversions
 
-        kwargs2['conv'] = dict([ (k, v) for k, v in conv.items()
-                                 if type(k) is int ])
-    
+        conv2 = {}
+        for k, v in conv.items():
+            if isinstance(k, int):
+                if isinstance(v, list):
+                    conv2[k] = v[:]
+                else:
+                    conv2[k] = v
+        kwargs2['conv'] = conv2
+
         self.cursorclass = kwargs2.pop('cursorclass', self.default_cursor)
         charset = kwargs2.pop('charset', '')
 
