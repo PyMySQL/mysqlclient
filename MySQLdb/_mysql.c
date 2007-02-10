@@ -489,10 +489,10 @@ _mysql_ConnectionObject_Initialize(
 				  "named_pipe", "init_command",
 				  "read_default_file", "read_default_group",
 				  "client_flag", "ssl",
-				  "local_infile", "reconnect", 
+				  "local_infile",
 				  NULL } ;
 	int connect_timeout = 0;
-	int compress = -1, named_pipe = -1, local_infile = -1, reconnect = -1;
+	int compress = -1, named_pipe = -1, local_infile = -1;
 	char *init_command=NULL,
 	     *read_default_file=NULL,
 	     *read_default_group=NULL;
@@ -500,7 +500,7 @@ _mysql_ConnectionObject_Initialize(
 	self->converter = NULL;
 	self->open = 0;
 	check_server_init(-1);
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|ssssisOiiisssiOii:connect",
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|ssssisOiiisssiOi:connect",
 					 kwlist,
 					 &host, &user, &passwd, &db,
 					 &port, &unix_socket, &conv,
@@ -509,7 +509,7 @@ _mysql_ConnectionObject_Initialize(
 					 &init_command, &read_default_file,
 					 &read_default_group,
 					 &client_flag, &ssl,
-					 &local_infile, &reconnect
+					 &local_infile
 					 ))
 		return -1;
 
@@ -553,7 +553,6 @@ _mysql_ConnectionObject_Initialize(
 		mysql_options(&(self->connection), MYSQL_OPT_COMPRESS, 0);
 		client_flag |= CLIENT_COMPRESS;
 	}
-
 	if (named_pipe != -1)
 		mysql_options(&(self->connection), MYSQL_OPT_NAMED_PIPE, 0);
 	if (init_command != NULL)
@@ -574,12 +573,6 @@ _mysql_ConnectionObject_Initialize(
 
 	conn = mysql_real_connect(&(self->connection), host, user, passwd, db,
 				  port, unix_socket, client_flag);
-
-	/* Needs to come after real_connect per mysql API manual */
-	if (reconnect > 0) {
-		my_bool bool = reconnect;
-		mysql_options(conn, MYSQL_OPT_RECONNECT, &bool);
-	}
 
 	Py_END_ALLOW_THREADS ;
 
@@ -648,10 +641,6 @@ client_flag\n\
 \n\
 load_infile\n\
   int, non-zero enables LOAD LOCAL INFILE, zero disables\n\
-reconnect\n\
-  boolean, True enables automatic reconnections (default\n\
-  True for MySQL<5.0.3, False thereafter). *Don't use this\n\
-  unless you absolutely know the consequences for transactions!*\n\
 \n\
 ";
 
@@ -1786,15 +1775,20 @@ _mysql_ResultObject_num_rows(
 static char _mysql_ConnectionObject_ping__doc__[] =
 "Checks whether or not the connection to the server is\n\
 working. If it has gone down, an automatic reconnection is\n\
-attempted if the reconnect option has been set (the default\n\
-in MySQL<5.0.3). The reconnect option to connect() or\n\
-autoreconnect() can change this setting.\n\
+attempted.\n\
 \n\
 This function can be used by clients that remain idle for a\n\
 long while, to check whether or not the server has closed the\n\
 connection and reconnect if necessary.\n\
 \n\
-Non-standard.\n\
+New in 1.2.2: Accepts an optional reconnect parameter. If True,\n\
+then the client will attempt reconnection. Note that this setting\n\
+is persistent. By default, this is on in MySQL<5.0.3, and off\n\
+thereafter.\n\
+\n\
+Non-standard. You should assume that ping() performs an\n\
+implicit rollback; use only when starting a new transaction.\n\
+You have been warned.\n\
 ";
 
 static PyObject *
@@ -1802,9 +1796,10 @@ _mysql_ConnectionObject_ping(
 	_mysql_ConnectionObject *self,
 	PyObject *args)
 {
-	int r;
-	if (!PyArg_ParseTuple(args, "")) return NULL;
+	int r, reconnect = -1;
+	if (!PyArg_ParseTuple(args, "|I", &reconnect)) return NULL;
 	check_connection(self);
+	if ( reconnect != -1 ) self->connection.reconnect = reconnect;
 	Py_BEGIN_ALLOW_THREADS
 	r = mysql_ping(&(self->connection));
 	Py_END_ALLOW_THREADS
@@ -1813,32 +1808,6 @@ _mysql_ConnectionObject_ping(
 	return Py_None;
 }
 
-static char _mysql_ConnectionObject_autoreconnect__doc__[] =
-"Set reconnect option. If the optional parameter is True, ping()\n\
-will cause the client to automatically try reconnecting; if it's\n\
-False, ping() will raise OperationError if the connection has\n\
-\"gone away\"; if no parameter is given, the value is unchanged.\n\
-Always returns the current value (after setting).\n\
-\n\
-If you set this, you should always assume ping()\n\
-causes an implicit rollback. You have been warned.\n";
-
-static PyObject *
-_mysql_ConnectionObject_autoreconnect(
-	_mysql_ConnectionObject *self,
-	PyObject *args)
-{
-	int reconnect = -1;
-	if (!PyArg_ParseTuple(args, "|I", &reconnect)) return NULL;
-	check_connection(self);
-	Py_BEGIN_ALLOW_THREADS
-	if (reconnect > -1)
-		self->connection.reconnect = reconnect;
-	reconnect = self->connection.reconnect;
-	Py_END_ALLOW_THREADS
-	return PyInt_FromLong((long)reconnect);
-}
-	
 static char _mysql_ConnectionObject_query__doc__[] =
 "Execute a query. store_result() or use_result() will get the\n\
 result set, if any. Non-standard. Use cursor() to create a cursor,\n\
@@ -2305,12 +2274,6 @@ static PyMethodDef _mysql_ConnectionObject_methods[] = {
 		(PyCFunction)_mysql_ConnectionObject_ping,
 		METH_VARARGS,
 		_mysql_ConnectionObject_ping__doc__
-	},
-	{
-		"autoreconnect",
-		(PyCFunction)_mysql_ConnectionObject_autoreconnect,
-		METH_VARARGS,
-		_mysql_ConnectionObject_autoreconnect__doc__
 	},
 	{
 		"query",
