@@ -36,19 +36,6 @@ class test_MySQLdb(test_capabilities.DatabaseTest):
         self.check_data_integrity(
             ('col1 TINYINT',),
             generator)
-
-    def test_SET(self):
-        things = 'ash birch cedar larch pine'.split()
-        def generator(row, col):
-            from sets import Set
-            s = Set()
-            for i in range(len(things)):
-                if (row >> i) & 1:
-                    s.add(things[i])
-            return s
-        self.check_data_integrity(
-            ('col1 SET(%s)' % ','.join(["'%s'" % t for t in things]),),
-            generator)
         
     def test_stored_procedures(self):
         db = self.connection
