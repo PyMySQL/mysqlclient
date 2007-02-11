@@ -49,7 +49,7 @@ def get_config():
     libraries = [ dequote(i[2:]) for i in libs if i.startswith(compiler_flag("l")) ]
     
     removable_compile_args = [ compiler_flag(f) for f in "ILl" ]
-    extra_compile_args = [ i for i in mysql_config("cflags")
+    extra_compile_args = [ i.replace("%", "%%") for i in mysql_config("cflags")
                            if i[:2] not in removable_compile_args ]
     include_dirs = [ dequote(i[2:])
                      for i in mysql_config('include')
