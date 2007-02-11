@@ -200,9 +200,8 @@ class BaseCursor(object):
         p = m.start(1)
         e = m.end(1)
         qv = m.group(1)
-        qargs = db.literal(args)
         try:
-            q = [ qv % a for a in qargs ]
+            q = [ qv % db.literal(a) for a in args ]
         except TypeError, msg:
             if msg.args[0] in ("not enough arguments for format string",
                                "not all arguments converted"):
