@@ -225,6 +225,14 @@ class Connection(_mysql.connection):
         """
         return (cursorclass or self.cursorclass)(self)
 
+    def __enter__(self): return self.cursor()
+    
+    def __exit__(self, exc, value, tb):
+        if exc:
+            self.rollback()
+        else:
+            self.commit()
+            
     def literal(self, o):
         """
 
