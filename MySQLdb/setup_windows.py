@@ -2,13 +2,14 @@ def get_config():
     import os, sys, _winreg
     from setup_common import get_metadata_and_options, enabled, create_release_file
 
-    serverKey = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE,
-                                r'SOFTWARE\MySQL AB\MySQL Server 5.0')
-    mysql_root, dummy = _winreg.QueryValueEx(serverKey,'Location')
     metadata, options = get_metadata_and_options()
+
+    serverKey = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, options['registry_key'])
+    mysql_root, dummy = _winreg.QueryValueEx(serverKey,'Location')
 
     extra_objects = []
     static = enabled(options, 'static')
+    # XXX static doesn't actually do anything on Windows
     if enabled(options, 'embedded'):
         client = "mysqld"
     else:

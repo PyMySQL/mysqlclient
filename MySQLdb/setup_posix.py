@@ -14,15 +14,16 @@ def compiler_flag(f):
 def mysql_config(what):
     from os import popen
     
-    f = popen("mysql_config --%s" % what)
+    f = popen("%s --%s" % (mysql_config.path, what))
     data = f.read().strip().split()
     ret = f.close()
     if ret:
         if ret/256:
             data = []
         if ret/256 > 1:
-            raise EnvironmentError, "mysql_config is not on your PATH"
+            raise EnvironmentError, "%s not found" % mysql_config.path
     return data
+mysql_config.path = "mysql_config"
 
 def get_config():
     import os, sys
@@ -30,6 +31,9 @@ def get_config():
 
     metadata, options = get_metadata_and_options()
 
+    if 'mysql_config' in options:
+        mysql_config.path = options['mysql_config']
+        
     extra_objects = []
     static = enabled(options, 'static')
     if enabled(options, 'embedded'):

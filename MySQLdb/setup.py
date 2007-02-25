@@ -15,4 +15,5 @@ else: # assume windows
 
 metadata, options = get_config()
 metadata['ext_modules'] = [Extension(sources=['_mysql.c'], **options)]
+metadata['long_description'] = metadata['long_description'].replace(r'\n', '')
 setup(**metadata)
