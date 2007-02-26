@@ -40,14 +40,14 @@ class DBAPISet(ImmutableSet):
     def __ne__(self, other):
         from sets import BaseSet
         if isinstance(other, BaseSet):
-            return super(self).__ne__(self, other)
+            return super(DBAPISet.self).__ne__(self, other)
         else:
             return other not in self
 
     def __eq__(self, other):
         from sets import BaseSet
         if isinstance(other, BaseSet):
-            return super(self).__eq__(self, other)
+            return super(DBAPISet, self).__eq__(self, other)
         else:
             return other in self
 
@@ -82,7 +82,7 @@ __all__ = [ 'BINARY', 'Binary', 'Connect', 'Connection', 'DATE',
     'MySQLError', 'NULL', 'NUMBER', 'NotSupportedError', 'DBAPISet',
     'OperationalError', 'ProgrammingError', 'ROWID', 'STRING', 'TIME',
     'TIMESTAMP', 'Warning', 'apilevel', 'connect', 'connections',
-    'constants', 'cursors', 'debug', 'escape', 'escape_dict',
+    'constants', 'converters', 'cursors', 'debug', 'escape', 'escape_dict',
     'escape_sequence', 'escape_string', 'get_client_info',
     'paramstyle', 'string_literal', 'threadsafety', 'version_info']
 
