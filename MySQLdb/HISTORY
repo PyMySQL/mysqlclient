@@ -1,3 +1,36 @@
+=====================
+ What's new in 1.2.2
+=====================
+
+The build system has been completely redone and should now build
+on Windows without any patching; uses setuptools.
+
+Added compatibility for Python 2.5, including support for with statement.
+
+connection.ping() now takes an optional boolean argument which can
+enable (or disable) automatic reconnection.
+
+Support returning SET columns as Python sets was removed due to an
+API bug in MySQL; corresponding test removed.
+
+Added a test for single-character CHAR columns.
+
+BLOB columns are now returned as Python strings instead of byte arrays.
+
+BINARY character columns are always returned as Python strings, and not
+unicode.
+
+Fixed a bug introduced in 1.2.1 where the new SHOW WARNINGS support broke
+SSCursor.
+
+Only encode the query (convert to a string) when it is a unicode instance;
+re-encoding encoded strings would break things.
+
+Make a deep copy of conv when connecting, since it can be modified.
+
+Added support for new VARCHAR and BIT column types.
+
+
 ========================
  What's new in 1.2.1_p2
 ========================
