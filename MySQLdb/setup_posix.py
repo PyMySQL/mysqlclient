@@ -67,7 +67,7 @@ def get_config():
         extra_objects.append(os.path.join(
             library_dirs[0],'lib%s.a' % client))
         
-    name = "MySQL-%s" % os.path.basename(sys.executable)
+    name = "MySQL-python"
     if enabled(options, 'embedded'):
         name = name + "-embedded"
     metadata['name'] = name

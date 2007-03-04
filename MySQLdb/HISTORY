@@ -30,6 +30,8 @@ Make a deep copy of conv when connecting, since it can be modified.
 
 Added support for new VARCHAR and BIT column types.
 
+DBAPISet objects were broken, but nobody noticed.
+
 
 ========================
  What's new in 1.2.1_p2
