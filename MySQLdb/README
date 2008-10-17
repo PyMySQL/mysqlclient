@@ -21,6 +21,10 @@ Prerequisites
     - Make sure you have the Python development headers and libraries
       (python-devel).
 
++ setuptools
+
+  * http://pypi.python.org/pypi/setuptools
+
 + MySQL 3.23.32 or higher
 
   * http://www.mysql.com/downloads/
@@ -35,11 +39,14 @@ Prerequisites
 
   * MySQL-4.0 is supported, but not tested and slightly discouraged.
 
-  * MySQL-4.1 is supported and tested. The prepared statements API is not
-    supported, and won't be until MySQLdb-1.3 or 2.0.
+  * MySQL-4.1 is supported. The prepared statements API is not
+    supported, and won't be until MySQLdb-1.3 or 2.0, if ever.
 
   * MySQL-5.0 is supported and tested, including stored procedures.
       
+  * MySQL-5.1 is supported (currently a release candidate) but untested.
+    It should work.
+
   * MaxDB, formerly known as SAP DB (and maybe Adabas D?), is a
     completely different animal. Use the sapdb.sql module that comes
     with MaxDB.
@@ -92,7 +99,6 @@ Prerequisites
     for this, or you can use Cygwin_.
 
 .. _Cygwin: http://www.cygwin.com/
-
 
 
 Building and installing
@@ -213,8 +219,7 @@ Same as with Debian.
 Gentoo Linux
 ............
 
-Packaged as `mysql-python`_. Gentoo is also my preferred development platform,
-though I have also done some with Ubuntu lately. ::
+Packaged as `mysql-python`_. ::
 
       # emerge sync
       # emerge mysql-python
