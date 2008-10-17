@@ -47,6 +47,14 @@ Prerequisites
   * MySQL-5.1 is supported (currently a release candidate) but untested.
     It should work.
 
+  * MySQL-6.0 is sorta-kinda-supported (currently alpha) but untested.
+    It should work.
+
+  * Drizzle <https://launchpad.net/drizzle> is a fork of MySQL. So far
+    the C API looks really similar except everything is renamed.
+    Drizzle support probably won't happen in 1.2. There may be have to
+    be an entirely different module, but still using DB-API.
+
   * MaxDB, formerly known as SAP DB (and maybe Adabas D?), is a
     completely different animal. Use the sapdb.sql module that comes
     with MaxDB.
