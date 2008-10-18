@@ -130,7 +130,7 @@ conversions = {
     types.BooleanType: Bool2Str,
     DateTimeType: DateTime2literal,
     DateTimeDeltaType: DateTimeDelta2literal,
-    Set: Set2Str,
+    set: Set2Str,
     FIELD_TYPE.TINY: int,
     FIELD_TYPE.SHORT: int,
     FIELD_TYPE.LONG: long,

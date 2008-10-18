@@ -32,7 +32,7 @@ def defaulterrorhandler(connection, cursor, errorclass, errorvalue):
         connection.messages.append(error)
     del cursor
     del connection
-    raise errorclass, errorvalue
+    raise errorclass(errorvalue)
 
 
 class Connection(_mysql.connection):
@@ -277,7 +277,7 @@ class Connection(_mysql.connection):
                 super(Connection, self).set_character_set(charset)
             except AttributeError:
                 if self._server_version < (4, 1):
-                    raise NotSupportedError, "server is too old to set charset"
+                    raise NotSupportedError("server is too old to set charset")
                 self.query('SET NAMES %s' % charset)
                 self.store_result()
         self.string_decoder.charset = charset
@@ -287,7 +287,7 @@ class Connection(_mysql.connection):
         """Set the connection sql_mode. See MySQL documentation for
         legal values."""
         if self._server_version < (4, 1):
-            raise NotSupportedError, "server is too old to set sql_mode"
+            raise NotSupportedError("server is too old to set sql_mode")
         self.query("SET SESSION sql_mode='%s'" % sql_mode)
         self.store_result()
         
