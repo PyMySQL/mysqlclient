@@ -34,15 +34,19 @@ MySQL.connect().
 
 from _mysql import string_literal, escape_sequence, escape_dict, escape, NULL
 from constants import FIELD_TYPE, FLAG
-from sets import BaseSet, Set
 from times import *
 import types
 import array
 
+try:
+    set
+except NameError:
+    from sets import Set as set
+
 def Bool2Str(s, d): return str(int(s))
 
 def Str2Set(s):
-    return Set([ i for i in s.split(',') if i ])
+    return set([ i for i in s.split(',') if i ])
 
 def Set2Str(s, d):
     return string_literal(','.join(s), d)
