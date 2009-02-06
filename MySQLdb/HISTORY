@@ -1,0 +1,100 @@
+=====================
+ What's new in 1.2.2
+=====================
+
+The build system has been completely redone and should now build
+on Windows without any patching; uses setuptools.
+
+Added compatibility for Python 2.5, including support for with statement.
+
+connection.ping() now takes an optional boolean argument which can
+enable (or disable) automatic reconnection.
+
+Support returning SET columns as Python sets was removed due to an
+API bug in MySQL; corresponding test removed.
+
+Added a test for single-character CHAR columns.
+
+BLOB columns are now returned as Python strings instead of byte arrays.
+
+BINARY character columns are always returned as Python strings, and not
+unicode.
+
+Fixed a bug introduced in 1.2.1 where the new SHOW WARNINGS support broke
+SSCursor.
+
+Only encode the query (convert to a string) when it is a unicode instance;
+re-encoding encoded strings would break things.
+
+Make a deep copy of conv when connecting, since it can be modified.
+
+Added support for new VARCHAR and BIT column types.
+
+DBAPISet objects were broken, but nobody noticed.
+
+
+========================
+ What's new in 1.2.1_p2
+========================
+
+There are some minor build fixes which probably only affect MySQL
+older than 4.0.
+
+If you had MySQL older than 4.1, the new charset and sql_mode
+parameters didn't work right. In fact, it was impossible to create
+a connection due to the charset problem.
+
+If you are using MySQL-4.1 or newer, there is no practical difference
+between 1.2.1 and 1.2.1_p2, and you don't need to upgrade.
+
+
+=====================
+ What's new in 1.2.1
+=====================
+
+Switched to Subversion. Was going to do this for 1.3, but a
+SourceForge CVS outage has forced the issue.
+
+Mapped a lot of new 4.1 and 5.0 error codes to Python exceptions
+
+Added an API call for mysql_set_character_set(charset) (MySQL > 5.0.7)
+
+Added an API call for mysql_get_character_set_info() (MySQL > 5.0.10)
+
+Revamped the build system. Edit site.cfg if necessary (probably not
+in most cases)
+
+Python-2.3 is now the minimum version.
+
+Dropped support for mx.Datetime and stringtimes; always uses Python
+datetime module now.
+
+Improved unit tests
+
+New connect() options:
+* charset: sets character set, implies use_unicode
+* sql_mode: sets SQL mode (i.e. ANSI, etc.; see MySQL docs)
+
+When using MySQL-4.1 or newer, enables MULTI_STATEMENTS
+
+When using MySQL-5.0 or newer, enables MULTI_RESULTS
+
+When using MySQL-4.1 or newer, more detailed warning messages
+are produced
+
+SET columns returned as Python Set types; you can pass a Set as
+a parameter to cursor.execute().
+
+Support for the new MySQL-5.0 DECIMAL implementation
+
+Support for Python Decimal type
+
+Some use of weak references internally. Cursors no longer leak
+if you don't close them. Connections still do, unfortunately.
+
+ursor.fetchXXXDict() methods raise DeprecationWarning
+
+cursor.begin() is making a brief reappearence.
+
+cursor.callproc() now works, with some limitations.
+

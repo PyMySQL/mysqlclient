@@ -1,0 +1,16 @@
+recursive-include doc *.txt
+include MANIFEST.in
+include MANIFEST
+include ChangeLog
+include HISTORY
+include GPL
+include pymemcompat.h
+include dbapi20.py
+include test_MySQLdb_dbapi20.py
+include test_capabilities.py
+include test_MySQLdb_capabilities.py
+include metadata.cfg
+include site.cfg
+include setup_common.py
+include setup_posix.py
+include setup_windows.py
