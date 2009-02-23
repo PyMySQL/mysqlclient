@@ -418,12 +418,14 @@ _mysql_ResultObject_Initialize(
 					if (PyInt_Check(pmask)) {
 						mask = PyInt_AS_LONG(pmask);
 						if (mask & fields[i].flags) {
+							Py_DECREF(t);
 							break;
 						}
 						else {
-							continue;
+							goto cleanup;
 						}
 					} else {
+						Py_DECREF(t);
 						break;
 					}
 				}
