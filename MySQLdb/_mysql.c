@@ -34,9 +34,6 @@ PERFORMANCE OF THIS SOFTWARE.
 #else
 #include "my_config.h"
 #endif
-#ifndef uint
-#define uint unsigned int
-#endif
 #include "mysql.h"
 #include "mysqld_error.h"
 #include "errmsg.h"
@@ -483,8 +480,8 @@ _mysql_ConnectionObject_Initialize(
 #endif
 	char *host = NULL, *user = NULL, *passwd = NULL,
 		*db = NULL, *unix_socket = NULL;
-	uint port = MYSQL_PORT;
-	uint client_flag = 0;
+	unsigned int port = MYSQL_PORT;
+	unsigned int client_flag = 0;
 	static char *kwlist[] = { "host", "user", "passwd", "db", "port",
 				  "unix_socket", "conv",
 				  "connect_timeout", "compress",
