@@ -3,10 +3,10 @@ from ConfigParser import SafeConfigParser
 def get_metadata_and_options():
     config = SafeConfigParser()
     config.read(['metadata.cfg', 'site.cfg'])
-    
+
     metadata = dict(config.items('metadata'))
     options = dict(config.items('options'))
-    
+
     metadata['py_modules'] = filter(None, metadata['py_modules'].split('\n'))
     metadata['classifiers'] = filter(None, metadata['classifiers'].split('\n'))
 
@@ -20,7 +20,7 @@ def enabled(options, option):
     elif s in ('no', 'false', '0', 'n'):
         return False
     else:
-        raise Abort, "Unknown value %s for option %s" % (value, option)
+        raise ValueError("Unknown value %s for option %s" % (value, option))
 
 def create_release_file(metadata):
     rel = open("MySQLdb/release.py",'w')

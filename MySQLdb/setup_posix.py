@@ -13,7 +13,7 @@ def compiler_flag(f):
 
 def mysql_config(what):
     from os import popen
-    
+
     f = popen("%s --%s" % (mysql_config.path, what))
     data = f.read().strip().split()
     ret = f.close()
@@ -21,7 +21,7 @@ def mysql_config(what):
         if ret/256:
             data = []
         if ret/256 > 1:
-            raise EnvironmentError, "%s not found" % mysql_config.path
+            raise EnvironmentError("%s not found" % (mysql_config.path,))
     return data
 mysql_config.path = "mysql_config"
 
@@ -33,7 +33,7 @@ def get_config():
 
     if 'mysql_config' in options:
         mysql_config.path = options['mysql_config']
-        
+
     extra_objects = []
     static = enabled(options, 'static')
     if enabled(options, 'embedded'):
@@ -51,7 +51,7 @@ def get_config():
 
     library_dirs = [ dequote(i[2:]) for i in libs if i.startswith(compiler_flag("L")) ]
     libraries = [ dequote(i[2:]) for i in libs if i.startswith(compiler_flag("l")) ]
-    
+
     removable_compile_args = [ compiler_flag(f) for f in "ILl" ]
     extra_compile_args = [ i.replace("%", "%%") for i in mysql_config("cflags")
                            if i[:2] not in removable_compile_args ]
@@ -62,16 +62,16 @@ def get_config():
         include_dirs = [ dequote(i[2:])
                          for i in mysql_config('cflags')
                          if i.startswith(compiler_flag('I')) ]
-    
+
     if static:
         extra_objects.append(os.path.join(
             library_dirs[0],'lib%s.a' % client))
-        
+
     name = "MySQL-python"
     if enabled(options, 'embedded'):
         name = name + "-embedded"
     metadata['name'] = name
-    
+
     define_macros = [
         ('version_info', metadata['version_info']),
         ('__version__', metadata['version']),
@@ -91,4 +91,4 @@ def get_config():
 
 if __name__ == "__main__":
     print """You shouldn't be running this directly; it is used by setup.py."""
-    
+
