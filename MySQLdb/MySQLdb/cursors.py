@@ -212,10 +212,8 @@ class BaseCursor(object):
         except TypeError, msg:
             if msg.args[0] in ("not enough arguments for format string",
                                "not all arguments converted"):
-                self.messages.append((ProgrammingError, msg.args[0]))
                 self.errorhandler(self, ProgrammingError, msg.args[0])
             else:
-                self.messages.append((TypeError, msg))
                 self.errorhandler(self, TypeError, msg)
         except:
             from sys import exc_info

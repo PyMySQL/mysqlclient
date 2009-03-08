@@ -32,7 +32,7 @@ def defaulterrorhandler(connection, cursor, errorclass, errorvalue):
         connection.messages.append(error)
     del cursor
     del connection
-    raise errorclass(errorvalue)
+    raise errorclass, errorvalue
 
 
 class Connection(_mysql.connection):
