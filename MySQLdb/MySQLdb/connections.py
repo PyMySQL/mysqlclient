@@ -11,6 +11,7 @@ from _mysql_exceptions import Warning, Error, InterfaceError, DataError, \
      DatabaseError, OperationalError, IntegrityError, InternalError, \
      NotSupportedError, ProgrammingError
 import types, _mysql
+import re
 
 
 def defaulterrorhandler(connection, cursor, errorclass, errorvalue):
@@ -33,6 +34,23 @@ def defaulterrorhandler(connection, cursor, errorclass, errorvalue):
     del cursor
     del connection
     raise errorclass, errorvalue
+
+re_numeric_part = re.compile(r"^(\d+)")
+
+def numeric_part(s):
+    """Returns the leading numeric part of a string.
+    
+    >>> numeric_part("20-alpha")
+    20
+    >>> numeric_part("foo")
+    >>> numeric_part("16b")
+    16
+    """
+    
+    m = re_numeric_part.match(s)
+    if m:
+        return int(m.group(1))
+    return None
 
 
 class Connection(_mysql.connection):
@@ -159,7 +177,7 @@ class Connection(_mysql.connection):
         sql_mode = kwargs2.pop('sql_mode', '')
 
         client_flag = kwargs.get('client_flag', 0)
-        client_version = tuple([ int(n) for n in _mysql.get_client_info().split('.')[:2] ])
+        client_version = tuple([ numeric_part(n) for n in _mysql.get_client_info().split('.')[:2] ])
         if client_version >= (4, 1):
             client_flag |= CLIENT.MULTI_STATEMENTS
         if client_version >= (5, 0):
@@ -172,7 +190,7 @@ class Connection(_mysql.connection):
         self.encoders = dict([ (k, v) for k, v in conv.items()
                                if type(k) is not int ])
         
-        self._server_version = tuple([ int(n) for n in self.get_server_info().split('.')[:2] ])
+        self._server_version = tuple([ numeric_part(n) for n in self.get_server_info().split('.')[:2] ])
 
         db = proxy(self)
         def _get_string_literal():
