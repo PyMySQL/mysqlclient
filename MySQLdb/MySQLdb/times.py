@@ -4,6 +4,7 @@ This module provides some Date and Time classes for dealing with MySQL data.
 
 Use Python datetime module to handle date and time columns."""
 
+import math
 from time import localtime
 from datetime import date, datetime, time, timedelta
 from _mysql import string_literal
@@ -55,25 +56,26 @@ def DateTime_or_None(s):
         return Date_or_None(s)
 
 def TimeDelta_or_None(s):
-    from math import modf
     try:
         h, m, s = s.split(':')
-        td = timedelta(hours=int(h), minutes=int(m), seconds=int(float(s)),
-                       microseconds=int(modf(float(s))[0]*1000000))
+        h, m, s = int(h), int(m), float(s)
+        td = timedelta(hours=abs(h), minutes=m, seconds=int(s),
+                       microseconds=int(math.modf(s)[0] * 1000000))
         if h < 0:
             return -td
         else:
             return td
-    except:
+    except ValueError:
+        # unpacking or int/float conversion failed
         return None
 
 def Time_or_None(s):
-    from math import modf
     try:
         h, m, s = s.split(':')
-        return time(hour=int(h), minute=int(m), second=int(float(s)),
-                    microsecond=int(modf(float(s))[0]*1000000))
-    except:
+        h, m, s = int(h), int(m), float(s)
+        return time(hour=h, minute=m, second=int(s),
+                    microsecond=int(math.modf(s)[0] * 1000000))
+    except ValueError:
         return None
 
 def Date_or_None(s):
