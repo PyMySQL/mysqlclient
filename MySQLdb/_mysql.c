@@ -28,7 +28,8 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "pymemcompat.h"
 #include "structmember.h"
-#if defined(_WIN32) || defined(_WIN64) || defined(__WIN32__) || defined(WIN32) || defined(MS_WIN32)
+#if defined(MS_WINDOWS)
+#include <winsock2.h>
 #include <windows.h>
 #include <config-win.h>
 #else
@@ -480,7 +481,7 @@ _mysql_ConnectionObject_Initialize(
 #endif
 	char *host = NULL, *user = NULL, *passwd = NULL,
 		*db = NULL, *unix_socket = NULL;
-	unsigned int port = MYSQL_PORT;
+	unsigned int port = 0;
 	unsigned int client_flag = 0;
 	static char *kwlist[] = { "host", "user", "passwd", "db", "port",
 				  "unix_socket", "conv",
@@ -508,7 +509,8 @@ _mysql_ConnectionObject_Initialize(
 					 &init_command, &read_default_file,
 					 &read_default_group,
 					 &client_flag, &ssl,
-					 &local_infile
+					 &local_infile /* DO NOT PATCH FOR RECONNECT, IDIOTS
+					 IF YOU DO THIS, I WILL NOT SUPPORT YOUR PACKAGES. */
 					 ))
 		return -1;
 
