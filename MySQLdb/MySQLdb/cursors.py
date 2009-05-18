@@ -6,6 +6,9 @@ default, MySQLdb uses the Cursor class.
 """
 
 import re
+import sys
+from types import ListType, TupleType, UnicodeType
+
 
 restr = (r"\svalues\s*"
         r"(\(((?<!\\)'[^\)]*?\)[^\)]*(?<!\\)?'"
@@ -65,7 +68,7 @@ class BaseCursor(object):
         self.close()
         self.errorhandler = None
         self._result = None
-        
+
     def close(self):
         """Close the cursor. No further queries will be possible."""
         if not self.connection: return
@@ -147,8 +150,6 @@ class BaseCursor(object):
         Returns long integer rows affected, if any
 
         """
-        from types import ListType, TupleType
-        from sys import exc_info
         del self.messages[:]
         db = self._get_db()
         charset = db.character_set_name()
@@ -167,7 +168,7 @@ class BaseCursor(object):
                 self.messages.append((TypeError, m))
                 self.errorhandler(self, TypeError, m)
         except:
-            exc, value, tb = exc_info()
+            exc, value, tb = sys.exc_info()
             del tb
             self.messages.append((exc, value))
             self.errorhandler(self, exc, value)
@@ -216,8 +217,7 @@ class BaseCursor(object):
             else:
                 self.errorhandler(self, TypeError, msg)
         except:
-            from sys import exc_info
-            exc, value, tb = exc_info()
+            exc, value, tb = sys.exc_info()
             del tb
             self.errorhandler(self, exc, value)
         r = self._query('\n'.join([query[:p], ',\n'.join(q), query[e:]]))
@@ -254,7 +254,6 @@ class BaseCursor(object):
         disconnected.
         """
 
-        from types import UnicodeType
         db = self._get_db()
         charset = db.character_set_name()
         for index, arg in enumerate(args):
