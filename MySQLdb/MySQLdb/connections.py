@@ -158,11 +158,10 @@ class Connection(_mysql.connection):
 
         conv2 = {}
         for k, v in conv.items():
-            if isinstance(k, int):
-                if isinstance(v, list):
-                    conv2[k] = v[:]
-                else:
-                    conv2[k] = v
+            if isinstance(k, int) and isinstance(v, list):
+                conv2[k] = v[:]
+            else:
+                conv2[k] = v
         kwargs2['conv'] = conv2
 
         self.cursorclass = kwargs2.pop('cursorclass', self.default_cursor)
