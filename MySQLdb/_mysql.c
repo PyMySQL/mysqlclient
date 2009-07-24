@@ -514,20 +514,10 @@ _mysql_ConnectionObject_Initialize(
 					 ))
 		return -1;
 
-	if (!conv) 
-		conv = PyDict_New();
-#if PY_VERSION_HEX > 0x02000100
-	else
-		Py_INCREF(conv);
-#endif
-	if (!conv)
-		return -1;
-	self->converter = conv;
-
 #define _stringsuck(d,t,s) {t=PyMapping_GetItemString(s,#d);\
         if(t){d=PyString_AsString(t);Py_DECREF(t);}\
         PyErr_Clear();}
-	
+
 	if (ssl) {
 #if HAVE_OPENSSL
 		PyObject *value = NULL;
@@ -581,6 +571,17 @@ _mysql_ConnectionObject_Initialize(
 		_mysql_Exception(self);
 		return -1;
 	}
+
+        /* Internal references to python-land objects */
+	if (!conv)
+		conv = PyDict_New();
+	else
+		Py_INCREF(conv);
+
+	if (!conv)
+		return -1;
+	self->converter = conv;
+
 	/*
 	  PyType_GenericAlloc() automatically sets up GC allocation and
 	  tracking for GC objects, at least in 2.2.1, so it does not need to
