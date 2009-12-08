@@ -1715,7 +1715,7 @@ _mysql_ConnectionObject_kill(
 {
 	unsigned long pid;
 	int r;
-	if (!PyArg_ParseTuple(args, "i:kill", &pid)) return NULL;
+	if (!PyArg_ParseTuple(args, "k:kill", &pid)) return NULL;
 	check_connection(self);
 	Py_BEGIN_ALLOW_THREADS
 	r = mysql_kill(&(self->connection), pid);
