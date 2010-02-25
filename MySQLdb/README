@@ -15,7 +15,7 @@ Prerequisites
   * Versions lower than 2.3 WON'T WORK.
 
   * 2.4 is the primary test environment.
-  
+
   * Red Hat Linux:
 
     - Make sure you have the Python development headers and libraries
@@ -43,7 +43,7 @@ Prerequisites
     supported, and won't be until MySQLdb-1.3 or 2.0, if ever.
 
   * MySQL-5.0 is supported and tested, including stored procedures.
-      
+
   * MySQL-5.1 is supported (currently a release candidate) but untested.
     It should work.
 
@@ -93,7 +93,7 @@ Prerequisites
 
   * May be needed for MySQL-4.0 or newer, depending on compilation
     options. If you need it, you probably already have it.
-    
+
     - you may need openssl-devel on some platforms
 
 + C compiler
@@ -134,7 +134,7 @@ edit the [options] section of site.cfg:
         if True, try to link against a static library; otherwise link
 	against dynamic libraries (default). You may need static linking
 	to use the embedded server.
-	
+
 
 Finally, putting it together::
 
@@ -187,7 +187,7 @@ their own packages available.
 
 RPMs
 ....
-    
+
 If you prefer to install RPMs, you can use the bdist_rpm command with
 setup.py. This only builds the RPM; it does not install it. You may
 want to use the --python=XXX option, where XXX is the name of the

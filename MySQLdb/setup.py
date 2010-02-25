@@ -4,8 +4,8 @@ import os
 import sys
 from setuptools import setup, Extension
 
-if sys.version_info < (2, 3):
-    raise Error("Python-2.3 or newer is required")
+if not hasattr(sys, "hexversion") or sys.hexversion < 0x02030000:
+    raise Error("Python 2.3 or newer is required")
 
 if os.name == "posix":
     from setup_posix import get_config
