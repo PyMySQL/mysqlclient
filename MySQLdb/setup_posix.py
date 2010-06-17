@@ -55,6 +55,13 @@ def get_config():
     removable_compile_args = [ compiler_flag(f) for f in "ILl" ]
     extra_compile_args = [ i.replace("%", "%%") for i in mysql_config("cflags")
                            if i[:2] not in removable_compile_args ]
+
+    # Copy the arch flags for linking as well
+    extra_link_args = list()
+    for i in range(len(extra_compile_args)):
+        if extra_compile_args[i] == '-arch':
+            extra_link_args += ['-arch', extra_compile_args[i + 1]]
+
     include_dirs = [ dequote(i[2:])
                      for i in mysql_config('include')
                      if i.startswith(compiler_flag('I')) ]
@@ -83,6 +90,7 @@ def get_config():
         library_dirs = library_dirs,
         libraries = libraries,
         extra_compile_args = extra_compile_args,
+        extra_link_args = extra_link_args,
         include_dirs = include_dirs,
         extra_objects = extra_objects,
         define_macros = define_macros,
