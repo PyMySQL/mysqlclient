@@ -1,4 +1,20 @@
 =====================
+ What's new in 1.2.3
+=====================
+
+ez_setup.py has been update to include various fixes that affect the build.
+
+Better Python version and dependency detection as well as eliminate exception
+warnings under Python 2.6.
+
+Eliminated memory leaks related to Unicode and failed connections.
+
+Corrected connection .escape() functionality.
+
+Miscellaneous cleanups and and expanded testing suite to ensure ongoing release
+quality.
+
+=====================
  What's new in 1.2.2
 =====================
 
