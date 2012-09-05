@@ -4,12 +4,10 @@ def get_config():
 
     metadata, options = get_metadata_and_options()
 
-    serverKey = _winreg.OpenKey(_winreg.HKEY_LOCAL_MACHINE, options['registry_key'])
     connector = options["connector"]
 
     extra_objects = []
-    static = enabled(options, 'static')
-    # XXX static doesn't actually do anything on Windows
+
     if enabled(options, 'embedded'):
         client = "mysqld"
     else:
