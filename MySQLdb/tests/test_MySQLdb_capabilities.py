@@ -79,7 +79,18 @@ class test_MySQLdb(capabilities.DatabaseTest):
             self.cursor.execute("describe some_non_existent_table");
         except self.connection.ProgrammingError, msg:
             self.assertTrue(msg[0] == ER.NO_SUCH_TABLE)
-    
+
+    def test_bug_3514287(self):
+        c = self.cursor
+        try:
+            c.execute("""create table bug_3541287 (
+                c1 CHAR(10),
+                t1 TIMESTAMP)""")
+            c.execute("insert into bug_3541287 (c1,t1) values (%s, NOW())",
+                ("blah",))
+        finally:
+            c.execute("drop table if exists bug_3541287")
+
     def test_ping(self):
         self.connection.ping()
         
