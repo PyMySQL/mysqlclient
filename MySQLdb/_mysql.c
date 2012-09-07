@@ -381,6 +381,10 @@ _mysql_ResultObject_Initialize(
 	self->result = result;
 	Py_END_ALLOW_THREADS ;
 	if (!result) {
+		if (mysql_field_count(&(conn->connection)) > 0) {
+		    _mysql_Exception(conn);
+		    return -1;
+		}
 		self->converter = PyTuple_New(0);
 		return 0;
 	}
