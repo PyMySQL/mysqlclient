@@ -16,7 +16,8 @@ restr = (r"\svalues\s*"
         r"(?:\([^\)]*\))"
         r")+\))")
 
-insert_values= re.compile(restr)
+insert_values = re.compile(restr, re.I)
+
 from _mysql_exceptions import Warning, Error, InterfaceError, DataError, \
      DatabaseError, OperationalError, IntegrityError, InternalError, \
      NotSupportedError, ProgrammingError
