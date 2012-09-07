@@ -38,7 +38,7 @@ def format_TIMEDELTA(v):
     return '%d %d:%d:%d' % (v.days, hours, minutes, seconds)
 
 def format_TIMESTAMP(d):
-    return d.strftime("%Y-%m-%d %H:%M:%S")
+    return d.isoformat(" ")
 
 
 def DateTime_or_None(s):
