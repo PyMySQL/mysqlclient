@@ -32,6 +32,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #define PyInt_FromLong(n) PyLong_FromLong(n)
 #define PyInt_Check(n) PyLong_Check(n)
 #define PyInt_AS_LONG(n) PyLong_AS_LONG(n)
+#define RO READONLY
 #endif
 #if PY_VERSION_HEX > 0x02060000
 #include "bytesobject.h"
@@ -58,7 +59,11 @@ PERFORMANCE OF THIS SOFTWARE.
 # define MyMember(a,b,c,d,e) {a,b,c,d,e}
 # define MyMemberlist(x) struct PyMemberDef x
 # define MyAlloc(s,t) (s *) t.tp_alloc(&t,0)
-# define MyFree(ob) ob->ob_type->tp_free((PyObject *)ob) 
+#ifdef IS_PY3K
+# define MyFree(o) PyObject_Del(o)
+#else
+# define MyFree(ob) ob->ob_type->tp_free((PyObject *)ob)
+#endif
 #endif
 
 #if PY_VERSION_HEX < 0x02050000 && !defined(PY_SSIZE_T_MIN)
@@ -2235,7 +2240,11 @@ _mysql_ResultObject_repr(
 	char buf[300];
 	sprintf(buf, "<_mysql.result object at %lx>",
 		(long)self);
+#ifdef IS_PY3K
+	return PyUnicode_FromString(buf);
+#else
 	return PyString_FromString(buf);
+#endif
 }
 
 static PyMethodDef _mysql_ConnectionObject_methods[] = {
