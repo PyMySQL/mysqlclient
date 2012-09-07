@@ -158,6 +158,7 @@ class BaseCursor(object):
         if args is not None:
             query = query % db.literal(args)
         try:
+            r = None
             r = self._query(query)
         except TypeError, m:
             if m.args[0] in ("not enough arguments for format string",
