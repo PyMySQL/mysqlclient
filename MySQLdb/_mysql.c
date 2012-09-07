@@ -26,6 +26,13 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
+#if PY_MAJOR_VERSION >= 3
+#define IS_PY3K
+#endif
+#if PY_VERSION_HEX > 0x02060000
+#include "bytesobject.h"
+#include "intobject.h"
+#endif
 #include "pymemcompat.h"
 #include "structmember.h"
 #if defined(MS_WINDOWS)
