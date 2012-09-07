@@ -7,7 +7,8 @@ class test_MySQLdb(dbapi20.DatabaseAPI20Test):
     driver = MySQLdb
     connect_args = ()
     connect_kw_args = dict(db='test',
-                           read_default_file='~/.my.cnf',
+                           host="127.0.0.1",
+                           user="test", #read_default_file='~/.my.cnf',
                            charset='utf8',
                            sql_mode="ANSI,STRICT_TRANS_TABLES,TRADITIONAL")
 
@@ -39,7 +40,7 @@ class test_MySQLdb(dbapi20.DatabaseAPI20Test):
 
             cur.execute('select name from %sbooze' % self.table_prefix)
             rows = cur.fetchall()
-            self.failUnless(cur.rowcount in (-1,len(self.samples)))
+            self.assertTrue(cur.rowcount in (-1,len(self.samples)))
             self.assertEqual(len(rows),len(self.samples),
                 'cursor.fetchall did not retrieve all rows'
                 )
@@ -55,12 +56,12 @@ class test_MySQLdb(dbapi20.DatabaseAPI20Test):
                 'cursor.fetchall should return an empty list if called '
                 'after the whole result set has been fetched'
                 )
-            self.failUnless(cur.rowcount in (-1,len(self.samples)))
+            self.assertTrue(cur.rowcount in (-1,len(self.samples)))
 
             self.executeDDL2(cur)
             cur.execute('select name from %sbarflys' % self.table_prefix)
             rows = cur.fetchall()
-            self.failUnless(cur.rowcount in (-1,0))
+            self.assertTrue(cur.rowcount in (-1,0))
             self.assertEqual(len(rows),0,
                 'cursor.fetchall should return an empty list if '
                 'a select query returns no rows'
@@ -88,7 +89,7 @@ class test_MySQLdb(dbapi20.DatabaseAPI20Test):
                 'cursor.fetchone should return None if a query retrieves '
                 'no rows'
                 )
-            self.failUnless(cur.rowcount in (-1,0))
+            self.assertTrue(cur.rowcount in (-1,0))
 
             # cursor.fetchone should raise an Error if called after
             # executing a query that cannnot return rows
@@ -108,7 +109,7 @@ class test_MySQLdb(dbapi20.DatabaseAPI20Test):
 ##             self.assertEqual(cur.fetchone(),None,
 ##                 'cursor.fetchone should return None if no more rows available'
 ##                 )
-            self.failUnless(cur.rowcount in (-1,1))
+            self.assertTrue(cur.rowcount in (-1,1))
         finally:
             con.close()
 
@@ -125,12 +126,12 @@ class test_MySQLdb(dbapi20.DatabaseAPI20Test):
             cur.execute("insert into %sbooze values ('Victoria Bitter')" % (
                 self.table_prefix
                 ))
-##             self.failUnless(cur.rowcount in (-1,1),
+##             self.assertTrue(cur.rowcount in (-1,1),
 ##                 'cursor.rowcount should == number or rows inserted, or '
 ##                 'set to -1 after executing an insert statement'
 ##                 )
             cur.execute("select name from %sbooze" % self.table_prefix)
-            self.failUnless(cur.rowcount in (-1,1),
+            self.assertTrue(cur.rowcount in (-1,1),
                 'cursor.rowcount should == number of rows returned, or '
                 'set to -1 after executing a select statement'
                 )

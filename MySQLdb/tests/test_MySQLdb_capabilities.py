@@ -10,7 +10,7 @@ class test_MySQLdb(capabilities.DatabaseTest):
 
     db_module = MySQLdb
     connect_args = ()
-    connect_kwargs = dict(db='test', read_default_file='~/.my.cnf',
+    connect_kwargs = dict(db='test', host="127.0.0.1", user="test", #read_default_file='~/.my.cnf',
                           charset='utf8', sql_mode="ANSI,STRICT_TRANS_TABLES,TRADITIONAL")
     create_table_extra = "ENGINE=INNODB CHARACTER SET UTF8"
     leak_test = False
@@ -78,7 +78,7 @@ class test_MySQLdb(capabilities.DatabaseTest):
         try:
             self.cursor.execute("describe some_non_existent_table");
         except self.connection.ProgrammingError, msg:
-            self.failUnless(msg[0] == ER.NO_SUCH_TABLE)
+            self.assertTrue(msg[0] == ER.NO_SUCH_TABLE)
     
     def test_ping(self):
         self.connection.ping()

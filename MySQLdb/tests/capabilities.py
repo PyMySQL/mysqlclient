@@ -127,12 +127,12 @@ class DatabaseTest(unittest.TestCase):
         self.cursor.execute('select col1 from %s where col1=%s' % \
                             (self.table, 0))
         l = self.cursor.fetchall()
-        self.failIf(l, "DELETE didn't work")
+        self.assertFalse(l, "DELETE didn't work")
         self.connection.rollback()
         self.cursor.execute('select col1 from %s where col1=%s' % \
                             (self.table, 0))
         l = self.cursor.fetchall()
-        self.failUnless(len(l) == 1, "ROLLBACK didn't work")
+        self.assertTrue(len(l) == 1, "ROLLBACK didn't work")
         self.cursor.execute('drop table %s' % (self.table))
 
     def test_truncation(self):
