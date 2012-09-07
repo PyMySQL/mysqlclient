@@ -1,5 +1,6 @@
+import os, sys
+
 def get_config():
-    import os, sys, _winreg
     from setup_common import get_metadata_and_options, enabled, create_release_file
 
     metadata, options = get_metadata_and_options()
@@ -41,5 +42,5 @@ def get_config():
     return metadata, ext_options
 
 if __name__ == "__main__":
-    print """You shouldn't be running this directly; it is used by setup.py."""
+    sys.stderr.write("""You shouldn't be running this directly; it is used by setup.py.""")
     

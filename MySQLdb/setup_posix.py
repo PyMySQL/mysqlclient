@@ -1,3 +1,4 @@
+import os, sys
 from ConfigParser import SafeConfigParser
 
 # This dequote() business is required for some older versions
@@ -26,7 +27,6 @@ def mysql_config(what):
 mysql_config.path = "mysql_config"
 
 def get_config():
-    import os, sys
     from setup_common import get_metadata_and_options, enabled, create_release_file
 
     metadata, options = get_metadata_and_options()
@@ -98,5 +98,5 @@ def get_config():
     return metadata, ext_options
 
 if __name__ == "__main__":
-    print """You shouldn't be running this directly; it is used by setup.py."""
+    sys.stderr.write("""You shouldn't be running this directly; it is used by setup.py.""")
 
