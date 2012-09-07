@@ -164,7 +164,7 @@ class Connection(_mysql.connection):
                 conv2[k] = v
         kwargs2['conv'] = conv2
 
-        self.cursorclass = kwargs2.pop('cursorclass', self.default_cursor)
+        cursorclass = kwargs2.pop('cursorclass', self.default_cursor)
         charset = kwargs2.pop('charset', '')
 
         if charset:
@@ -185,7 +185,7 @@ class Connection(_mysql.connection):
         kwargs2['client_flag'] = client_flag
 
         super(Connection, self).__init__(*args, **kwargs2)
-
+        self.cursorclass = cursorclass
         self.encoders = dict([ (k, v) for k, v in conv.items()
                                if type(k) is not int ])
         
