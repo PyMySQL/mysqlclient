@@ -35,7 +35,17 @@ MySQL.connect().
 from _mysql import string_literal, escape_sequence, escape_dict, escape, NULL
 from MySQLdb.constants import FIELD_TYPE, FLAG
 from MySQLdb.times import *
-import types
+
+try:
+    from types import IntType, LongType, FloatType, NoneType, TupleType, ListType, DictType, InstanceType, \
+        StringType, UnicodeType, ObjectType, BooleanType, ClassType, TypeType
+except ImportError:
+    # Python 3
+    long = int
+    IntType, LongType, FloatType, NoneType = int, long, float, type(None)
+    TupleType, ListType, DictType, InstanceType = tuple, list, dict, None
+    StringType, UnicodeType, ObjectType, BooleanType = bytes, str, object, bool
+
 import array
 
 try:
@@ -92,14 +102,14 @@ def Instance2Str(o, d):
 
     """
 
-    if d.has_key(o.__class__):
+    if o.__class__ in d:
         return d[o.__class__](o, d)
     cl = filter(lambda x,o=o:
-                type(x) is types.ClassType
+                type(x) is ClassType
                 and isinstance(o, x), d.keys())
     if not cl and hasattr(types, 'ObjectType'):
         cl = filter(lambda x,o=o:
-                    type(x) is types.TypeType
+                    type(x) is TypeType
                     and isinstance(o, x)
                     and d[x] is not Instance2Str,
                     d.keys())
@@ -115,19 +125,19 @@ def array2Str(o, d):
     return Thing2Literal(o.tostring(), d)
 
 conversions = {
-    types.IntType: Thing2Str,
-    types.LongType: Long2Int,
-    types.FloatType: Float2Str,
-    types.NoneType: None2NULL,
-    types.TupleType: escape_sequence,
-    types.ListType: escape_sequence,
-    types.DictType: escape_dict,
-    types.InstanceType: Instance2Str,
+    IntType: Thing2Str,
+    LongType: Long2Int,
+    FloatType: Float2Str,
+    NoneType: None2NULL,
+    TupleType: escape_sequence,
+    ListType: escape_sequence,
+    DictType: escape_dict,
+    InstanceType: Instance2Str,
     array.ArrayType: array2Str,
-    types.StringType: Thing2Literal, # default
-    types.UnicodeType: Unicode2Str,
-    types.ObjectType: Instance2Str,
-    types.BooleanType: Bool2Str,
+    StringType: Thing2Literal, # default
+    UnicodeType: Unicode2Str,
+    ObjectType: Instance2Str,
+    BooleanType: Bool2Str,
     DateTimeType: DateTime2literal,
     DateTimeDeltaType: DateTimeDelta2literal,
     set: Set2Str,
