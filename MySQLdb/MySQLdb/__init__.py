@@ -14,7 +14,7 @@ MySQLdb.converters module.
 """
 
 __revision__ = """$Revision$"""[11:-2]
-from release import __version__, version_info, __author__
+from MySQLdb.release import __version__, version_info, __author__
 
 import _mysql
 
