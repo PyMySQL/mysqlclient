@@ -3018,8 +3018,10 @@ init_mysql(void)
 			       (PyObject *)&_mysql_ResultObject_Type))
 		goto error;	
 	Py_INCREF(&_mysql_ResultObject_Type);
-	if (!(emod = PyImport_ImportModule("_mysql_exceptions")))
+	if (!(emod = PyImport_ImportModule("_mysql_exceptions"))) {
+	    PyErr_Print();
 		goto error;
+	}
 	if (!(edict = PyModule_GetDict(emod))) goto error;
 	if (!(_mysql_MySQLError =
 	      _mysql_NewException(dict, edict, "MySQLError")))
