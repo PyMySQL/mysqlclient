@@ -32,7 +32,6 @@ PERFORMANCE OF THIS SOFTWARE.
 #define PyInt_FromLong(n) PyLong_FromLong(n)
 #define PyInt_Check(n) PyLong_Check(n)
 #define PyInt_AS_LONG(n) PyLong_AS_LONG(n)
-#define RO READONLY
 #endif
 #if PY_VERSION_HEX > 0x02060000
 #include "bytesobject.h"
@@ -2467,7 +2466,7 @@ static MyMemberlist(_mysql_ConnectionObject_memberlist)[] = {
 		"open",
 		T_INT,
 		offsetof(_mysql_ConnectionObject,open),
-		RO,
+		READONLY,
 		"True if connection is open"
 		),
 	MyMember(
@@ -2481,20 +2480,20 @@ static MyMemberlist(_mysql_ConnectionObject_memberlist)[] = {
 		"server_capabilities",
 		T_UINT,
 		offsetof(_mysql_ConnectionObject,connection.server_capabilities),
-		RO,
+		READONLY,
 		"Capabilites of server; consult MySQLdb.constants.CLIENT"
 		),
 	MyMember(
 		 "port",
 		 T_UINT,
 		 offsetof(_mysql_ConnectionObject,connection.port),
-		 RO,
+		 READONLY,
 		 "TCP/IP port of the server connection"
 		 ),
 	MyMember(
 		 "client_flag",
 		 T_UINT,
-		 RO,
+		 READONLY,
 		 offsetof(_mysql_ConnectionObject,connection.client_flag),
 		 "Client flags; refer to MySQLdb.constants.CLIENT"
 		 ),
@@ -2558,23 +2557,25 @@ static MyMemberlist(_mysql_ResultObject_memberlist)[] = {
 		"converter",
 		T_OBJECT,
 		offsetof(_mysql_ResultObject,converter),
-		RO,
+		READONLY,
 		"Type conversion mapping"
 		),
 	{NULL} /* Sentinel */
 };
-                                                                        
+
 static PyObject *
 _mysql_ConnectionObject_getattr(
 	_mysql_ConnectionObject *self,
 	char *name)
 {
+#ifndef IS_PY3K
 	PyObject *res;
 
 	res = Py_FindMethod(_mysql_ConnectionObject_methods, (PyObject *)self, name);
 	if (res != NULL)
 		return res;
 	PyErr_Clear();
+#endif
 	if (strcmp(name, "closed") == 0)
 		return PyInt_FromLong((long)!(self->open));
 #if PY_VERSION_HEX < 0x02020000
@@ -2597,12 +2598,14 @@ _mysql_ResultObject_getattr(
 	_mysql_ResultObject *self,
 	char *name)
 {
+#ifndef IS_PY3K
 	PyObject *res;
 
 	res = Py_FindMethod(_mysql_ResultObject_methods, (PyObject *)self, name);
 	if (res != NULL)
 		return res;
 	PyErr_Clear();
+#endif
 #if PY_VERSION_HEX < 0x02020000
 	return PyMember_Get((char *)self, _mysql_ResultObject_memberlist, name);
 #else
@@ -2669,8 +2672,12 @@ _mysql_ResultObject_setattr(
 }
 
 PyTypeObject _mysql_ConnectionObject_Type = {
+#ifdef IS_PY3K
+    PyVarObject_HEAD_INIT(NULL, 0)
+#else
 	PyObject_HEAD_INIT(NULL)
 	0,
+#endif
 	"_mysql.connection", /* (char *)tp_name For printing */
 	sizeof(_mysql_ConnectionObject),
 	0,
@@ -2753,8 +2760,12 @@ PyTypeObject _mysql_ConnectionObject_Type = {
 } ;
 
 PyTypeObject _mysql_ResultObject_Type = {
+#ifdef IS_PY3K
+    PyVarObject_HEAD_INIT(NULL, 0)
+#else
 	PyObject_HEAD_INIT(NULL)
 	0,
+#endif
 	"_mysql.result",
 	sizeof(_mysql_ResultObject),
 	0,
@@ -2941,22 +2952,50 @@ an argument are now methods of the result object. Deprecated functions\n\
 (as of 3.23) are NOT implemented.\n\
 ";
 
+#ifdef IS_PY3K
+static struct PyModuleDef _mysqlmodule = {
+   PyModuleDef_HEAD_INIT,
+   "_mysql",   /* name of module */
+   _mysql___doc__, /* module documentation, may be NULL */
+   -1,       /* size of per-interpreter state of the module,
+                or -1 if the module keeps state in global variables. */
+   _mysql_methods
+};
+
+PyMODINIT_FUNC
+PyInit__mysql(void)
+#else
 DL_EXPORT(void)
 init_mysql(void)
+#endif
 {
 	PyObject *dict, *module, *emod, *edict;
+#ifdef IS_PY3K
+    module = PyModule_Create(&_mysqlmodule);
+	if (!module) return module; /* this really should never happen */
+#else
 	module = Py_InitModule4("_mysql", _mysql_methods, _mysql___doc__,
 				(PyObject *)NULL, PYTHON_API_VERSION);
 	if (!module) return; /* this really should never happen */
+#endif
+#ifdef IS_PY3K
+/*    Py_TYPE(_mysql_ConnectionObject_Type) = &PyType_Type;
+    Py_TYPE(_mysql_ResultObject_Type) = &PyType_Type; */
+#else
 	_mysql_ConnectionObject_Type.ob_type = &PyType_Type;
 	_mysql_ResultObject_Type.ob_type = &PyType_Type;
+#endif
 #if PY_VERSION_HEX >= 0x02020000
 	_mysql_ConnectionObject_Type.tp_alloc = PyType_GenericAlloc;
 	_mysql_ConnectionObject_Type.tp_new = PyType_GenericNew;
-	_mysql_ConnectionObject_Type.tp_free = _PyObject_GC_Del; 
+#ifndef IS_PY3K
+	_mysql_ConnectionObject_Type.tp_free = _PyObject_GC_Del;
+#endif
 	_mysql_ResultObject_Type.tp_alloc = PyType_GenericAlloc;
 	_mysql_ResultObject_Type.tp_new = PyType_GenericNew;
+#ifndef IS_PY3K
 	_mysql_ResultObject_Type.tp_free = _PyObject_GC_Del;
+#endif
 #endif
 
 	if (!(dict = PyModule_GetDict(module))) goto error;
@@ -2965,7 +3004,11 @@ init_mysql(void)
 				       dict, dict)))
 		goto error;
 	if (PyDict_SetItemString(dict, "__version__",
+#ifdef IS_PY3K
+			       PyUnicode_FromString(QUOTE(__version__))))
+#else
 			       PyString_FromString(QUOTE(__version__))))
+#endif
 		goto error;
 	if (PyDict_SetItemString(dict, "connection",
 			       (PyObject *)&_mysql_ConnectionObject_Type))
@@ -3012,14 +3055,21 @@ init_mysql(void)
 	      _mysql_NewException(dict, edict, "NotSupportedError")))
 		goto error;
 	Py_DECREF(emod);
+#ifdef IS_PY3K
+	if (!(_mysql_NULL = PyUnicode_FromString("NULL")))
+		goto error;
+#else
 	if (!(_mysql_NULL = PyString_FromString("NULL")))
 		goto error;
+#endif
 	if (PyDict_SetItemString(dict, "NULL", _mysql_NULL)) goto error;
   error:
 	if (PyErr_Occurred())
 		PyErr_SetString(PyExc_ImportError,
 				"_mysql: init failed");
-	return;
+#ifdef IS_PY3K
+    return module;
+#endif
 }
 
 
