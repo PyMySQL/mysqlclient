@@ -3064,9 +3064,11 @@ init_mysql(void)
 #endif
 	if (PyDict_SetItemString(dict, "NULL", _mysql_NULL)) goto error;
   error:
-	if (PyErr_Occurred())
+	if (PyErr_Occurred()) {
 		PyErr_SetString(PyExc_ImportError,
 				"_mysql: init failed");
+		module = NULL;
+    }
 #ifdef IS_PY3K
     return module;
 #endif
