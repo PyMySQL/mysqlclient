@@ -2979,8 +2979,8 @@ init_mysql(void)
 	if (!module) return; /* this really should never happen */
 #endif
 #ifdef IS_PY3K
-/*    Py_TYPE(_mysql_ConnectionObject_Type) = &PyType_Type;
-    Py_TYPE(_mysql_ResultObject_Type) = &PyType_Type; */
+	Py_TYPE(&_mysql_ConnectionObject_Type) = &PyType_Type;
+	Py_TYPE(&_mysql_ResultObject_Type) = &PyType_Type;
 #else
 	_mysql_ConnectionObject_Type.ob_type = &PyType_Type;
 	_mysql_ResultObject_Type.ob_type = &PyType_Type;

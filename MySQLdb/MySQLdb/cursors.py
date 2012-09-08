@@ -7,8 +7,13 @@ default, MySQLdb uses the Cursor class.
 
 import re
 import sys
-from types import ListType, TupleType, UnicodeType
-
+try:
+    from types import ListType, TupleType, UnicodeType
+except ImportError:
+    # Python 3
+    ListType = list
+    TupleType = tuple
+    UnicodeType = str
 
 restr = (r"\svalues\s*"
         r"(\(((?<!\\)'[^\)]*?\)[^\)]*(?<!\\)?'"
@@ -161,7 +166,7 @@ class BaseCursor(object):
         try:
             r = None
             r = self._query(query)
-        except TypeError, m:
+        except TypeError as m:
             if m.args[0] in ("not enough arguments for format string",
                              "not all arguments converted"):
                 self.messages.append((ProgrammingError, m.args[0]))
@@ -212,7 +217,7 @@ class BaseCursor(object):
         qv = m.group(1)
         try:
             q = [ qv % db.literal(a) for a in args ]
-        except TypeError, msg:
+        except TypeError as msg:
             if msg.args[0] in ("not enough arguments for format string",
                                "not all arguments converted"):
                 self.errorhandler(self, ProgrammingError, msg.args[0])
@@ -365,7 +370,7 @@ class CursorStoreResultMixIn(object):
             r = value
         else:
             self.errorhandler(self, ProgrammingError,
-                              "unknown scroll mode %s" % `mode`)
+                              "unknown scroll mode %s" % repr(mode))
         if r < 0 or r >= len(self._rows):
             self.errorhandler(self, IndexError, "out of range")
         self.rownumber = r

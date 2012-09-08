@@ -33,8 +33,8 @@ MySQL.connect().
 """
 
 from _mysql import string_literal, escape_sequence, escape_dict, escape, NULL
-from constants import FIELD_TYPE, FLAG
-from times import *
+from MySQLdb.constants import FIELD_TYPE, FLAG
+from MySQLdb.times import *
 import types
 import array
 

@@ -6,7 +6,7 @@ want to make your own subclasses. In most cases, you will probably
 override Connection.default_cursor with a non-standard Cursor class.
 
 """
-import cursors
+from MySQLdb import cursors
 from _mysql_exceptions import Warning, Error, InterfaceError, DataError, \
      DatabaseError, OperationalError, IntegrityError, InternalError, \
      NotSupportedError, ProgrammingError
@@ -33,7 +33,7 @@ def defaulterrorhandler(connection, cursor, errorclass, errorvalue):
         connection.messages.append(error)
     del cursor
     del connection
-    raise errorclass, errorvalue
+    raise errorclass(errorvalue)
 
 re_numeric_part = re.compile(r"^(\d+)")
 
@@ -143,8 +143,8 @@ class Connection(_mysql.connection):
         documentation for the MySQL C API for some hints on what they do.
 
         """
-        from constants import CLIENT, FIELD_TYPE
-        from converters import conversions
+        from MySQLdb.constants import CLIENT, FIELD_TYPE
+        from MySQLdb.converters import conversions
         from weakref import proxy, WeakValueDictionary
         
         import types

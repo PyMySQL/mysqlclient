@@ -77,7 +77,7 @@ def Binary(x):
 
 def Connect(*args, **kwargs):
     """Factory function for connections.Connection."""
-    from connections import Connection
+    from MySQLdb.connections import Connection
     return Connection(*args, **kwargs)
 
 connect = Connection = Connect
