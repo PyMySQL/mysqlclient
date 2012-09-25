@@ -1,6 +1,0 @@
-dist
-build
-regress.py
-test.py
-PKG-INFO
-*.pyc

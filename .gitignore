@@ -1,0 +1,11 @@
+*.pyc
+*.pyo
+*.o
+*.so
+*.pyd
+*.gz
+*.zip
+*.egg
+*.egg-info/
+build/
+dist/
