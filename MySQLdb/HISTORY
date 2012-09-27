@@ -1,4 +1,40 @@
 =====================
+ What's new in 1.2.4
+=====================
+
+beta 2
+======
+
+Reverted an accidental change in the exception format. (issue #1)
+
+Reverted some raise statements so that they will continue to work with Python < 2.6
+
+
+beta 1
+======
+
+A lot of work has been done towards Python 3 compatibility, and avoiding warnings with Python 2.7.
+This includes import changes, converting dict.has_kay(k) to k in dict, updating some test suite methods, etc.
+
+Due to the difficulties of supporting Python 3 and Python < 2.7, 1.2.4 will support Python 2.4 though 2.7.
+1.3.0 will support Python 3 and Python 2.7 and 2.6.
+
+MySQLdb-2.0 is instead going to become moist-1.0. See https://github.com/farcepest/moist
+
+The Windows build has been simplified, and I plan to correct pre-built i386 packages built
+against the python.org Python-2.7 package and MySQL Connector/C-6.0. Contact me if you
+need ia64 packages.
+
+The connection's cursorclass (if not default) was being lost on reconnect.
+
+Newer versions of MySQL don't use OpenSSL and therefore don't have HAVE_SSL defined, but they do have
+a different SSL library. Fixed this so SSL support would be enabled in this case.
+
+The regex that looked for SQL INSERT statement and VALUES in cursor.executemany() was made case-insensitive
+again.
+
+
+=====================
  What's new in 1.2.3
 =====================
 
