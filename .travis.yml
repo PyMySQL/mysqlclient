@@ -3,5 +3,5 @@ python:
  - "2.5"
  - "2.6"
  - "2.7"
-install: cd MySQLdb && python setup.py install
-script: cd MySQLdb && nosetests 
+install: (cd MySQLdb && python setup.py install)
+script: (cd MySQLdb && nosetests)
