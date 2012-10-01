@@ -1,0 +1,9 @@
+language: python
+Python:
+ - "2.4"
+ - "2.5"
+ - "2.6"
+ - "2.7"
+script: nosetests
+before_script:
+ - mysql -e 'CREATE DATABASE test;'
