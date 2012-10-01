@@ -8,7 +8,7 @@ class test_MySQLdb(dbapi20.DatabaseAPI20Test):
     connect_args = ()
     connect_kw_args = dict(db='test',
                            host="127.0.0.1",
-                           user="test", #read_default_file='~/.my.cnf',
+                           user="root",
                            charset='utf8',
                            sql_mode="ANSI,STRICT_TRANS_TABLES,TRADITIONAL")
 
