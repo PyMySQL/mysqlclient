@@ -44,7 +44,7 @@ class CoreAPI(unittest.TestCase):
     """Test _mysql interaction internals."""
 
     def setUp(self):
-        self.conn = _mysql.connect(db='test', host='127.0.0.1', user='test') #read_default_file="~/.my.cnf")
+        self.conn = _mysql.connect(db='test', host='127.0.0.1', user='root')
 
     def tearDown(self):
         self.conn.close()
