@@ -4,4 +4,4 @@ Python:
  - "2.5"
  - "2.6"
  - "2.7"
-script: nosetests
+script: nosetests MySQLdb
