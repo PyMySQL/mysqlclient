@@ -2,15 +2,12 @@
 import dbapi20
 import unittest
 import MySQLdb
+from configdb import connection_kwargs
 
 class test_MySQLdb(dbapi20.DatabaseAPI20Test):
     driver = MySQLdb
     connect_args = ()
-    connect_kw_args = dict(db='test',
-                           host="127.0.0.1",
-                           user="root",
-                           charset='utf8',
-                           sql_mode="ANSI,STRICT_TRANS_TABLES,TRADITIONAL")
+    connect_kw_args = connection_kwargs(dict(sql_mode="ANSI,STRICT_TRANS_TABLES,TRADITIONAL"))
 
     def test_setoutputsize(self): pass
     def test_setoutputsize_basic(self): pass
