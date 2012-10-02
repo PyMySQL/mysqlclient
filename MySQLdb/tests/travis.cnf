@@ -5,6 +5,6 @@
 [MySQLdb-tests]
 host = 127.0.0.1
 user = root
-database = test
+database = mysqldb_test
 #password =
 default-character-set = utf8
