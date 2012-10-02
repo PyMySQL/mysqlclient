@@ -3,6 +3,7 @@ import unittest
 import _mysql
 import MySQLdb
 from MySQLdb.constants import FIELD_TYPE
+from configdb import connection_factory
 
 
 class TestDBAPISet(unittest.TestCase):
@@ -44,7 +45,7 @@ class CoreAPI(unittest.TestCase):
     """Test _mysql interaction internals."""
 
     def setUp(self):
-        self.conn = _mysql.connect(db='test', host='127.0.0.1', user='root')
+        self.conn = connection_factory(use_unicode=True)
 
     def tearDown(self):
         self.conn.close()
