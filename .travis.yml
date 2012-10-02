@@ -4,4 +4,4 @@ python:
  - "2.6"
  - "2.7"
 install: (cd MySQLdb && python setup.py install)
-script: (cd MySQLdb && nosetests)
+script: (cd MySQLdb && TESTDB=travis.cnf nosetests)
