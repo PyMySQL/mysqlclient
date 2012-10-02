@@ -10,8 +10,7 @@ class test_MySQLdb(capabilities.DatabaseTest):
 
     db_module = MySQLdb
     connect_args = ()
-    connect_kwargs = dict(db='test', host="127.0.0.1", user="test", #read_default_file='~/.my.cnf',
-                          charset='utf8', sql_mode="ANSI,STRICT_TRANS_TABLES,TRADITIONAL")
+    connect_kwargs = dict(use_unicode=True, sql_mode="ANSI,STRICT_TRANS_TABLES,TRADITIONAL")
     create_table_extra = "ENGINE=INNODB CHARACTER SET UTF8"
     leak_test = False
     

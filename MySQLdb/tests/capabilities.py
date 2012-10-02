@@ -8,6 +8,7 @@
 from time import time
 import array
 import unittest
+from configdb import connection_factory
 
 
 class DatabaseTest(unittest.TestCase):
@@ -21,7 +22,7 @@ class DatabaseTest(unittest.TestCase):
     
     def setUp(self):
         import gc
-        db = self.db_module.connect(*self.connect_args, **self.connect_kwargs)
+        db = connection_factory(**self.connect_kwargs)
         self.connection = db
         self.cursor = db.cursor()
         # TODO: this needs to be re-evaluated for Python 3

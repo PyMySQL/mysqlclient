@@ -1,0 +1,10 @@
+# To create your own custom version of this file, read
+# http://dev.mysql.com/doc/refman/5.1/en/option-files.html
+# and set TESTDB in your environment to the name of the file
+
+[MySQLdb-tests]
+host = 127.0.0.1
+user = test
+database = test
+#password =
+default-character-set = utf8
