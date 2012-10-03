@@ -174,6 +174,8 @@ class BaseCursor(object):
             else:
                 self.messages.append((TypeError, m))
                 self.errorhandler(self, TypeError, m)
+        except (SystemExit, KeyboardInterrupt):
+            raise
         except:
             exc, value, tb = sys.exc_info()
             del tb
@@ -223,6 +225,8 @@ class BaseCursor(object):
                 self.errorhandler(self, ProgrammingError, msg.args[0])
             else:
                 self.errorhandler(self, TypeError, msg)
+        except (SystemExit, KeyboardInterrupt):
+            raise
         except:
             exc, value, tb = sys.exc_info()
             del tb
