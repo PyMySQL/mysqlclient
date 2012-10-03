@@ -471,13 +471,17 @@ _mysql_ResultObject_Initialize(
 					return -1;
 				}
 				if (PyTuple_Check(t) && PyTuple_GET_SIZE(t) == 2) {
-					long mask;
+					long mask, flags;
 					PyObject *pmask=NULL;
 					pmask = PyTuple_GET_ITEM(t, 0);
 					fun2 = PyTuple_GET_ITEM(t, 1);
 					if (PyInt_Check(pmask)) {
 						mask = PyInt_AS_LONG(pmask);
-						if (mask & fields[i].flags) {
+						flags = fields[i].flags;
+						if (fields[i].charsetnr != 63) { /* maaagic */
+							flags &= ~BINARY_FLAG;
+						}
+						if (mask & flags) {
 							Py_DECREF(t);
 							break;
 						}
