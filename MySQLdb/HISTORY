@@ -2,6 +2,15 @@
  What's new in 1.2.4
 =====================
 
+beta 3
+======
+
+Unified test database configuration, and set up CI testing with Travis.
+
+Applied several patches from André Malo (ndparker@users.sf.net) which fix some issues
+with exception handling and reference counting and TEXT/BLOB conversion.
+
+
 beta 2
 ======
 
