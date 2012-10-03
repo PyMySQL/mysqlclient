@@ -407,8 +407,13 @@ _mysql_ResultObject_Initialize(
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|iO", kwlist,
 					  &conn, &use, &conv))
 		return -1;
-	if (!conv) conv = PyDict_New();
-	if (!conv) return -1;
+	if (!conv) {
+		if (!(conv = PyDict_New()))
+			return -1;
+	}
+	else
+		Py_INCREF(conv);
+
 	self->conn = (PyObject *) conn;
 	Py_INCREF(conn);
 	self->use = use;
@@ -425,31 +430,47 @@ _mysql_ResultObject_Initialize(
 		    return -1;
 		}
 		self->converter = PyTuple_New(0);
+		Py_DECREF(conv);
 		return 0;
 	}
 	n = mysql_num_fields(result);
 	self->nfields = n;
-	if (!(self->converter = PyTuple_New(n))) return -1;
+	if (!(self->converter = PyTuple_New(n))) {
+		Py_DECREF(conv);
+		return -1;
+	}
 	fields = mysql_fetch_fields(result);
 	for (i=0; i<n; i++) {
 		PyObject *tmp, *fun;
 		tmp = PyInt_FromLong((long) fields[i].type);
-		if (!tmp) return -1;
+		if (!tmp) {
+			Py_DECREF(conv);
+			return -1;
+		}
 		fun = PyObject_GetItem(conv, tmp);
 		Py_DECREF(tmp);
 		if (!fun) {
-			PyErr_Clear();
+			if (PyErr_Occurred()) {
+				if (!PyErr_ExceptionMatches(PyExc_KeyError)) {
+					Py_DECREF(conv);
+					return -1;
+				}
+				PyErr_Clear();
+			}
 			fun = Py_None;
 			Py_INCREF(Py_None);
 		}
-		if (PySequence_Check(fun)) {
+		else if (PySequence_Check(fun)) {
 			int j, n2=PySequence_Size(fun);
 			PyObject *fun2=NULL;
 			for (j=0; j<n2; j++) {
 				PyObject *t = PySequence_GetItem(fun, j);
-				if (!t) continue;
-				if (!PyTuple_Check(t)) goto cleanup;
-				if (PyTuple_GET_SIZE(t) == 2) {
+				if (!t) {
+					Py_DECREF(fun);
+					Py_DECREF(conv);
+					return -1;
+				}
+				if (PyTuple_Check(t) && PyTuple_GET_SIZE(t) == 2) {
 					long mask;
 					PyObject *pmask=NULL;
 					pmask = PyTuple_GET_ITEM(t, 0);
@@ -461,14 +482,13 @@ _mysql_ResultObject_Initialize(
 							break;
 						}
 						else {
-							goto cleanup;
+							fun2 = NULL;
 						}
 					} else {
 						Py_DECREF(t);
 						break;
 					}
 				}
-			  cleanup:
 				Py_DECREF(t);
 			}
 			if (!fun2) fun2 = Py_None;
@@ -478,6 +498,8 @@ _mysql_ResultObject_Initialize(
 		}
 		PyTuple_SET_ITEM(self->converter, i, fun);
 	}
+
+	Py_DECREF(conv);
 	return 0;
 }
 
