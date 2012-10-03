@@ -15,13 +15,32 @@ except ImportError:
     TupleType = tuple
     UnicodeType = str
 
-restr = (r"\svalues\s*"
-        r"(\(((?<!\\)'[^\)]*?\)[^\)]*(?<!\\)?'"
-        r"|[^\(\)]|"
-        r"(?:\([^\)]*\))"
-        r")+\))")
+restr = r"""
+    \s
+    values
+    \s*
+    (
+        \(
+            [^()']*
+            (?:
+                (?:
+                        (?:\(
+                            # ( - editor hightlighting helper
+                            [^)]*
+                        \))
+                    |
+                        '
+                            [^\\']*
+                            (?:\\.[^\\']*)*
+                        '
+                )
+                [^()']*
+            )*
+        \)
+    )
+"""
 
-insert_values = re.compile(restr, re.I)
+insert_values = re.compile(restr, re.S | re.I | re.X)
 
 from _mysql_exceptions import Warning, Error, InterfaceError, DataError, \
      DatabaseError, OperationalError, IntegrityError, InternalError, \
