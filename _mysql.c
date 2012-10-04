@@ -118,6 +118,12 @@ static int _mysql_server_init_done = 0;
 #define HAVE_OPENSSL 1
 #endif
 
+/* According to https://dev.mysql.com/doc/refman/5.1/en/mysql-options.html
+   The MYSQL_OPT_READ_TIMEOUT apear in the version 5.1.12 */
+#if MYSQL_VERSION_ID > 50112
+#define HAVE_MYSQL_OPT_READ_TIMEOUT 1
+#endif
+
 PyObject *
 _mysql_Exception(_mysql_ConnectionObject *c)
 {
@@ -557,8 +563,14 @@ _mysql_ConnectionObject_Initialize(
 				  "read_default_file", "read_default_group",
 				  "client_flag", "ssl",
 				  "local_infile",
+#ifdef HAVE_MYSQL_OPT_READ_TIMEOUT
+                                  "read_timeout",
+#endif
 				  NULL } ;
 	int connect_timeout = 0;
+#ifdef HAVE_MYSQL_OPT_READ_TIMEOUT
+        int read_timeout = 0;
+#endif
 	int compress = -1, named_pipe = -1, local_infile = -1;
 	char *init_command=NULL,
 	     *read_default_file=NULL,
@@ -567,7 +579,13 @@ _mysql_ConnectionObject_Initialize(
 	self->converter = NULL;
 	self->open = 0;
 	check_server_init(-1);
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|ssssisOiiisssiOi:connect",
+
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
+#ifdef HAVE_MYSQL_OPT_READ_TIMEOUT
+                                         "|ssssisOiiisssiOii:connect",
+#else
+                                         "|ssssisOiiisssiOi:connect",
+#endif
 					 kwlist,
 					 &host, &user, &passwd, &db,
 					 &port, &unix_socket, &conv,
@@ -576,8 +594,11 @@ _mysql_ConnectionObject_Initialize(
 					 &init_command, &read_default_file,
 					 &read_default_group,
 					 &client_flag, &ssl,
-					 &local_infile /* DO NOT PATCH FOR RECONNECT, IDIOTS
+                                         &local_infile, /* DO NOT PATCH FOR RECONNECT, IDIOTS
 					 IF YOU DO THIS, I WILL NOT SUPPORT YOUR PACKAGES. */
+#ifdef HAVE_MYSQL_OPT_READ_TIMEOUT
+                                         &read_timeout
+#endif
 					 ))
 		return -1;
 
@@ -613,6 +634,13 @@ _mysql_ConnectionObject_Initialize(
 		mysql_options(&(self->connection), MYSQL_OPT_CONNECT_TIMEOUT, 
 				(char *)&timeout);
 	}
+#ifdef HAVE_MYSQL_OPT_READ_TIMEOUT
+	if (read_timeout) {
+		unsigned int timeout = read_timeout;
+		mysql_options(&(self->connection), MYSQL_OPT_READ_TIMEOUT,
+				(char *)&timeout);
+	}
+#endif
 	if (compress != -1) {
 		mysql_options(&(self->connection), MYSQL_OPT_COMPRESS, 0);
 		client_flag |= CLIENT_COMPRESS;

@@ -2,6 +2,13 @@
  What's new in 1.2.4
 =====================
 
+beta 4
+======
+
+Added support for the MySQL read_timeout option. Contributed by
+Jean Schurger (jean@schurger.org).
+
+
 beta 3
 ======
 
