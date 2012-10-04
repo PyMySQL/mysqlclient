@@ -2,6 +2,8 @@ recursive-include doc *.txt
 recursive-include tests *.py
 include MANIFEST.in
 include HISTORY
+include INSTALL
+include README.md
 include GPL-2.0
 include pymemcompat.h
 include metadata.cfg
