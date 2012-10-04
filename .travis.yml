@@ -3,6 +3,6 @@ python:
  - "2.5"
  - "2.6"
  - "2.7"
-install: (cd MySQLdb && python setup.py install)
+install: python setup.py install
 before_script: mysql -e 'create database mysqldb_test charset utf8;'
-script: (cd MySQLdb && TESTDB=travis.cnf nosetests)
+script: TESTDB=travis.cnf nosetests
