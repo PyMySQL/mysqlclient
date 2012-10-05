@@ -289,6 +289,10 @@ class Connection(_mysql.connection):
         set can only be changed in MySQL-4.1 and newer. If you try
         to change the character set from the current value in an
         older version, NotSupportedError will be raised."""
+        if charset == "utf8mb4":
+            py_charset = "utf8"
+        else:
+            py_charset = charset
         if self.character_set_name() != charset:
             try:
                 super(Connection, self).set_character_set(charset)
@@ -297,8 +301,8 @@ class Connection(_mysql.connection):
                     raise NotSupportedError("server is too old to set charset")
                 self.query('SET NAMES %s' % charset)
                 self.store_result()
-        self.string_decoder.charset = charset
-        self.unicode_literal.charset = charset
+        self.string_decoder.charset = py_charset
+        self.unicode_literal.charset = py_charset
 
     def set_sql_mode(self, sql_mode):
         """Set the connection sql_mode. See MySQL documentation for
