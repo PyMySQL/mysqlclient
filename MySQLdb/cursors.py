@@ -47,6 +47,9 @@ from _mysql_exceptions import Warning, Error, InterfaceError, DataError, \
      NotSupportedError, ProgrammingError
 
 
+def normalize_utf8mb4(charset):
+    return 'utf8' if charset == 'utf8mb4' else charset
+
 class BaseCursor(object):
     
     """A base for Cursor classes. Useful attributes:
@@ -177,7 +180,7 @@ class BaseCursor(object):
         """
         del self.messages[:]
         db = self._get_db()
-        charset = db.character_set_name()
+        charset = normalize_utf8mb4(db.character_set_name())
         if isinstance(query, unicode):
             query = query.encode(charset)
         if args is not None:
@@ -225,7 +228,7 @@ class BaseCursor(object):
         del self.messages[:]
         db = self._get_db()
         if not args: return
-        charset = db.character_set_name()
+        charset = normalize_utf8mb4(db.character_set_name())
         if isinstance(query, unicode): query = query.encode(charset)
         m = insert_values.search(query)
         if not m:
