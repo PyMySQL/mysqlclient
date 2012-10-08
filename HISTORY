@@ -8,6 +8,9 @@ beta 4
 Added support for the MySQL read_timeout option. Contributed by
 Jean Schurger (jean@schurger.org).
 
+Added a workaround so that the MySQL character set utf8mb4 works with Python; utf8 is substituted
+on the Python side.
+
 
 beta 3
 ======
