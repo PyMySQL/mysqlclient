@@ -177,9 +177,8 @@ class BaseCursor(object):
         """
         del self.messages[:]
         db = self._get_db()
-        charset = db.character_set_name()
         if isinstance(query, unicode):
-            query = query.encode(charset)
+            query = query.encode(db.unicode_literal.charset)
         if args is not None:
             query = query % db.literal(args)
         try:
@@ -225,8 +224,8 @@ class BaseCursor(object):
         del self.messages[:]
         db = self._get_db()
         if not args: return
-        charset = db.character_set_name()
-        if isinstance(query, unicode): query = query.encode(charset)
+        if isinstance(query, unicode):
+            query = query.encode(db.unicode_literal.charset)
         m = insert_values.search(query)
         if not m:
             r = 0
@@ -285,12 +284,11 @@ class BaseCursor(object):
         """
 
         db = self._get_db()
-        charset = db.character_set_name()
         for index, arg in enumerate(args):
             q = "SET @_%s_%d=%s" % (procname, index,
                                          db.literal(arg))
             if isinstance(q, unicode):
-                q = q.encode(charset)
+                q = q.encode(db.unicode_literal.charset)
             self._query(q)
             self.nextset()
             
@@ -298,7 +296,7 @@ class BaseCursor(object):
                              ','.join(['@_%s_%d' % (procname, i)
                                        for i in range(len(args))]))
         if type(q) is UnicodeType:
-            q = q.encode(charset)
+            q = q.encode(db.unicode_literal.charset)
         self._query(q)
         self._executed = q
         if not self._defer_warnings: self._warning_check()
