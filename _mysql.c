@@ -594,12 +594,11 @@ _mysql_ConnectionObject_Initialize(
 					 &init_command, &read_default_file,
 					 &read_default_group,
 					 &client_flag, &ssl,
-                                         &local_infile, /* DO NOT PATCH FOR RECONNECT, IDIOTS
-					 IF YOU DO THIS, I WILL NOT SUPPORT YOUR PACKAGES. */
+                     &local_infile
 #ifdef HAVE_MYSQL_OPT_READ_TIMEOUT
-                                         &read_timeout
+                     , &read_timeout
 #endif
-					 ))
+	))
 		return -1;
 
 #ifdef IS_PY3K
