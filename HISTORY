@@ -5,7 +5,12 @@
 beta 5
 ======
 
-Additional work for utf8mb4 support.
+Another internal fix for handling remapped character sets.
+
+_mysql.c was broken for the case where read_timeout was *not* available. (Issue #6)
+
+Documentation was converted to sphinx but there is a lot of cleanup left to do.
+
 
 beta 4
 ======

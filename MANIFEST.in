@@ -1,5 +1,6 @@
-recursive-include doc *.txt
+recursive-include doc *.rst
 recursive-include tests *.py
+include doc/conf.py
 include MANIFEST.in
 include HISTORY
 include INSTALL
