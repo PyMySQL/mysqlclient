@@ -49,6 +49,11 @@ except ImportError:
 import array
 
 try:
+    ArrayType = array.ArrayType
+except AttributeError:
+    ArrayType = array.array
+
+try:
     set
 except NameError:
     from sets import Set as set
@@ -133,7 +138,7 @@ conversions = {
     ListType: escape_sequence,
     DictType: escape_dict,
     InstanceType: Instance2Str,
-    array.ArrayType: array2Str,
+    ArrayType: array2Str,
     StringType: Thing2Literal, # default
     UnicodeType: Unicode2Str,
     ObjectType: Instance2Str,

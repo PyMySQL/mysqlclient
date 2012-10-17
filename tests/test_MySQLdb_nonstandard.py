@@ -4,7 +4,8 @@ import _mysql
 import MySQLdb
 from MySQLdb.constants import FIELD_TYPE
 from configdb import connection_factory
-
+import warnings
+warnings.simplefilter("ignore")
 
 class TestDBAPISet(unittest.TestCase):
     def test_set_equality(self):

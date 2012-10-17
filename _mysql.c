@@ -481,6 +481,7 @@ _mysql_ResultObject_Initialize(
 					PyObject *pmask=NULL;
 					pmask = PyTuple_GET_ITEM(t, 0);
 					fun2 = PyTuple_GET_ITEM(t, 1);
+					Py_XINCREF(fun2);
 					if (PyInt_Check(pmask)) {
 						mask = PyInt_AS_LONG(pmask);
 						flags = fields[i].flags;
@@ -501,8 +502,10 @@ _mysql_ResultObject_Initialize(
 				}
 				Py_DECREF(t);
 			}
-			if (!fun2) fun2 = Py_None;
-			Py_INCREF(fun2);
+			if (!fun2) {
+				fun2 = Py_None;
+				Py_INCREF(fun2);
+			}
 			Py_DECREF(fun);
 			fun = fun2;
 		}
@@ -1190,7 +1193,9 @@ _escape_item(
 				"no default type converter defined");
 		goto error;
 	}
+	Py_INCREF(d);
 	quoted = PyObject_CallFunction(itemconv, "OO", item, d);
+	Py_DECREF(d);
 	Py_DECREF(itemconv);
 error:
 	return quoted;
@@ -2985,6 +2990,9 @@ _mysql_NewException(
 	if (!(e = PyDict_GetItemString(edict, name)))
 		return NULL;
 	if (PyDict_SetItemString(dict, name, e)) return NULL;
+#ifdef PYPY_VERSION
+	Py_INCREF(e);
+#endif
 	return e;
 }
 

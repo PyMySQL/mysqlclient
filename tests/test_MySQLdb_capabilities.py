@@ -4,7 +4,7 @@ import unittest
 import MySQLdb
 import warnings
 
-warnings.filterwarnings('error')
+warnings.filterwarnings('ignore')
 
 class test_MySQLdb(capabilities.DatabaseTest):
 

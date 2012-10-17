@@ -3,6 +3,8 @@ import dbapi20
 import unittest
 import MySQLdb
 from configdb import connection_kwargs
+import warnings
+warnings.simplefilter("ignore")
 
 class test_MySQLdb(dbapi20.DatabaseAPI20Test):
     driver = MySQLdb
