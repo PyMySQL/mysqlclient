@@ -112,14 +112,14 @@ def Instance2Str(o, d):
     cl = filter(lambda x,o=o:
                 type(x) is ClassType
                 and isinstance(o, x), d.keys())
-    if not cl and hasattr(types, 'ObjectType'):
+    if not cl:
         cl = filter(lambda x,o=o:
                     type(x) is TypeType
                     and isinstance(o, x)
                     and d[x] is not Instance2Str,
                     d.keys())
     if not cl:
-        return d[types.StringType](o,d)
+        return d[StringType](o,d)
     d[o.__class__] = d[cl[0]]
     return d[cl[0]](o, d)
 
