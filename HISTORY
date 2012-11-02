@@ -2,6 +2,12 @@
  What's new in 1.2.4
 =====================
 
+rc 1
+====
+
+Fixed a dangling reference to the old types module.
+
+
 beta 5
 ======
 
