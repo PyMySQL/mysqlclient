@@ -140,7 +140,9 @@ class Connection(_mysql.connection):
           integer, non-zero enables LOAD LOCAL INFILE; zero disables
 
         autocommit
+          If False (default), autocommit is disabled.
           If True, autocommit is enabled.
+          If None, autocommit isn't set and server default is used.
 
         There are a number of undocumented, non-standard methods. See the
         documentation for the MySQL C API for some hints on what they do.
@@ -227,9 +229,11 @@ class Connection(_mysql.connection):
         self.encoders[types.StringType] = string_literal
         self.encoders[types.UnicodeType] = unicode_literal
         self._transactional = self.server_capabilities & CLIENT.TRANSACTIONS
-        if self._transactional and not kwargs2.pop('autocommit', False):
+        if self._transactional:
             # PEP-249 requires autocommit to be initially off
-            self.autocommit(False)
+            autocommit = kwargs2.pop('autocommit', False)
+            if autocommit is not None:
+                self.autocommit(bool(True))
         self.messages = []
 
     def cursor(self, cursorclass=None):
