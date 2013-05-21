@@ -233,7 +233,7 @@ class Connection(_mysql.connection):
             # PEP-249 requires autocommit to be initially off
             autocommit = kwargs2.pop('autocommit', False)
             if autocommit is not None:
-                self.autocommit(bool(True))
+                self.autocommit(bool(autocommit))
         self.messages = []
 
     def cursor(self, cursorclass=None):
