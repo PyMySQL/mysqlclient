@@ -60,9 +60,13 @@ def DateTime_or_None(s):
 def TimeDelta_or_None(s):
     try:
         h, m, s = s.split(':')
-        h, m, s = int(h), int(m), float(s)
-        td = timedelta(hours=abs(h), minutes=m, seconds=int(s),
-                       microseconds=int(math.modf(s)[0] * 1000000))
+        if '.' in s:
+            s, ms = s.split('.')
+        else:
+            ms = 0
+        h, m, s, ms = int(h), int(m), int(s), int(ms)
+        td = timedelta(hours=abs(h), minutes=m, seconds=s,
+                       microseconds=ms)
         if h < 0:
             return -td
         else:
@@ -74,9 +78,13 @@ def TimeDelta_or_None(s):
 def Time_or_None(s):
     try:
         h, m, s = s.split(':')
-        h, m, s = int(h), int(m), float(s)
-        return time(hour=h, minute=m, second=int(s),
-                    microsecond=int(math.modf(s)[0] * 1000000))
+        if '.' in s:
+            s, ms = s.split('.')
+        else:
+            ms = 0
+        h, m, s, ms = int(h), int(m), int(s), int(ms)
+        return time(hour=h, minute=m, second=s,
+                    microsecond=ms)
     except ValueError:
         return None
 
