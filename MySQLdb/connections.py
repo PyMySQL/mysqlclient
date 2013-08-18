@@ -139,6 +139,11 @@ class Connection(_mysql.connection):
         local_infile
           integer, non-zero enables LOAD LOCAL INFILE; zero disables
 
+        autocommit
+          If False (default), autocommit is disabled.
+          If True, autocommit is enabled.
+          If None, autocommit isn't set and server default is used.
+
         There are a number of undocumented, non-standard methods. See the
         documentation for the MySQL C API for some hints on what they do.
 
@@ -182,6 +187,9 @@ class Connection(_mysql.connection):
 
         kwargs2['client_flag'] = client_flag
 
+        # PEP-249 requires autocommit to be initially off
+        autocommit = kwargs2.pop('autocommit', False)
+
         super(Connection, self).__init__(*args, **kwargs2)
         self.cursorclass = cursorclass
         self.encoders = dict([ (k, v) for k, v in conv.items()
@@ -224,10 +232,28 @@ class Connection(_mysql.connection):
         self.encoders[types.StringType] = string_literal
         self.encoders[types.UnicodeType] = unicode_literal
         self._transactional = self.server_capabilities & CLIENT.TRANSACTIONS
+        self._autocommit = None
         if self._transactional:
-            # PEP-249 requires autocommit to be initially off
-            self.autocommit(False)
+            if autocommit is not None:
+                self.autocommit(autocommit)
         self.messages = []
+
+    def autocommit(self, on):
+        on = bool(on)
+        _mysql.connection.autocommit(self, on)
+        self._autocommit = on
+
+    def get_autocommit(self):
+        if self._autocommit is None:
+            self._update_autocommit()
+        return self._autocommit
+
+    def _update_autocommit(self):
+        cursor = cursors.Cursor(self)
+        cursor.execute("SELECT @@AUTOCOMMIT")
+        row = cursor.fetchone()
+        self._autocommit = bool(row[0])
+        cursor.close()
 
     def cursor(self, cursorclass=None):
         """
@@ -241,6 +267,8 @@ class Connection(_mysql.connection):
         return (cursorclass or self.cursorclass)(self)
 
     def __enter__(self):
+        if self.get_autocommit():
+            self.query("BEGIN")
         return self.cursor()
 
     def __exit__(self, exc, value, tb):
