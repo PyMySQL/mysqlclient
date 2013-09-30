@@ -7,5 +7,6 @@
 *.zip
 *.egg
 *.egg-info/
+.tox/
 build/
 dist/
