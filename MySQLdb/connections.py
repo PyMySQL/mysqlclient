@@ -240,20 +240,9 @@ class Connection(_mysql.connection):
 
     def autocommit(self, on):
         on = bool(on)
-        _mysql.connection.autocommit(self, on)
+        if self.get_autocommit() != on:
+            _mysql.connection.autocommit(self, on)
         self._autocommit = on
-
-    def get_autocommit(self):
-        if self._autocommit is None:
-            self._update_autocommit()
-        return self._autocommit
-
-    def _update_autocommit(self):
-        cursor = cursors.Cursor(self)
-        cursor.execute("SELECT @@AUTOCOMMIT")
-        row = cursor.fetchone()
-        self._autocommit = bool(row[0])
-        cursor.close()
 
     def cursor(self, cursorclass=None):
         """

@@ -891,7 +891,21 @@ _mysql_ConnectionObject_autocommit(
 	if (err) return _mysql_Exception(self);
 	Py_INCREF(Py_None);
 	return Py_None;
-}		
+}
+
+static char _mysql_ConnectionObject_get_autocommit__doc__[] =
+"Get the autocommit mode. True when enable; False when disable.\n";
+
+static PyObject *
+_mysql_ConnectionObject_get_autocommit(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
+{
+	if (self->connection.server_status & SERVER_STATUS_AUTOCOMMIT) {
+		Py_RETURN_TRUE;
+	}
+	Py_RETURN_FALSE;
+}
 
 static char _mysql_ConnectionObject_commit__doc__[] =
 "Commits the current transaction\n\
@@ -2316,6 +2330,12 @@ static PyMethodDef _mysql_ConnectionObject_methods[] = {
 		(PyCFunction)_mysql_ConnectionObject_autocommit,
 		METH_VARARGS,
 		_mysql_ConnectionObject_autocommit__doc__
+	},
+	{
+		"get_autocommit",
+		(PyCFunction)_mysql_ConnectionObject_get_autocommit,
+		METH_NOARGS,
+		_mysql_ConnectionObject_get_autocommit__doc__
 	},
 	{
 		"commit",
