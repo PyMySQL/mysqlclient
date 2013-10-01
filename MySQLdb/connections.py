@@ -232,7 +232,6 @@ class Connection(_mysql.connection):
         self.encoders[types.StringType] = string_literal
         self.encoders[types.UnicodeType] = unicode_literal
         self._transactional = self.server_capabilities & CLIENT.TRANSACTIONS
-        self._autocommit = None
         if self._transactional:
             if autocommit is not None:
                 self.autocommit(autocommit)
@@ -242,7 +241,6 @@ class Connection(_mysql.connection):
         on = bool(on)
         if self.get_autocommit() != on:
             _mysql.connection.autocommit(self, on)
-        self._autocommit = on
 
     def cursor(self, cursorclass=None):
         """
