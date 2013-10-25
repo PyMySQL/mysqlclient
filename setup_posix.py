@@ -71,8 +71,9 @@ def get_config():
                          if i.startswith(compiler_flag('I')) ]
 
     if static:
-        extra_objects.append(os.path.join(
-            library_dirs[0],'lib%s.a' % client))
+        extra_objects.append(os.path.join(library_dirs[0],'lib%s.a' % client))
+        if client in libraries:
+            libraries.remove(client)
 
     name = "MySQL-python"
     if enabled(options, 'embedded'):
