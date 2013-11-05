@@ -240,7 +240,13 @@ class BaseCursor(object):
         e = m.end(1)
         qv = m.group(1)
         try:
-            q = [ qv % db.literal(a) for a in args ]
+            q = []
+            for a in args:
+                if isinstance(a, dict):
+                    q.append(qv % dict((key, db.literal(item))
+                                       for key, item in a.iteritems()))
+                else:
+                    q.append(qv % tuple([db.literal(item) for item in a]))
         except TypeError, msg:
             if msg.args[0] in ("not enough arguments for format string",
                                "not all arguments converted"):
