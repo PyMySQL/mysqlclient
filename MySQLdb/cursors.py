@@ -181,7 +181,8 @@ class BaseCursor(object):
             query = query.encode(db.unicode_literal.charset)
         if args is not None:
             if isinstance(args, dict):
-                query = query % {key: db.literal(item) for key, item in args.iteritems()}
+                query = query % dict((key, db.literal(item))
+                                     for key, item in args.iteritems())
             else:
                 query = query % tuple([db.literal(item) for item in args])
         try:
