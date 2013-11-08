@@ -51,7 +51,11 @@ def DateTime_or_None(s):
 
     try:
         d, t = s.split(sep, 1)
-        return datetime(*[ int(x) for x in d.split('-')+t.split(':') ])
+        if '.' in t:
+            t, m = t.split('.',1)
+        else:
+            m = 0
+        return datetime(*[ int(x) for x in d.split('-')+t.split(':')+[m] ])
     except (SystemExit, KeyboardInterrupt):
         raise
     except:
