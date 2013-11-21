@@ -129,13 +129,16 @@ def char_array(s):
 def array2Str(o, d):
     return Thing2Literal(o.tostring(), d)
 
+def quote_tuple(t, d):
+    return "(%s)" % (','.join(escape_sequence(t, d)))
+
 conversions = {
     IntType: Thing2Str,
     LongType: Long2Int,
     FloatType: Float2Str,
     NoneType: None2NULL,
-    TupleType: escape_sequence,
-    ListType: escape_sequence,
+    TupleType: quote_tuple,
+    ListType: quote_tuple,
     DictType: escape_dict,
     InstanceType: Instance2Str,
     ArrayType: array2Str,
