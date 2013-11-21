@@ -232,7 +232,6 @@ class Connection(_mysql.connection):
         self.encoders[types.StringType] = string_literal
         self.encoders[types.UnicodeType] = unicode_literal
         self._transactional = self.server_capabilities & CLIENT.TRANSACTIONS
-        self._autocommit = None
         if self._transactional:
             if autocommit is not None:
                 self.autocommit(autocommit)
@@ -240,20 +239,8 @@ class Connection(_mysql.connection):
 
     def autocommit(self, on):
         on = bool(on)
-        _mysql.connection.autocommit(self, on)
-        self._autocommit = on
-
-    def get_autocommit(self):
-        if self._autocommit is None:
-            self._update_autocommit()
-        return self._autocommit
-
-    def _update_autocommit(self):
-        cursor = cursors.Cursor(self)
-        cursor.execute("SELECT @@AUTOCOMMIT")
-        row = cursor.fetchone()
-        self._autocommit = bool(row[0])
-        cursor.close()
+        if self.get_autocommit() != on:
+            _mysql.connection.autocommit(self, on)
 
     def cursor(self, cursorclass=None):
         """
