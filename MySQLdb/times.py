@@ -51,7 +51,12 @@ def DateTime_or_None(s):
 
     try:
         d, t = s.split(sep, 1)
-        return datetime(*[ int(x) for x in d.split('-')+t.split(':') ])
+        if '.' in t:
+            t, ms = t.split('.',1)
+            ms = ms.ljust(6, '0')
+        else:
+            ms = 0
+        return datetime(*[ int(x) for x in d.split('-')+t.split(':')+[ms] ])
     except (SystemExit, KeyboardInterrupt):
         raise
     except:
@@ -62,6 +67,7 @@ def TimeDelta_or_None(s):
         h, m, s = s.split(':')
         if '.' in s:
             s, ms = s.split('.')
+            ms = ms.ljust(6, '0')
         else:
             ms = 0
         h, m, s, ms = int(h), int(m), int(s), int(ms)
@@ -80,6 +86,7 @@ def Time_or_None(s):
         h, m, s = s.split(':')
         if '.' in s:
             s, ms = s.split('.')
+            ms = ms.ljust(6, '0')
         else:
             ms = 0
         h, m, s, ms = int(h), int(m), int(s), int(ms)
