@@ -9,7 +9,6 @@ include GPL-2.0
 include pymemcompat.h
 include metadata.cfg
 include site.cfg
-include distribute_setup.py
 include setup_common.py
 include setup_posix.py
 include setup_windows.py
