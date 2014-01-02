@@ -121,7 +121,7 @@ static int _mysql_server_init_done = 0;
 /* According to https://dev.mysql.com/doc/refman/5.1/en/mysql-options.html
    The MYSQL_OPT_READ_TIMEOUT apear in the version 5.1.12 */
 #if MYSQL_VERSION_ID > 50112
-#define HAVE_MYSQL_OPT_READ_TIMEOUT 1
+#define HAVE_MYSQL_OPT_TIMEOUTS 1
 #endif
 
 PyObject *
@@ -566,13 +566,15 @@ _mysql_ConnectionObject_Initialize(
 				  "read_default_file", "read_default_group",
 				  "client_flag", "ssl",
 				  "local_infile",
-#ifdef HAVE_MYSQL_OPT_READ_TIMEOUT
+#ifdef HAVE_MYSQL_OPT_TIMEOUTS
                                   "read_timeout",
+                                  "write_timeout",
 #endif
 				  NULL } ;
 	int connect_timeout = 0;
-#ifdef HAVE_MYSQL_OPT_READ_TIMEOUT
+#ifdef HAVE_MYSQL_OPT_TIMEOUTS
         int read_timeout = 0;
+        int write_timeout = 0;
 #endif
 	int compress = -1, named_pipe = -1, local_infile = -1;
 	char *init_command=NULL,
@@ -584,8 +586,8 @@ _mysql_ConnectionObject_Initialize(
 	check_server_init(-1);
 
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
-#ifdef HAVE_MYSQL_OPT_READ_TIMEOUT
-                                         "|ssssisOiiisssiOii:connect",
+#ifdef HAVE_MYSQL_OPT_TIMEOUTS
+                                         "|ssssisOiiisssiOiii:connect",
 #else
                                          "|ssssisOiiisssiOi:connect",
 #endif
@@ -598,8 +600,9 @@ _mysql_ConnectionObject_Initialize(
 					 &read_default_group,
 					 &client_flag, &ssl,
                      &local_infile
-#ifdef HAVE_MYSQL_OPT_READ_TIMEOUT
+#ifdef HAVE_MYSQL_OPT_TIMEOUTS
                      , &read_timeout
+                     , &write_timeout
 #endif
 	))
 		return -1;
@@ -636,10 +639,15 @@ _mysql_ConnectionObject_Initialize(
 		mysql_options(&(self->connection), MYSQL_OPT_CONNECT_TIMEOUT, 
 				(char *)&timeout);
 	}
-#ifdef HAVE_MYSQL_OPT_READ_TIMEOUT
+#ifdef HAVE_MYSQL_OPT_TIMEOUTS
 	if (read_timeout) {
 		unsigned int timeout = read_timeout;
 		mysql_options(&(self->connection), MYSQL_OPT_READ_TIMEOUT,
+				(char *)&timeout);
+	}
+	if (write_timeout) {
+		unsigned int timeout = write_timeout;
+		mysql_options(&(self->connection), MYSQL_OPT_WRITE_TIMEOUT,
 				(char *)&timeout);
 	}
 #endif
@@ -891,7 +899,21 @@ _mysql_ConnectionObject_autocommit(
 	if (err) return _mysql_Exception(self);
 	Py_INCREF(Py_None);
 	return Py_None;
-}		
+}
+
+static char _mysql_ConnectionObject_get_autocommit__doc__[] =
+"Get the autocommit mode. True when enable; False when disable.\n";
+
+static PyObject *
+_mysql_ConnectionObject_get_autocommit(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
+{
+	if (self->connection.server_status & SERVER_STATUS_AUTOCOMMIT) {
+		Py_RETURN_TRUE;
+	}
+	Py_RETURN_FALSE;
+}
 
 static char _mysql_ConnectionObject_commit__doc__[] =
 "Commits the current transaction\n\
@@ -2316,6 +2338,12 @@ static PyMethodDef _mysql_ConnectionObject_methods[] = {
 		(PyCFunction)_mysql_ConnectionObject_autocommit,
 		METH_VARARGS,
 		_mysql_ConnectionObject_autocommit__doc__
+	},
+	{
+		"get_autocommit",
+		(PyCFunction)_mysql_ConnectionObject_get_autocommit,
+		METH_NOARGS,
+		_mysql_ConnectionObject_get_autocommit__doc__
 	},
 	{
 		"commit",

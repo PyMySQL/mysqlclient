@@ -77,7 +77,7 @@ class test_MySQLdb(capabilities.DatabaseTest):
         try:
             self.cursor.execute("describe some_non_existent_table");
         except self.connection.ProgrammingError, msg:
-            self.assertTrue(msg[0] == ER.NO_SUCH_TABLE)
+            self.assertEquals(msg[0], ER.NO_SUCH_TABLE)
 
     def test_bug_3514287(self):
         c = self.cursor

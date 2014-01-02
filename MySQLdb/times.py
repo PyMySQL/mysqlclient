@@ -51,7 +51,12 @@ def DateTime_or_None(s):
 
     try:
         d, t = s.split(sep, 1)
-        return datetime(*[ int(x) for x in d.split('-')+t.split(':') ])
+        if '.' in t:
+            t, ms = t.split('.',1)
+            ms = ms.ljust(6, '0')
+        else:
+            ms = 0
+        return datetime(*[ int(x) for x in d.split('-')+t.split(':')+[ms] ])
     except (SystemExit, KeyboardInterrupt):
         raise
     except:
@@ -60,9 +65,14 @@ def DateTime_or_None(s):
 def TimeDelta_or_None(s):
     try:
         h, m, s = s.split(':')
-        h, m, s = int(h), int(m), float(s)
-        td = timedelta(hours=abs(h), minutes=m, seconds=int(s),
-                       microseconds=int(math.modf(s)[0] * 1000000))
+        if '.' in s:
+            s, ms = s.split('.')
+            ms = ms.ljust(6, '0')
+        else:
+            ms = 0
+        h, m, s, ms = int(h), int(m), int(s), int(ms)
+        td = timedelta(hours=abs(h), minutes=m, seconds=s,
+                       microseconds=ms)
         if h < 0:
             return -td
         else:
@@ -74,9 +84,14 @@ def TimeDelta_or_None(s):
 def Time_or_None(s):
     try:
         h, m, s = s.split(':')
-        h, m, s = int(h), int(m), float(s)
-        return time(hour=h, minute=m, second=int(s),
-                    microsecond=int(math.modf(s)[0] * 1000000))
+        if '.' in s:
+            s, ms = s.split('.')
+            ms = ms.ljust(6, '0')
+        else:
+            ms = 0
+        h, m, s, ms = int(h), int(m), int(s), int(ms)
+        return time(hour=h, minute=m, second=s,
+                    microsecond=ms)
     except ValueError:
         return None
 
