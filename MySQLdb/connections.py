@@ -33,7 +33,11 @@ def defaulterrorhandler(connection, cursor, errorclass, errorvalue):
         connection.messages.append(error)
     del cursor
     del connection
-    raise errorclass, errorvalue
+    if errorclass is not None:    
+        raise errorclass(errorvalue)
+    else:
+        raise Exception(errorvalue)
+
 
 re_numeric_part = re.compile(r"^(\d+)")
 
