@@ -10,7 +10,7 @@ TODO
 ----
 
 * A bugfix 1.2.4 release
-* A 1.3.0 release that will support Python 2.7-3.3
+* A 1.3.0 release that will support Python 2.7-3.4
 * The 2.0 version is being renamed [moist][] and is heavily refactored.
 
 Projects
