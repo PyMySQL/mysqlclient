@@ -10,3 +10,4 @@
 .tox/
 build/
 dist/
+MySQLdb/release.py
