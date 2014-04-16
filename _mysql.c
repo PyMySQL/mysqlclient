@@ -2997,6 +2997,8 @@ init_mysql(void)
 	module = PyModule_Create(&_mysqlmodule);
 	if (!module) return module; /* this really should never happen */
 #else
+	_mysql_ConnectionObject_Type.tp_free = _PyObject_GC_Del;
+	_mysql_ResultObject_Type.tp_free = _PyObject_GC_Del;
 	module = Py_InitModule4("_mysql", _mysql_methods, _mysql___doc__,
 				(PyObject *)NULL, PYTHON_API_VERSION);
 	if (!module) return; /* this really should never happen */
