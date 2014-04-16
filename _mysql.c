@@ -47,9 +47,6 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "mysqld_error.h"
 #include "errmsg.h"
 
-#define MyTuple_Resize(t,n,d) _PyTuple_Resize(t, n)
-#define MyMember(a,b,c,d,e) {a,b,c,d,e}
-#define MyMemberlist(x) struct PyMemberDef x
 #define MyAlloc(s,t) (s *) t.tp_alloc(&t,0)
 #ifdef IS_PY3K
 # define MyFree(o) Py_TYPE(o)->tp_free((PyObject*)o)
@@ -1505,7 +1502,7 @@ _mysql__fetch_row(
 			goto error;
 		}
 		if (!row) {
-			if (MyTuple_Resize(r, i, 0) == -1) goto error;
+			if (_PyTuple_Resize(r, i) == -1) goto error;
 			break;
 		}
 		v = convert_row(self, row);
@@ -1568,7 +1565,7 @@ _mysql_ResultObject_fetch_row(
 				if (rowsadded == -1) goto error;
 				skiprows += rowsadded;
 				if (rowsadded < maxrows) break;
-				if (MyTuple_Resize(&r, skiprows+maxrows, 0) == -1)
+				if (_PyTuple_Resize(&r, skiprows+maxrows) == -1)
 				        goto error;
 			}
 		} else {
@@ -2509,42 +2506,42 @@ static PyMethodDef _mysql_ConnectionObject_methods[] = {
 	{NULL,              NULL} /* sentinel */
 };
 
-static MyMemberlist(_mysql_ConnectionObject_memberlist)[] = {
-	MyMember(
+static struct PyMemberDef _mysql_ConnectionObject_memberlist[] = {
+	{
 		"open",
 		T_INT,
 		offsetof(_mysql_ConnectionObject,open),
 		READONLY,
 		"True if connection is open"
-		),
-	MyMember(
+	},
+	{
 		"converter",
 		T_OBJECT,
 		offsetof(_mysql_ConnectionObject,converter),
 		0,
 		"Type conversion mapping"
-		),
-	MyMember(
+	},
+	{
 		"server_capabilities",
 		T_UINT,
 		offsetof(_mysql_ConnectionObject,connection.server_capabilities),
 		READONLY,
 		"Capabilites of server; consult MySQLdb.constants.CLIENT"
-		),
-	MyMember(
-		 "port",
-		 T_UINT,
-		 offsetof(_mysql_ConnectionObject,connection.port),
-		 READONLY,
-		 "TCP/IP port of the server connection"
-		 ),
-	MyMember(
-		 "client_flag",
-		 T_UINT,
-		 READONLY,
-		 offsetof(_mysql_ConnectionObject,connection.client_flag),
-		 "Client flags; refer to MySQLdb.constants.CLIENT"
-		 ),
+	},
+	{
+		"port",
+		T_UINT,
+		offsetof(_mysql_ConnectionObject,connection.port),
+		READONLY,
+		"TCP/IP port of the server connection"
+	},
+	{
+		"client_flag",
+		T_UINT,
+		READONLY,
+		offsetof(_mysql_ConnectionObject,connection.client_flag),
+		"Client flags; refer to MySQLdb.constants.CLIENT"
+	},
 	{NULL} /* Sentinel */
 };
 
@@ -2600,14 +2597,14 @@ static PyMethodDef _mysql_ResultObject_methods[] = {
 	{NULL,              NULL} /* sentinel */
 };
 
-static MyMemberlist(_mysql_ResultObject_memberlist)[] = {
-	MyMember(
+static struct PyMemberDef _mysql_ResultObject_memberlist[] = {
+	{
 		"converter",
 		T_OBJECT,
 		offsetof(_mysql_ResultObject,converter),
 		READONLY,
 		"Type conversion mapping"
-		),
+	},
 	{NULL} /* Sentinel */
 };
 
@@ -2712,7 +2709,7 @@ PyTypeObject _mysql_ConnectionObject_Type = {
 	
 	/* Attribute descriptor and subclassing stuff */
 	(struct PyMethodDef *)_mysql_ConnectionObject_methods, /* tp_methods */
-	(MyMemberlist(*))_mysql_ConnectionObject_memberlist, /* tp_members */
+	(struct PyMemberDef *)_mysql_ConnectionObject_memberlist, /* tp_members */
 	0, /* (struct getsetlist *) tp_getset; */
 	0, /* (struct _typeobject *) tp_base; */
 	0, /* (PyObject *) tp_dict */
@@ -2785,7 +2782,7 @@ PyTypeObject _mysql_ResultObject_Type = {
 	
 	/* Attribute descriptor and subclassing stuff */
 	(struct PyMethodDef *) _mysql_ResultObject_methods, /* tp_methods */
-	(MyMemberlist(*)) _mysql_ResultObject_memberlist, /*tp_members */
+	(struct PyMemberDef *) _mysql_ResultObject_memberlist, /*tp_members */
 	0, /* (struct getsetlist *) tp_getset; */
 	0, /* (struct _typeobject *) tp_base; */
 	0, /* (PyObject *) tp_dict */
