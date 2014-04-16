@@ -32,10 +32,10 @@ PERFORMANCE OF THIS SOFTWARE.
 #define PyInt_FromLong(n) PyLong_FromLong(n)
 #define PyInt_Check(n) PyLong_Check(n)
 #define PyInt_AS_LONG(n) PyLong_AS_LONG(n)
+#define PyString_FromString(s) PyUnicode_FromString(s)
 #endif
-#if PY_VERSION_HEX > 0x02060000
+
 #include "bytesobject.h"
-#endif
 #include "pymemcompat.h"
 #include "structmember.h"
 #if defined(MS_WINDOWS)
@@ -47,28 +47,11 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "mysqld_error.h"
 #include "errmsg.h"
 
-#if PY_VERSION_HEX < 0x02020000
-# define MyTuple_Resize(t,n,d) _PyTuple_Resize(t, n, d)
-# define MyMember(a,b,c,d,e) {a,b,c,d}
-# define MyMemberlist(x) struct memberlist x
-# define MyAlloc(s,t) PyObject_New(s,&t)
-# define MyFree(o) PyObject_Del(o)
-#else
-# define MyTuple_Resize(t,n,d) _PyTuple_Resize(t, n)
-# define MyMember(a,b,c,d,e) {a,b,c,d,e}
-# define MyMemberlist(x) struct PyMemberDef x
-# define MyAlloc(s,t) (s *) t.tp_alloc(&t,0)
+#define MyAlloc(s,t) (s *) t.tp_alloc(&t,0)
 #ifdef IS_PY3K
-# define MyFree(o) PyObject_Del(o)
+# define MyFree(o) Py_TYPE(o)->tp_free((PyObject*)o)
 #else
 # define MyFree(ob) ob->ob_type->tp_free((PyObject *)ob)
-#endif
-#endif
-
-#if PY_VERSION_HEX < 0x02050000 && !defined(PY_SSIZE_T_MIN)
-typedef int Py_ssize_t;
-#define PY_SSIZE_T_MAX INT_MAX
-#define PY_SSIZE_T_MIN INT_MIN
 #endif
 
 static PyObject *_mysql_MySQLError;
@@ -134,11 +117,7 @@ _mysql_Exception(_mysql_ConnectionObject *c)
 	if (!_mysql_server_init_done) {
 		e = _mysql_InternalError;
 		PyTuple_SET_ITEM(t, 0, PyInt_FromLong(-1L));
-#ifdef IS_PY3K
-		PyTuple_SET_ITEM(t, 1, PyUnicode_FromString("server not initialized"));
-#else
 		PyTuple_SET_ITEM(t, 1, PyString_FromString("server not initialized"));
-#endif
 		PyErr_SetObject(e, t);
 		Py_DECREF(t);
 		return NULL;
@@ -148,11 +127,7 @@ _mysql_Exception(_mysql_ConnectionObject *c)
 		e = _mysql_InterfaceError;
 	else if (merr > CR_MAX_ERROR) {
 		PyTuple_SET_ITEM(t, 0, PyInt_FromLong(-1L));
-#ifdef IS_PY3K
-		PyTuple_SET_ITEM(t, 1, PyUnicode_FromString("error totally whack"));
-#else
 		PyTuple_SET_ITEM(t, 1, PyString_FromString("error totally whack"));
-#endif
 		PyErr_SetObject(_mysql_InterfaceError, t);
 		Py_DECREF(t);
 		return NULL;
@@ -240,11 +215,7 @@ _mysql_Exception(_mysql_ConnectionObject *c)
 		break;
 	}
 	PyTuple_SET_ITEM(t, 0, PyInt_FromLong((long)merr));
-#ifdef IS_PY3K
-	PyTuple_SET_ITEM(t, 1, PyUnicode_FromString(mysql_error(&(c->connection))));
-#else
 	PyTuple_SET_ITEM(t, 1, PyString_FromString(mysql_error(&(c->connection))));
-#endif
 	PyErr_SetObject(e, t);
 	Py_DECREF(t);
 	return NULL;
@@ -516,7 +487,6 @@ _mysql_ResultObject_Initialize(
 	return 0;
 }
 
-#if PY_VERSION_HEX >= 0x02020000
 static int _mysql_ResultObject_traverse(
 	_mysql_ResultObject *self,
 	visitproc visit,
@@ -530,7 +500,6 @@ static int _mysql_ResultObject_traverse(
 		return visit(self->conn, arg);
 	return 0;
 }
-#endif
 
 static int _mysql_ResultObject_clear(
 	_mysql_ResultObject *self)
@@ -567,14 +536,14 @@ _mysql_ConnectionObject_Initialize(
 				  "client_flag", "ssl",
 				  "local_infile",
 #ifdef HAVE_MYSQL_OPT_TIMEOUTS
-                                  "read_timeout",
-                                  "write_timeout",
+				  "read_timeout",
+				  "write_timeout",
 #endif
 				  NULL } ;
 	int connect_timeout = 0;
 #ifdef HAVE_MYSQL_OPT_TIMEOUTS
-        int read_timeout = 0;
-        int write_timeout = 0;
+	int read_timeout = 0;
+	int write_timeout = 0;
 #endif
 	int compress = -1, named_pipe = -1, local_infile = -1;
 	char *init_command=NULL,
@@ -774,7 +743,6 @@ _mysql_connect(
 	return (PyObject *) c;
 }
 
-#if PY_VERSION_HEX >= 0x02020000
 static int _mysql_ConnectionObject_traverse(
 	_mysql_ConnectionObject *self,
 	visitproc visit,
@@ -784,7 +752,6 @@ static int _mysql_ConnectionObject_traverse(
 		return visit(self->converter, arg);
 	return 0;
 }
-#endif
 
 static int _mysql_ConnectionObject_clear(
 	_mysql_ConnectionObject *self)
@@ -935,7 +902,7 @@ _mysql_ConnectionObject_commit(
 	if (err) return _mysql_Exception(self);
 	Py_INCREF(Py_None);
 	return Py_None;
-}		
+}
 
 static char _mysql_ConnectionObject_rollback__doc__[] =
 "Rolls backs the current transaction\n\
@@ -1031,11 +998,7 @@ _mysql_ConnectionObject_sqlstate(
 	PyObject *args)
 {
 	if (!PyArg_ParseTuple(args, "")) return NULL;
-#ifdef IS_PY3K
-	return PyUnicode_FromString(mysql_sqlstate(&(self->connection)));
-#else
 	return PyString_FromString(mysql_sqlstate(&(self->connection)));
-#endif
 }
 
 static char _mysql_ConnectionObject_warning_count__doc__[] =
@@ -1084,11 +1047,7 @@ _mysql_ConnectionObject_error(
 {
 	if (!PyArg_ParseTuple(args, "")) return NULL;
 	check_connection(self);
-#ifdef IS_PY3K
-	return PyUnicode_FromString(mysql_error(&(self->connection)));
-#else
 	return PyString_FromString(mysql_error(&(self->connection)));
-#endif
 }
 
 static char _mysql_escape_string__doc__[] =
@@ -1115,9 +1074,9 @@ _mysql_escape_string(
 #endif
 	if (!str) return PyErr_NoMemory();
 #ifdef IS_PY3K
-    out = PyUnicode_AS_DATA(str);
+	out = PyUnicode_AS_DATA(str);
 #else
-    out = PyString_AS_STRING(str);
+	out = PyString_AS_STRING(str);
 #endif
 #if MYSQL_VERSION_ID < 32321
 	len = mysql_escape_string(out, in, size);
@@ -1301,10 +1260,10 @@ _mysql_escape_dict(
 	if (!PyArg_ParseTuple(args, "O!O:escape_dict", &PyDict_Type, &o, &d))
 		goto error;
 	if (!PyMapping_Check(d)) {
-              PyErr_SetString(PyExc_TypeError,
-                              "argument 2 must be a mapping");
-              return NULL;
-        }
+		PyErr_SetString(PyExc_TypeError,
+				"argument 2 must be a mapping");
+		return NULL;
+	}
 	if (!(r = PyDict_New())) goto error;
 	while (PyDict_Next(o, &ppos, &pkey, &item)) {
 		quoted = _escape_item(item, d);
@@ -1543,7 +1502,7 @@ _mysql__fetch_row(
 			goto error;
 		}
 		if (!row) {
-			if (MyTuple_Resize(r, i, 0) == -1) goto error;
+			if (_PyTuple_Resize(r, i) == -1) goto error;
 			break;
 		}
 		v = convert_row(self, row);
@@ -1606,7 +1565,7 @@ _mysql_ResultObject_fetch_row(
 				if (rowsadded == -1) goto error;
 				skiprows += rowsadded;
 				if (rowsadded < maxrows) break;
-				if (MyTuple_Resize(&r, skiprows+maxrows, 0) == -1)
+				if (_PyTuple_Resize(&r, skiprows+maxrows) == -1)
 				        goto error;
 			}
 		} else {
@@ -2547,42 +2506,42 @@ static PyMethodDef _mysql_ConnectionObject_methods[] = {
 	{NULL,              NULL} /* sentinel */
 };
 
-static MyMemberlist(_mysql_ConnectionObject_memberlist)[] = {
-	MyMember(
+static struct PyMemberDef _mysql_ConnectionObject_memberlist[] = {
+	{
 		"open",
 		T_INT,
 		offsetof(_mysql_ConnectionObject,open),
 		READONLY,
 		"True if connection is open"
-		),
-	MyMember(
+	},
+	{
 		"converter",
 		T_OBJECT,
 		offsetof(_mysql_ConnectionObject,converter),
 		0,
 		"Type conversion mapping"
-		),
-	MyMember(
+	},
+	{
 		"server_capabilities",
 		T_UINT,
 		offsetof(_mysql_ConnectionObject,connection.server_capabilities),
 		READONLY,
 		"Capabilites of server; consult MySQLdb.constants.CLIENT"
-		),
-	MyMember(
-		 "port",
-		 T_UINT,
-		 offsetof(_mysql_ConnectionObject,connection.port),
-		 READONLY,
-		 "TCP/IP port of the server connection"
-		 ),
-	MyMember(
-		 "client_flag",
-		 T_UINT,
-		 READONLY,
-		 offsetof(_mysql_ConnectionObject,connection.client_flag),
-		 "Client flags; refer to MySQLdb.constants.CLIENT"
-		 ),
+	},
+	{
+		"port",
+		T_UINT,
+		offsetof(_mysql_ConnectionObject,connection.port),
+		READONLY,
+		"TCP/IP port of the server connection"
+	},
+	{
+		"client_flag",
+		T_UINT,
+		READONLY,
+		offsetof(_mysql_ConnectionObject,connection.client_flag),
+		"Client flags; refer to MySQLdb.constants.CLIENT"
+	},
 	{NULL} /* Sentinel */
 };
 
@@ -2638,79 +2597,38 @@ static PyMethodDef _mysql_ResultObject_methods[] = {
 	{NULL,              NULL} /* sentinel */
 };
 
-static MyMemberlist(_mysql_ResultObject_memberlist)[] = {
-	MyMember(
+static struct PyMemberDef _mysql_ResultObject_memberlist[] = {
+	{
 		"converter",
 		T_OBJECT,
 		offsetof(_mysql_ResultObject,converter),
 		READONLY,
 		"Type conversion mapping"
-		),
+	},
 	{NULL} /* Sentinel */
 };
 
 static PyObject *
-_mysql_ConnectionObject_getattr(
+_mysql_ConnectionObject_getattro(
 	_mysql_ConnectionObject *self,
-	char *name)
+	PyObject *name)
 {
-#ifndef IS_PY3K
-	PyObject *res;
-
-	res = Py_FindMethod(_mysql_ConnectionObject_methods, (PyObject *)self, name);
-	if (res != NULL)
-		return res;
-	PyErr_Clear();
+	char *cname;
+#ifdef IS_PY3K
+	cname = PyUnicode_AsUTF8(name);
+#else
+	cname = PyString_AsString(name);
 #endif
-	if (strcmp(name, "closed") == 0)
+	if (strcmp(cname, "closed") == 0)
 		return PyInt_FromLong((long)!(self->open));
-#if PY_VERSION_HEX < 0x02020000
-	return PyMember_Get((char *)self, _mysql_ConnectionObject_memberlist, name);
-#else
-	{
-		MyMemberlist(*l);
-		for (l = _mysql_ConnectionObject_memberlist; l->name != NULL; l++) {
-			if (strcmp(l->name, name) == 0)
-				return PyMember_GetOne((char *)self, l);
-		}
-		PyErr_SetString(PyExc_AttributeError, name);
-		return NULL;
-	}
-#endif
-}
 
-static PyObject *
-_mysql_ResultObject_getattr(
-	_mysql_ResultObject *self,
-	char *name)
-{
-#ifndef IS_PY3K
-	PyObject *res;
-
-	res = Py_FindMethod(_mysql_ResultObject_methods, (PyObject *)self, name);
-	if (res != NULL)
-		return res;
-	PyErr_Clear();
-#endif
-#if PY_VERSION_HEX < 0x02020000
-	return PyMember_Get((char *)self, _mysql_ResultObject_memberlist, name);
-#else
-	{
-		MyMemberlist(*l);
-		for (l = _mysql_ResultObject_memberlist; l->name != NULL; l++) {
-			if (strcmp(l->name, name) == 0)
-				return PyMember_GetOne((char *)self, l);
-		}
-		PyErr_SetString(PyExc_AttributeError, name);
-		return NULL;
-	}
-#endif
+	return PyObject_GenericGetAttr(self, name);
 }
 
 static int
-_mysql_ConnectionObject_setattr(
+_mysql_ConnectionObject_setattro(
 	_mysql_ConnectionObject *self,
-	char *name,
+	PyObject *name,
 	PyObject *v)
 {
 	if (v == NULL) {
@@ -2718,24 +2636,13 @@ _mysql_ConnectionObject_setattr(
 				"can't delete connection attributes");
 		return -1;
 	}
-#if PY_VERSION_HEX < 0x02020000
-	return PyMember_Set((char *)self, _mysql_ConnectionObject_memberlist, name, v);
-#else
-        {
-		MyMemberlist(*l);
-		for (l = _mysql_ConnectionObject_memberlist; l->name != NULL; l++)
-			if (strcmp(l->name, name) == 0)
-				return PyMember_SetOne((char *)self, l, v);
-	}
-        PyErr_SetString(PyExc_AttributeError, name);
-        return -1;
-#endif
+	return PyObject_GenericSetAttr(self, name, v);
 }
 
 static int
-_mysql_ResultObject_setattr(
+_mysql_ResultObject_setattro(
 	_mysql_ResultObject *self,
-	char *name,
+	PyObject *name,
 	PyObject *v)
 {
 	if (v == NULL) {
@@ -2743,18 +2650,7 @@ _mysql_ResultObject_setattr(
 				"can't delete connection attributes");
 		return -1;
 	}
-#if PY_VERSION_HEX < 0x02020000
-	return PyMember_Set((char *)self, _mysql_ResultObject_memberlist, name, v);
-#else
-        {
-		MyMemberlist(*l);
-		for (l = _mysql_ResultObject_memberlist; l->name != NULL; l++)
-			if (strcmp(l->name, name) == 0)
-				return PyMember_SetOne((char *)self, l, v);
-	}
-        PyErr_SetString(PyExc_AttributeError, name);
-        return -1;
-#endif
+	return PyObject_GenericSetAttr(self, name, v);
 }
 
 PyTypeObject _mysql_ConnectionObject_Type = {
@@ -2769,8 +2665,8 @@ PyTypeObject _mysql_ConnectionObject_Type = {
 	0,
 	(destructor)_mysql_ConnectionObject_dealloc, /* tp_dealloc */
 	0, /*tp_print*/
-	(getattrfunc)_mysql_ConnectionObject_getattr, /* tp_getattr */
-	(setattrfunc)_mysql_ConnectionObject_setattr, /* tp_setattr */
+	0, /* tp_getattr */
+	0, /* tp_setattr */
 	0, /*tp_compare*/
 	(reprfunc)_mysql_ConnectionObject_repr, /* tp_repr */
 	
@@ -2785,48 +2681,35 @@ PyTypeObject _mysql_ConnectionObject_Type = {
 	0, /* (hashfunc) tp_hash */
 	0, /* (ternaryfunc) tp_call */
 	0, /* (reprfunc) tp_str */
-	0, /* (getattrofunc) tp_getattro */
-	0, /* (setattrofunc) tp_setattro */
+	(getattrofunc)_mysql_ConnectionObject_getattro, /* tp_getattro */
+	(setattrofunc)_mysql_ConnectionObject_setattro, /* tp_setattro */
 	
 	/* Functions to access object as input/output buffer */
 	0, /* (PyBufferProcs *) tp_as_buffer */
 	
-	/* Flags to define presence of optional/expanded features */
-#if PY_VERSION_HEX < 0x02020000
-	Py_TPFLAGS_DEFAULT, /* (long) tp_flags */
-#else
+	/* (tp_flags) Flags to define presence of optional/expanded features */
 	Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC | Py_TPFLAGS_BASETYPE,
-#endif
 	_mysql_connect__doc__, /* (char *) tp_doc Documentation string */
-#if PY_VERSION_HEX >= 0x02000000	
-	/* Assigned meaning in release 2.0 */
-#if PY_VERSION_HEX >= 0x02020000
+
 	/* call function for all accessible objects */
 	(traverseproc) _mysql_ConnectionObject_traverse, /* tp_traverse */
 	
 	/* delete references to contained objects */
 	(inquiry) _mysql_ConnectionObject_clear, /* tp_clear */
-#else
-	/* not supporting pre-2.2 GC */
-	0,
-	0,
-#endif
-#if PY_VERSION_HEX >= 0x02010000	
-	/* Assigned meaning in release 2.1 */
+
 	/* rich comparisons */
 	0, /* (richcmpfunc) tp_richcompare */
 	
 	/* weak reference enabler */
 	0, /* (long) tp_weaklistoffset */
-#if PY_VERSION_HEX >= 0x02020000
-	/* Added in release 2.2 */
+
 	/* Iterators */
 	0, /* (getiterfunc) tp_iter */
 	0, /* (iternextfunc) tp_iternext */
 	
 	/* Attribute descriptor and subclassing stuff */
 	(struct PyMethodDef *)_mysql_ConnectionObject_methods, /* tp_methods */
-	(MyMemberlist(*))_mysql_ConnectionObject_memberlist, /* tp_members */
+	(struct PyMemberDef *)_mysql_ConnectionObject_memberlist, /* tp_members */
 	0, /* (struct getsetlist *) tp_getset; */
 	0, /* (struct _typeobject *) tp_base; */
 	0, /* (PyObject *) tp_dict */
@@ -2840,9 +2723,6 @@ PyTypeObject _mysql_ConnectionObject_Type = {
 	0, /* (PyObject *) tp_bases */
 	0, /* (PyObject *) tp_mro method resolution order */
 	0, /* (PyObject *) tp_defined */
-#endif /* python 2.2 */
-#endif /* python 2.1 */
-#endif /* python 2.0 */
 } ;
 
 PyTypeObject _mysql_ResultObject_Type = {
@@ -2857,8 +2737,8 @@ PyTypeObject _mysql_ResultObject_Type = {
 	0,
 	(destructor)_mysql_ResultObject_dealloc, /* tp_dealloc */
 	0, /*tp_print*/
-	(getattrfunc)_mysql_ResultObject_getattr, /* tp_getattr */
-	(setattrfunc)_mysql_ResultObject_setattr, /* tp_setattr */
+	0, /* tp_getattr */
+	0, /* tp_setattr */
 	0, /*tp_compare*/
 	(reprfunc)_mysql_ResultObject_repr, /* tp_repr */
 	
@@ -2873,49 +2753,36 @@ PyTypeObject _mysql_ResultObject_Type = {
 	0, /* (hashfunc) tp_hash */
 	0, /* (ternaryfunc) tp_call */
 	0, /* (reprfunc) tp_str */
-	0, /* (getattrofunc) tp_getattro */
-	0, /* (setattrofunc) tp_setattro */
+	(getattrofunc)PyObject_GenericGetAttr, /* tp_getattro */
+	(setattrofunc)_mysql_ResultObject_setattro, /* tp_setattr */
 	
 	/* Functions to access object as input/output buffer */
 	0, /* (PyBufferProcs *) tp_as_buffer */
 	
 	/* Flags to define presence of optional/expanded features */
-#if PY_VERSION_HEX < 0x02020000
-	Py_TPFLAGS_DEFAULT, /* (long) tp_flags */
-#else
 	Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC | Py_TPFLAGS_BASETYPE,
-#endif
 	
 	_mysql_ResultObject__doc__, /* (char *) tp_doc Documentation string */
-#if PY_VERSION_HEX >= 0x02000000	
-	/* Assigned meaning in release 2.0 */
-#if PY_VERSION_HEX >= 0x02020000
+
 	/* call function for all accessible objects */
 	(traverseproc) _mysql_ResultObject_traverse, /* tp_traverse */
 	
 	/* delete references to contained objects */
 	(inquiry) _mysql_ResultObject_clear, /* tp_clear */
-#else
-	/* not supporting pre-2.2 GC */
-	0,
-	0,
-#endif
-#if PY_VERSION_HEX >= 0x02010000	
-	/* Assigned meaning in release 2.1 */
+
 	/* rich comparisons */
 	0, /* (richcmpfunc) tp_richcompare */
 	
 	/* weak reference enabler */
 	0, /* (long) tp_weaklistoffset */
-#if PY_VERSION_HEX >= 0x02020000
-	/* Added in release 2.2 */
+
 	/* Iterators */
 	0, /* (getiterfunc) tp_iter */
 	0, /* (iternextfunc) tp_iternext */
 	
 	/* Attribute descriptor and subclassing stuff */
 	(struct PyMethodDef *) _mysql_ResultObject_methods, /* tp_methods */
-	(MyMemberlist(*)) _mysql_ResultObject_memberlist, /*tp_members */
+	(struct PyMemberDef *) _mysql_ResultObject_memberlist, /*tp_members */
 	0, /* (struct getsetlist *) tp_getset; */
 	0, /* (struct _typeobject *) tp_base; */
 	0, /* (PyObject *) tp_dict */
@@ -2929,9 +2796,6 @@ PyTypeObject _mysql_ResultObject_Type = {
 	0, /* (PyObject *) tp_bases */
 	0, /* (PyObject *) tp_mro method resolution order */
 	0, /* (PyObject *) tp_defined */
-#endif /* python 2.2 */
-#endif /* python 2.1 */
-#endif /* python 2.0 */
 };
 
 static PyMethodDef
@@ -3059,32 +2923,31 @@ init_mysql(void)
 #endif
 {
 	PyObject *dict, *module, *emod, *edict;
-#ifdef IS_PY3K
-    module = PyModule_Create(&_mysqlmodule);
-	if (!module) return module; /* this really should never happen */
-#else
-	module = Py_InitModule4("_mysql", _mysql_methods, _mysql___doc__,
-				(PyObject *)NULL, PYTHON_API_VERSION);
-	if (!module) return; /* this really should never happen */
-#endif
-#ifdef IS_PY3K
-	Py_TYPE(&_mysql_ConnectionObject_Type) = &PyType_Type;
-	Py_TYPE(&_mysql_ResultObject_Type) = &PyType_Type;
-#else
+
+#ifndef IS_PY3K
 	_mysql_ConnectionObject_Type.ob_type = &PyType_Type;
 	_mysql_ResultObject_Type.ob_type = &PyType_Type;
 #endif
 #if PY_VERSION_HEX >= 0x02020000
 	_mysql_ConnectionObject_Type.tp_alloc = PyType_GenericAlloc;
 	_mysql_ConnectionObject_Type.tp_new = PyType_GenericNew;
-#ifndef IS_PY3K
-	_mysql_ConnectionObject_Type.tp_free = _PyObject_GC_Del;
-#endif
 	_mysql_ResultObject_Type.tp_alloc = PyType_GenericAlloc;
 	_mysql_ResultObject_Type.tp_new = PyType_GenericNew;
-#ifndef IS_PY3K
-	_mysql_ResultObject_Type.tp_free = _PyObject_GC_Del;
 #endif
+#ifdef IS_PY3K
+	if (PyType_Ready(&_mysql_ConnectionObject_Type) < 0)
+		return NULL;
+	if (PyType_Ready(&_mysql_ResultObject_Type) < 0)
+		return NULL;
+
+	module = PyModule_Create(&_mysqlmodule);
+	if (!module) return module; /* this really should never happen */
+#else
+	_mysql_ConnectionObject_Type.tp_free = _PyObject_GC_Del;
+	_mysql_ResultObject_Type.tp_free = _PyObject_GC_Del;
+	module = Py_InitModule4("_mysql", _mysql_methods, _mysql___doc__,
+				(PyObject *)NULL, PYTHON_API_VERSION);
+	if (!module) return; /* this really should never happen */
 #endif
 
 	if (!(dict = PyModule_GetDict(module))) goto error;
@@ -3164,5 +3027,3 @@ init_mysql(void)
     return module;
 #endif
 }
-
-
