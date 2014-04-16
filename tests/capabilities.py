@@ -10,6 +10,8 @@ import array
 import unittest
 from configdb import connection_factory
 
+from MySQLdb.compat import unichr
+
 
 class DatabaseTest(unittest.TestCase):
 

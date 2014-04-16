@@ -7,13 +7,8 @@ default, MySQLdb uses the Cursor class.
 
 import re
 import sys
-try:
-    from types import ListType, TupleType, UnicodeType
-except ImportError:
-    # Python 3
-    ListType = list
-    TupleType = tuple
-    UnicodeType = str
+
+from MySQLdb.compat import unicode
 
 restr = r"""
     \s
@@ -305,7 +300,7 @@ class BaseCursor(object):
         q = "CALL %s(%s)" % (procname,
                              ','.join(['@_%s_%d' % (procname, i)
                                        for i in range(len(args))]))
-        if type(q) is UnicodeType:
+        if isinstance(q, unicode):
             q = q.encode(db.unicode_literal.charset)
         self._query(q)
         self._executed = q
