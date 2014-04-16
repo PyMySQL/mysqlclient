@@ -2791,7 +2791,7 @@ PyTypeObject _mysql_ResultObject_Type = {
 	0, /* (hashfunc) tp_hash */
 	0, /* (ternaryfunc) tp_call */
 	0, /* (reprfunc) tp_str */
-	0, /* tp_getattro */
+	(getattrofunc)PyObject_GenericGetAttr, /* tp_getattro */
 	(setattrofunc)_mysql_ResultObject_setattro, /* tp_setattr */
 	
 	/* Functions to access object as input/output buffer */
