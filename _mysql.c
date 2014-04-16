@@ -60,7 +60,7 @@ PERFORMANCE OF THIS SOFTWARE.
 # define MyMemberlist(x) struct PyMemberDef x
 # define MyAlloc(s,t) (s *) t.tp_alloc(&t,0)
 #ifdef IS_PY3K
-# define MyFree(o) PyObject_Del(o)
+# define MyFree(o) Py_TYPE(o)->tp_free((PyObject*)o)
 #else
 # define MyFree(ob) ob->ob_type->tp_free((PyObject *)ob)
 #endif
@@ -924,7 +924,7 @@ _mysql_ConnectionObject_commit(
 	if (err) return _mysql_Exception(self);
 	Py_INCREF(Py_None);
 	return Py_None;
-}		
+}
 
 static char _mysql_ConnectionObject_rollback__doc__[] =
 "Rolls backs the current transaction\n\
@@ -2985,14 +2985,8 @@ init_mysql(void)
 #if PY_VERSION_HEX >= 0x02020000
 	_mysql_ConnectionObject_Type.tp_alloc = PyType_GenericAlloc;
 	_mysql_ConnectionObject_Type.tp_new = PyType_GenericNew;
-#ifndef IS_PY3K
-	_mysql_ConnectionObject_Type.tp_free = _PyObject_GC_Del;
-#endif
 	_mysql_ResultObject_Type.tp_alloc = PyType_GenericAlloc;
 	_mysql_ResultObject_Type.tp_new = PyType_GenericNew;
-#ifndef IS_PY3K
-	_mysql_ResultObject_Type.tp_free = _PyObject_GC_Del;
-#endif
 #endif
 #ifdef IS_PY3K
 	if (PyType_Ready(&_mysql_ConnectionObject_Type) < 0)
