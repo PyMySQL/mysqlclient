@@ -7,10 +7,11 @@ default, MySQLdb uses the Cursor class.
 
 import re
 import sys
+PY2 = sys.version_info[0] == 2
 
 from MySQLdb.compat import unicode
 
-restr = r"""
+restr = br"""
     \s
     values
     \s*
@@ -68,9 +69,9 @@ class BaseCursor(object):
     _defer_warnings = False
     
     def __init__(self, connection):
-        from weakref import proxy
+        from weakref import ref
     
-        self.connection = proxy(connection)
+        self.connection = ref(connection)
         self.description = None
         self.description_flags = None
         self.rowcount = -1
@@ -91,7 +92,8 @@ class BaseCursor(object):
 
     def close(self):
         """Close the cursor. No further queries will be possible."""
-        if not self.connection: return
+        if self.connection is None or self.connection() is None:
+            return
         while self.nextset(): pass
         self.connection = None
 
@@ -152,9 +154,12 @@ class BaseCursor(object):
         """Does nothing, required by DB API."""
 
     def _get_db(self):
-        if not self.connection:
+        con = self.connection
+        if con is not None:
+            con = con()
+        if con is None:
             self.errorhandler(self, ProgrammingError, "cursor closed")
-        return self.connection
+        return con
     
     def execute(self, query, args=None):
 
@@ -172,14 +177,32 @@ class BaseCursor(object):
         """
         del self.messages[:]
         db = self._get_db()
-        if isinstance(query, unicode):
+        if PY2 and isinstance(query, unicode):
             query = query.encode(db.unicode_literal.charset)
+        else:
+            def decode(x):
+                if isinstance(x, bytes):
+                    x = x.decode('ascii', 'surrogateescape')
+                return x
+
         if args is not None:
             if isinstance(args, dict):
-                query = query % dict((key, db.literal(item))
-                                     for key, item in args.iteritems())
+                if PY2:
+                    args = dict((key, db.literal(item)) for key, item in args.iteritems())
+                else:
+                    args = dict((key, decode(db.literal(item))) for key, item in args.items())
             else:
-                query = query % tuple([db.literal(item) for item in args])
+                if PY2:
+                    args = tuple(map(db.literal, args))
+                else:
+                    args = tuple([decode(db.literal(x)) for x in args])
+            if not PY2 and isinstance(query, bytes):
+                query = query.decode(db.unicode_literal.charset)
+            query = query % args
+
+        if isinstance(query, unicode):
+            query = query.encode(db.unicode_literal.charset, 'surrogateescape')
+
         try:
             r = None
             r = self._query(query)
