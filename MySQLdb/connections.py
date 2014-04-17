@@ -13,6 +13,9 @@ from _mysql_exceptions import Warning, Error, InterfaceError, DataError, \
      NotSupportedError, ProgrammingError
 import _mysql
 import re
+import sys
+
+PY2 = sys.version_info[0] == 2
 
 
 def defaulterrorhandler(connection, cursor, errorclass, errorvalue):
@@ -280,7 +283,10 @@ class Connection(_mysql.connection):
         applications.
 
         """
-        return self.escape(o, self.encoders)
+        s = self.escape(o, self.encoders)
+        if not PY2 and isinstance(s, bytes):
+            return s.decode('ascii', 'surrogateescape')
+        return s
 
     def begin(self):
         """Explicitly begin a connection. Non-standard.
