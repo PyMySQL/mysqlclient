@@ -438,7 +438,11 @@ _mysql_ResultObject_Initialize(
 			Py_INCREF(Py_None);
 		}
 		else if (PySequence_Check(fun)) {
+			long flags = fields[i].flags;
 			int j, n2=PySequence_Size(fun);
+			if (fields[i].charsetnr != 63) { /* maaagic */
+				flags &= ~BINARY_FLAG;
+			}
 			PyObject *fun2=NULL;
 			for (j=0; j<n2; j++) {
 				PyObject *t = PySequence_GetItem(fun, j);
@@ -448,17 +452,13 @@ _mysql_ResultObject_Initialize(
 					return -1;
 				}
 				if (PyTuple_Check(t) && PyTuple_GET_SIZE(t) == 2) {
-					long mask, flags;
+					long mask;
 					PyObject *pmask=NULL;
 					pmask = PyTuple_GET_ITEM(t, 0);
 					fun2 = PyTuple_GET_ITEM(t, 1);
 					Py_XINCREF(fun2);
 					if (PyInt_Check(pmask)) {
 						mask = PyInt_AS_LONG(pmask);
-						flags = fields[i].flags;
-						if (fields[i].charsetnr != 63) { /* maaagic */
-							flags &= ~BINARY_FLAG;
-						}
 						if (mask & flags) {
 							Py_DECREF(t);
 							break;
@@ -1343,23 +1343,41 @@ static PyObject *
 _mysql_field_to_python(
 	PyObject *converter,
 	char *rowitem,
-	unsigned long length)
+	unsigned long length,
+	MYSQL_FIELD *field)
 {
+	int field_type = field->type;
 	PyObject *v;
+#ifdef IS_PY3K
+	// Return bytes for binary and string types.
+	int binary = 0;
+	if (field_type == FIELD_TYPE_TINY_BLOB ||
+		field_type == FIELD_TYPE_MEDIUM_BLOB ||
+		field_type == FIELD_TYPE_LONG_BLOB ||
+		field_type == FIELD_TYPE_BLOB ||
+		field_type == FIELD_TYPE_VAR_STRING ||
+		field_type == FIELD_TYPE_STRING) {
+			binary = 1;
+	}
+#endif
 	if (rowitem) {
 		if (converter != Py_None) {
+			const char *fmt = "s#";
 			v = PyObject_CallFunction(converter,
 #ifdef IS_PY3K
-						  "y#",
+						  binary ? "y#" : "s#",
 #else
 						  "s#",
 #endif
 						  rowitem,
 						  (int)length);
 		} else {
-			// TODO: Should we decode here on Python 3?
-			v = PyBytes_FromStringAndSize(rowitem,
-						       (int)length);
+#ifdef IS_PY3K
+			if (!binary) {
+				v = PyUnicode_FromStringAndSize(rowitem, (int)length);
+			} else
+#endif
+			v = PyBytes_FromStringAndSize(rowitem, (int)length);
 		}
 		if (!v)
 			return NULL;
@@ -1378,14 +1396,16 @@ _mysql_row_to_tuple(
 	unsigned int n, i;
 	unsigned long *length;
 	PyObject *r, *c;
+	MYSQL_FIELD *fields;
 
 	n = mysql_num_fields(self->result);
 	if (!(r = PyTuple_New(n))) return NULL;
 	length = mysql_fetch_lengths(self->result);
+	fields = mysql_fetch_fields(self->result);
 	for (i=0; i<n; i++) {
 		PyObject *v;
 		c = PyTuple_GET_ITEM(self->converter, i);
-		v = _mysql_field_to_python(c, row[i], length[i]);
+		v = _mysql_field_to_python(c, row[i], length[i], &fields[i]);
 		if (!v) goto error;
 		PyTuple_SET_ITEM(r, i, v);
 	}
@@ -1403,16 +1423,16 @@ _mysql_row_to_dict(
 	unsigned int n, i;
 	unsigned long *length;
 	PyObject *r, *c;
-        MYSQL_FIELD *fields;
+	MYSQL_FIELD *fields;
 
 	n = mysql_num_fields(self->result);
 	if (!(r = PyDict_New())) return NULL;
 	length = mysql_fetch_lengths(self->result);
-        fields = mysql_fetch_fields(self->result);
+	fields = mysql_fetch_fields(self->result);
 	for (i=0; i<n; i++) {
 		PyObject *v;
 		c = PyTuple_GET_ITEM(self->converter, i);
-		v = _mysql_field_to_python(c, row[i], length[i]);
+		v = _mysql_field_to_python(c, row[i], length[i], &fields[i]);
 		if (!v) goto error;
 		if (!PyMapping_HasKeyString(r, fields[i].name)) {
 			PyMapping_SetItemString(r, fields[i].name, v);
@@ -1447,11 +1467,11 @@ _mysql_row_to_dict_old(
 	n = mysql_num_fields(self->result);
 	if (!(r = PyDict_New())) return NULL;
 	length = mysql_fetch_lengths(self->result);
-        fields = mysql_fetch_fields(self->result);
+	fields = mysql_fetch_fields(self->result);
 	for (i=0; i<n; i++) {
 		PyObject *v;
 		c = PyTuple_GET_ITEM(self->converter, i);
-		v = _mysql_field_to_python(c, row[i], length[i]);
+		v = _mysql_field_to_python(c, row[i], length[i], &fields[i]);
 		if (!v) goto error;
 		{
 			int len=0;
