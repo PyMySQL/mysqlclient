@@ -265,7 +265,7 @@ static PyObject *_mysql_server_init(
 		for (i=0; i< cmd_argc; i++) {
 			item = PySequence_GetItem(cmd_args, i);
 #ifdef IS_PY3K
-			s = PyUnicode_AS_DATA(item);
+			s = PyUnicode_AsUTF8(item);
 #else
 			s = PyString_AsString(item);
 #endif
@@ -295,7 +295,7 @@ static PyObject *_mysql_server_init(
 		for (i=0; i< groupc; i++) {
 			item = PySequence_GetItem(groups, i);
 #ifdef IS_PY3K
-			s = PyUnicode_AS_DATA(item);
+			s = PyUnicode_AsUTF8(item);
 #else
 			s = PyString_AsString(item);
 #endif
@@ -578,7 +578,7 @@ _mysql_ConnectionObject_Initialize(
 
 #ifdef IS_PY3K
 #define _stringsuck(d,t,s) {t=PyMapping_GetItemString(s,#d);\
-        if(t){d=PyUnicode_AS_DATA(t);Py_DECREF(t);}\
+        if(t){d=PyUnicode_AsUTF8(t);Py_DECREF(t);}\
         PyErr_Clear();}
 #else
 #define _stringsuck(d,t,s) {t=PyMapping_GetItemString(s,#d);\
@@ -1334,19 +1334,16 @@ _mysql_field_to_python(
 {
 	PyObject *v;
 	if (rowitem) {
-		if (converter != Py_None)
+		if (converter != Py_None) {
 			v = PyObject_CallFunction(converter,
 						  "s#",
 						  rowitem,
 						  (int)length);
-		else
-#ifdef IS_PY3K
-			v = PyUnicode_FromStringAndSize(rowitem,
+		} else {
+			// TODO: Should we decode here on Python 3?
+			v = PyBytes_FromStringAndSize(rowitem,
 						       (int)length);
-#else
-			v = PyString_FromStringAndSize(rowitem,
-						       (int)length);
-#endif
+		}
 		if (!v)
 			return NULL;
 	} else {
