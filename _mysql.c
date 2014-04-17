@@ -1074,6 +1074,9 @@ _mysql_escape_string(
 	len = mysql_escape_string(out, in, size);
 #else
 	check_server_init(NULL);
+
+	if (PyModule_Check((PyObject*)self))
+		self = NULL;
 	if (self && self->open)
 		len = mysql_real_escape_string(&(self->connection), out, in, size);
 	else
@@ -1101,21 +1104,31 @@ _mysql_string_literal(
 	PyObject *str, *s, *o, *d;
 	char *in, *out;
 	int len, size;
+	if (PyModule_Check((PyObject*)self))
+		self = NULL;
 	if (!PyArg_ParseTuple(args, "O|O:string_literal", &o, &d)) return NULL;
-	s = PyObject_Str(o);
-	if (!s) return NULL;
+	if (PyBytes_Check(o)) {
+		s = o;
+		Py_INCREF(s);
+	} else {
+		s = PyObject_Str(o);
+		if (!s) return NULL;
 #ifdef IS_PY3K
-	{
-		PyObject *t = PyUnicode_AsASCIIString(s);
-		if (!t) return NULL;
-		Py_DECREF(s);
-		s = t;
-	}
+		{
+			PyObject *t = PyUnicode_AsASCIIString(s);
+			Py_DECREF(s);
+			if (!t) return NULL;
+			s = t;
+		}
 #endif
+	}
 	in = PyBytes_AsString(s);
 	size = PyBytes_GET_SIZE(s);
 	str = PyBytes_FromStringAndSize((char *) NULL, size*2+3);
-	if (!str) return PyErr_NoMemory();
+	if (!str) {
+		Py_DECREF(s);
+		return PyErr_NoMemory();
+	}
 	out = PyBytes_AS_STRING(str);
 #if MYSQL_VERSION_ID < 32321
 	len = mysql_escape_string(out+1, in, size);
@@ -1336,7 +1349,11 @@ _mysql_field_to_python(
 	if (rowitem) {
 		if (converter != Py_None) {
 			v = PyObject_CallFunction(converter,
+#ifdef IS_PY3K
+						  "y#",
+#else
 						  "s#",
+#endif
 						  rowitem,
 						  (int)length);
 		} else {
