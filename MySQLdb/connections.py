@@ -212,8 +212,12 @@ class Connection(_mysql.connection):
             return string_literal
 
         def _get_unicode_literal():
-            def unicode_literal(u, dummy=None):
-                return db.literal(u.encode(unicode_literal.charset))
+            if PY2:
+                def unicode_literal(u, dummy=None):
+                    return db.literal(u.encode(unicode_literal.charset))
+            else:
+                def unicode_literal(u, dummy=None):
+                    return db.literal(str(u).encode(unicode_literal.charset))
             return unicode_literal
 
         def _get_string_decoder():

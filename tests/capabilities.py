@@ -27,10 +27,8 @@ class DatabaseTest(unittest.TestCase):
         db = connection_factory(**self.connect_kwargs)
         self.connection = db
         self.cursor = db.cursor()
-        # TODO: this needs to be re-evaluated for Python 3
-        self.BLOBText = ''.join([chr(i) for i in range(256)] * 100);
         self.BLOBUText = u''.join([unichr(i) for i in range(16384)])
-        self.BLOBBinary = self.db_module.Binary(''.join([chr(i) for i in range(256)] * 16))
+        self.BLOBBinary = self.db_module.Binary((u''.join([unichr(i) for i in range(256)] * 16)).encode('latin1'))
 
     leak_test = True
     
