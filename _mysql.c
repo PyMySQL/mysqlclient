@@ -36,7 +36,6 @@ PERFORMANCE OF THIS SOFTWARE.
 #endif
 
 #include "bytesobject.h"
-#include "pymemcompat.h"
 #include "structmember.h"
 #if defined(MS_WINDOWS)
 #include <config-win.h>
