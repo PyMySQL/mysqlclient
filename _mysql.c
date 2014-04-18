@@ -1075,7 +1075,7 @@ _mysql_escape_string(
 #else
 	check_server_init(NULL);
 
-	if (PyModule_Check((PyObject*)self))
+	if (self && PyModule_Check((PyObject*)self))
 		self = NULL;
 	if (self && self->open)
 		len = mysql_real_escape_string(&(self->connection), out, in, size);
@@ -1104,7 +1104,7 @@ _mysql_string_literal(
 	PyObject *str, *s, *o, *d;
 	char *in, *out;
 	int len, size;
-	if (PyModule_Check((PyObject*)self))
+	if (self && PyModule_Check((PyObject*)self))
 		self = NULL;
 	if (!PyArg_ParseTuple(args, "O|O:string_literal", &o, &d)) return NULL;
 	if (PyBytes_Check(o)) {
