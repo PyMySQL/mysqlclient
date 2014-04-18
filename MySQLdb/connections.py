@@ -13,7 +13,6 @@ from _mysql_exceptions import Warning, Error, InterfaceError, DataError, \
      NotSupportedError, ProgrammingError
 import _mysql
 import re
-import sys
 
 
 def defaulterrorhandler(connection, cursor, errorclass, errorvalue):
