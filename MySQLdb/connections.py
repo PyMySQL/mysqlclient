@@ -178,7 +178,7 @@ class Connection(_mysql.connection):
         cursorclass = kwargs2.pop('cursorclass', self.default_cursor)
         charset = kwargs2.pop('charset', '')
 
-        if charset:
+        if charset or not PY2:
             use_unicode = True
         else:
             use_unicode = False
