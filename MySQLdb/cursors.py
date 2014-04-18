@@ -177,6 +177,14 @@ class BaseCursor(object):
         """
         del self.messages[:]
         db = self._get_db()
+
+        # NOTE:
+        # Python 2: query should be bytes when executing %.
+        # All unicode in args should be encoded to bytes on Python 2.
+        # Python 3: query should be str (unicode) when executing %.
+        # All bytes in args should be decoded with ascii and surrogateescape on Python 3.
+        # db.literal(obj) always returns str.
+
         if PY2 and isinstance(query, unicode):
             query = query.encode(db.unicode_literal.charset)
 
