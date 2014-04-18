@@ -6,9 +6,6 @@ python:
  - 3.3
  - 3.4
 matrix:
-  allow_failures:
-    - python: 3.3
-    - python: 3.4
   fast_finish: true
 install: python setup.py install
 before_script: mysql -e 'create database mysqldb_test charset utf8;'
