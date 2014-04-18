@@ -35,18 +35,9 @@ MySQL.connect().
 from _mysql import string_literal, escape_sequence, escape_dict, escape, NULL
 from MySQLdb.constants import FIELD_TYPE, FLAG
 from MySQLdb.times import *
+from MySQLdb.compat import PY2, long
 
-try:
-    from types import IntType, LongType, FloatType, NoneType, TupleType, ListType, DictType, InstanceType, \
-        ObjectType, BooleanType
-    PY2 = True
-except ImportError:
-    # Python 3
-    long = int
-    IntType, LongType, FloatType, NoneType = int, long, float, type(None)
-    TupleType, ListType, DictType, InstanceType = tuple, list, dict, None
-    ObjectType, BooleanType = object, bool
-    PY2 = False
+NoneType = type(None)
 
 import array
 
@@ -78,8 +69,6 @@ def Unicode2Str(s, d):
     is connection-dependent."""
     return s.encode()
 
-Long2Int = Thing2Str
-
 def Float2Str(o, d):
     return '%.15g' % o
 
@@ -88,12 +77,10 @@ def None2NULL(o, d):
     return NULL # duh
 
 def Thing2Literal(o, d):
-    
     """Convert something into a SQL string literal.  If using
     MySQL-3.23 or newer, string_literal() is a method of the
     _mysql.MYSQL object, and this function will be overridden with
     that method when the connection is created."""
-
     return string_literal(o, d)
 
 
@@ -107,19 +94,19 @@ def quote_tuple(t, d):
     return "(%s)" % (','.join(escape_sequence(t, d)))
 
 conversions = {
-    IntType: Thing2Str,
-    LongType: Long2Int,
-    FloatType: Float2Str,
+    int: Thing2Str,
+    long: Thing2Str,
+    float: Float2Str,
     NoneType: None2NULL,
-    TupleType: quote_tuple,
-    ListType: quote_tuple,
-    DictType: escape_dict,
+    tuple: quote_tuple,
+    list: quote_tuple,
+    dict: escape_dict,
     ArrayType: array2Str,
-    BooleanType: Bool2Str,
+    bool: Bool2Str,
     Date: Thing2Literal,
     DateTimeType: DateTime2literal,
     DateTimeDeltaType: DateTimeDelta2literal,
-    str: str,  # default
+    str: Thing2Literal,  # default
     set: Set2Str,
     FIELD_TYPE.TINY: int,
     FIELD_TYPE.SHORT: int,
@@ -152,7 +139,7 @@ conversions = {
 if PY2:
     conversions[unicode] = Unicode2Str
 else:
-    conversions[bytes] = bytes
+    conversions[bytes] = Thing2Literal
 
 try:
     from decimal import Decimal
@@ -160,6 +147,3 @@ try:
     conversions[FIELD_TYPE.NEWDECIMAL] = Decimal
 except ImportError:
     pass
-
-
-

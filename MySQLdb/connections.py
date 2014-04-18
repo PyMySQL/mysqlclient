@@ -7,15 +7,13 @@ override Connection.default_cursor with a non-standard Cursor class.
 
 """
 from MySQLdb import cursors
-from MySQLdb.compat import unicode
+from MySQLdb.compat import unicode, PY2
 from _mysql_exceptions import Warning, Error, InterfaceError, DataError, \
      DatabaseError, OperationalError, IntegrityError, InternalError, \
      NotSupportedError, ProgrammingError
 import _mysql
 import re
 import sys
-
-PY2 = sys.version_info[0] == 2
 
 
 def defaulterrorhandler(connection, cursor, errorclass, errorvalue):
@@ -123,6 +121,7 @@ class Connection(_mysql.connection):
           columns are returned as strings.  columns are returned as
           normal strings. Unicode objects will always be encoded to
           the connection's character set regardless of this setting.
+          Default to False on Python 2 and True on Python 3.
 
         charset
           If supplied, the connection character set will be changed
@@ -207,15 +206,18 @@ class Connection(_mysql.connection):
 
         db = proxy(self)
         def _get_string_literal():
+            # Note: string_literal() is called for bytes object on Python 3.
             def string_literal(obj, dummy=None):
                 return db.string_literal(obj)
             return string_literal
 
         def _get_unicode_literal():
             if PY2:
+                # unicode_literal is called for only unicode object.
                 def unicode_literal(u, dummy=None):
                     return db.literal(u.encode(unicode_literal.charset))
             else:
+                # unicode_literal() is called for arbitrary object.
                 def unicode_literal(u, dummy=None):
                     return db.literal(str(u).encode(unicode_literal.charset))
             return unicode_literal
@@ -288,6 +290,11 @@ class Connection(_mysql.connection):
 
         """
         s = self.escape(o, self.encoders)
+        # Python 3 doesn't support % operation for bytes object.
+        # We should decode it before using %.
+        # Decoding with ascii and surrogateescape allows convert arbitrary
+        # bytes to unicode and back again.
+        # See http://python.org/dev/peps/pep-0383/
         if not PY2 and isinstance(s, bytes):
             return s.decode('ascii', 'surrogateescape')
         return s
