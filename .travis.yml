@@ -7,4 +7,4 @@ install:
     - pip install tox six
 
 before_script: mysql -e 'create database mysqldb_test charset utf8;'
-script: tox
+script: TESTDB=travis.cnf tox
