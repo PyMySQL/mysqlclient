@@ -71,13 +71,13 @@ def TimeDelta_or_None(s):
         else:
             ms = 0
         if h[0] == '-':
-            isNegative = True
+            negative = True
         else:
-            isNegative = False
-        h, m, s, ms = int(h), int(m), int(s), int(ms)
-        td = timedelta(hours=abs(h), minutes=m, seconds=s,
+            negative = False
+        h, m, s, ms = abs(int(h)), int(m), int(s), int(ms)
+        td = timedelta(hours=h, minutes=m, seconds=s,
                        microseconds=ms)
-        if isNegative:
+        if negative:
             return -td
         else:
             return td
