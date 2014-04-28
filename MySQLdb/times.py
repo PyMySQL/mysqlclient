@@ -70,10 +70,14 @@ def TimeDelta_or_None(s):
             ms = ms.ljust(6, '0')
         else:
             ms = 0
-        h, m, s, ms = int(h), int(m), int(s), int(ms)
-        td = timedelta(hours=abs(h), minutes=m, seconds=s,
+        if h[0] == '-':
+            negative = True
+        else:
+            negative = False
+        h, m, s, ms = abs(int(h)), int(m), int(s), int(ms)
+        td = timedelta(hours=h, minutes=m, seconds=s,
                        microseconds=ms)
-        if h < 0:
+        if negative:
             return -td
         else:
             return td
