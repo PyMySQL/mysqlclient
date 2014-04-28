@@ -1,4 +1,6 @@
 import os, sys
+from distutils.msvccompiler import get_build_version
+
 
 def get_config():
     from setup_common import get_metadata_and_options, enabled, create_release_file
@@ -14,16 +16,17 @@ def get_config():
     else:
         client = "mysqlclient"
 
-    library_dirs = [ os.path.join(connector, r'lib\opt') ]
+    vcversion = int(get_build_version())
+    library_dirs = [ os.path.join(connector, r'lib\vs%d' % vcversion) ]
     libraries = [ 'kernel32', 'advapi32', 'wsock32', client ]
     include_dirs = [ os.path.join(connector, r'include') ]
     extra_compile_args = [ '/Zl' ]
-    
+
     name = "MySQL-python"
     if enabled(options, 'embedded'):
         name = name + "-embedded"
     metadata['name'] = name
-    
+
     define_macros = [
         ('version_info', metadata['version_info']),
         ('__version__', metadata['version']),

@@ -38,11 +38,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #endif
 #include "pymemcompat.h"
 #include "structmember.h"
-#if defined(MS_WINDOWS)
-#include <config-win.h>
-#else
 #include "my_config.h"
-#endif
 #include "mysql.h"
 #include "mysqld_error.h"
 #include "errmsg.h"
