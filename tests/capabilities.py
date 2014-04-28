@@ -10,6 +10,8 @@ import array
 import unittest
 from configdb import connection_factory
 
+from MySQLdb.compat import unichr
+
 
 class DatabaseTest(unittest.TestCase):
 
@@ -25,10 +27,8 @@ class DatabaseTest(unittest.TestCase):
         db = connection_factory(**self.connect_kwargs)
         self.connection = db
         self.cursor = db.cursor()
-        # TODO: this needs to be re-evaluated for Python 3
-        self.BLOBText = ''.join([chr(i) for i in range(256)] * 100);
         self.BLOBUText = u''.join([unichr(i) for i in range(16384)])
-        self.BLOBBinary = self.db_module.Binary(''.join([chr(i) for i in range(256)] * 16))
+        self.BLOBBinary = self.db_module.Binary((u''.join([unichr(i) for i in range(256)] * 16)).encode('latin1'))
 
     leak_test = True
     
@@ -137,7 +137,7 @@ class DatabaseTest(unittest.TestCase):
         columndefs = ( 'col1 INT', 'col2 VARCHAR(255)')
         def generator(row, col):
             if col == 0: return row
-            else: return ('%i' % (row%10))*((255-self.rows/2)+row)
+            else: return ('%i' % (row%10))*((255-self.rows//2)+row)
         self.create_table(columndefs)
         insert_statement = ('INSERT INTO %s VALUES (%s)' % 
                             (self.table,

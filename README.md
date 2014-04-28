@@ -13,4 +13,3 @@ TODO
 
 * A 1.3.0 release that will support Python 2.7 and 3.3-3.4
 * Release binary wheel for Windows.
-

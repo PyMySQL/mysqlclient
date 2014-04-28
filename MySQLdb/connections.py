@@ -7,10 +7,11 @@ override Connection.default_cursor with a non-standard Cursor class.
 
 """
 from MySQLdb import cursors
+from MySQLdb.compat import unicode, PY2
 from _mysql_exceptions import Warning, Error, InterfaceError, DataError, \
      DatabaseError, OperationalError, IntegrityError, InternalError, \
      NotSupportedError, ProgrammingError
-import types, _mysql
+import _mysql
 import re
 
 
@@ -33,7 +34,11 @@ def defaulterrorhandler(connection, cursor, errorclass, errorvalue):
         connection.messages.append(error)
     del cursor
     del connection
-    raise errorclass, errorvalue
+    if errorclass is not None:    
+        raise errorclass(errorvalue)
+    else:
+        raise Exception(errorvalue)
+
 
 re_numeric_part = re.compile(r"^(\d+)")
 
@@ -115,6 +120,7 @@ class Connection(_mysql.connection):
           columns are returned as strings.  columns are returned as
           normal strings. Unicode objects will always be encoded to
           the connection's character set regardless of this setting.
+          Default to False on Python 2 and True on Python 3.
 
         charset
           If supplied, the connection character set will be changed
@@ -170,7 +176,7 @@ class Connection(_mysql.connection):
         cursorclass = kwargs2.pop('cursorclass', self.default_cursor)
         charset = kwargs2.pop('charset', '')
 
-        if charset:
+        if charset or not PY2:
             use_unicode = True
         else:
             use_unicode = False
@@ -199,13 +205,20 @@ class Connection(_mysql.connection):
 
         db = proxy(self)
         def _get_string_literal():
+            # Note: string_literal() is called for bytes object on Python 3.
             def string_literal(obj, dummy=None):
                 return db.string_literal(obj)
             return string_literal
 
         def _get_unicode_literal():
-            def unicode_literal(u, dummy=None):
-                return db.literal(u.encode(unicode_literal.charset))
+            if PY2:
+                # unicode_literal is called for only unicode object.
+                def unicode_literal(u, dummy=None):
+                    return db.literal(u.encode(unicode_literal.charset))
+            else:
+                # unicode_literal() is called for arbitrary object.
+                def unicode_literal(u, dummy=None):
+                    return db.literal(str(u).encode(unicode_literal.charset))
             return unicode_literal
 
         def _get_string_decoder():
@@ -229,8 +242,8 @@ class Connection(_mysql.connection):
             self.converter[FIELD_TYPE.VARCHAR].append((None, string_decoder))
             self.converter[FIELD_TYPE.BLOB].append((None, string_decoder))
 
-        self.encoders[types.StringType] = string_literal
-        self.encoders[types.UnicodeType] = unicode_literal
+        self.encoders[bytes] = string_literal
+        self.encoders[unicode] = unicode_literal
         self._transactional = self.server_capabilities & CLIENT.TRANSACTIONS
         if self._transactional:
             if autocommit is not None:
@@ -275,7 +288,15 @@ class Connection(_mysql.connection):
         applications.
 
         """
-        return self.escape(o, self.encoders)
+        s = self.escape(o, self.encoders)
+        # Python 3 doesn't support % operation for bytes object.
+        # We should decode it before using %.
+        # Decoding with ascii and surrogateescape allows convert arbitrary
+        # bytes to unicode and back again.
+        # See http://python.org/dev/peps/pep-0383/
+        if not PY2 and isinstance(s, bytes):
+            return s.decode('ascii', 'surrogateescape')
+        return s
 
     def begin(self):
         """Explicitly begin a connection. Non-standard.

@@ -1,5 +1,9 @@
 import os, sys
-from ConfigParser import SafeConfigParser
+try:
+    from ConfigParser import SafeConfigParser
+except ImportError:
+    # Probably running Python 3.x
+    from configparser import ConfigParser as SafeConfigParser
 
 # This dequote() business is required for some older versions
 # of mysql_config

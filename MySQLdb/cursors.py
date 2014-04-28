@@ -7,13 +7,9 @@ default, MySQLdb uses the Cursor class.
 
 import re
 import sys
-try:
-    from types import ListType, TupleType, UnicodeType
-except ImportError:
-    # Python 3
-    ListType = list
-    TupleType = tuple
-    UnicodeType = str
+PY2 = sys.version_info[0] == 2
+
+from MySQLdb.compat import unicode
 
 restr = r"""
     \s
@@ -73,9 +69,9 @@ class BaseCursor(object):
     _defer_warnings = False
     
     def __init__(self, connection):
-        from weakref import proxy
+        from weakref import ref
     
-        self.connection = proxy(connection)
+        self.connection = ref(connection)
         self.description = None
         self.description_flags = None
         self.rowcount = -1
@@ -96,7 +92,8 @@ class BaseCursor(object):
 
     def close(self):
         """Close the cursor. No further queries will be possible."""
-        if not self.connection: return
+        if self.connection is None or self.connection() is None:
+            return
         while self.nextset(): pass
         self.connection = None
 
@@ -157,9 +154,12 @@ class BaseCursor(object):
         """Does nothing, required by DB API."""
 
     def _get_db(self):
-        if not self.connection:
+        con = self.connection
+        if con is not None:
+            con = con()
+        if con is None:
             self.errorhandler(self, ProgrammingError, "cursor closed")
-        return self.connection
+        return con
     
     def execute(self, query, args=None):
 
@@ -177,18 +177,33 @@ class BaseCursor(object):
         """
         del self.messages[:]
         db = self._get_db()
-        if isinstance(query, unicode):
+
+        # NOTE:
+        # Python 2: query should be bytes when executing %.
+        # All unicode in args should be encoded to bytes on Python 2.
+        # Python 3: query should be str (unicode) when executing %.
+        # All bytes in args should be decoded with ascii and surrogateescape on Python 3.
+        # db.literal(obj) always returns str.
+
+        if PY2 and isinstance(query, unicode):
             query = query.encode(db.unicode_literal.charset)
+
         if args is not None:
             if isinstance(args, dict):
-                query = query % dict((key, db.literal(item))
-                                     for key, item in args.iteritems())
+                args = dict((key, db.literal(item)) for key, item in args.iteritems())
             else:
-                query = query % tuple([db.literal(item) for item in args])
+                args = tuple(map(db.literal, args))
+            if not PY2 and isinstance(query, bytes):
+                query = query.decode(db.unicode_literal.charset)
+            query = query % args
+
+        if isinstance(query, unicode):
+            query = query.encode(db.unicode_literal.charset, 'surrogateescape')
+
         try:
             r = None
             r = self._query(query)
-        except TypeError, m:
+        except TypeError as m:
             if m.args[0] in ("not enough arguments for format string",
                              "not all arguments converted"):
                 self.messages.append((ProgrammingError, m.args[0]))
@@ -228,8 +243,10 @@ class BaseCursor(object):
         del self.messages[:]
         db = self._get_db()
         if not args: return
-        if isinstance(query, unicode):
+        if PY2 and isinstance(query, unicode):
             query = query.encode(db.unicode_literal.charset)
+        elif not PY2 and isinstance(query, bytes):
+            query = query.decode(db.unicode_literal.charset)
         m = insert_values.search(query)
         if not m:
             r = 0
@@ -247,7 +264,7 @@ class BaseCursor(object):
                                        for key, item in a.iteritems()))
                 else:
                     q.append(qv % tuple([db.literal(item) for item in a]))
-        except TypeError, msg:
+        except TypeError as msg:
             if msg.args[0] in ("not enough arguments for format string",
                                "not all arguments converted"):
                 self.errorhandler(self, ProgrammingError, msg.args[0])
@@ -259,7 +276,10 @@ class BaseCursor(object):
             exc, value, tb = sys.exc_info()
             del tb
             self.errorhandler(self, exc, value)
-        r = self._query('\n'.join([query[:p], ',\n'.join(q), query[e:]]))
+        qs = '\n'.join([query[:p], ',\n'.join(q), query[e:]])
+        if not PY2:
+            qs = qs.encode(db.unicode_literal.charset, 'surrogateescape')
+        r = self._query(qs)
         if not self._defer_warnings: self._warning_check()
         return r
     
@@ -305,7 +325,7 @@ class BaseCursor(object):
         q = "CALL %s(%s)" % (procname,
                              ','.join(['@_%s_%d' % (procname, i)
                                        for i in range(len(args))]))
-        if type(q) is UnicodeType:
+        if isinstance(q, unicode):
             q = q.encode(db.unicode_literal.charset)
         self._query(q)
         self._executed = q

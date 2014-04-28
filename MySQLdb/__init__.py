@@ -73,7 +73,7 @@ def test_DBAPISet_set_inequality_membership():
     assert FIELD_TYPE.DATE != STRING
 
 def Binary(x):
-    return str(x)
+    return bytes(x)
 
 def Connect(*args, **kwargs):
     """Factory function for connections.Connection."""

@@ -35,16 +35,9 @@ MySQL.connect().
 from _mysql import string_literal, escape_sequence, escape_dict, escape, NULL
 from MySQLdb.constants import FIELD_TYPE, FLAG
 from MySQLdb.times import *
+from MySQLdb.compat import PY2, long
 
-try:
-    from types import IntType, LongType, FloatType, NoneType, TupleType, ListType, DictType, InstanceType, \
-        StringType, UnicodeType, ObjectType, BooleanType, ClassType, TypeType
-except ImportError:
-    # Python 3
-    long = int
-    IntType, LongType, FloatType, NoneType = int, long, float, type(None)
-    TupleType, ListType, DictType, InstanceType = tuple, list, dict, None
-    StringType, UnicodeType, ObjectType, BooleanType = bytes, str, object, bool
+NoneType = type(None)
 
 import array
 
@@ -76,8 +69,6 @@ def Unicode2Str(s, d):
     is connection-dependent."""
     return s.encode()
 
-Long2Int = Thing2Str
-
 def Float2Str(o, d):
     return '%.15g' % o
 
@@ -86,42 +77,12 @@ def None2NULL(o, d):
     return NULL # duh
 
 def Thing2Literal(o, d):
-    
     """Convert something into a SQL string literal.  If using
     MySQL-3.23 or newer, string_literal() is a method of the
     _mysql.MYSQL object, and this function will be overridden with
     that method when the connection is created."""
-
     return string_literal(o, d)
 
-
-def Instance2Str(o, d):
-
-    """
-
-    Convert an Instance to a string representation.  If the __str__()
-    method produces acceptable output, then you don't need to add the
-    class to conversions; it will be handled by the default
-    converter. If the exact class is not found in d, it will use the
-    first class it can find for which o is an instance.
-
-    """
-
-    if o.__class__ in d:
-        return d[o.__class__](o, d)
-    cl = filter(lambda x,o=o:
-                type(x) is ClassType
-                and isinstance(o, x), d.keys())
-    if not cl:
-        cl = filter(lambda x,o=o:
-                    type(x) is TypeType
-                    and isinstance(o, x)
-                    and d[x] is not Instance2Str,
-                    d.keys())
-    if not cl:
-        return d[StringType](o,d)
-    d[o.__class__] = d[cl[0]]
-    return d[cl[0]](o, d)
 
 def char_array(s):
     return array.array('c', s)
@@ -133,21 +94,19 @@ def quote_tuple(t, d):
     return "(%s)" % (','.join(escape_sequence(t, d)))
 
 conversions = {
-    IntType: Thing2Str,
-    LongType: Long2Int,
-    FloatType: Float2Str,
+    int: Thing2Str,
+    long: Thing2Str,
+    float: Float2Str,
     NoneType: None2NULL,
-    TupleType: quote_tuple,
-    ListType: quote_tuple,
-    DictType: escape_dict,
-    InstanceType: Instance2Str,
+    tuple: quote_tuple,
+    list: quote_tuple,
+    dict: escape_dict,
     ArrayType: array2Str,
-    StringType: Thing2Literal, # default
-    UnicodeType: Unicode2Str,
-    ObjectType: Instance2Str,
-    BooleanType: Bool2Str,
+    bool: Bool2Str,
+    Date: Thing2Literal,
     DateTimeType: DateTime2literal,
     DateTimeDeltaType: DateTimeDelta2literal,
+    str: Thing2Literal,  # default
     set: Set2Str,
     FIELD_TYPE.TINY: int,
     FIELD_TYPE.SHORT: int,
@@ -165,18 +124,22 @@ conversions = {
     FIELD_TYPE.TIME: TimeDelta_or_None,
     FIELD_TYPE.DATE: Date_or_None,
     FIELD_TYPE.BLOB: [
-        (FLAG.BINARY, str),
+        (FLAG.BINARY, bytes),
         ],
     FIELD_TYPE.STRING: [
-        (FLAG.BINARY, str),
+        (FLAG.BINARY, bytes),
         ],
     FIELD_TYPE.VAR_STRING: [
-        (FLAG.BINARY, str),
+        (FLAG.BINARY, bytes),
         ],
     FIELD_TYPE.VARCHAR: [
-        (FLAG.BINARY, str),
+        (FLAG.BINARY, bytes),
         ],
     }
+if PY2:
+    conversions[unicode] = Unicode2Str
+else:
+    conversions[bytes] = Thing2Literal
 
 try:
     from decimal import Decimal
@@ -184,6 +147,3 @@ try:
     conversions[FIELD_TYPE.NEWDECIMAL] = Decimal
 except ImportError:
     pass
-
-
-

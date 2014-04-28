@@ -6,7 +6,6 @@ include HISTORY
 include INSTALL
 include README.md
 include GPL-2.0
-include pymemcompat.h
 include metadata.cfg
 include site.cfg
 include setup_common.py
