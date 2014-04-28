@@ -23,7 +23,7 @@ def get_config():
     extra_compile_args = [ '/Zl' ]
     extra_link_args = ['/MANIFEST']
 
-    name = "MySQL-python"
+    name = "mysqlclient"
     if enabled(options, 'embedded'):
         name = name + "-embedded"
     metadata['name'] = name
