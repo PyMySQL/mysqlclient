@@ -434,11 +434,11 @@ _mysql_ResultObject_Initialize(
 		}
 		else if (PySequence_Check(fun)) {
 			long flags = fields[i].flags;
+			PyObject *fun2=NULL;
 			int j, n2=PySequence_Size(fun);
 			if (fields[i].charsetnr != 63) { /* maaagic */
 				flags &= ~BINARY_FLAG;
 			}
-			PyObject *fun2=NULL;
 			for (j=0; j<n2; j++) {
 				PyObject *t = PySequence_GetItem(fun, j);
 				if (!t) {
