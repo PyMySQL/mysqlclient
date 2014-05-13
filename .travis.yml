@@ -1,8 +1,4 @@
 language: python
-before_install:
-    - sudo apt-get update -qq -y
-    - sudo apt-get install python3.4-dev
-
 install:
     - pip install tox six
 
