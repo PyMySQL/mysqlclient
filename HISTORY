@@ -1,4 +1,24 @@
 =====================
+ What's new in 1.3.2
+=====================
+
+* Add send_query() and read_query_result() method to low level connection.
+* Add waiter option.
+
+
+=====================
+ What's new in 1.3.1
+=====================
+
+This is a first fork of MySQL-python.
+Now named "mysqlclient"
+
+* Support Python 3
+* Add autocommit option
+* Support microsecond in datetime field.
+
+
+=====================
  What's new in 1.2.4
 =====================
 
