@@ -756,6 +756,16 @@ static int _mysql_ConnectionObject_clear(
 	return 0;
 }
 
+static char _mysql_ConnectionObject_fileno__doc__[] =
+"Return underlaying fd for connection";
+
+static PyObject *
+_mysql_ConnectionObject_fileno(
+	_mysql_ConnectionObject *self)
+{
+	return PyInt_FromLong(self->connection.net.fd);
+}
+
 static char _mysql_ConnectionObject_close__doc__[] =
 "Close the connection. No further activity possible.";
 
@@ -1963,8 +1973,10 @@ _mysql_ConnectionObject_query(
 {
 	char *query;
 	int len, r;
+	MYSQL *mysql = &(self->connection);
 	if (!PyArg_ParseTuple(args, "s#:query", &query, &len)) return NULL;
 	check_connection(self);
+
 	Py_BEGIN_ALLOW_THREADS
 	r = mysql_real_query(&(self->connection), query, len);
 	Py_END_ALLOW_THREADS
@@ -1973,6 +1985,50 @@ _mysql_ConnectionObject_query(
 	return Py_None;
 }
 
+
+static char _mysql_ConnectionObject_send_query__doc__[] =
+"Send a query. Same to query() except not wait response.\n\n\
+Use read_query_result() before calling store_result() or use_result()\n";
+
+static PyObject *
+_mysql_ConnectionObject_send_query(
+	_mysql_ConnectionObject *self,
+	PyObject *args)
+{
+	char *query;
+	int len, r;
+	MYSQL *mysql = &(self->connection);
+	if (!PyArg_ParseTuple(args, "s#:query", &query, &len)) return NULL;
+	check_connection(self);
+
+	Py_BEGIN_ALLOW_THREADS
+	r = mysql_send_query(mysql, query, len);
+	Py_END_ALLOW_THREADS
+	if (r) return _mysql_Exception(self);
+	Py_INCREF(Py_None);
+	return Py_None;
+}
+
+
+static char _mysql_ConnectionObject_read_query_result__doc__[] =
+"Read result of query sent by send_query().\n";
+
+static PyObject *
+_mysql_ConnectionObject_read_query_result(
+	_mysql_ConnectionObject *self)
+{
+	char *query;
+	int len, r;
+	MYSQL *mysql = &(self->connection);
+	check_connection(self);
+
+	Py_BEGIN_ALLOW_THREADS
+	r = (int)mysql_read_query_result(mysql);
+	Py_END_ALLOW_THREADS
+	if (r) return _mysql_Exception(self);
+	Py_INCREF(Py_None);
+	return Py_None;
+}
 
 static char _mysql_ConnectionObject_select_db__doc__[] =
 "Causes the database specified by db to become the default\n\
@@ -2345,6 +2401,12 @@ static PyMethodDef _mysql_ConnectionObject_methods[] = {
 		_mysql_ConnectionObject_close__doc__
 	},
 	{
+		"fileno",
+		(PyCFunction)_mysql_ConnectionObject_fileno,
+		METH_NOARGS,
+		_mysql_ConnectionObject_fileno__doc__
+	},
+	{
 		"dump_debug_info",
 		(PyCFunction)_mysql_ConnectionObject_dump_debug_info,
 		METH_VARARGS,
@@ -2427,6 +2489,18 @@ static PyMethodDef _mysql_ConnectionObject_methods[] = {
 		(PyCFunction)_mysql_ConnectionObject_query,
 		METH_VARARGS,
 		_mysql_ConnectionObject_query__doc__
+	},
+	{
+		"send_query",
+		(PyCFunction)_mysql_ConnectionObject_send_query,
+		METH_VARARGS,
+		_mysql_ConnectionObject_send_query__doc__,
+	},
+	{
+		"read_query_result",
+		(PyCFunction)_mysql_ConnectionObject_read_query_result,
+		METH_NOARGS,
+		_mysql_ConnectionObject_read_query_result__doc__,
 	},
 	{
 		"select_db",
