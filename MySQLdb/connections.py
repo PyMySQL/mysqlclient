@@ -63,10 +63,10 @@ class Connection(_mysql.connection):
     """MySQL Database Connection Object"""
 
     default_cursor = cursors.Cursor
+    waiter = None
 
     def __init__(self, *args, **kwargs):
         """
-
         Create a connection to the database. It is strongly recommended
         that you only use keyword parameters. Consult the MySQL C API
         documentation for more information.
@@ -150,9 +150,13 @@ class Connection(_mysql.connection):
           If True, autocommit is enabled.
           If None, autocommit isn't set and server default is used.
 
+        waiter
+          Callable accepts fd as an argument. It is called after sending
+          query and before reading response.
+          This is useful when using with greenlet and async io.
+
         There are a number of undocumented, non-standard methods. See the
         documentation for the MySQL C API for some hints on what they do.
-
         """
         from MySQLdb.constants import CLIENT, FIELD_TYPE
         from MySQLdb.converters import conversions
@@ -195,6 +199,7 @@ class Connection(_mysql.connection):
 
         # PEP-249 requires autocommit to be initially off
         autocommit = kwargs2.pop('autocommit', False)
+        self.waiter = kwargs2.pop('waiter', None)
 
         super(Connection, self).__init__(*args, **kwargs2)
         self.cursorclass = cursorclass
@@ -265,6 +270,14 @@ class Connection(_mysql.connection):
 
         """
         return (cursorclass or self.cursorclass)(self)
+
+    def query(self, query):
+        if self.waiter is not None:
+            self.send_query(query)
+            self.waiter(self.fileno())
+            self.read_query_result()
+        else:
+            _mysql.connection.query(self, query)
 
     def __enter__(self):
         if self.get_autocommit():
