@@ -34,6 +34,8 @@ def defaulterrorhandler(connection, cursor, errorclass, errorvalue):
         connection.messages.append(error)
     del cursor
     del connection
+    if isinstance(errorvalue, BaseException):
+        raise errorvalue
     if errorclass is not None:    
         raise errorclass(errorvalue)
     else:
