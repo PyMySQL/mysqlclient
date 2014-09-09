@@ -214,8 +214,7 @@ class BaseCursor(object):
         except (SystemExit, KeyboardInterrupt):
             raise
         except:
-            exc, value, tb = sys.exc_info()
-            del tb
+            exc, value = sys.exc_info()[:2]
             self.messages.append((exc, value))
             self.errorhandler(self, exc, value)
         self._executed = query
@@ -273,8 +272,7 @@ class BaseCursor(object):
         except (SystemExit, KeyboardInterrupt):
             raise
         except:
-            exc, value, tb = sys.exc_info()
-            del tb
+            exc, value = sys.exc_info()[:2]
             self.errorhandler(self, exc, value)
         qs = '\n'.join([query[:p], ',\n'.join(q), query[e:]])
         if not PY2:

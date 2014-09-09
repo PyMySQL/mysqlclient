@@ -92,7 +92,16 @@ class test_MySQLdb(capabilities.DatabaseTest):
 
     def test_ping(self):
         self.connection.ping()
-        
+
+    def test_reraise_exception(self):
+        c = self.cursor
+        try:
+            c.execute("SELECT x FROM not_existing_table")
+        except MySQLdb.ProgrammingError as e:
+            self.assertEqual(e.args[0], 1146)
+            return
+        self.fail("Should raise ProgrammingError")
+
         
 if __name__ == '__main__':
     if test_MySQLdb.leak_test:
