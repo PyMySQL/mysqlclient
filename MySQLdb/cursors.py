@@ -190,7 +190,7 @@ class BaseCursor(object):
 
         if args is not None:
             if isinstance(args, dict):
-                args = dict((key, db.literal(item)) for key, item in args.iteritems())
+                args = dict((key, db.literal(item)) for key, item in args.items())
             else:
                 args = tuple(map(db.literal, args))
             if not PY2 and isinstance(query, bytes):
@@ -261,7 +261,7 @@ class BaseCursor(object):
             for a in args:
                 if isinstance(a, dict):
                     q.append(qv % dict((key, db.literal(item))
-                                       for key, item in a.iteritems()))
+                                       for key, item in a.items()))
                 else:
                     q.append(qv % tuple([db.literal(item) for item in a]))
         except TypeError as msg:
