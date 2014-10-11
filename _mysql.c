@@ -26,6 +26,10 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
+#include "my_config.h"
+#include "mysql.h"
+#include "mysqld_error.h"
+
 #include "Python.h"
 #if PY_MAJOR_VERSION >= 3
 #define IS_PY3K
@@ -37,9 +41,6 @@ PERFORMANCE OF THIS SOFTWARE.
 
 #include "bytesobject.h"
 #include "structmember.h"
-#include "my_config.h"
-#include "mysql.h"
-#include "mysqld_error.h"
 #include "errmsg.h"
 
 #define MyAlloc(s,t) (s *) t.tp_alloc(&t,0)
