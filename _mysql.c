@@ -30,6 +30,13 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "mysql.h"
 #include "mysqld_error.h"
 
+#ifdef HAVE_WCSCOLL
+#undef HAVE_WCSCOLL
+#endif
+#ifdef SIZEOF_SIZE_T
+#undef SIZEOF_SIZE_T
+#endif
+
 #include "Python.h"
 #if PY_MAJOR_VERSION >= 3
 #define IS_PY3K
@@ -1352,9 +1359,9 @@ _mysql_field_to_python(
 	unsigned long length,
 	MYSQL_FIELD *field)
 {
-	int field_type = field->type;
 	PyObject *v;
 #ifdef IS_PY3K
+	int field_type = field->type;
 	// Return bytes for binary and string types.
 	int binary = 0;
 	if (field_type == FIELD_TYPE_TINY_BLOB ||
@@ -1368,7 +1375,6 @@ _mysql_field_to_python(
 #endif
 	if (rowitem) {
 		if (converter != Py_None) {
-			const char *fmt = "s#";
 			v = PyObject_CallFunction(converter,
 #ifdef IS_PY3K
 						  binary ? "y#" : "s#",
@@ -1569,7 +1575,7 @@ _mysql_ResultObject_fetch_row(
 					 &maxrows, &how))
 		return NULL;
 	check_result_connection(self);
-	if (how < 0 || how >= sizeof(row_converters)) {
+	if (how >= sizeof(row_converters)) {
 		PyErr_SetString(PyExc_ValueError, "how out of range");
 		return NULL;
 	}
@@ -1974,7 +1980,6 @@ _mysql_ConnectionObject_query(
 {
 	char *query;
 	int len, r;
-	MYSQL *mysql = &(self->connection);
 	if (!PyArg_ParseTuple(args, "s#:query", &query, &len)) return NULL;
 	check_connection(self);
 
@@ -2018,8 +2023,7 @@ static PyObject *
 _mysql_ConnectionObject_read_query_result(
 	_mysql_ConnectionObject *self)
 {
-	char *query;
-	int len, r;
+	int r;
 	MYSQL *mysql = &(self->connection);
 	check_connection(self);
 
@@ -2663,7 +2667,7 @@ _mysql_ConnectionObject_getattro(
 	if (strcmp(cname, "closed") == 0)
 		return PyInt_FromLong((long)!(self->open));
 
-	return PyObject_GenericGetAttr(self, name);
+	return PyObject_GenericGetAttr((PyObject *)self, name);
 }
 
 static int
@@ -2677,7 +2681,7 @@ _mysql_ConnectionObject_setattro(
 				"can't delete connection attributes");
 		return -1;
 	}
-	return PyObject_GenericSetAttr(self, name, v);
+	return PyObject_GenericSetAttr((PyObject *)self, name, v);
 }
 
 static int
@@ -2691,7 +2695,7 @@ _mysql_ResultObject_setattro(
 				"can't delete connection attributes");
 		return -1;
 	}
-	return PyObject_GenericSetAttr(self, name, v);
+	return PyObject_GenericSetAttr((PyObject *)self, name, v);
 }
 
 PyTypeObject _mysql_ConnectionObject_Type = {
