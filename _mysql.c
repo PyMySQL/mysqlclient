@@ -2212,12 +2212,10 @@ static void
 _mysql_ConnectionObject_dealloc(
 	_mysql_ConnectionObject *self)
 {
-	PyObject *o;
-
 	PyObject_GC_UnTrack(self);
 	if (self->open) {
-		o = _mysql_ConnectionObject_close(self, NULL);
-		Py_XDECREF(o);
+		mysql_close(&(self->connection));
+		self->open = 0;
 	}
 	MyFree(self);
 }
