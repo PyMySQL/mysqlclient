@@ -1,4 +1,18 @@
 =====================
+ What's new in 1.3.4
+=====================
+
+* Remove compiler warnings.
+* Fix compile error when using libmariadbclient.
+* Fix GIL deadlock while dealloc.
+
+=====================
+ What's new in 1.3.3
+=====================
+
+* Fix exception reraising doesn't work.
+
+=====================
  What's new in 1.3.2
 =====================
 
