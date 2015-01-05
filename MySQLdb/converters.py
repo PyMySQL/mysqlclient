@@ -17,7 +17,7 @@ Key: Python type object (from types) or class
 
 Conversion function:
 
-    Arguments: Python object of indicated type or class AND 
+    Arguments: Python object of indicated type or class AND
                conversion dictionary
 
     Returns: SQL literal value
@@ -58,7 +58,7 @@ def Str2Set(s):
 
 def Set2Str(s, d):
     return string_literal(','.join(s), d)
-    
+
 def Thing2Str(s, d):
     """Convert something into a string via str()."""
     return str(s)
@@ -74,7 +74,7 @@ def Float2Str(o, d):
 
 def None2NULL(o, d):
     """Convert None to NULL."""
-    return NULL # duh
+    return NULL  # duh
 
 def Thing2Literal(o, d):
     """Convert something into a SQL string literal.  If using
@@ -92,6 +92,9 @@ def array2Str(o, d):
 
 def quote_tuple(t, d):
     return "(%s)" % (','.join(escape_sequence(t, d)))
+
+# bytes or str regarding to BINARY_FLAG.
+_bytes_or_str = [(FLAG.BINARY, bytes)]
 
 conversions = {
     int: Thing2Str,
@@ -123,19 +126,16 @@ conversions = {
     FIELD_TYPE.DATETIME: DateTime_or_None,
     FIELD_TYPE.TIME: TimeDelta_or_None,
     FIELD_TYPE.DATE: Date_or_None,
-    FIELD_TYPE.BLOB: [
-        (FLAG.BINARY, bytes),
-        ],
-    FIELD_TYPE.STRING: [
-        (FLAG.BINARY, bytes),
-        ],
-    FIELD_TYPE.VAR_STRING: [
-        (FLAG.BINARY, bytes),
-        ],
-    FIELD_TYPE.VARCHAR: [
-        (FLAG.BINARY, bytes),
-        ],
-    }
+
+    FIELD_TYPE.TINY_BLOB: _bytes_or_str,
+    FIELD_TYPE.MEDIUM_BLOB: _bytes_or_str,
+    FIELD_TYPE.LONG_BLOB: _bytes_or_str,
+    FIELD_TYPE.BLOB: _bytes_or_str,
+    FIELD_TYPE.STRING: _bytes_or_str,
+    FIELD_TYPE.VAR_STRING: _bytes_or_str,
+    FIELD_TYPE.VARCHAR: _bytes_or_str,
+}
+
 if PY2:
     conversions[unicode] = Unicode2Str
 else:
