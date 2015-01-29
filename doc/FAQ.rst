@@ -139,5 +139,5 @@ Other Resources
 
 * Read `PEP-249`_
 
-.. _`PEP-249`: http://www.python.org/peps/pep-0249.html
+.. _`PEP-249`: https://www.python.org/dev/peps/pep-0249/
 

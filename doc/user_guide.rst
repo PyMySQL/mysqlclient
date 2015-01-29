@@ -167,7 +167,7 @@ exceptions are defined in a separate module, ``_mysql_exceptions``,
 but ``_mysql`` exports them. Read DB API specification PEP-249_ to
 find out what they are, or you can use the catch-all ``MySQLError``.
 
-.. _PEP-249: http://www.python.org/peps/pep-0249.html
+.. _PEP-249: https://www.python.org/dev/peps/pep-0249/
 
 At this point your query has been executed and you need to get the
 results. You have two options::
