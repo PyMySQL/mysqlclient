@@ -1,4 +1,14 @@
 =====================
+ What's new in 1.3.5
+=====================
+
+Fix TINYBLOB, MEDIUMBLOB and LONGBLOB are treated as string and decoded
+to unicode or cause UnicodeError.
+
+Fix aware datetime is formatted with timezone offset (e.g. "+0900").
+
+
+=====================
  What's new in 1.3.4
 =====================
 
