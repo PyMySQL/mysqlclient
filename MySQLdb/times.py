@@ -2,9 +2,8 @@
 
 This module provides some Date and Time classes for dealing with MySQL data.
 
-Use Python datetime module to handle date and time columns."""
-
-import math
+Use Python datetime module to handle date and time columns.
+"""
 from time import localtime
 from datetime import date, datetime, time, timedelta
 from _mysql import string_literal
@@ -33,12 +32,19 @@ format_TIME = format_DATE = str
 
 def format_TIMEDELTA(v):
     seconds = int(v.seconds) % 60
-    minutes = int(v.seconds / 60) % 60
-    hours = int(v.seconds / 3600) % 24
+    minutes = int(v.seconds // 60) % 60
+    hours = int(v.seconds // 3600) % 24
     return '%d %d:%d:%d' % (v.days, hours, minutes, seconds)
 
 def format_TIMESTAMP(d):
-    return d.isoformat(" ")
+    """
+    :type d: datetime.datetime
+    """
+    if d.microsecond:
+        fmt = "{0.year:04}-{0.month:02}-{0.day:02} {0.hour:02}:{0.minute:02}:{0.second:02}.{0.microsecond:06}"
+    else:
+        fmt = "{0.year:04}-{0.month:02}-{0.day:02} {0.hour:02}:{0.minute:02}:{0.second:02}"
+    return fmt.format(d)
 
 
 def DateTime_or_None(s):
@@ -102,14 +108,12 @@ def Time_or_None(s):
 def Date_or_None(s):
     try:
         return date(*[ int(x) for x in s.split('-',2)])
-    except (SystemExit, KeyboardInterrupt):
-        raise
-    except:
+    except (TypeError, ValueError):
         return None
 
 def DateTime2literal(d, c):
     """Format a DateTime object as an ISO timestamp."""
-    return string_literal(format_TIMESTAMP(d),c)
+    return string_literal(format_TIMESTAMP(d), c)
     
 def DateTimeDelta2literal(d, c):
     """Format a DateTimeDelta object as a time."""
