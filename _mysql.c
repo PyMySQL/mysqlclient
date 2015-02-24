@@ -1079,7 +1079,7 @@ _mysql_escape_string(
 	PyObject *str;
 	char *in, *out;
 	int len, size;
-	if (!PyArg_ParseTuple(args, "y#:escape_string", &in, &size)) return NULL;
+	if (!PyArg_ParseTuple(args, "s#:escape_string", &in, &size)) return NULL;
 	str = PyBytes_FromStringAndSize((char *) NULL, size*2+1);
 	if (!str) return PyErr_NoMemory();
 	out = PyBytes_AS_STRING(str);
