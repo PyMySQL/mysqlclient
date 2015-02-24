@@ -41,6 +41,12 @@ class CoreModule(unittest.TestCase):
     def test_thread_safe(self):
         self.assertTrue(isinstance(_mysql.thread_safe(), int))
 
+    def test_escape_string(self):
+        self.assertEqual(_mysql.escape_string(b'foo"bar'),
+                         b'foo\\"bar', "escape byte string")
+        self.assertEqual(_mysql.escape_string(u'foo"bar'),
+                         b'foo\\"bar', "escape unicode string")
+
 
 class CoreAPI(unittest.TestCase):
     """Test _mysql interaction internals."""
