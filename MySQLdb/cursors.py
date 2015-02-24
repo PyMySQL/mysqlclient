@@ -44,7 +44,6 @@ from _mysql_exceptions import Warning, Error, InterfaceError, DataError, \
 
 
 class BaseCursor(object):
-    
     """A base for Cursor classes. Useful attributes:
     
     description
@@ -59,7 +58,6 @@ class BaseCursor(object):
     
     arraysize
         default number of rows fetchmany() will fetch
-
     """
 
     from _mysql_exceptions import MySQLError, Warning, Error, InterfaceError, \
@@ -85,17 +83,15 @@ class BaseCursor(object):
         self._info = None
         self.rownumber = None
         
-    def __del__(self):
-        self.close()
-        self.errorhandler = None
-        self._result = None
-
     def close(self):
         """Close the cursor. No further queries will be possible."""
         if self.connection is None or self.connection() is None:
             return
-        while self.nextset(): pass
+        while self.nextset():
+            pass
         self.connection = None
+        self.errorhandler = None
+        self._result = None
 
     def _check_executed(self):
         if not self._executed:
@@ -124,7 +120,7 @@ class BaseCursor(object):
         if self._executed:
             self.fetchall()
         del self.messages[:]
-        
+
         db = self._get_db()
         nr = db.next_result()
         if nr == -1:
@@ -135,7 +131,7 @@ class BaseCursor(object):
         return 1
 
     def _post_get_result(self): pass
-    
+
     def _do_get_result(self):
         db = self._get_db()
         self._result = self._get_result()
@@ -162,7 +158,6 @@ class BaseCursor(object):
         return con
     
     def execute(self, query, args=None):
-
         """Execute a query.
         
         query -- string, query to execute on server
@@ -173,9 +168,9 @@ class BaseCursor(object):
         %(key)s must be used as the placeholder.
 
         Returns long integer rows affected, if any
-
         """
-        del self.messages[:]
+        while self.nextset():
+            pass
         db = self._get_db()
 
         # NOTE:
@@ -206,23 +201,19 @@ class BaseCursor(object):
         except TypeError as m:
             if m.args[0] in ("not enough arguments for format string",
                              "not all arguments converted"):
-                self.messages.append((ProgrammingError, m.args[0]))
                 self.errorhandler(self, ProgrammingError, m.args[0])
             else:
-                self.messages.append((TypeError, m))
                 self.errorhandler(self, TypeError, m)
         except (SystemExit, KeyboardInterrupt):
             raise
         except:
             exc, value = sys.exc_info()[:2]
-            self.messages.append((exc, value))
             self.errorhandler(self, exc, value)
         self._executed = query
         if not self._defer_warnings: self._warning_check()
         return r
 
     def executemany(self, query, args):
-
         """Execute a multi-row query.
         
         query -- string, query to execute on server
@@ -237,7 +228,6 @@ class BaseCursor(object):
         This method improves performance on multiple-row INSERT and
         REPLACE. Otherwise it is equivalent to looping over args with
         execute().
-
         """
         del self.messages[:]
         db = self._get_db()
