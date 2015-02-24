@@ -17,7 +17,6 @@ import re
 
 def defaulterrorhandler(connection, cursor, errorclass, errorvalue):
     """
-
     If cursor is not None, (errorclass, errorvalue) is appended to
     cursor.messages; otherwise it is appended to
     connection.messages. Then errorclass is raised with errorvalue as
@@ -25,7 +24,6 @@ def defaulterrorhandler(connection, cursor, errorclass, errorvalue):
 
     You can override this with your own error handler by assigning it
     to the instance.
-
     """
     error = errorclass, errorvalue
     if cursor:
