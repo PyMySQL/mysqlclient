@@ -1,4 +1,22 @@
 =====================
+ What's new in 1.3.6
+=====================
+
+Fix escape_string() doesn't work.
+
+Remove `Cursor.__del__` to fix uncollectable circular reference on Python 3.3.
+
+Add context manager support to `Cursor`. It automatically closes cursor on `__exit__`.
+
+.. code-block::
+
+    with conn.cursor() as cur:
+        cur.execute("SELECT 1+1")
+        print(cur.fetchone())
+    # cur is now closed
+
+
+=====================
  What's new in 1.3.5
 =====================
 
