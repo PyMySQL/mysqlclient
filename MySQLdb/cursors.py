@@ -224,16 +224,16 @@ class BaseCursor(object):
 
     def executemany(self, query, args):
         """Execute a multi-row query.
-        
+
         query -- string, query to execute on server
 
         args
 
             Sequence of sequences or mappings, parameters to use with
             query.
-            
+
         Returns long integer rows affected, if any.
-        
+
         This method improves performance on multiple-row INSERT and
         REPLACE. Otherwise it is equivalent to looping over args with
         execute().
@@ -279,11 +279,10 @@ class BaseCursor(object):
         r = self._query(qs)
         if not self._defer_warnings: self._warning_check()
         return r
-    
-    def callproc(self, procname, args=()):
 
+    def callproc(self, procname, args=()):
         """Execute stored procedure procname with args
-        
+
         procname -- string, name of procedure to execute on server
 
         args -- Sequence of parameters to use with procedure
@@ -318,7 +317,7 @@ class BaseCursor(object):
                 q = q.encode(db.unicode_literal.charset)
             self._query(q)
             self.nextset()
-            
+
         q = "CALL %s(%s)" % (procname,
                              ','.join(['@_%s_%d' % (procname, i)
                                        for i in range(len(args))]))
@@ -326,9 +325,10 @@ class BaseCursor(object):
             q = q.encode(db.unicode_literal.charset)
         self._query(q)
         self._executed = q
-        if not self._defer_warnings: self._warning_check()
+        if not self._defer_warnings:
+            self._warning_check()
         return args
-    
+
     def _do_query(self, q):
         db = self._get_db()
         self._last_executed = q
@@ -336,8 +336,9 @@ class BaseCursor(object):
         self._do_get_result()
         return self.rowcount
 
-    def _query(self, q): return self._do_query(q)
-    
+    def _query(self, q):
+        return self._do_query(q)
+
     def _fetch_row(self, size=1):
         if not self._result:
             return ()
@@ -356,7 +357,7 @@ class BaseCursor(object):
     InternalError = InternalError
     ProgrammingError = ProgrammingError
     NotSupportedError = NotSupportedError
-   
+
 
 class CursorStoreResultMixIn(object):
 
@@ -403,11 +404,11 @@ class CursorStoreResultMixIn(object):
             result = self._rows
         self.rownumber = len(self._rows)
         return result
-    
+
     def scroll(self, value, mode='relative'):
         """Scroll the cursor in the result set to a new position according
         to mode.
-        
+
         If mode is 'relative' (default), value is taken as offset to
         the current position in the result set, if set to 'absolute',
         value states an absolute target position."""
@@ -427,7 +428,7 @@ class CursorStoreResultMixIn(object):
         self._check_executed()
         result = self.rownumber and self._rows[self.rownumber:] or self._rows
         return iter(result)
-    
+
 
 class CursorUseResultMixIn(object):
 
@@ -438,7 +439,7 @@ class CursorUseResultMixIn(object):
     the connection."""
 
     _defer_warnings = True
-    
+
     def _get_result(self): return self._get_db().use_result()
 
     def fetchone(self):
@@ -450,7 +451,7 @@ class CursorUseResultMixIn(object):
             return None
         self.rownumber = self.rownumber + 1
         return r[0]
-             
+
     def fetchmany(self, size=None):
         """Fetch up to size rows from the cursor. Result set may be smaller
         than size. If size is not defined, cursor.arraysize is used."""
@@ -460,7 +461,7 @@ class CursorUseResultMixIn(object):
         if not r:
             self._warning_check()
         return r
-         
+
     def fetchall(self):
         """Fetchs all available rows from the cursor."""
         self._check_executed()
@@ -477,10 +478,11 @@ class CursorUseResultMixIn(object):
         if row is None:
             raise StopIteration
         return row
-    
+
+    __next__ = next
+
 
 class CursorTupleRowsMixIn(object):
-
     """This is a MixIn class that causes all rows to be returned as tuples,
     which is the standard form required by DB API."""
 
@@ -488,7 +490,6 @@ class CursorTupleRowsMixIn(object):
 
 
 class CursorDictRowsMixIn(object):
-
     """This is a MixIn class that causes all rows to be returned as
     dictionaries. This is a non-standard feature."""
 
@@ -520,7 +521,6 @@ class CursorDictRowsMixIn(object):
 
 
 class CursorOldDictRowsMixIn(CursorDictRowsMixIn):
-
     """This is a MixIn class that returns rows as dictionaries with
     the same key convention as the old Mysqldb (MySQLmodule). Don't
     use this."""
@@ -530,28 +530,24 @@ class CursorOldDictRowsMixIn(CursorDictRowsMixIn):
 
 class Cursor(CursorStoreResultMixIn, CursorTupleRowsMixIn,
              BaseCursor):
-
     """This is the standard Cursor class that returns rows as tuples
     and stores the result set in the client."""
 
 
 class DictCursor(CursorStoreResultMixIn, CursorDictRowsMixIn,
                  BaseCursor):
-
      """This is a Cursor class that returns rows as dictionaries and
     stores the result set in the client."""
-   
+
 
 class SSCursor(CursorUseResultMixIn, CursorTupleRowsMixIn,
                BaseCursor):
-
     """This is a Cursor class that returns rows as tuples and stores
     the result set in the server."""
 
 
 class SSDictCursor(CursorUseResultMixIn, CursorDictRowsMixIn,
                    BaseCursor):
-
     """This is a Cursor class that returns rows as dictionaries and
     stores the result set in the server."""
 
