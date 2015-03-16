@@ -194,6 +194,9 @@ _mysql_Exception(_mysql_ConnectionObject *c)
 #ifdef ER_CANNOT_ADD_FOREIGN
 	case ER_CANNOT_ADD_FOREIGN:
 #endif
+#ifdef ER_NO_DEFAULT_FOR_FIELD
+	case ER_NO_DEFAULT_FOR_FIELD:
+#endif
 		e = _mysql_IntegrityError;
 		break;
 #ifdef ER_WARNING_NOT_COMPLETE_ROLLBACK
