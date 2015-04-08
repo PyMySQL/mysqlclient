@@ -1,10 +1,13 @@
 #!/usr/bin/env python
 import capabilities
+from datetime import timedelta
 import unittest
 import MySQLdb
 import warnings
 
+
 warnings.filterwarnings('ignore')
+
 
 class test_MySQLdb(capabilities.DatabaseTest):
 
@@ -13,12 +16,11 @@ class test_MySQLdb(capabilities.DatabaseTest):
     connect_kwargs = dict(use_unicode=True, sql_mode="ANSI,STRICT_TRANS_TABLES,TRADITIONAL")
     create_table_extra = "ENGINE=INNODB CHARACTER SET UTF8"
     leak_test = False
-    
+
     def quote_identifier(self, ident):
         return "`%s`" % ident
 
     def test_TIME(self):
-        from datetime import timedelta
         def generator(row,col):
             return timedelta(0, row*8000)
         self.check_data_integrity(
@@ -27,7 +29,7 @@ class test_MySQLdb(capabilities.DatabaseTest):
 
     def test_TINYINT(self):
         # Number data
-        def generator(row,col):
+        def generator(row, col):
             v = (row*row) % 256
             if v > 127:
                 v = v-256
@@ -35,7 +37,7 @@ class test_MySQLdb(capabilities.DatabaseTest):
         self.check_data_integrity(
             ('col1 TINYINT',),
             generator)
-        
+
     def test_stored_procedures(self):
         db = self.connection
         c = self.cursor
@@ -43,7 +45,7 @@ class test_MySQLdb(capabilities.DatabaseTest):
         c.executemany("INSERT INTO %s (pos,tree) VALUES (%%s,%%s)" % self.table,
                       list(enumerate('ash birch cedar larch pine'.split())))
         db.commit()
-        
+
         c.execute("""
         CREATE PROCEDURE test_sp(IN t VARCHAR(255))
         BEGIN
@@ -57,7 +59,7 @@ class test_MySQLdb(capabilities.DatabaseTest):
         self.assertEquals(len(rows), 1)
         self.assertEquals(rows[0][0], 3)
         c.nextset()
-        
+
         c.execute("DROP PROCEDURE test_sp")
         c.execute('drop table %s' % (self.table))
 
@@ -71,7 +73,29 @@ class test_MySQLdb(capabilities.DatabaseTest):
         self.check_data_integrity(
             ('col1 char(1)','col2 char(1)'),
             generator)
-    
+
+    def test_BIT(self):
+        c = self.cursor
+        try:
+            c.execute("""create table test_BIT (
+                b3 BIT(3),
+                b7 BIT(10),
+                b64 BIT(64))""")
+
+            one64 = '1'*64
+            c.execute(
+                "insert into test_BIT (b3, b7, b64)"
+                " VALUES (b'011', b'1111111111', b'%s')"
+                % one64)
+
+            c.execute("SELECT b3, b7, b64 FROM test_BIT")
+            row = c.fetchone()
+            self.assertEqual(row[0], b'\x03')
+            self.assertEqual(row[1], b'\x03\xff')
+            self.assertEqual(row[2], 'b\xff'*8)
+        finally:
+            c.execute("drop table if exists test_BIT")
+
     def test_bug_2671682(self):
         from MySQLdb.constants import ER
         try:
@@ -102,7 +126,7 @@ class test_MySQLdb(capabilities.DatabaseTest):
             return
         self.fail("Should raise ProgrammingError")
 
-        
+
 if __name__ == '__main__':
     if test_MySQLdb.leak_test:
         import gc
