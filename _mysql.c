@@ -1372,7 +1372,8 @@ _mysql_field_to_python(
 		field_type == FIELD_TYPE_LONG_BLOB ||
 		field_type == FIELD_TYPE_BLOB ||
 		field_type == FIELD_TYPE_VAR_STRING ||
-		field_type == FIELD_TYPE_STRING) {
+		field_type == FIELD_TYPE_STRING ||
+		field_type == FIELD_TYPE_BIT) {
 			binary = 1;
 	}
 #endif

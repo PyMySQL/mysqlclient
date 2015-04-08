@@ -92,7 +92,7 @@ class test_MySQLdb(capabilities.DatabaseTest):
             row = c.fetchone()
             self.assertEqual(row[0], b'\x03')
             self.assertEqual(row[1], b'\x03\xff')
-            self.assertEqual(row[2], 'b\xff'*8)
+            self.assertEqual(row[2], b'\xff'*8)
         finally:
             c.execute("drop table if exists test_BIT")
 
