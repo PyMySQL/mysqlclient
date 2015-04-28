@@ -325,10 +325,9 @@ class Connection(_mysql.connection):
         def warning_count(self):
             """Return the number of warnings generated from the
             last query. This is derived from the info() method."""
-            from string import atoi
             info = self.info()
             if info:
-                return atoi(info.split()[-1])
+                return int(info.split()[-1])
             else:
                 return 0
 
