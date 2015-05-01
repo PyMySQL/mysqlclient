@@ -60,17 +60,17 @@ class TestX_or_None(unittest.TestCase):
 class TestTicks(unittest.TestCase):
     def test_date_from_ticks(self):
         assert times.DateFromTicks(0) == date(1970, 1, 1)
-        assert times.DateFromTicks(1430000000) == date(2015, 4, 26)
+        assert times.DateFromTicks(1430000000) == date(2015, 4, 25)
 
     def test_time_from_ticks(self):
-        assert times.TimeFromTicks(0) == time(1, 0, 0)
-        assert times.TimeFromTicks(1431100000) == time(17, 46, 40)
-        assert times.TimeFromTicks(1431100000.123) == time(17, 46, 40)
+        assert times.TimeFromTicks(0) == time(0, 0, 0)
+        assert times.TimeFromTicks(1431100000) == time(15, 46, 40)
+        assert times.TimeFromTicks(1431100000.123) == time(15, 46, 40)
 
     def test_timestamp_from_ticks(self):
-        assert times.TimestampFromTicks(0) == datetime(1970, 1, 1, 1, 0, 0)
-        assert times.TimestampFromTicks(1430000000) == datetime(2015, 4, 26, 0, 13, 20)
-        assert times.TimestampFromTicks(1430000000.123) == datetime(2015, 4, 26, 0, 13, 20)
+        assert times.TimestampFromTicks(0) == datetime(1970, 1, 1, 0, 0, 0)
+        assert times.TimestampFromTicks(1430000000) == datetime(2015, 4, 25, 22, 13, 20)
+        assert times.TimestampFromTicks(1430000000.123) == datetime(2015, 4, 25, 22, 13, 20)
 
 
 class TestTimestampConverter(unittest.TestCase):
