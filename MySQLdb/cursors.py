@@ -163,7 +163,7 @@ class BaseCursor(object):
         if con is not None:
             con = con()
         if con is None:
-            self.errorhandler(self, ProgrammingError, "cursor closed")
+            raise ProgrammingError("cursor closed")
         return con
     
     def execute(self, query, args=None):
