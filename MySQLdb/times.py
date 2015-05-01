@@ -4,7 +4,7 @@ This module provides some Date and Time classes for dealing with MySQL data.
 
 Use Python datetime module to handle date and time columns.
 """
-from time import localtime
+from time import gmtime
 from datetime import date, datetime, time, timedelta
 from _mysql import string_literal
 
@@ -18,15 +18,15 @@ DateTimeType = datetime
 
 def DateFromTicks(ticks):
     """Convert UNIX ticks into a date instance."""
-    return date(*localtime(ticks)[:3])
+    return date(*gmtime(ticks)[:3])
 
 def TimeFromTicks(ticks):
     """Convert UNIX ticks into a time instance."""
-    return time(*localtime(ticks)[3:6])
+    return time(*gmtime(ticks)[3:6])
 
 def TimestampFromTicks(ticks):
     """Convert UNIX ticks into a datetime instance."""
-    return datetime(*localtime(ticks)[:6])
+    return datetime(*gmtime(ticks)[:6])
 
 format_TIME = format_DATE = str
 
