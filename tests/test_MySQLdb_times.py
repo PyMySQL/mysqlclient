@@ -46,6 +46,7 @@ class TestX_or_None(unittest.TestCase):
         assert times.DateTime_or_None('2015-12-13T01:02:03.123456789') is None
 
     def test_timedelta_or_none(self):
+        assert times.TimeDelta_or_None('-1:0:0') == timedelta(0, -3600)
         assert times.TimeDelta_or_None('1:0:0') == timedelta(0, 3600)
         assert times.TimeDelta_or_None('12:55:30') == timedelta(0, 46530)
         assert times.TimeDelta_or_None('12:55:30.123456') == timedelta(0, 46530, 123456)
