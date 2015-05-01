@@ -93,7 +93,6 @@ class TestToLiteral(unittest.TestCase):
 
     def test_datetimedelta_to_literal(self):
         d = datetime(2015, 12, 13, 1, 2, 3) - datetime(2015, 12, 13, 1, 2, 2)
-        print(times.DateTimeDelta2literal(d, ''))
         assert times.DateTimeDelta2literal(d, '') == b"'0 0:0:1'"
 
 
