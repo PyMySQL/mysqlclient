@@ -1,4 +1,6 @@
+import mock
 import unittest
+from time import gmtime
 from datetime import time, date, datetime, timedelta
 
 from MySQLdb import times
@@ -59,16 +61,19 @@ class TestX_or_None(unittest.TestCase):
 
 
 class TestTicks(unittest.TestCase):
-    def test_date_from_ticks(self):
+    @mock.patch('MySQLdb.times.localtime', side_effect=gmtime)
+    def test_date_from_ticks(self, mock):
         assert times.DateFromTicks(0) == date(1970, 1, 1)
         assert times.DateFromTicks(1430000000) == date(2015, 4, 25)
 
-    def test_time_from_ticks(self):
+    @mock.patch('MySQLdb.times.localtime', side_effect=gmtime)
+    def test_time_from_ticks(self, mock):
         assert times.TimeFromTicks(0) == time(0, 0, 0)
         assert times.TimeFromTicks(1431100000) == time(15, 46, 40)
         assert times.TimeFromTicks(1431100000.123) == time(15, 46, 40)
 
-    def test_timestamp_from_ticks(self):
+    @mock.patch('MySQLdb.times.localtime', side_effect=gmtime)
+    def test_timestamp_from_ticks(self, mock):
         assert times.TimestampFromTicks(0) == datetime(1970, 1, 1, 0, 0, 0)
         assert times.TimestampFromTicks(1430000000) == datetime(2015, 4, 25, 22, 13, 20)
         assert times.TimestampFromTicks(1430000000.123) == datetime(2015, 4, 25, 22, 13, 20)
