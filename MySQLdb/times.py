@@ -64,7 +64,7 @@ def DateTime_or_None(s):
             ms = 0
         return datetime(*[ int(x) for x in d.split('-')+t.split(':')+[ms] ])
     except (SystemExit, KeyboardInterrupt):
-        raise
+        raise  # pragma: no cover
     except:
         return Date_or_None(s)
 
@@ -129,6 +129,6 @@ def mysql_timestamp_converter(s):
     try:
         return Timestamp(*parts)
     except (SystemExit, KeyboardInterrupt):
-        raise
+        raise  # pragma: no cover
     except:
         return None
