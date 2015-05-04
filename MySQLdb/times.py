@@ -48,25 +48,33 @@ def format_TIMESTAMP(d):
 
 
 def DateTime_or_None(s):
-    if ' ' in s:
-        sep = ' '
-    elif 'T' in s:
-        sep = 'T'
-    else:
-        return Date_or_None(s)
-
     try:
-        d, t = s.split(sep, 1)
-        if '.' in t:
-            t, ms = t.split('.',1)
-            ms = ms.ljust(6, '0')
+        if len(s) < 11:
+            return Date_or_None(s)
         else:
-            ms = 0
-        return datetime(*[ int(x) for x in d.split('-')+t.split(':')+[ms] ])
-    except (SystemExit, KeyboardInterrupt):
-        raise  # pragma: no cover
-    except:
-        return Date_or_None(s)
+            micros = s[20:]
+
+            if len(micros) == 0:
+                # 12:00:00
+                micros = 0
+            elif len(micros) > 0 and len(micros) < 7:
+                # 12:00:00.123456
+                micros = int(micros) * 10 ** (6 - len(micros))
+            else:
+                # 12:00:00.123456789
+                micros = int(micros)
+
+            return datetime(
+                int(s[:4]),          # year
+                int(s[5:7]),         # month
+                int(s[8:10]),        # day
+                int(s[11:13] or 0),  # hour
+                int(s[14:16] or 0),  # minute
+                int(s[17:19] or 0),  # second
+                micros,              # microsecond
+            )
+    except ValueError:
+        return None
 
 def TimeDelta_or_None(s):
     try:
@@ -107,14 +115,18 @@ def Time_or_None(s):
 
 def Date_or_None(s):
     try:
-        return date(*[ int(x) for x in s.split('-',2)])
-    except (TypeError, ValueError):
+        return date(
+            int(s[:4]),    # year
+            int(s[5:7]),   # month
+            int(s[8:10]),  # day
+        )
+    except ValueError:
         return None
 
 def DateTime2literal(d, c):
     """Format a DateTime object as an ISO timestamp."""
     return string_literal(format_TIMESTAMP(d), c)
-    
+
 def DateTimeDelta2literal(d, c):
     """Format a DateTimeDelta object as a time."""
     return string_literal(format_TIMEDELTA(d),c)
