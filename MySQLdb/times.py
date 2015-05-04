@@ -57,7 +57,7 @@ def DateTime_or_None(s):
             if len(micros) == 0:
                 # 12:00:00
                 micros = 0
-            elif len(micros) > 0 and len(micros) < 7:
+            elif len(micros) < 7:
                 # 12:00:00.123456
                 micros = int(micros) * 10 ** (6 - len(micros))
             else:
