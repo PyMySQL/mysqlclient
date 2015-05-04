@@ -11,15 +11,14 @@ warnings.simplefilter("ignore")
 
 class TestX_or_None(unittest.TestCase):
     def test_date_or_none(self):
-        assert times.Date_or_None('1969-1-1') == date(1969, 1, 1)
-        assert times.Date_or_None('2015-1-1') == date(2015, 1, 1)
+        assert times.Date_or_None('1969-01-01') == date(1969, 1, 1)
+        assert times.Date_or_None('2015-01-01') == date(2015, 1, 1)
         assert times.Date_or_None('2015-12-13') == date(2015, 12, 13)
 
         assert times.Date_or_None('') is None
         assert times.Date_or_None('fail') is None
         assert times.Date_or_None('2015-12') is None
         assert times.Date_or_None('2015-12-40') is None
-        assert times.Date_or_None('15-12-13').year != 2015
 
     def test_time_or_none(self):
         assert times.Time_or_None('00:00:00') == time(0, 0)
@@ -32,7 +31,7 @@ class TestX_or_None(unittest.TestCase):
         assert times.Time_or_None('01:02:03.123456789') is None
 
     def test_datetime_or_none(self):
-        assert times.DateTime_or_None('15-12-13') == date(15, 12, 13)
+        assert times.DateTime_or_None('1000-01-01') == date(1000, 1, 1)
         assert times.DateTime_or_None('2015-12-13') == date(2015, 12, 13)
         assert times.DateTime_or_None('2015-12-13 01:02') == datetime(2015, 12, 13, 1, 2)
         assert times.DateTime_or_None('2015-12-13T01:02') == datetime(2015, 12, 13, 1, 2)
