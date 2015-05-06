@@ -19,6 +19,7 @@ class TestX_or_None(unittest.TestCase):
         assert times.Date_or_None('fail') is None
         assert times.Date_or_None('2015-12') is None
         assert times.Date_or_None('2015-12-40') is None
+        assert times.Date_or_None('0000-00-00') is None
 
     def test_time_or_none(self):
         assert times.Time_or_None('00:00:00') == time(0, 0)
@@ -44,6 +45,8 @@ class TestX_or_None(unittest.TestCase):
 
         assert times.DateTime_or_None('') is None
         assert times.DateTime_or_None('fail') is None
+        assert times.DateTime_or_None('0000-00-00 00:00:00') is None
+        assert times.DateTime_or_None('0000-00-00 00:00:00.000000') is None
         assert times.DateTime_or_None('2015-12-13T01:02:03.123456789') is None
 
     def test_timedelta_or_none(self):

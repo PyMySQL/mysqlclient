@@ -61,8 +61,7 @@ def DateTime_or_None(s):
             # 12:00:00.123456
             micros = int(micros) * 10 ** (6 - len(micros))
         else:
-            # 12:00:00.123456789
-            micros = int(micros)
+            return None
 
         return datetime(
             int(s[:4]),          # year
