@@ -21,7 +21,7 @@ restr = r"""
             (?:
                 (?:
                         (?:\(
-                            # ( - editor hightlighting helper
+                            # ( - editor highlighting helper
                             .*
                         \))
                     |
