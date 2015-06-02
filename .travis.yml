@@ -1,7 +1,8 @@
 sudo: false
 language: python
+cache: pip
 install:
-    - pip install tox six
+    - pip install tox
 
 before_script:
     - "mysql --help"
