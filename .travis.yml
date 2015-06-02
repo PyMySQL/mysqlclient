@@ -3,5 +3,8 @@ language: python
 install:
     - pip install tox six
 
-before_script: mysql -e 'create database mysqldb_test charset utf8;'
+before_script:
+    - "mysql --help"
+    - "mysql --print-defaults"
+    - "mysql -e 'create database mysqldb_test charset utf8mb4;'"
 script: TESTDB=travis.cnf tox
