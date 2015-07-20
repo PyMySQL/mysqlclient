@@ -96,6 +96,35 @@ class test_MySQLdb(capabilities.DatabaseTest):
         finally:
             c.execute("drop table if exists test_BIT")
 
+    def test_MULTIPOLYGON(self):
+        c = self.cursor
+        try:
+            c.execute("""create table test_MULTIPOLYGON (
+                id INTEGER PRIMARY KEY,
+                border MULTIPOLYGON)""")
+
+            c.execute(
+                "insert into test_MULTIPOLYGON (id, border)"
+                " VALUES (1, GeomFromText('MULTIPOLYGON(((1 1, 1 -1, -1 -1, -1 1, 1 1)),((1 1, 3 1, 3 3, 1 3, 1 1)))'))"
+            )
+
+            c.execute("SELECT id, AsText(border) FROM test_MULTIPOLYGON")
+            row = c.fetchone()
+            self.assertEqual(row[0], 1)
+            self.assertEqual(row[1], b'MULTIPOLYGON(((1 1,1 -1,-1 -1,-1 1,1 1)),((1 1,3 1,3 3,1 3,1 1)))')
+
+            c.execute("SELECT id, AsWKB(border) FROM test_MULTIPOLYGON")
+            row = c.fetchone()
+            self.assertEqual(row[0], 1)
+            self.assertGreater(len(row[1]), 0)
+
+            c.execute("SELECT id, border FROM test_MULTIPOLYGON")
+            row = c.fetchone()
+            self.assertEqual(row[0], 1)
+            self.assertGreater(len(row[1]), 0)
+        finally:
+            c.execute("drop table if exists test_MULTIPOLYGON")
+
     def test_bug_2671682(self):
         from MySQLdb.constants import ER
         try:
