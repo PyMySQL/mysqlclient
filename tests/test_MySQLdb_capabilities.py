@@ -116,12 +116,12 @@ class test_MySQLdb(capabilities.DatabaseTest):
             c.execute("SELECT id, AsWKB(border) FROM test_MULTIPOLYGON")
             row = c.fetchone()
             self.assertEqual(row[0], 1)
-            self.assertGreater(len(row[1]), 0)
+            self.assertNotEqual(len(row[1]), 0)
 
             c.execute("SELECT id, border FROM test_MULTIPOLYGON")
             row = c.fetchone()
             self.assertEqual(row[0], 1)
-            self.assertGreater(len(row[1]), 0)
+            self.assertNotEqual(len(row[1]), 0)
         finally:
             c.execute("drop table if exists test_MULTIPOLYGON")
 
