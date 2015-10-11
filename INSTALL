@@ -8,56 +8,24 @@ MySQLdb Installation
 Prerequisites
 -------------
 
-+ Python 2.3.4 or higher
++ Python 2.6, 2.7, 3.3 or higher
 
   * http://www.python.org/
-
-  * Versions lower than 2.3 WON'T WORK.
-
-  * 2.4 is the primary test environment.
-
-  * Red Hat Linux:
-
-    - Make sure you have the Python development headers and libraries
-      (python-devel).
 
 + setuptools
 
   * http://pypi.python.org/pypi/setuptools
 
-+ MySQL 3.23.32 or higher
++ MySQL 5.0 or higher
 
   * http://www.mysql.com/downloads/
 
-  * Versions lower than 3.22 definitely WON'T WORK.
-
-  * Versions lower than 3.22.19 might not work.
-
-  * MySQL-3.22 might work but isn't supported anymore. It's very old.
-
-  * MySQL-3.23 ought to work, but it's pretty elderly.
-
-  * MySQL-4.0 is supported, but not tested and slightly discouraged.
-
-  * MySQL-4.1 is supported. The prepared statements API is not
-    supported, and won't be until MySQLdb-1.3 or 2.0, if ever.
+  * MySQL-4.0 and MySQL-4.1 may work, but not supported.
 
   * MySQL-5.0 is supported and tested, including stored procedures.
 
   * MySQL-5.1 is supported (currently a release candidate) but untested.
     It should work.
-
-  * MySQL-6.0 is sorta-kinda-supported (currently alpha) but untested.
-    It should work.
-
-  * Drizzle <https://launchpad.net/drizzle> is a fork of MySQL. So far
-    the C API looks really similar except everything is renamed.
-    Drizzle support probably won't happen in 1.2. There may be have to
-    be an entirely different module, but still using DB-API.
-
-  * MaxDB, formerly known as SAP DB (and maybe Adabas D?), is a
-    completely different animal. Use the sapdb.sql module that comes
-    with MaxDB.
 
   * Red Hat Linux packages:
 
@@ -75,27 +43,6 @@ Prerequisites
 
     - MySQL-shared to run if you compiled with MySQL-shared installed
 
-  * Transactions (particularly InnoDB tables) are supported for
-    MySQL-3.23 and up. You may need a special package from your vendor
-    with this support turned on.
-
-+  zlib
-
-   * Required for MySQL-3.23 and newer.
-
-   * Red Hat Linux
-
-     - zlib-devel to compile
-
-     - zlib to run
-
-+ openssl
-
-  * May be needed for MySQL-4.0 or newer, depending on compilation
-    options. If you need it, you probably already have it.
-
-    - you may need openssl-devel on some platforms
-
 + C compiler
 
   * Most free software-based systems already have this, usually gcc.
@@ -103,10 +50,8 @@ Prerequisites
   * Most commercial UNIX platforms also come with a C compiler, or
     you can also use gcc.
 
-  * If you have some Windows flavor, you usually have to pay extra
-    for this, or you can use Cygwin_.
-
-.. _Cygwin: http://www.cygwin.com/
+  * If you have some Windows flavor, you should use Windows SDK or
+    Visual C++.
 
 
 Building and installing
@@ -134,12 +79,18 @@ edit the [options] section of site.cfg:
         if True, try to link against a static library; otherwise link
 	against dynamic libraries (default). You may need static linking
 	to use the embedded server.
+        This option doesn't work for MySQL>5.6 since libmysqlclient
+        requires libstdc++. If you want to use, add `-lstdc++` to
+        mysql_config manually.
 
+If `<mysql prefix>/lib` is not added to `/etc/ld.so.conf`, `import _mysql`
+doesn't work. To fix this, (1) set `LD_LIBRARY_PATH`, or (2) add
+`-Wl,-rpath,<mysql prefix>/lib` to ldflags in your mysql_config.
 
 Finally, putting it together::
 
-  $ tar xfz MySQL-python-1.2.1.tar.gz
-  $ cd MySQL-python-1.2.1
+  $ tar xz mysqlclient-1.3.6.tar.gz
+  $ cd mysqlclient-1.3.6
   $ # edit site.cfg if necessary
   $ python setup.py build
   $ sudo python setup.py install # or su first
@@ -166,15 +117,6 @@ I don't do Windows, but I'll accept a patch that does this.
 
 On Windows, you will definitely have to edit site.cfg since there is
 no mysql_config in the MySQL package.
-
-
-Zope
-....
-
-If you are using a binary package of Zope, you need run setup.py with
-the python executable that came with Zope. Otherwise, you'll install
-into the wrong Python tree and Zope (ZMySQLDA) will not be able to
-find _mysql.
 
 
 Binary Packages

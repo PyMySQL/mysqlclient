@@ -13,9 +13,6 @@ def dequote(s):
         s = s[1:-1]
     return s
 
-def compiler_flag(f):
-    return "-%s" % f
-
 def mysql_config(what):
     from os import popen
 
@@ -53,29 +50,24 @@ def get_config():
         libs = mysql_config("libs")
         client = "mysqlclient"
 
-    library_dirs = [ dequote(i[2:]) for i in libs if i.startswith(compiler_flag("L")) ]
-    libraries = [ dequote(i[2:]) for i in libs if i.startswith(compiler_flag("l")) ]
+    library_dirs = [dequote(i[2:]) for i in libs if i.startswith('-L')]
+    libraries = [dequote(i[2:]) for i in libs if i.startswith('-l')]
+    extra_link_args = [x for x in libs if not x.startswith(('-l', '-L'))]
 
-    removable_compile_args = [ compiler_flag(f) for f in "ILl" ]
-    extra_compile_args = [ i.replace("%", "%%") for i in mysql_config("cflags")
-                           if i[:2] not in removable_compile_args ]
+    removable_compile_args = ('-I', '-L', '-l')
+    extra_compile_args = [i.replace("%", "%%") for i in mysql_config("cflags")
+                          if i[:2] not in removable_compile_args]
 
     # Copy the arch flags for linking as well
-    extra_link_args = list()
     for i in range(len(extra_compile_args)):
         if extra_compile_args[i] == '-arch':
             extra_link_args += ['-arch', extra_compile_args[i + 1]]
 
-    include_dirs = [ dequote(i[2:])
-                     for i in mysql_config('include')
-                     if i.startswith(compiler_flag('I')) ]
-    if not include_dirs: # fix for MySQL-3.23
-        include_dirs = [ dequote(i[2:])
-                         for i in mysql_config('cflags')
-                         if i.startswith(compiler_flag('I')) ]
+    include_dirs = [dequote(i[2:])
+                    for i in mysql_config('include') if i.startswith('-I')]
 
     if static:
-        extra_objects.append(os.path.join(library_dirs[0],'lib%s.a' % client))
+        extra_objects.append(os.path.join(library_dirs[0], 'lib%s.a' % client))
         if client in libraries:
             libraries.remove(client)
 
@@ -104,4 +96,3 @@ def get_config():
 
 if __name__ == "__main__":
     sys.stderr.write("""You shouldn't be running this directly; it is used by setup.py.""")
-
