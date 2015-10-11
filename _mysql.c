@@ -88,6 +88,7 @@ typedef struct {
 	MYSQL_RES *result;
 	int nfields;
 	int use;
+	char has_next;
 	PyObject *converter;
 } _mysql_ResultObject;
 
@@ -406,6 +407,7 @@ _mysql_ResultObject_Initialize(
 	else
 		result = mysql_store_result(&(conn->connection));
 	self->result = result;
+	self->has_next = (char)mysql_more_results(&(conn->connection));
 	Py_END_ALLOW_THREADS ;
 	if (!result) {
 		if (mysql_errno(&(conn->connection))) {
@@ -1520,7 +1522,7 @@ _mysql__fetch_row(
 	int maxrows,
 	_PYFUNC *convert_row)
 {
-	unsigned int i;
+	int i;
 	MYSQL_ROW row;
 
 	for (i = skiprows; i<(skiprows+maxrows); i++) {
@@ -1573,14 +1575,14 @@ _mysql_ResultObject_fetch_row(
 		_mysql_row_to_dict_old
 	};
 	_PYFUNC *convert_row;
-	unsigned int maxrows=1, how=0, skiprows=0, rowsadded;
+	int maxrows=1, how=0, skiprows=0, rowsadded;
 	PyObject *r=NULL;
 
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|ii:fetch_row", kwlist,
 					 &maxrows, &how))
 		return NULL;
 	check_result_connection(self);
-	if (how >= sizeof(row_converters)) {
+	if (how >= (int)sizeof(row_converters)) {
 		PyErr_SetString(PyExc_ValueError, "how out of range");
 		return NULL;
 	}
@@ -2652,6 +2654,13 @@ static struct PyMemberDef _mysql_ResultObject_memberlist[] = {
 		offsetof(_mysql_ResultObject,converter),
 		READONLY,
 		"Type conversion mapping"
+	},
+	{
+		"has_next",
+		T_BOOL,
+		offsetof(_mysql_ResultObject, has_next),
+		READONLY,
+		"Has next result"
 	},
 	{NULL} /* Sentinel */
 };

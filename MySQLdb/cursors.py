@@ -109,6 +109,14 @@ class BaseCursor(object):
     def _warning_check(self):
         from warnings import warn
         if self._warnings:
+            # When there is next result, fetching warnings cause "command
+            # out of sync" error.
+            if self._result.has_next:
+                msg = "There are %d MySQL warnings." % (self._warnings,)
+                self.messages.append(msg)
+                warn(msg, self.Warning, 3)
+                return
+
             warnings = self._get_db().show_warnings()
             if warnings:
                 # This is done in two loops in case
@@ -204,23 +212,21 @@ class BaseCursor(object):
         if isinstance(query, unicode):
             query = query.encode(db.unicode_literal.charset, 'surrogateescape')
 
+        res = None
         try:
-            r = None
-            r = self._query(query)
+            res = self._query(query)
         except TypeError as m:
             if m.args[0] in ("not enough arguments for format string",
                              "not all arguments converted"):
                 self.errorhandler(self, ProgrammingError, m.args[0])
             else:
                 self.errorhandler(self, TypeError, m)
-        except (SystemExit, KeyboardInterrupt):
-            raise
-        except:
+        except Exception:
             exc, value = sys.exc_info()[:2]
             self.errorhandler(self, exc, value)
         self._executed = query
         if not self._defer_warnings: self._warning_check()
-        return r
+        return res
 
     def executemany(self, query, args):
         """Execute a multi-row query.
