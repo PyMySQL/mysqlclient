@@ -68,7 +68,7 @@ static PyObject *_mysql_IntegrityError;
 static PyObject *_mysql_InternalError; 
 static PyObject *_mysql_ProgrammingError;
 static PyObject *_mysql_NotSupportedError;
- 
+
 typedef struct {
 	PyObject_HEAD
 	MYSQL connection;
@@ -227,7 +227,7 @@ _mysql_Exception(_mysql_ConnectionObject *c)
 	Py_DECREF(t);
 	return NULL;
 }
-	  
+
 static char _mysql_server_init__doc__[] =
 "Initialize embedded server. If this client is not linked against\n\
 the embedded server library, this function does nothing.\n\
@@ -250,7 +250,7 @@ static PyObject *_mysql_server_init(
 				"already initialized");
 		return NULL;
 	}
-	  
+
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|OO", kwlist,
 					 &cmd_args, &groups))
 		return NULL;
@@ -349,7 +349,7 @@ static PyObject *_mysql_server_end(
 	}
 	return _mysql_Exception(NULL);
 }
-	 
+
 #if MYSQL_VERSION_ID >= 32314
 static char _mysql_thread_safe__doc__[] =
 "Indicates whether the client is compiled as thread-safe.";
@@ -557,7 +557,7 @@ _mysql_ConnectionObject_Initialize(
 	char *init_command=NULL,
 	     *read_default_file=NULL,
 	     *read_default_group=NULL;
-	
+
 	self->converter = NULL;
 	self->open = 0;
 	check_server_init(-1);
@@ -741,7 +741,7 @@ _mysql_connect(
 	PyObject *kwargs)
 {
 	_mysql_ConnectionObject *c=NULL;
-	
+
 	c = MyAlloc(_mysql_ConnectionObject, _mysql_ConnectionObject_Type);
 	if (c == NULL) return NULL;
 	if (_mysql_ConnectionObject_Initialize(c, args, kwargs)) {
@@ -1291,7 +1291,7 @@ _mysql_escape_dict(
 	Py_XDECREF(r);
 	return NULL;
 }
-				
+
 static char _mysql_ResultObject_describe__doc__[] =
 "Returns the sequence of 7-tuples required by the DB-API for\n\
 the Cursor.description attribute.\n\
@@ -1328,7 +1328,7 @@ _mysql_ResultObject_describe(
 	Py_XDECREF(d);
 	return NULL;
 }
-	
+
 static char _mysql_ResultObject_field_flags__doc__[] =
 "Returns a tuple of field flags, one for each column in the result.\n\
 " ;
@@ -1736,7 +1736,7 @@ _mysql_ConnectionObject_get_character_set_info(
 {
 	PyObject *result;
 	MY_CHARSET_INFO cs;
-	
+
 	if (!PyArg_ParseTuple(args, "")) return NULL;
 	check_connection(self);
 	mysql_get_character_set_info(&(self->connection), &cs);
@@ -2726,44 +2726,44 @@ PyTypeObject _mysql_ConnectionObject_Type = {
 	0, /* tp_setattr */
 	0, /*tp_compare*/
 	(reprfunc)_mysql_ConnectionObject_repr, /* tp_repr */
-	
+
 	/* Method suites for standard classes */
-	
+
 	0, /* (PyNumberMethods *) tp_as_number */
 	0, /* (PySequenceMethods *) tp_as_sequence */
 	0, /* (PyMappingMethods *) tp_as_mapping */
-	
+
 	/* More standard operations (here for binary compatibility) */
-	
+
 	0, /* (hashfunc) tp_hash */
 	0, /* (ternaryfunc) tp_call */
 	0, /* (reprfunc) tp_str */
 	(getattrofunc)_mysql_ConnectionObject_getattro, /* tp_getattro */
 	(setattrofunc)_mysql_ConnectionObject_setattro, /* tp_setattro */
-	
+
 	/* Functions to access object as input/output buffer */
 	0, /* (PyBufferProcs *) tp_as_buffer */
-	
+
 	/* (tp_flags) Flags to define presence of optional/expanded features */
 	Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC | Py_TPFLAGS_BASETYPE,
 	_mysql_connect__doc__, /* (char *) tp_doc Documentation string */
 
 	/* call function for all accessible objects */
 	(traverseproc) _mysql_ConnectionObject_traverse, /* tp_traverse */
-	
+
 	/* delete references to contained objects */
 	(inquiry) _mysql_ConnectionObject_clear, /* tp_clear */
 
 	/* rich comparisons */
 	0, /* (richcmpfunc) tp_richcompare */
-	
+
 	/* weak reference enabler */
 	0, /* (long) tp_weaklistoffset */
 
 	/* Iterators */
 	0, /* (getiterfunc) tp_iter */
 	0, /* (iternextfunc) tp_iternext */
-	
+
 	/* Attribute descriptor and subclassing stuff */
 	(struct PyMethodDef *)_mysql_ConnectionObject_methods, /* tp_methods */
 	(struct PyMemberDef *)_mysql_ConnectionObject_memberlist, /* tp_members */
@@ -2798,45 +2798,45 @@ PyTypeObject _mysql_ResultObject_Type = {
 	0, /* tp_setattr */
 	0, /*tp_compare*/
 	(reprfunc)_mysql_ResultObject_repr, /* tp_repr */
-	
+
 	/* Method suites for standard classes */
-	
+
 	0, /* (PyNumberMethods *) tp_as_number */
 	0, /* (PySequenceMethods *) tp_as_sequence */
 	0, /* (PyMappingMethods *) tp_as_mapping */
-	
+
 	/* More standard operations (here for binary compatibility) */
-	
+
 	0, /* (hashfunc) tp_hash */
 	0, /* (ternaryfunc) tp_call */
 	0, /* (reprfunc) tp_str */
 	(getattrofunc)PyObject_GenericGetAttr, /* tp_getattro */
 	(setattrofunc)_mysql_ResultObject_setattro, /* tp_setattr */
-	
+
 	/* Functions to access object as input/output buffer */
 	0, /* (PyBufferProcs *) tp_as_buffer */
-	
+
 	/* Flags to define presence of optional/expanded features */
 	Py_TPFLAGS_DEFAULT | Py_TPFLAGS_HAVE_GC | Py_TPFLAGS_BASETYPE,
-	
+
 	_mysql_ResultObject__doc__, /* (char *) tp_doc Documentation string */
 
 	/* call function for all accessible objects */
 	(traverseproc) _mysql_ResultObject_traverse, /* tp_traverse */
-	
+
 	/* delete references to contained objects */
 	(inquiry) _mysql_ResultObject_clear, /* tp_clear */
 
 	/* rich comparisons */
 	0, /* (richcmpfunc) tp_richcompare */
-	
+
 	/* weak reference enabler */
 	0, /* (long) tp_weaklistoffset */
 
 	/* Iterators */
 	0, /* (getiterfunc) tp_iter */
 	0, /* (iternextfunc) tp_iternext */
-	
+
 	/* Attribute descriptor and subclassing stuff */
 	(struct PyMethodDef *) _mysql_ResultObject_methods, /* tp_methods */
 	(struct PyMemberDef *) _mysql_ResultObject_memberlist, /*tp_members */

@@ -6,6 +6,7 @@ from configdb import connection_kwargs
 import warnings
 warnings.simplefilter("ignore")
 
+
 class test_MySQLdb(dbapi20.DatabaseAPI20Test):
     driver = MySQLdb
     connect_args = ()
@@ -35,7 +36,7 @@ class test_MySQLdb(dbapi20.DatabaseAPI20Test):
 
             # cursor.fetchall should raise an Error if called
             # after executing a a statement that cannot return rows
-##             self.assertRaises(self.driver.Error,cur.fetchall)
+            #self.assertRaises(self.driver.Error,cur.fetchall)
 
             cur.execute('select name from %sbooze' % self.table_prefix)
             rows = cur.fetchall()
@@ -164,11 +165,11 @@ class test_MySQLdb(dbapi20.DatabaseAPI20Test):
         cur.execute("drop procedure deleteme")
 
     def test_nextset(self):
-        from warnings import warn
+        #from warnings import warn
         con = self._connect()
         try:
             cur = con.cursor()
-            if not hasattr(cur,'nextset'):
+            if not hasattr(cur, 'nextset'):
                 return
 
             try:

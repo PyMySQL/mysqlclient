@@ -111,7 +111,7 @@ class BaseCursor(object):
         if self._warnings:
             # When there is next result, fetching warnings cause "command
             # out of sync" error.
-            if self._result.has_next:
+            if self._result and self._result.has_next:
                 msg = "There are %d MySQL warnings." % (self._warnings,)
                 self.messages.append(msg)
                 warn(msg, self.Warning, 3)
