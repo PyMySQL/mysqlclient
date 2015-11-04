@@ -10,16 +10,15 @@ connect_kwargs = dict(
     read_default_group = "MySQLdb-tests",
 )
 
+
 def connection_kwargs(kwargs):
     db_kwargs = connect_kwargs.copy()
     db_kwargs.update(kwargs)
     return db_kwargs
+
 
 def connection_factory(**kwargs):
     import MySQLdb
     db_kwargs = connection_kwargs(kwargs)
     db = MySQLdb.connect(**db_kwargs)
     return db
-
-
-

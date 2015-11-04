@@ -1,5 +1,7 @@
 sudo: false
 language: python
+python: "3.5"
+
 cache: pip
 install:
     - pip install tox
@@ -8,4 +10,8 @@ before_script:
     - "mysql --help"
     - "mysql --print-defaults"
     - "mysql -e 'create database mysqldb_test charset utf8mb4;'"
+
 script: TESTDB=travis.cnf tox
+
+
+# vim: sw=4 ts=4 sts=4

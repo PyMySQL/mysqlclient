@@ -7,6 +7,7 @@ from configdb import connection_factory
 import warnings
 warnings.simplefilter("ignore")
 
+
 class TestDBAPISet(unittest.TestCase):
     def test_set_equality(self):
         self.assertTrue(MySQLdb.STRING == MySQLdb.STRING)
@@ -21,7 +22,7 @@ class TestDBAPISet(unittest.TestCase):
         self.assertTrue(FIELD_TYPE.DATE != MySQLdb.STRING)
 
 
-class CoreModule(unittest.TestCase):
+class TestCoreModule(unittest.TestCase):
     """Core _mysql module features."""
 
     def test_NULL(self):
