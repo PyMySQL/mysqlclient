@@ -8,12 +8,22 @@ cache:
 install:
     - pip install tox
 
+env:
+  matrix:
+    - TOX_ENV=py26
+    - TOX_ENV=py27
+    - TOX_ENV=pypy
+    - TOX_ENV=py33
+    - TOX_ENV=py34
+    - TOX_ENV=py35
+  global:
+    - TESTDB=travis.cnf
 before_script:
     - "mysql --help"
     - "mysql --print-defaults"
     - "mysql -e 'create database mysqldb_test charset utf8mb4;'"
 
-script: TESTDB=travis.cnf tox
+script: tox -e $TOX_ENV
 
 
 # vim: sw=4 ts=4 sts=4
