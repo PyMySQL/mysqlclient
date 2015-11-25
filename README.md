@@ -39,3 +39,8 @@ in your `requirements.txt` to avoid trying install source newest pacakge.
 1. Download source by `git clone` or [zipfile](https://github.com/PyMySQL/mysqlclient-python/archive/master.zip).
 2. Customize `site.cfg`
 3. `python setup.py install`
+
+### Documentation
+
+Documentation is hosted on [Read The Docs](https://mysqlclient.readthedocs.org/)
+
