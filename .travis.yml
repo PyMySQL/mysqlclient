@@ -2,7 +2,9 @@ sudo: false
 language: python
 python: "3.5"
 
-cache: pip
+cache:
+  directories:
+    - $HOME/.cache/pip
 install:
     - pip install tox
 
