@@ -4,7 +4,7 @@ MySQLdb Package
 :mod:`MySQLdb` Package
 ----------------------
 
-.. automodule:: MySQLdb.__init__
+.. automodule:: MySQLdb
     :members:
     :undoc-members:
     :show-inheritance:
