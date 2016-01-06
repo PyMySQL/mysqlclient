@@ -45,7 +45,7 @@ from _mysql_exceptions import Warning, Error, InterfaceError, DataError, \
 
 class BaseCursor(object):
     """A base for Cursor classes. Useful attributes:
-    
+
     description
         A tuple of DB API 7-tuples describing the columns in
         the last executed query; see PEP-249 for details.
@@ -55,7 +55,7 @@ class BaseCursor(object):
         in the result set. Values correspond to those in
         MySQLdb.constants.FLAG. See MySQL documentation (C API)
         for more information. Non-standard extension.
-    
+
     arraysize
         default number of rows fetchmany() will fetch
     """
@@ -63,12 +63,12 @@ class BaseCursor(object):
     from _mysql_exceptions import MySQLError, Warning, Error, InterfaceError, \
          DatabaseError, DataError, OperationalError, IntegrityError, \
          InternalError, ProgrammingError, NotSupportedError
-    
+
     _defer_warnings = False
-    
+
     def __init__(self, connection):
         from weakref import ref
-    
+
         self.connection = ref(connection)
         self.description = None
         self.description_flags = None
@@ -82,7 +82,7 @@ class BaseCursor(object):
         self._warnings = 0
         self._info = None
         self.rownumber = None
-        
+
     def close(self):
         """Close the cursor. No further queries will be possible."""
         try:
@@ -124,7 +124,10 @@ class BaseCursor(object):
                 for w in warnings:
                     self.messages.append((self.Warning, w))
                 for w in warnings:
-                    warn(w[-1], self.Warning, 3)
+                    msg = w[-1]
+                    if not PY2 and isinstance(msg, bytes):
+                        msg = msg.decode()
+                    warn(msg, self.Warning, 3)
             elif self._info:
                 self.messages.append((self.Warning, self._info))
                 warn(self._info, self.Warning, 3)
@@ -159,10 +162,10 @@ class BaseCursor(object):
         self.lastrowid = db.insert_id()
         self._warnings = db.warning_count()
         self._info = db.info()
-    
+
     def setinputsizes(self, *args):
         """Does nothing, required by DB API."""
-      
+
     def setoutputsizes(self, *args):
         """Does nothing, required by DB API."""
 
@@ -173,10 +176,10 @@ class BaseCursor(object):
         if con is None:
             raise ProgrammingError("cursor closed")
         return con
-    
+
     def execute(self, query, args=None):
         """Execute a query.
-        
+
         query -- string, query to execute on server
         args -- optional sequence or mapping, parameters to use with query.
 
