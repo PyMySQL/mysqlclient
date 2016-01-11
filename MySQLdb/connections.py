@@ -1,10 +1,8 @@
 """
-
 This module implements connections for MySQLdb. Presently there is
 only one class: Connection. Others are unlikely. However, you might
 want to make your own subclasses. In most cases, you will probably
 override Connection.default_cursor with a non-standard Cursor class.
-
 """
 from MySQLdb import cursors
 from MySQLdb.compat import unicode, PY2
@@ -13,6 +11,14 @@ from _mysql_exceptions import Warning, Error, InterfaceError, DataError, \
      NotSupportedError, ProgrammingError
 import _mysql
 import re
+
+
+if not PY2:
+    # See http://bugs.python.org/issue24870
+    _surrogateescape_table = [chr(i) if i < 0x80 else chr(i + 0xdc00) for i in range(256)]
+
+    def _fast_surroundescape(s):
+        return s.decode('latin1').translate(_surrogateescape_table)
 
 
 def defaulterrorhandler(connection, cursor, errorclass, errorvalue):
@@ -34,7 +40,7 @@ def defaulterrorhandler(connection, cursor, errorclass, errorvalue):
     del connection
     if isinstance(errorvalue, BaseException):
         raise errorvalue
-    if errorclass is not None:    
+    if errorclass is not None:
         raise errorclass(errorvalue)
     else:
         raise Exception(errorvalue)
@@ -291,24 +297,21 @@ class Connection(_mysql.connection):
             self.commit()
 
     def literal(self, o):
-        """
-
-        If o is a single object, returns an SQL literal as a string.
+        """If o is a single object, returns an SQL literal as a string.
         If o is a non-string sequence, the items of the sequence are
         converted and returned as a sequence.
 
         Non-standard. For internal use; do not use this in your
         applications.
-
         """
         s = self.escape(o, self.encoders)
-        # Python 3 doesn't support % operation for bytes object.
+        # Python 3(~3.4) doesn't support % operation for bytes object.
         # We should decode it before using %.
         # Decoding with ascii and surrogateescape allows convert arbitrary
         # bytes to unicode and back again.
         # See http://python.org/dev/peps/pep-0383/
-        if not PY2 and isinstance(s, bytes):
-            return s.decode('ascii', 'surrogateescape')
+        if not PY2 and isinstance(s, (bytes, bytearray)):
+            return _fast_surroundescape(s)
         return s
 
     def begin(self):
