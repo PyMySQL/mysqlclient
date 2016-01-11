@@ -187,7 +187,7 @@ class BaseCursor(object):
         parameter placeholder in the query. If a mapping is used,
         %(key)s must be used as the placeholder.
 
-        Returns long integer rows affected, if any
+        Returns integer represents rows affected, if any
         """
         while self.nextset():
             pass
@@ -208,9 +208,12 @@ class BaseCursor(object):
                 args = dict((key, db.literal(item)) for key, item in args.items())
             else:
                 args = tuple(map(db.literal, args))
-            if not PY2 and isinstance(query, bytes):
+            if not PY2 and isinstance(query, (bytes, bytearray)):
                 query = query.decode(db.unicode_literal.charset)
-            query = query % args
+            try:
+                query = query % args
+            except TypeError as m:
+                self.errorhandler(self, ProgrammingError, str(m))
 
         if isinstance(query, unicode):
             query = query.encode(db.unicode_literal.charset, 'surrogateescape')
@@ -218,17 +221,12 @@ class BaseCursor(object):
         res = None
         try:
             res = self._query(query)
-        except TypeError as m:
-            if m.args[0] in ("not enough arguments for format string",
-                             "not all arguments converted"):
-                self.errorhandler(self, ProgrammingError, m.args[0])
-            else:
-                self.errorhandler(self, TypeError, m)
         except Exception:
             exc, value = sys.exc_info()[:2]
             self.errorhandler(self, exc, value)
         self._executed = query
-        if not self._defer_warnings: self._warning_check()
+        if not self._defer_warnings:
+            self._warning_check()
         return res
 
     def executemany(self, query, args):
@@ -369,13 +367,13 @@ class BaseCursor(object):
 
 
 class CursorStoreResultMixIn(object):
-
     """This is a MixIn class which causes the entire result set to be
     stored on the client side, i.e. it uses mysql_store_result(). If the
     result set can be very large, consider adding a LIMIT clause to your
     query, or using CursorUseResultMixIn instead."""
 
-    def _get_result(self): return self._get_db().store_result()
+    def _get_result(self):
+        return self._get_db().store_result()
 
     def _query(self, q):
         rowcount = self._do_query(q)
@@ -390,9 +388,10 @@ class CursorStoreResultMixIn(object):
         """Fetches a single row from the cursor. None indicates that
         no more rows are available."""
         self._check_executed()
-        if self.rownumber >= len(self._rows): return None
+        if self.rownumber >= len(self._rows):
+            return None
         result = self._rows[self.rownumber]
-        self.rownumber = self.rownumber+1
+        self.rownumber = self.rownumber + 1
         return result
 
     def fetchmany(self, size=None):
