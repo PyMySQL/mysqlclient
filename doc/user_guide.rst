@@ -402,10 +402,6 @@ threadsafety
       a connection simultaneously, the MySQL client library will
       probably upchuck and die.  You have been warned.
 
-      For threaded applications, try using a connection pool.
-      This can be done using the `Pool module`_.
-
-      .. _`Pool module`: http://dustman.net/andy/python/Pool
 
 charset
       The character set used by the connection. In MySQL-4.1 and newer,
