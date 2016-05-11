@@ -2,45 +2,34 @@
 
 This module implements Cursors of various types for MySQLdb. By
 default, MySQLdb uses the Cursor class.
-
 """
-
+from __future__ import print_function, absolute_import
+from functools import partial
 import re
 import sys
-PY2 = sys.version_info[0] == 2
 
 from MySQLdb.compat import unicode
+from _mysql_exceptions import (
+    Warning, Error, InterfaceError, DataError,
+    DatabaseError, OperationalError, IntegrityError, InternalError,
+    NotSupportedError, ProgrammingError)
 
-restr = r"""
-    \s
-    values
-    \s*
-    (
-        \(
-            [^()']*
-            (?:
-                (?:
-                        (?:\(
-                            # ( - editor highlighting helper
-                            .*
-                        \))
-                    |
-                        '
-                            [^\\']*
-                            (?:\\.[^\\']*)*
-                        '
-                )
-                [^()']*
-            )*
-        \)
-    )
-"""
 
-insert_values = re.compile(restr, re.S | re.I | re.X)
+PY2 = sys.version_info[0] == 2
+if PY2:
+    text_type = unicode
+else:
+    text_type = str
 
-from _mysql_exceptions import Warning, Error, InterfaceError, DataError, \
-     DatabaseError, OperationalError, IntegrityError, InternalError, \
-     NotSupportedError, ProgrammingError
+
+#: Regular expression for :meth:`Cursor.executemany`.
+#: executemany only suports simple bulk insert.
+#: You can use it to load large dataset.
+RE_INSERT_VALUES = re.compile(
+    r"\s*((?:INSERT|REPLACE)\s.+\sVALUES?\s+)" +
+    r"(\(\s*(?:%s|%\(.+\)s)\s*(?:,\s*(?:%s|%\(.+\)s)\s*)*\))" +
+    r"(\s*(?:ON DUPLICATE.*)?)\Z",
+    re.IGNORECASE | re.DOTALL)
 
 
 class BaseCursor(object):
@@ -59,6 +48,12 @@ class BaseCursor(object):
     arraysize
         default number of rows fetchmany() will fetch
     """
+
+    #: Max stetement size which :meth:`executemany` generates.
+    #:
+    #: Max size of allowed statement is max_allowed_packet - packet_header_size.
+    #: Default value of max_allowed_packet is 1048576.
+    max_stmt_length = 64*1024
 
     from _mysql_exceptions import MySQLError, Warning, Error, InterfaceError, \
          DatabaseError, DataError, OperationalError, IntegrityError, \
@@ -101,6 +96,32 @@ class BaseCursor(object):
     def __exit__(self, *exc_info):
         del exc_info
         self.close()
+
+    def _ensure_bytes(self, x, encoding=None):
+        if isinstance(x, text_type):
+            x = x.encode(encoding)
+        elif isinstance(x, (tuple, list)):
+            x = type(x)(self._ensure_bytes(v, encoding=encoding) for v in x)
+        return x
+
+    def _escape_args(self, args, conn):
+        ensure_bytes = partial(self._ensure_bytes, encoding=conn.encoding)
+
+        if isinstance(args, (tuple, list)):
+            if PY2:
+                args = tuple(map(ensure_bytes, args))
+            return tuple(conn.literal(arg) for arg in args)
+        elif isinstance(args, dict):
+            if PY2:
+                args = dict((ensure_bytes(key), ensure_bytes(val)) for
+                            (key, val) in args.items())
+            return dict((key, conn.literal(val)) for (key, val) in args.items())
+        else:
+            # If it's not a dictionary let's try escaping it anyways.
+            # Worst case it will throw a Value error
+            if PY2:
+                args = ensure_bytes(args)
+            return conn.literal(args)
 
     def _check_executed(self):
         if not self._executed:
@@ -230,62 +251,70 @@ class BaseCursor(object):
         return res
 
     def executemany(self, query, args):
+        # type: (str, list) -> int
         """Execute a multi-row query.
 
-        query -- string, query to execute on server
-
-        args
-
-            Sequence of sequences or mappings, parameters to use with
-            query.
-
-        Returns long integer rows affected, if any.
+        :param query: query to execute on server
+        :param args:  Sequence of sequences or mappings.  It is used as parameter.
+        :return: Number of rows affected, if any.
 
         This method improves performance on multiple-row INSERT and
         REPLACE. Otherwise it is equivalent to looping over args with
         execute().
         """
         del self.messages[:]
-        db = self._get_db()
-        if not args: return
-        if PY2 and isinstance(query, unicode):
-            query = query.encode(db.unicode_literal.charset)
-        elif not PY2 and isinstance(query, bytes):
-            query = query.decode(db.unicode_literal.charset)
-        m = insert_values.search(query)
-        if not m:
-            r = 0
-            for a in args:
-                r = r + self.execute(query, a)
-            return r
-        p = m.start(1)
-        e = m.end(1)
-        qv = m.group(1)
-        try:
-            q = []
-            for a in args:
-                if isinstance(a, dict):
-                    q.append(qv % dict((key, db.literal(item))
-                                       for key, item in a.items()))
-                else:
-                    q.append(qv % tuple([db.literal(item) for item in a]))
-        except TypeError as msg:
-            if msg.args[0] in ("not enough arguments for format string",
-                               "not all arguments converted"):
-                self.errorhandler(self, ProgrammingError, msg.args[0])
+
+        if not args:
+            return
+
+        m = RE_INSERT_VALUES.match(query)
+        if m:
+            q_prefix = m.group(1) % ()
+            q_values = m.group(2).rstrip()
+            q_postfix = m.group(3) or ''
+            assert q_values[0] == '(' and q_values[-1] == ')'
+            return self._do_execute_many(q_prefix, q_values, q_postfix, args,
+                                         self.max_stmt_length,
+                                         self._get_db().encoding)
+
+        self.rowcount = sum(self.execute(query, arg) for arg in args)
+        return self.rowcount
+
+    def _do_execute_many(self, prefix, values, postfix, args, max_stmt_length, encoding):
+        conn = self._get_db()
+        escape = self._escape_args
+        if isinstance(prefix, text_type):
+            prefix = prefix.encode(encoding)
+        if PY2 and isinstance(values, text_type):
+            values = values.encode(encoding)
+        if isinstance(postfix, text_type):
+            postfix = postfix.encode(encoding)
+        sql = bytearray(prefix)
+        args = iter(args)
+        v = values % escape(next(args), conn)
+        if isinstance(v, text_type):
+            if PY2:
+                v = v.encode(encoding)
             else:
-                self.errorhandler(self, TypeError, msg)
-        except (SystemExit, KeyboardInterrupt):
-            raise
-        except:
-            exc, value = sys.exc_info()[:2]
-            self.errorhandler(self, exc, value)
-        qs = '\n'.join([query[:p], ',\n'.join(q), query[e:]])
-        if not PY2:
-            qs = qs.encode(db.unicode_literal.charset, 'surrogateescape')
-        r = self._query(qs)
-        if not self._defer_warnings: self._warning_check()
-        return r
+                v = v.encode(encoding, 'surrogateescape')
+        sql += v
+        rows = 0
+        for arg in args:
+            v = values % escape(arg, conn)
+            if isinstance(v, text_type):
+                if PY2:
+                    v = v.encode(encoding)
+                else:
+                    v = v.encode(encoding, 'surrogateescape')
+            if len(sql) + len(v) + len(postfix) + 1 > max_stmt_length:
+                rows += self.execute(sql + postfix)
+                sql = bytearray(prefix)
+            else:
+                sql += b','
+            sql += v
+        rows += self.execute(sql + postfix)
+        self.rowcount = rows
+        return rows
 
     def callproc(self, procname, args=()):
         """Execute stored procedure procname with args
