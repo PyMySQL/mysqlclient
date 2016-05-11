@@ -65,7 +65,6 @@ def numeric_part(s):
 
 
 class Connection(_mysql.connection):
-
     """MySQL Database Connection Object"""
 
     default_cursor = cursors.Cursor

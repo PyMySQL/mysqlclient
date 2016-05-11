@@ -53,12 +53,12 @@ def test_executemany():
     # list args
     data = range(10)
     cursor.executemany("insert into test (data) values (%s)", data)
-    assert cursor._executed.endswith(",(7),(8),(9)"), 'execute many with %s not in one query'
+    assert cursor._executed.endswith(b",(7),(8),(9)"), 'execute many with %s not in one query'
 
     # dict args
     data_dict = [{'data': i} for i in range(10)]
     cursor.executemany("insert into test (data) values (%(data)s)", data_dict)
-    assert cursor._executed.endswith(",(7),(8),(9)"), 'execute many with %(data)s not in one query'
+    assert cursor._executed.endswith(b",(7),(8),(9)"), 'execute many with %(data)s not in one query'
 
     # %% in column set
     cursor.execute("""\
@@ -69,6 +69,6 @@ def test_executemany():
         q = "INSERT INTO percent_test (`A%%`, `B%%`) VALUES (%s, %s)"
         assert MySQLdb.cursors.RE_INSERT_VALUES.match(q) is not None
         cursor.executemany(q, [(3, 4), (5, 6)])
-        assert cursor._executed.endswith("(3, 4),(5, 6)"), "executemany with %% not in one query"
+        assert cursor._executed.endswith(b"(3, 4),(5, 6)"), "executemany with %% not in one query"
     finally:
         cursor.execute("DROP TABLE IF EXISTS percent_test")
