@@ -278,6 +278,9 @@ class Connection(_mysql.connection):
         return (cursorclass or self.cursorclass)(self)
 
     def query(self, query):
+        # Since _mysql releases GIL while querying, we need immutable buffer.
+        if isinstance(query, bytearray):
+            query = bytes(query)
         if self.waiter is not None:
             self.send_query(query)
             self.waiter(self.fileno())
@@ -353,6 +356,7 @@ class Connection(_mysql.connection):
                 self.store_result()
         self.string_decoder.charset = py_charset
         self.unicode_literal.charset = py_charset
+        self.encoding = py_charset
 
     def set_sql_mode(self, sql_mode):
         """Set the connection sql_mode. See MySQL documentation for
