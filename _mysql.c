@@ -530,10 +530,12 @@ _mysql_ConnectionObject_Initialize(
 	PyObject *ssl = NULL;
 #if HAVE_OPENSSL
 	char *key = NULL, *cert = NULL, *ca = NULL,
-		*capath = NULL, *cipher = NULL;
+		 *capath = NULL, *cipher = NULL;
+	PyObject *ssl_keepref[5] = {};
+	int n_ssl_keepref = 0;
 #endif
 	char *host = NULL, *user = NULL, *passwd = NULL,
-		*db = NULL, *unix_socket = NULL;
+		 *db = NULL, *unix_socket = NULL;
 	unsigned int port = 0;
 	unsigned int client_flag = 0;
 	static char *kwlist[] = { "host", "user", "passwd", "db", "port",
@@ -586,11 +588,11 @@ _mysql_ConnectionObject_Initialize(
 
 #ifdef IS_PY3K
 #define _stringsuck(d,t,s) {t=PyMapping_GetItemString(s,#d);\
-        if(t){d=PyUnicode_AsUTF8(t);Py_DECREF(t);}\
+        if(t){d=PyUnicode_AsUTF8(t);ssl_keepref[n_ssl_keepref++]=t;}\
         PyErr_Clear();}
 #else
 #define _stringsuck(d,t,s) {t=PyMapping_GetItemString(s,#d);\
-        if(t){d=PyString_AsString(t);Py_DECREF(t);}\
+        if(t){d=PyString_AsString(t);ssl_keepref[n_ssl_keepref++]=t;}\
         PyErr_Clear();}
 #endif
 
@@ -645,9 +647,9 @@ _mysql_ConnectionObject_Initialize(
 		mysql_options(&(self->connection), MYSQL_OPT_LOCAL_INFILE, (char *) &local_infile);
 
 #if HAVE_OPENSSL
-	if (ssl)
-		mysql_ssl_set(&(self->connection),
-			      key, cert, ca, capath, cipher);
+	if (ssl) {
+		mysql_ssl_set(&(self->connection), key, cert, ca, capath, cipher);
+	}
 #endif
 
 	conn = mysql_real_connect(&(self->connection), host, user, passwd, db,
@@ -655,12 +657,22 @@ _mysql_ConnectionObject_Initialize(
 
 	Py_END_ALLOW_THREADS ;
 
+#if HAVE_OPENSSL
+	if (ssl) {
+		int i;
+		for (i=0; i<n_ssl_keepref; i++) {
+			Py_DECREF(ssl_keepref[i]);
+			ssl_keepref[i] = NULL;
+		}
+	}
+#endif
+
 	if (!conn) {
 		_mysql_Exception(self);
 		return -1;
 	}
 
-        /* Internal references to python-land objects */
+	/* Internal references to python-land objects */
 	if (!conv)
 		conv = PyDict_New();
 	else
