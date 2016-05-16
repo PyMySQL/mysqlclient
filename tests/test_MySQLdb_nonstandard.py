@@ -67,8 +67,8 @@ class CoreAPI(unittest.TestCase):
                           "thread_id shouldn't accept arguments.")
 
     def test_affected_rows(self):
-        self.assertEquals(self.conn.affected_rows(), 0,
-                          "Should return 0 before we do anything.")
+        self.assertEqual(self.conn.affected_rows(), 0,
+                         "Should return 0 before we do anything.")
 
 
     #def test_debug(self):

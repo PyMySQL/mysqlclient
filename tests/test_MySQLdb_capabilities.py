@@ -56,8 +56,8 @@ class test_MySQLdb(capabilities.DatabaseTest):
 
         c.callproc('test_sp', ('larch',))
         rows = c.fetchall()
-        self.assertEquals(len(rows), 1)
-        self.assertEquals(rows[0][0], 3)
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0][0], 3)
         c.nextset()
 
         c.execute("DROP PROCEDURE test_sp")
