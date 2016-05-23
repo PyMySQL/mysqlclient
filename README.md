@@ -31,7 +31,7 @@ On Windows, there are binary wheel you can install without MySQLConnector/C or M
 `pip install mysqlclient`
 
 NOTE: Wheels for Windows may be not released with source package. You should pin version
-in your `requirements.txt` to avoid trying install source newest pacakge.
+in your `requirements.txt` to avoid trying to install newest source package.
 
 
 ### Install from source
