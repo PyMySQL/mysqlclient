@@ -42,5 +42,5 @@ in your `requirements.txt` to avoid trying to install newest source package.
 
 ### Documentation
 
-Documentation is hosted on [Read The Docs](https://mysqlclient.readthedocs.org/)
+Documentation is hosted on [Read The Docs](https://mysqlclient.readthedocs.io/)
 
