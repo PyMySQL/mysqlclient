@@ -355,7 +355,7 @@ class BaseCursor(object):
                              ','.join(['@_%s_%d' % (procname, i)
                                        for i in range(len(args))]))
         if isinstance(q, unicode):
-            q = q.encode(db.unicode_literal.charset)
+            q = q.encode(db.unicode_literal.charset, 'surrogateescape')
         self._query(q)
         self._executed = q
         if not self._defer_warnings:
