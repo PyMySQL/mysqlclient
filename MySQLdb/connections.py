@@ -76,89 +76,66 @@ class Connection(_mysql.connection):
         that you only use keyword parameters. Consult the MySQL C API
         documentation for more information.
 
-        host
-          string, host to connect
+        :param str host:        host to connect
+        :param str user:        user to connect as
+        :param str password:    password to use
+        :param str passwd:      alias of password, for backward compatibility
+        :param str database:    database to use
+        :param str db:          alias of database, for backward compatibility
+        :param int port:        TCP/IP port to connect to
+        :param str unix_socket: location of unix_socket to use
+        :param dict conv:       conversion dictionary, see MySQLdb.converters
+        :param int connect_timeout:
+            number of seconds to wait before the connection attempt fails.
 
-        user
-          string, user to connect as
+        :param bool compress:   if set, compression is enabled
+        :param str named_pipe:  if set, a named pipe is used to connect (Windows only)
+        :param str init_command:
+            command which is run once the connection is created
 
-        passwd
-          string, password to use
+        :param str read_default_file:
+            file from which default client values are read
 
-        db
-          string, database to use
+        :param str read_default_group:
+            configuration group to use from the default file
 
-        port
-          integer, TCP/IP port to connect to
+        :param type cursorclass:
+            class object, used to create cursors (keyword only)
 
-        unix_socket
-          string, location of unix_socket to use
+        :param str use_unicode:
+            If True, text-like columns are returned as unicode objects
+            using the connection's character set.  Otherwise, text-like
+            columns are returned as strings.  columns are returned as
+            normal strings. Unicode objects will always be encoded to
+            the connection's character set regardless of this setting.
+            Default to False on Python 2 and True on Python 3.
 
-        conv
-          conversion dictionary, see MySQLdb.converters
+        :param str charset:
+            If supplied, the connection character set will be changed
+            to this character set (MySQL-4.1 and newer). This implies
+            use_unicode=True.
 
-        connect_timeout
-          number of seconds to wait before the connection attempt
-          fails.
+        :param str sql_mode:
+            If supplied, the session SQL mode will be changed to this
+            setting (MySQL-4.1 and newer). For more details and legal
+            values, see the MySQL documentation.
 
-        compress
-          if set, compression is enabled
+        :param int client_flag:
+            flags to use or 0 (see MySQL docs or constants/CLIENTS.py)
 
-        named_pipe
-          if set, a named pipe is used to connect (Windows only)
+        :param dict ssl:
+            dictionary or mapping contains SSL connection parameters;
+            see the MySQL documentation for more details
+            (mysql_ssl_set()).  If this is set, and the client does not
+            support SSL, NotSupportedError will be raised.
 
-        init_command
-          command which is run once the connection is created
+        :param bool local_infile:
+            enables LOAD LOCAL INFILE; zero disables
 
-        read_default_file
-          file from which default client values are read
-
-        read_default_group
-          configuration group to use from the default file
-
-        cursorclass
-          class object, used to create cursors (keyword only)
-
-        use_unicode
-          If True, text-like columns are returned as unicode objects
-          using the connection's character set.  Otherwise, text-like
-          columns are returned as strings.  columns are returned as
-          normal strings. Unicode objects will always be encoded to
-          the connection's character set regardless of this setting.
-          Default to False on Python 2 and True on Python 3.
-
-        charset
-          If supplied, the connection character set will be changed
-          to this character set (MySQL-4.1 and newer). This implies
-          use_unicode=True.
-
-        sql_mode
-          If supplied, the session SQL mode will be changed to this
-          setting (MySQL-4.1 and newer). For more details and legal
-          values, see the MySQL documentation.
-
-        client_flag
-          integer, flags to use or 0
-          (see MySQL docs or constants/CLIENTS.py)
-
-        ssl
-          dictionary or mapping, contains SSL connection parameters;
-          see the MySQL documentation for more details
-          (mysql_ssl_set()).  If this is set, and the client does not
-          support SSL, NotSupportedError will be raised.
-
-        local_infile
-          integer, non-zero enables LOAD LOCAL INFILE; zero disables
-
-        autocommit
-          If False (default), autocommit is disabled.
-          If True, autocommit is enabled.
-          If None, autocommit isn't set and server default is used.
-
-        waiter
-          Callable accepts fd as an argument. It is called after sending
-          query and before reading response.
-          This is useful when using with greenlet and async io.
+        :param bool autocommit:
+            If False (default), autocommit is disabled.
+            If True, autocommit is enabled.
+            If None, autocommit isn't set and server default is used.
 
         There are a number of undocumented, non-standard methods. See the
         documentation for the MySQL C API for some hints on what they do.
@@ -168,6 +145,11 @@ class Connection(_mysql.connection):
         from weakref import proxy
 
         kwargs2 = kwargs.copy()
+
+        if 'database' in kwargs2:
+            kwargs2['db'] = kwargs2.pop('database')
+        if 'password' in kwargs2:
+            kwargs2['passwd'] = kwargs2.pop('password')
 
         if 'conv' in kwargs:
             conv = kwargs['conv']

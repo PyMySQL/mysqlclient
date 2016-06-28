@@ -95,11 +95,7 @@ typedef struct {
 extern PyTypeObject _mysql_ResultObject_Type;
 
 static int _mysql_server_init_done = 0;
-#if MYSQL_VERSION_ID >= 40000
 #define check_server_init(x) if (!_mysql_server_init_done) { if (mysql_server_init(0, NULL, NULL)) { _mysql_Exception(NULL); return x; } else { _mysql_server_init_done = 1;} }
-#else
-#define check_server_init(x) if (!_mysql_server_init_done) _mysql_server_init_done = 1
-#endif
 
 #if MYSQL_VERSION_ID >= 50500
 #define HAVE_OPENSSL 1
@@ -2947,13 +2943,11 @@ _mysql_NewException(
 	char *name)
 {
 	PyObject *e;
-
 	if (!(e = PyDict_GetItemString(edict, name)))
 		return NULL;
-	if (PyDict_SetItemString(dict, name, e)) return NULL;
-#ifdef PYPY_VERSION
+	if (PyDict_SetItemString(dict, name, e))
+		return NULL;
 	Py_INCREF(e);
-#endif
 	return e;
 }
 
