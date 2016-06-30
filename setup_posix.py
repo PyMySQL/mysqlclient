@@ -36,6 +36,11 @@ def get_config():
         mysql_config.path = options['mysql_config']
 
     extra_objects = []
+    # the following flag forces an error if any symbols are left undefined
+    if sys.platform == 'darwin':
+        extra_objects.append('-Wl,-undefined,error')
+    else:
+        extra_objects.append('-Wl,--no-undefined')
     static = enabled(options, 'static')
     if enabled(options, 'embedded'):
         libs = mysql_config("libmysqld-libs")
@@ -67,6 +72,8 @@ def get_config():
                     for i in mysql_config('include') if i.startswith('-I')]
 
     if static:
+        # the mysql client lib uses c++, so add a (dynamic) link
+        libraries.append('stdc++')
         extra_objects.append(os.path.join(library_dirs[0], 'lib%s.a' % client))
         if client in libraries:
             libraries.remove(client)
