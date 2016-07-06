@@ -2,7 +2,7 @@
 
 These classes are dictated by the DB API v2.0:
 
-    http://www.python.org/topics/database/DatabaseAPI-2.0.html
+    https://www.python.org/dev/peps/pep-0249/
 """
 
 try:
