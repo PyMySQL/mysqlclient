@@ -71,7 +71,7 @@ Solutions:
 * reconfigure your system so that the MySQL libraries are on the
   default loader path. In Linux, you edit /etc/ld.so.conf and run
   ldconfig. For Solaris, see `Linker and Libraries Guide
-  <http://docs.sun.com/app/docs/doc/817-3677/6mj8mbtbe?a=view>`_.
+  <http://docs.oracle.com/cd/E19253-01/817-1984/chapter6-63352/>`_.
 
 
   ImportError: ld.so.1: python: fatal: libmtmalloc.so.1: DF_1_NOOPEN tagged object may not be dlopen()'ed 

@@ -152,7 +152,7 @@ This does what the previous example does, but gets the username and
 password and other parameters from ~/.my.cnf (UNIX-like systems). Read
 about `option files`_ for more details.
 
-.. _`option files`: http://dev.mysql.com/doc/mysql/en/Option_files.html
+.. _`option files`: http://dev.mysql.com/doc/refman/en/option-files.html
 
 So now you have an open connection as ``db`` and want to do a
 query. Well, there are no cursors in MySQL, and no parameter
@@ -366,7 +366,7 @@ connect(parameters...)
 	    an exception is raised. *This must be a keyword
 	    parameter.*
 
-.. _mysql_ssl_set: http://dev.mysql.com/doc/mysql/en/mysql_ssl_set.html
+.. _mysql_ssl_set: http://dev.mysql.com/doc/refman/en/mysql-ssl-set.html
 
 
 apilevel 

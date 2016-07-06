@@ -175,7 +175,7 @@ Packaged as `mysql-python`_. ::
       # emerge mysql-python
       # emerge zmysqlda # if you use Zope
 
-.. _`mysql-python`: http://packages.gentoo.org/search/?sstring=mysql-python
+.. _`mysql-python`: https://packages.gentoo.org/packages/search?q=mysql-python
 
 
 BSD
