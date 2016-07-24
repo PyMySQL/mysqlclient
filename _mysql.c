@@ -827,9 +827,13 @@ _mysql_ConnectionObject_affected_rows(
 	_mysql_ConnectionObject *self,
 	PyObject *args)
 {
+	my_ulonglong ret;
 	if (!PyArg_ParseTuple(args, "")) return NULL;
 	check_connection(self);
-	return PyLong_FromUnsignedLongLong(mysql_affected_rows(&(self->connection)));
+	ret = mysql_affected_rows(&(self->connection));
+	if (ret == (my_ulonglong)-1)
+		return PyInt_FromLong(-1);
+	return PyLong_FromUnsignedLongLong(ret);
 }
 
 static char _mysql_debug__doc__[] =
