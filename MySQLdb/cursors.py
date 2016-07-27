@@ -347,7 +347,7 @@ class BaseCursor(object):
             q = "SET @_%s_%d=%s" % (procname, index,
                                          db.literal(arg))
             if isinstance(q, unicode):
-                q = q.encode(db.unicode_literal.charset)
+                q = q.encode(db.unicode_literal.charset, 'surrogateescape')
             self._query(q)
             self.nextset()
 
