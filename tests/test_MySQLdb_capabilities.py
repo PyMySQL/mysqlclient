@@ -4,6 +4,8 @@ import capabilities
 from datetime import timedelta
 import unittest
 import MySQLdb
+from MySQLdb.compat import unicode
+from MySQLdb import cursors
 import warnings
 
 
@@ -155,6 +157,28 @@ class test_MySQLdb(capabilities.DatabaseTest):
             self.assertEqual(e.args[0], 1146)
             return
         self.fail("Should raise ProgrammingError")
+
+    def test_warning_propagation(self):
+        with warnings.catch_warnings():
+            # Ignore all warnings other than MySQLdb generated ones
+            warnings.simplefilter("ignore")
+            warnings.simplefilter("error", category=MySQLdb.Warning)
+
+            # verify for both buffered and unbuffered cursor types
+            for cursor_class in (cursors.Cursor, cursors.SSCursor):
+                c = self.connection.cursor(cursor_class)
+                try:
+                    c.execute("SELECT CAST('124b' AS SIGNED)")
+                    c.fetchall()
+                except MySQLdb.Warning as e:
+                    # Warnings should have errorcode and string message, just like exceptions
+                    self.assertEqual(len(e.args), 2)
+                    self.assertEqual(e.args[0], 1292)
+                    self.assertTrue(isinstance(e.args[1], unicode))
+                else:
+                    self.fail("Should raise Warning")
+                finally:
+                    c.close()
 
 
 if __name__ == '__main__':
