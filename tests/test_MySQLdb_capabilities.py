@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import capabilities
 from datetime import timedelta
 import unittest
@@ -43,7 +44,7 @@ class test_MySQLdb(capabilities.DatabaseTest):
         c = self.cursor
         self.create_table(('pos INT', 'tree CHAR(20)'))
         c.executemany("INSERT INTO %s (pos,tree) VALUES (%%s,%%s)" % self.table,
-                      list(enumerate('ash birch cedar larch pine'.split())))
+                      list(enumerate('ash birch cedar Lärche pine'.split())))
         db.commit()
 
         c.execute("""
@@ -54,7 +55,7 @@ class test_MySQLdb(capabilities.DatabaseTest):
         """ % self.table)
         db.commit()
 
-        c.callproc('test_sp', ('larch',))
+        c.callproc('test_sp', ('Lärche',))
         rows = c.fetchall()
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0][0], 3)
