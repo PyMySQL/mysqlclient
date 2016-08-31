@@ -2,7 +2,6 @@ from __future__ import print_function
 """Demo using Gevent with mysqlclient."""
 
 import gevent.hub
-import select
 import MySQLdb
 
 
