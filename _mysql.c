@@ -1063,10 +1063,15 @@ _mysql_escape_string(
 
 	if (self && PyModule_Check((PyObject*)self))
 		self = NULL;
-	if (self && self->open)
+	if (self && self->open) {
+#if MYSQL_VERSION_ID >= 50706
+		len = mysql_real_escape_string_quote(&(self->connection), out, in, size, '\'');
+#else
 		len = mysql_real_escape_string(&(self->connection), out, in, size);
-	else
+#endif
+	} else {
 		len = mysql_escape_string(out, in, size);
+	}
 	if (_PyBytes_Resize(&str, len) < 0) return NULL;
 	return (str);
 }
@@ -1117,7 +1122,11 @@ _mysql_string_literal(
 	out = PyBytes_AS_STRING(str);
 	check_server_init(NULL);
 	if (self && self->open) {
+#if MYSQL_VERSION_ID >= 50706
+		len = mysql_real_escape_string_quote(&(self->connection), out+1, in, size, '\'');
+#else
 		len = mysql_real_escape_string(&(self->connection), out+1, in, size);
+#endif
 	} else {
 		len = mysql_escape_string(out+1, in, size);
 	}
