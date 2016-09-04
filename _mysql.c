@@ -251,7 +251,6 @@ static PyObject *_mysql_server_init(
 					 &cmd_args, &groups))
 		return NULL;
 
-#if MYSQL_VERSION_ID >= 40000
 	if (cmd_args) {
 		if (!PySequence_Check(cmd_args)) {
 			PyErr_SetString(PyExc_TypeError,
@@ -318,7 +317,6 @@ static PyObject *_mysql_server_init(
 		_mysql_Exception(NULL);
 		goto finish;
 	}
-#endif
 	ret = Py_None;
 	Py_INCREF(Py_None);
 	_mysql_server_init_done = 1;
@@ -336,9 +334,7 @@ static PyObject *_mysql_server_end(
 	PyObject *self,
 	PyObject *args) {
 	if (_mysql_server_init_done) {
-#if MYSQL_VERSION_ID >= 40000
 		mysql_server_end();
-#endif
 		_mysql_server_init_done = 0;
 		Py_INCREF(Py_None);
 		return Py_None;
@@ -1063,18 +1059,19 @@ _mysql_escape_string(
 	str = PyBytes_FromStringAndSize((char *) NULL, size*2+1);
 	if (!str) return PyErr_NoMemory();
 	out = PyBytes_AS_STRING(str);
-#if MYSQL_VERSION_ID < 32321
-	len = mysql_escape_string(out, in, size);
-#else
 	check_server_init(NULL);
 
 	if (self && PyModule_Check((PyObject*)self))
 		self = NULL;
-	if (self && self->open)
+	if (self && self->open) {
+#if MYSQL_VERSION_ID >= 50706
+		len = mysql_real_escape_string_quote(&(self->connection), out, in, size, '\'');
+#else
 		len = mysql_real_escape_string(&(self->connection), out, in, size);
-	else
-		len = mysql_escape_string(out, in, size);
 #endif
+	} else {
+		len = mysql_escape_string(out, in, size);
+	}
 	if (_PyBytes_Resize(&str, len) < 0) return NULL;
 	return (str);
 }
@@ -1123,15 +1120,16 @@ _mysql_string_literal(
 		return PyErr_NoMemory();
 	}
 	out = PyBytes_AS_STRING(str);
-#if MYSQL_VERSION_ID < 32321
-	len = mysql_escape_string(out+1, in, size);
-#else
 	check_server_init(NULL);
-	if (self && self->open)
+	if (self && self->open) {
+#if MYSQL_VERSION_ID >= 50706
+		len = mysql_real_escape_string_quote(&(self->connection), out+1, in, size, '\'');
+#else
 		len = mysql_real_escape_string(&(self->connection), out+1, in, size);
-	else
-		len = mysql_escape_string(out+1, in, size);
 #endif
+	} else {
+		len = mysql_escape_string(out+1, in, size);
+	}
 	*out = *(out+len+1) = '\'';
 	if (_PyBytes_Resize(&str, len+2) < 0) return NULL;
 	Py_DECREF(s);
@@ -1593,8 +1591,6 @@ _mysql_ResultObject_fetch_row(
 	return NULL;
 }
 
-#if MYSQL_VERSION_ID >= 32303
-
 static char _mysql_ConnectionObject_change_user__doc__[] =
 "Changes the user and causes the database specified by db to\n\
 become the default (current) database on the connection\n\
@@ -1633,7 +1629,6 @@ _mysql_ConnectionObject_change_user(
 	Py_INCREF(Py_None);
 	return Py_None;
 }
-#endif
 
 static char _mysql_ConnectionObject_character_set_name__doc__[] =
 "Returns the default character set for the current connection.\n\
@@ -1651,7 +1646,6 @@ _mysql_ConnectionObject_character_set_name(
 	return PyString_FromString(s);
 }
 
-#if MYSQL_VERSION_ID >= 50007
 static char _mysql_ConnectionObject_set_character_set__doc__[] =
 "Sets the default character set for the current connection.\n\
 Non-standard.\n\
@@ -1673,7 +1667,6 @@ _mysql_ConnectionObject_set_character_set(
 	Py_INCREF(Py_None);
 	return Py_None;
 }
-#endif
 
 #if MYSQL_VERSION_ID >= 50010
 static char _mysql_ConnectionObject_get_character_set_info__doc__[] =
@@ -2039,11 +2032,7 @@ _mysql_ConnectionObject_shutdown(
 	int r;
 	check_connection(self);
 	Py_BEGIN_ALLOW_THREADS
-	r = mysql_shutdown(&(self->connection)
-#if MYSQL_VERSION_ID >= 40103
-		, SHUTDOWN_DEFAULT
-#endif
-		);
+	r = mysql_shutdown(&(self->connection), SHUTDOWN_DEFAULT);
 	Py_END_ALLOW_THREADS
 	if (r) return _mysql_Exception(self);
 	Py_INCREF(Py_None);
@@ -2333,14 +2322,12 @@ static PyMethodDef _mysql_ConnectionObject_methods[] = {
 		METH_NOARGS,
 		_mysql_ConnectionObject_character_set_name__doc__
 	},
-#if MYSQL_VERSION_ID >= 50007
 	{
 		"set_character_set",
 		(PyCFunction)_mysql_ConnectionObject_set_character_set,
 		METH_VARARGS,
 		_mysql_ConnectionObject_set_character_set__doc__
 	},
-#endif
 #if MYSQL_VERSION_ID >= 50010
 	{
 		"get_character_set_info",
