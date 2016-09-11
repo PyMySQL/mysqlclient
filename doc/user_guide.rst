@@ -441,7 +441,7 @@ conv
 	is a function as above. The sequence is tested until the flags
 	on the field match those of the first value. If both values
 	are None, then the default conversion is done. Presently this
-	is only used to distinquish TEXT and BLOB columns.
+	is only used to distinguish TEXT and BLOB columns.
 
       If the key is a Python type or class, then the value is a
       callable Python object (usually a function) taking two arguments
@@ -615,7 +615,7 @@ Using and extending
 -------------------
 
 In general, it is probably wise to not directly interact with the DB
-API except for small applicatons. Databases, even SQL databases, vary
+API except for small applications. Databases, even SQL databases, vary
 widely in capabilities and may have non-standard features. The DB API
 does a good job of providing a reasonably portable interface but some
 methods are non-portable. Specifically, the parameters accepted by

@@ -20,7 +20,7 @@ threadsafe = False.
 
 This almost always mean you don't have development packages
 installed. On some systems, C headers for various things (like MySQL)
-are distributed as a seperate package. You'll need to figure out
+are distributed as a separate package. You'll need to figure out
 what that is and install it, but often the name ends with -devel.
 
 Another possibility: Some older versions of mysql_config behave oddly
