@@ -5,6 +5,33 @@ raises ProgrammingError.
 
 """
 
+if __name__ == "__main__":
+    """
+    Usage: python CR.py [/path/to/mysql/errmsg.h ...] >> CR.py
+    """
+    import fileinput, re
+    data = {}
+    error_last = None
+    for line in fileinput.input():
+        line = re.sub(r'/\*.*?\*/', '', line)
+        m = re.match(r'^\s*#define\s+CR_([A-Z0-9_]+)\s+(\d+)(\s.*|$)', line)
+        if m:
+            name = m.group(1)
+            value = int(m.group(2))
+            if name == 'ERROR_LAST':
+                if error_last is None or error_last < value:
+                    error_last = value
+                continue
+            if value not in data:
+                data[value] = set()
+            data[value].add(name)
+    for value, names in sorted(data.items()):
+        for name in sorted(names):
+            print('%s = %s' % (name, value))
+    if error_last is not None:
+        print('ERROR_LAST = %s' % error_last)
+
+
 MIN_ERROR = 2000
 MAX_ERROR = 2999
 UNKNOWN_ERROR = 2000

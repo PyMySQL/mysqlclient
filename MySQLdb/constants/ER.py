@@ -5,6 +5,35 @@ that may occur.
 
 """
 
+if __name__ == "__main__":
+    """
+    Usage: python ER.py [/path/to/mysql/mysqld_error.h ...] >> ER.py
+    """
+    import fileinput, re
+    data = {}
+    error_last = None
+    for line in fileinput.input():
+        line = re.sub(r'/\*.*?\*/', '', line)
+        m = re.match(r'^\s*#define\s+((ER|WARN)_[A-Z0-9_]+)\s+(\d+)\s*', line)
+        if m:
+            name = m.group(1)
+            if name.startswith('ER_'):
+                name = name[3:]
+            value = int(m.group(3))
+            if name == 'ERROR_LAST':
+                if error_last is None or error_last < value:
+                    error_last = value
+                continue
+            if value not in data:
+                data[value] = set()
+            data[value].add(name)
+    for value, names in sorted(data.items()):
+        for name in sorted(names):
+            print('%s = %s' % (name, value))
+    if error_last is not None:
+        print('ERROR_LAST = %s' % error_last)
+
+
 HASHCHK = 1000
 NISAMCHK = 1001
 NO = 1002
