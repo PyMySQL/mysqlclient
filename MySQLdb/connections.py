@@ -197,7 +197,7 @@ class Connection(_mysql.connection):
 
         db = proxy(self)
         def _get_string_literal():
-            # Note: string_literal() is called for bytes object on Python 3.
+            # Note: string_literal() is called for bytes object on Python 3 (via bytes_literal)
             def string_literal(obj, dummy=None):
                 return db.string_literal(obj)
             return string_literal
@@ -213,6 +213,11 @@ class Connection(_mysql.connection):
                     return db.literal(str(u).encode(unicode_literal.charset))
             return unicode_literal
 
+        def _get_bytes_literal():
+            def bytes_literal(obj, dummy=None):
+                return b'_binary' + db.string_literal(obj)
+            return bytes_literal
+
         def _get_string_decoder():
             def string_decoder(s):
                 return s.decode(string_decoder.charset)
@@ -220,6 +225,7 @@ class Connection(_mysql.connection):
 
         string_literal = _get_string_literal()
         self.unicode_literal = unicode_literal = _get_unicode_literal()
+        bytes_literal = _get_bytes_literal()
         self.string_decoder = string_decoder = _get_string_decoder()
         if not charset:
             charset = self.character_set_name()
@@ -234,7 +240,8 @@ class Connection(_mysql.connection):
             self.converter[FIELD_TYPE.VARCHAR].append((None, string_decoder))
             self.converter[FIELD_TYPE.BLOB].append((None, string_decoder))
 
-        self.encoders[bytes] = string_literal
+        self.encoders[bytes] = string_literal if PY2 else bytes_literal
+        self.encoders[bytearray] = bytes_literal
         self.encoders[unicode] = unicode_literal
         self._transactional = self.server_capabilities & CLIENT.TRANSACTIONS
         if self._transactional:
