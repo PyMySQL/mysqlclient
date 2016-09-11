@@ -4,7 +4,15 @@ python: "3.5"
 
 cache: pip
 install:
-    - pip install tox
+  - pip install tox
+
+matrix:
+  include:
+    - python: "nightly"
+      env:
+        - TOX_ENV=py36
+        - TESTDB=travis.cnf
+
 
 env:
   matrix:
@@ -17,11 +25,11 @@ env:
   global:
     - TESTDB=travis.cnf
 before_script:
-    - "mysql --help"
-    - "mysql --print-defaults"
-    - "mysql -e 'create database mysqldb_test charset utf8mb4;'"
+  - "mysql --help"
+  - "mysql --print-defaults"
+  - "mysql -e 'create database mysqldb_test charset utf8mb4;'"
 
 script: tox -e $TOX_ENV
 
 
-# vim: sw=4 ts=4 sts=4
+# vim: sw=2 ts=2 sts=2
