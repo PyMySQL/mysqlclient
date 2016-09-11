@@ -23,7 +23,7 @@ else:
 
 
 #: Regular expression for :meth:`Cursor.executemany`.
-#: executemany only suports simple bulk insert.
+#: executemany only supports simple bulk insert.
 #: You can use it to load large dataset.
 RE_INSERT_VALUES = re.compile(
     r"\s*((?:INSERT|REPLACE)\s.+\sVALUES?\s+)" +
@@ -475,7 +475,7 @@ class CursorUseResultMixIn(object):
     """This is a MixIn class which causes the result set to be stored
     in the server and sent row-by-row to client side, i.e. it uses
     mysql_use_result(). You MUST retrieve the entire result set and
-    close() the cursor before additional queries can be peformed on
+    close() the cursor before additional queries can be performed on
     the connection."""
 
     _defer_warnings = True

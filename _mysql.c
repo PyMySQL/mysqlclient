@@ -2508,7 +2508,7 @@ static struct PyMemberDef _mysql_ConnectionObject_memberlist[] = {
 		T_UINT,
 		offsetof(_mysql_ConnectionObject,connection.server_capabilities),
 		READONLY,
-		"Capabilites of server; consult MySQLdb.constants.CLIENT"
+		"Capabilities of server; consult MySQLdb.constants.CLIENT"
 	},
 	{
 		"port",
