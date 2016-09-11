@@ -1064,7 +1064,7 @@ _mysql_escape_string(
 	if (self && PyModule_Check((PyObject*)self))
 		self = NULL;
 	if (self && self->open) {
-#if MYSQL_VERSION_ID >= 50707
+#if MYSQL_VERSION_ID >= 50707 && !defined(MARIADB_BASE_VERSION)
 		len = mysql_real_escape_string_quote(&(self->connection), out, in, size, '\'');
 #else
 		len = mysql_real_escape_string(&(self->connection), out, in, size);
@@ -1122,7 +1122,7 @@ _mysql_string_literal(
 	out = PyBytes_AS_STRING(str);
 	check_server_init(NULL);
 	if (self && self->open) {
-#if MYSQL_VERSION_ID >= 50707
+#if MYSQL_VERSION_ID >= 50707 && !defined(MARIADB_BASE_VERSION)
 		len = mysql_real_escape_string_quote(&(self->connection), out+1, in, size, '\'');
 #else
 		len = mysql_real_escape_string(&(self->connection), out+1, in, size);
