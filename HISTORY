@@ -1,4 +1,28 @@
 =====================
+ What's new in 1.3.8
+=====================
+
+Update error constants (#113)
+
+Use _binary prefix for bytes/bytearray parameters (#106)
+
+Use mysql_real_escape_string_quote() if exists (#109)
+
+Better Warning propergation (#101)
+
+Fix conversion error when mysql_affected_rows returns -1
+
+Fix Cursor.callproc may raise TypeError (#90, #91)
+
+connect() support 'database' and 'password' keyword argument.
+
+Fix accessing to dungling pointer when using ssl (#78)
+
+Accept %% in Cursor.executemany (#83)
+
+Fix warning cause TypeError on Python 3 (#68)
+
+=====================
  What's new in 1.3.7
 =====================
 
