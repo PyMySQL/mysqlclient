@@ -521,7 +521,7 @@ _mysql_ConnectionObject_Initialize(
 #if HAVE_OPENSSL
 	char *key = NULL, *cert = NULL, *ca = NULL,
 		 *capath = NULL, *cipher = NULL;
-	PyObject *ssl_keepref[5] = {};
+	PyObject *ssl_keepref[5] = {NULL};
 	int n_ssl_keepref = 0;
 #endif
 	char *host = NULL, *user = NULL, *passwd = NULL,
