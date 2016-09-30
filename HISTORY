@@ -1,4 +1,13 @@
 =====================
+ What's new in 1.3.9
+=====================
+
+Revert adding _binary prefix for bytes/bytearray parameter. It broke backward compatibility.
+
+Fix Windows compile error on MSVC.
+
+
+=====================
  What's new in 1.3.8
 =====================
 
