@@ -206,11 +206,11 @@ class Connection(_mysql.connection):
             if PY2:
                 # unicode_literal is called for only unicode object.
                 def unicode_literal(u, dummy=None):
-                    return db.literal(u.encode(unicode_literal.charset))
+                    return db.string_literal(u.encode(unicode_literal.charset))
             else:
                 # unicode_literal() is called for arbitrary object.
                 def unicode_literal(u, dummy=None):
-                    return db.literal(str(u).encode(unicode_literal.charset))
+                    return db.string_literal(str(u).encode(unicode_literal.charset))
             return unicode_literal
 
         def _get_bytes_literal():
