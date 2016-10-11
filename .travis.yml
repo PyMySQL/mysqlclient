@@ -8,7 +8,7 @@ install:
 
 matrix:
   include:
-    - python: "nightly"
+    - python: "3.6-dev"
       env:
         - TOX_ENV=py36
         - TESTDB=travis.cnf
