@@ -149,10 +149,8 @@ class Connection(_mysql.connection):
 
 		# Load SSL arguments from the environment if provided.
 		# Anything passed locally overrides the environment.
-		# Skip this if the host is "localhost", as a TLS connection there
-		# does not make sense, whether it's via a TCP/IP or UNIX socket.
-		if (kwargs2.get("host", "localhost") != "localhost" and
-				kwargs2.get("ssl", True) is not None):
+		# Skip this if ssl is explicitly passed with a None value.
+		if kwargs2.get("ssl", True) is not None:
 			ssl_arg = {}
 			for conf_name in ("key", "cert", "ca", "capath", "cipher"):
 				try:
@@ -166,8 +164,15 @@ class Connection(_mysql.connection):
 				if value is not None:
 					ssl_arg[conf_name] = value
 			if ssl_arg:
-				kwargs["ssl"] = ssl_arg
-		
+				kwargs2["ssl"] = ssl_arg
+
+		# If the host is "localhost", a TLS connection there does not
+		# make sense, whether it's via a TCP/IP or UNIX socket. Make it
+		# easier for users by removing the SSL argument in that case.
+		if ("ssl" in kwargs2 and
+				kwargs2.get("host", "localhost") == "localhost"):
+			del kwargs["ssl"]
+						
         if 'database' in kwargs2:
             kwargs2['db'] = kwargs2.pop('database')
         if 'password' in kwargs2:
