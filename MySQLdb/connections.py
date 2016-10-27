@@ -145,13 +145,28 @@ class Connection(_mysql.connection):
         from MySQLdb.converters import conversions
         from weakref import proxy
 
-		# Load values from the environment if provided.
-		# Anything passed locally overrides the environment.
-		kwargs2 = {key.split("PY_MYSQL_CONNECT_", 1)[1].lower(): value
-		           for key, value in os.environ.items
-		           if key.startswith("PY_MYSQL_CONNECT_")}
-		kwargs2.update(kwargs)
+		kwargs2 = kwargs.copy()
 
+		# Load SSL arguments from the environment if provided.
+		# Anything passed locally overrides the environment.
+		# Skip this if the host is "localhost", as a TLS connection there
+		# does not make sense, whether it's via a TCP/IP or UNIX socket.
+		if kwargs2.get("host", "localhost") == "localhost":
+			ssl_arg = {}
+			for conf_name in ("key", "cert", "ca", "capath", "cipher"):
+				try:
+					value = kwargs2["ssl"][conf_name]
+				except KeyError:
+					env_key = "PY_MYSQL_SSL_%s" % conf_name.upper()
+					try:
+						value = os.environ[env_key]
+					except KeyError:
+						value = None
+				if value is not None:
+					ssl_arg[conf_name] = value
+			if ssl_arg:
+				kwargs["ssl"] = ssl_arg
+		
         if 'database' in kwargs2:
             kwargs2['db'] = kwargs2.pop('database')
         if 'password' in kwargs2:
