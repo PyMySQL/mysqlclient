@@ -151,7 +151,8 @@ class Connection(_mysql.connection):
 		# Anything passed locally overrides the environment.
 		# Skip this if the host is "localhost", as a TLS connection there
 		# does not make sense, whether it's via a TCP/IP or UNIX socket.
-		if kwargs2.get("host", "localhost") == "localhost":
+		if (kwargs2.get("host", "localhost") != "localhost" and
+				kwargs2.get("ssl", True) is not None):
 			ssl_arg = {}
 			for conf_name in ("key", "cert", "ca", "capath", "cipher"):
 				try:
