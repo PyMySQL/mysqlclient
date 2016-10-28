@@ -171,7 +171,7 @@ class Connection(_mysql.connection):
         # easier for users by removing the SSL argument in that case.
         if ("ssl" in kwargs2 and
                 kwargs2.get("host", "localhost") == "localhost"):
-            del kwargs["ssl"]
+            del kwargs2["ssl"]
 
         if 'database' in kwargs2:
             kwargs2['db'] = kwargs2.pop('database')
