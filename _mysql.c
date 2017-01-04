@@ -378,8 +378,8 @@ _mysql_ResultObject_Initialize(
 	int n, i;
 	MYSQL_FIELD *fields;
 
-	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O|iO", kwlist,
-					  &conn, &use, &conv))
+	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!|iO", kwlist,
+					 &_mysql_ConnectionObject_Type, &conn, &use, &conv))
 		return -1;
 	if (!conv) {
 		if (!(conv = PyDict_New()))
