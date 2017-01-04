@@ -51,11 +51,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "errmsg.h"
 
 #define MyAlloc(s,t) (s *) t.tp_alloc(&t,0)
-#ifdef IS_PY3K
-# define MyFree(o) Py_TYPE(o)->tp_free((PyObject*)o)
-#else
-# define MyFree(ob) ob->ob_type->tp_free((PyObject *)ob)
-#endif
+#define MyFree(o) Py_TYPE(o)->tp_free((PyObject*)o)
 
 static PyObject *_mysql_MySQLError;
 static PyObject *_mysql_Warning;
@@ -2643,12 +2639,7 @@ _mysql_ResultObject_setattro(
 }
 
 PyTypeObject _mysql_ConnectionObject_Type = {
-#ifdef IS_PY3K
     PyVarObject_HEAD_INIT(NULL, 0)
-#else
-	PyObject_HEAD_INIT(NULL)
-	0,
-#endif
 	"_mysql.connection", /* (char *)tp_name For printing */
 	sizeof(_mysql_ConnectionObject),
 	0,
@@ -2715,12 +2706,7 @@ PyTypeObject _mysql_ConnectionObject_Type = {
 } ;
 
 PyTypeObject _mysql_ResultObject_Type = {
-#ifdef IS_PY3K
     PyVarObject_HEAD_INIT(NULL, 0)
-#else
-	PyObject_HEAD_INIT(NULL)
-	0,
-#endif
 	"_mysql.result",
 	sizeof(_mysql_ResultObject),
 	0,
