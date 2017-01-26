@@ -25,6 +25,7 @@ On Windows, there are binary wheel you can install without MySQLConnector/C or M
 
 `sudo yum install python3-devel `  # Red Hat / CentOS
 
+`brew install mysql-connector-c`  # macOS (Homebrew)
 
 ### Install from PyPI
 
