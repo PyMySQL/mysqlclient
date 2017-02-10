@@ -2,10 +2,12 @@
 # -*- coding: utf-8 -*-
 import capabilities
 from datetime import timedelta
+from contextlib import closing
 import unittest
 import MySQLdb
 from MySQLdb.compat import unicode
 from MySQLdb import cursors
+from configdb import connection_factory
 import warnings
 
 
@@ -179,6 +181,23 @@ class test_MySQLdb(capabilities.DatabaseTest):
                     self.fail("Should raise Warning")
                 finally:
                     c.close()
+
+    def test_binary_prefix(self):
+        # verify prefix behaviour when enabled, disabled and for default (disabled)
+        for binary_prefix in (True, False, None):
+            kwargs = self.connect_kwargs.copy()
+            # needs to be set to can guarantee CHARSET response for normal strings
+            kwargs['charset'] = 'utf8'
+            if binary_prefix != None:
+                kwargs['binary_prefix'] = binary_prefix
+
+            with closing(connection_factory(**kwargs)) as conn:
+                with closing(conn.cursor()) as c:
+                    c.execute('SELECT CHARSET(%s)', (MySQLdb.Binary(b'raw bytes'),))
+                    self.assertEqual(c.fetchall()[0][0], 'binary' if binary_prefix else 'utf8')
+                    # normal strings should not get prefix
+                    c.execute('SELECT CHARSET(%s)', ('str',))
+                    self.assertEqual(c.fetchall()[0][0], 'utf8')
 
 
 if __name__ == '__main__':
