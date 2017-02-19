@@ -1,35 +1,33 @@
 sudo: false
+dist: trusty
 language: python
-python: "3.5"
+python:
+  - "nightly"
+  - "pypy-5.3.1"
+  - "3.6-dev"
+  - "3.6"
+  - "3.5"
+  - "3.4"
+  - "2.7"
 
 cache: pip
+
 install:
-  - pip install tox
-
-matrix:
-  include:
-    - python: "3.6-dev"
-      env:
-        - TOX_ENV=py36
-        - TESTDB=travis.cnf
-
+  - pip install -U pip
+  - pip install -U mock coverage pytest pytest-cov
 
 env:
-  matrix:
-    - TOX_ENV=py26
-    - TOX_ENV=py27
-    - TOX_ENV=pypy
-    - TOX_ENV=py33
-    - TOX_ENV=py34
-    - TOX_ENV=py35
   global:
     - TESTDB=travis.cnf
+
 before_script:
   - "mysql --help"
   - "mysql --print-defaults"
   - "mysql -e 'create database mysqldb_test charset utf8mb4;'"
 
-script: tox -e $TOX_ENV
+script:
+  - pip install -e .
+  - py.test --cov ./MySQLdb
 
 
 # vim: sw=2 ts=2 sts=2
