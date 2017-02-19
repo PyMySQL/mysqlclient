@@ -12,6 +12,9 @@ python:
 
 cache: pip
 
+services:
+  - mysql
+
 install:
   - pip install -U pip
   - pip install -U mock coverage pytest pytest-cov
