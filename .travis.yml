@@ -17,7 +17,7 @@ services:
 
 install:
   - pip install -U pip
-  - pip install -U mock coverage pytest pytest-cov
+  - pip install -U mock coverage pytest pytest-cov codecov
 
 env:
   global:
@@ -31,6 +31,9 @@ before_script:
 script:
   - pip install -e .
   - py.test --cov ./MySQLdb
+
+after_succes:
+  - codecov
 
 
 # vim: sw=2 ts=2 sts=2
