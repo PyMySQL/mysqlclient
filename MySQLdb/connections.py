@@ -265,12 +265,10 @@ class Connection(_mysql.connection):
 
     def cursor(self, cursorclass=None):
         """
-
         Create a cursor on which queries may be performed. The
         optional cursorclass parameter is used to create the
         Cursor. By default, self.cursorclass=cursors.Cursor is
         used.
-
         """
         return (cursorclass or self.cursorclass)(self)
 
@@ -286,6 +284,9 @@ class Connection(_mysql.connection):
             _mysql.connection.query(self, query)
 
     def __enter__(self):
+        from warnings import warn
+        warn("context interface will be changed.  Use explicit conn.commit() or conn.rollback().",
+             DeprecationWarning, 2)
         if self.get_autocommit():
             self.query("BEGIN")
         return self.cursor()
@@ -319,7 +320,7 @@ class Connection(_mysql.connection):
         DEPRECATED: Will be removed in 1.3.
         Use an SQL BEGIN statement instead."""
         from warnings import warn
-        warn("begin() is non-standard and will be removed in 1.3",
+        warn("begin() is non-standard and will be removed in 1.4",
              DeprecationWarning, 2)
         self.query("BEGIN")
 
@@ -386,3 +387,5 @@ class Connection(_mysql.connection):
     NotSupportedError = NotSupportedError
 
     errorhandler = defaulterrorhandler
+
+# vim: colorcolumn=100
