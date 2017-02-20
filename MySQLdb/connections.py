@@ -4,21 +4,29 @@ only one class: Connection. Others are unlikely. However, you might
 want to make your own subclasses. In most cases, you will probably
 override Connection.default_cursor with a non-standard Cursor class.
 """
+import re
+import sys
+
 from MySQLdb import cursors
 from MySQLdb.compat import unicode, PY2
-from _mysql_exceptions import Warning, Error, InterfaceError, DataError, \
-     DatabaseError, OperationalError, IntegrityError, InternalError, \
-     NotSupportedError, ProgrammingError
+from _mysql_exceptions import (
+    Warning, Error, InterfaceError, DataError,
+    DatabaseError, OperationalError, IntegrityError, InternalError,
+    NotSupportedError, ProgrammingError,
+)
 import _mysql
-import re
 
 
 if not PY2:
-    # See http://bugs.python.org/issue24870
-    _surrogateescape_table = [chr(i) if i < 0x80 else chr(i + 0xdc00) for i in range(256)]
+    if sys.version_info[:2] < (3, 6):
+        # See http://bugs.python.org/issue24870
+        _surrogateescape_table = [chr(i) if i < 0x80 else chr(i + 0xdc00) for i in range(256)]
 
-    def _fast_surroundescape(s):
-        return s.decode('latin1').translate(_surrogateescape_table)
+        def _fast_surrogateescape(s):
+            return s.decode('latin1').translate(_surrogateescape_table)
+    else:
+        def _fast_surrogateescape(s):
+            return s.decode('ascii', 'surrogateescape')
 
 
 def defaulterrorhandler(connection, cursor, errorclass, errorvalue):
@@ -312,7 +320,7 @@ class Connection(_mysql.connection):
         # bytes to unicode and back again.
         # See http://python.org/dev/peps/pep-0383/
         if not PY2 and isinstance(s, (bytes, bytearray)):
-            return _fast_surroundescape(s)
+            return _fast_surrogateescape(s)
         return s
 
     def begin(self):
