@@ -53,7 +53,7 @@ def Str2Set(s):
     return set([ i for i in s.split(',') if i ])
 
 def Set2Str(s, d):
-    ### broken!!!
+    # Only support ascii string.  Not tested.
     return string_literal(','.join(s), d)
 
 def Thing2Str(s, d):
@@ -104,6 +104,7 @@ conversions = {
     DateTimeType: DateTime2literal,
     DateTimeDeltaType: DateTimeDelta2literal,
     str: Thing2Literal,  # default
+    set: Set2Str,
     FIELD_TYPE.TINY: int,
     FIELD_TYPE.SHORT: int,
     FIELD_TYPE.LONG: long,
