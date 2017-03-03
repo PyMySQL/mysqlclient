@@ -53,6 +53,7 @@ def Str2Set(s):
     return set([ i for i in s.split(',') if i ])
 
 def Set2Str(s, d):
+    ### broken!!!
     return string_literal(','.join(s), d)
 
 def Thing2Str(s, d):
@@ -99,14 +100,14 @@ conversions = {
     NoneType: None2NULL,
     tuple: quote_tuple,
     list: quote_tuple,
-    dict: escape_dict,
+    dict: escape_dict,  # broken!!!
     ArrayType: array2Str,
     bool: Bool2Str,
     Date: Thing2Literal,
     DateTimeType: DateTime2literal,
     DateTimeDeltaType: DateTimeDelta2literal,
     str: Thing2Literal,  # default
-    set: Set2Str,
+    set: Set2Str,   # broken!!!
     FIELD_TYPE.TINY: int,
     FIELD_TYPE.SHORT: int,
     FIELD_TYPE.LONG: long,

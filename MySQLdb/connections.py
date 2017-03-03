@@ -305,6 +305,13 @@ class Connection(_mysql.connection):
         else:
             self.commit()
 
+    def _bytes_literal(self, bs):
+        assert isinstance(bs, (bytes, bytearray))
+        x = self.string_literal(bs)  # x is escaped and quoted bytes
+        if self._binary_prefix:
+            return b'_binary' + x
+        return x
+
     def literal(self, o):
         """If o is a single object, returns an SQL literal as a string.
         If o is a non-string sequence, the items of the sequence are
