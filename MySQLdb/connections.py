@@ -186,7 +186,7 @@ class Connection(_mysql.connection):
 
         use_unicode = kwargs2.pop('use_unicode', use_unicode)
         sql_mode = kwargs2.pop('sql_mode', '')
-        binary_prefix = kwargs2.pop('binary_prefix', False)
+        self._binary_prefix = kwargs2.pop('binary_prefix', False)
 
         client_flag = kwargs.get('client_flag', 0)
         client_version = tuple([ numeric_part(n) for n in _mysql.get_client_info().split('.')[:2] ])
@@ -253,12 +253,7 @@ class Connection(_mysql.connection):
             self.converter[FIELD_TYPE.VARCHAR].append((None, string_decoder))
             self.converter[FIELD_TYPE.BLOB].append((None, string_decoder))
 
-        if binary_prefix:
-            self.encoders[bytes] = string_literal if PY2 else bytes_literal
-            self.encoders[bytearray] = bytes_literal
-        else:
-            self.encoders[bytes] = string_literal
-
+        self.encoders[bytes] = string_literal
         self.encoders[unicode] = unicode_literal
         self._transactional = self.server_capabilities & CLIENT.TRANSACTIONS
         if self._transactional:
@@ -320,7 +315,10 @@ class Connection(_mysql.connection):
         Non-standard. For internal use; do not use this in your
         applications.
         """
-        s = self.escape(o, self.encoders)
+        if isinstance(o, (bytes, bytearray)):
+            s = self._bytes_literal(o)
+        else:
+            s = self.escape(o, self.encoders)
         # Python 3(~3.4) doesn't support % operation for bytes object.
         # We should decode it before using %.
         # Decoding with ascii and surrogateescape allows convert arbitrary
