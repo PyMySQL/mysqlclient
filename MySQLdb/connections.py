@@ -307,6 +307,9 @@ class Connection(_mysql.connection):
             return b'_binary' + x
         return x
 
+    def _tuple_literal(self, t, d):
+        return "(%s)" % (','.join(map(self.literal, t)))
+
     def literal(self, o):
         """If o is a single object, returns an SQL literal as a string.
         If o is a non-string sequence, the items of the sequence are
@@ -317,6 +320,8 @@ class Connection(_mysql.connection):
         """
         if isinstance(o, (bytes, bytearray)):
             s = self._bytes_literal(o)
+        elif isinstance(o, (tuple, list)):
+            s = self._tuple_literal(o)
         else:
             s = self.escape(o, self.encoders)
         # Python 3(~3.4) doesn't support % operation for bytes object.

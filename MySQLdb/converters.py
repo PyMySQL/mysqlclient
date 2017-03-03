@@ -32,7 +32,7 @@ MySQL.connect().
 
 """
 
-from _mysql import string_literal, escape_sequence, escape_dict, escape, NULL
+from _mysql import string_literal, escape, NULL
 from MySQLdb.constants import FIELD_TYPE, FLAG
 from MySQLdb.times import *
 from MySQLdb.compat import PY2, long
@@ -98,16 +98,12 @@ conversions = {
     long: Thing2Str,
     float: Float2Str,
     NoneType: None2NULL,
-    tuple: quote_tuple,
-    list: quote_tuple,
-    dict: escape_dict,  # broken!!!
     ArrayType: array2Str,
     bool: Bool2Str,
     Date: Thing2Literal,
     DateTimeType: DateTime2literal,
     DateTimeDeltaType: DateTimeDelta2literal,
     str: Thing2Literal,  # default
-    set: Set2Str,   # broken!!!
     FIELD_TYPE.TINY: int,
     FIELD_TYPE.SHORT: int,
     FIELD_TYPE.LONG: long,
