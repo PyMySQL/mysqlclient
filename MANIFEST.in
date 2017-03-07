@@ -5,7 +5,7 @@ include MANIFEST.in
 include HISTORY.md
 include INSTALL.rst
 include README.md
-include GPL-2.0
+include LICENSE
 include metadata.cfg
 include site.cfg
 include setup_common.py
