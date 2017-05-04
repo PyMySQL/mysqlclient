@@ -44,6 +44,9 @@ PERFORMANCE OF THIS SOFTWARE.
 #define PyInt_Check(n) PyLong_Check(n)
 #define PyInt_AS_LONG(n) PyLong_AS_LONG(n)
 #define PyString_FromString(s) PyUnicode_FromString(s)
+#if (PY_VERSION_HEX < 0x03030000)
+#define PyUnicode_AsUTF8(x) PyBytes_AsString(PyUnicode_AsUTF8String(x))
+#endif
 #endif
 
 #include "bytesobject.h"
