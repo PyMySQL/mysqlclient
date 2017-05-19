@@ -1,4 +1,5 @@
-import os, sys
+import os
+import sys
 try:
     from ConfigParser import SafeConfigParser
 except ImportError:
@@ -8,10 +9,12 @@ except ImportError:
 # This dequote() business is required for some older versions
 # of mysql_config
 
+
 def dequote(s):
     if s[0] in "\"'" and s[0] == s[-1]:
         s = s[1:-1]
     return s
+
 
 def mysql_config(what):
     from os import popen
@@ -27,8 +30,10 @@ def mysql_config(what):
     return data
 mysql_config.path = "mysql_config"
 
+
 def get_config():
-    from setup_common import get_metadata_and_options, enabled, create_release_file
+    from setup_common import get_metadata_and_options, enabled,\
+                                create_release_file
 
     metadata, options = get_metadata_and_options()
 
@@ -50,8 +55,12 @@ def get_config():
         libs = mysql_config("libs")
         client = "mysqlclient"
 
-    library_dirs = [dequote(i[2:]) for i in libs if i.startswith('-L')]
-    libraries = [dequote(i[2:]) for i in libs if i.startswith('-l')]
+    library_dirs = [dequote(i[2:]) for i in libs
+                    if i.startswith('-L') and len(i) > 2]
+    libraries = [dequote(i[2:]) for i in libs
+                 if i.startswith('-l') and len(i) > 2]
+    if 'mysqlclient' not in libraries:
+        libraries.append('mysqlclient')
     extra_link_args = [x for x in libs if not x.startswith(('-l', '-L'))]
 
     removable_compile_args = ('-I', '-L', '-l')
@@ -83,14 +92,14 @@ def get_config():
     create_release_file(metadata)
     del metadata['version_info']
     ext_options = dict(
-        name = "_mysql",
-        library_dirs = library_dirs,
-        libraries = libraries,
-        extra_compile_args = extra_compile_args,
-        extra_link_args = extra_link_args,
-        include_dirs = include_dirs,
-        extra_objects = extra_objects,
-        define_macros = define_macros,
+        name="_mysql",
+        library_dirs=library_dirs,
+        libraries=libraries,
+        extra_compile_args=extra_compile_args,
+        extra_link_args=extra_link_args,
+        include_dirs=include_dirs,
+        extra_objects=extra_objects,
+        define_macros=define_macros,
         )
     return metadata, ext_options
 
