@@ -27,6 +27,21 @@ def mysql_config(what):
     return data
 mysql_config.path = "mysql_config"
 
+
+def _find_client_from_libs(libs):
+    for lib in libs:
+        if lib.startswith('-l') and lib.endswith('client'):
+            return lib[2:]
+
+
+def _find_static_lib(library_dirs, libname):
+    for lib_dir in library_dirs:
+        full_path = os.path.join(lib_dir, libname)
+        if os.path.exists(full_path):
+            return full_path
+    return full_path
+
+
 def get_config():
     from setup_common import get_metadata_and_options, enabled, create_release_file
 
@@ -40,17 +55,16 @@ def get_config():
     if enabled(options, 'embedded'):
         libs = mysql_config("libmysqld-libs")
         client = "mysqld"
-    elif enabled(options, 'threadsafe'):
-        libs = mysql_config("libs_r")
-        client = "mysqlclient_r"
+    else:
+        libs = None
+        if enabled(options, 'threadsafe'):
+            libs = mysql_config("libs_r")
         if not libs:
             libs = mysql_config("libs")
-            client = "mysqlclient"
-    else:
-        libs = mysql_config("libs")
-        client = "mysqlclient"
+        client = _find_client_from_libs(libs)
 
     library_dirs = [dequote(i[2:]) for i in libs if i.startswith('-L')]
+    library_dirs.append(library_dirs[0] + "/mysql")
     libraries = [dequote(i[2:]) for i in libs if i.startswith('-l')]
     extra_link_args = [x for x in libs if not x.startswith(('-l', '-L'))]
 
@@ -67,7 +81,8 @@ def get_config():
                     for i in mysql_config('include') if i.startswith('-I')]
 
     if static:
-        extra_objects.append(os.path.join(library_dirs[0], 'lib%s.a' % client))
+        extra_objects.append(
+            _find_static_lib(library_dirs, 'lib%s.a' % client))
         if client in libraries:
             libraries.remove(client)
 
