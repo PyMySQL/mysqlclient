@@ -49,6 +49,10 @@ def test_executemany():
     assert m is not None, 'error parse %(id_name)s'
     assert m.group(3) == ' ON duplicate update', 'group 3 not ON duplicate update, bug in RE_INSERT_VALUES?'
 
+    # Trailing comment
+    m = MySQLdb.cursors.RE_INSERT_VALUES.match("INSERT INTO TEST (ID, NAME) VALUES (%s, %s)    /* this is a simple comment */ ")
+    assert m is not None, 'error parse %s'
+
     # cursor._executed myst bee "insert into test (data) values (0),(1),(2),(3),(4),(5),(6),(7),(8),(9)"
     # list args
     data = range(10)
