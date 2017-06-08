@@ -531,6 +531,7 @@ _mysql_ConnectionObject_Initialize(
 				  "read_default_file", "read_default_group",
 				  "client_flag", "ssl",
 				  "local_infile",
+				  "secure_auth",
 #ifdef HAVE_MYSQL_OPT_TIMEOUTS
 				  "read_timeout",
 				  "write_timeout",
@@ -541,7 +542,7 @@ _mysql_ConnectionObject_Initialize(
 	int read_timeout = 0;
 	int write_timeout = 0;
 #endif
-	int compress = -1, named_pipe = -1, local_infile = -1;
+	int compress = -1, named_pipe = -1, local_infile = -1, secure_auth = -1;
 	char *init_command=NULL,
 	     *read_default_file=NULL,
 	     *read_default_group=NULL;
@@ -549,6 +550,8 @@ _mysql_ConnectionObject_Initialize(
 	self->converter = NULL;
 	self->open = 0;
 	check_server_init(-1);
+
+	my_bool opt_secure_auth = -1;
 
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs,
 #ifdef HAVE_MYSQL_OPT_TIMEOUTS
@@ -564,7 +567,8 @@ _mysql_ConnectionObject_Initialize(
 					 &init_command, &read_default_file,
 					 &read_default_group,
 					 &client_flag, &ssl,
-                     &local_infile
+					 &local_infile,
+					 &secure_auth
 #ifdef HAVE_MYSQL_OPT_TIMEOUTS
                      , &read_timeout
                      , &write_timeout
@@ -631,6 +635,11 @@ _mysql_ConnectionObject_Initialize(
 
 	if (local_infile != -1)
 		mysql_options(&(self->connection), MYSQL_OPT_LOCAL_INFILE, (char *) &local_infile);
+
+	if (secure_auth != -1) {
+		opt_secure_auth = secure_auth;
+		mysql_options(&(self->connection), MYSQL_SECURE_AUTH, (char *) &opt_secure_auth);
+	}
 
 #if HAVE_OPENSSL
 	if (ssl) {

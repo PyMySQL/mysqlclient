@@ -140,6 +140,11 @@ class Connection(_mysql.connection):
         :param bool local_infile:
             enables LOAD LOCAL INFILE; zero disables
 
+        :param bool secure_auth:
+            If False, secure_auth is disabled.
+            If True, secure_auth is enabled.
+            If None, secure_auth isn't set and server default is used.
+
         :param bool autocommit:
             If False (default), autocommit is disabled.
             If True, autocommit is enabled.
