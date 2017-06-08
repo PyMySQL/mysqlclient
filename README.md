@@ -1,6 +1,6 @@
 # mysqlclient
 
-[![Build Status](https://secure.travis-ci.org/PyMySQL/mysqlclient-python.png)](http://travis-ci.org/PyMySQL/mysqlclient-python)
+[![Build Status](https://travis-ci.org/lyqscmy/mysqlclient-python.svg?branch=master)](https://travis-ci.org/lyqscmy/mysqlclient-python)
 
 This is a fork of [MySQLdb1](https://github.com/farcepest/MySQLdb1).
 

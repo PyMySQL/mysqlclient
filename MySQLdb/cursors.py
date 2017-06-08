@@ -54,6 +54,7 @@ class BaseCursor(object):
     #: Max size of allowed statement is max_allowed_packet - packet_header_size.
     #: Default value of max_allowed_packet is 1048576.
     max_stmt_length = 64*1024
+    _query_literal = ""
 
     from _mysql_exceptions import MySQLError, Warning, Error, InterfaceError, \
          DatabaseError, DataError, OperationalError, IntegrityError, \
@@ -201,6 +202,10 @@ class BaseCursor(object):
             raise ProgrammingError("cursor closed")
         return con
 
+    @property
+    def query(self):
+        return self._query_literal
+
     def execute(self, query, args=None):
         """Execute a query.
 
@@ -241,6 +246,8 @@ class BaseCursor(object):
 
         if isinstance(query, unicode):
             query = query.encode(db.unicode_literal.charset, 'surrogateescape')
+        
+        self._query_literal = query
 
         res = None
         try:
