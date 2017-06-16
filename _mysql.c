@@ -495,13 +495,10 @@ static int _mysql_ResultObject_traverse(
 	return 0;
 }
 
-static int _mysql_ResultObject_clear(
-	_mysql_ResultObject *self)
+static int _mysql_ResultObject_clear(_mysql_ResultObject *self)
 {
-	Py_XDECREF(self->converter);
-	self->converter = NULL;
-	Py_XDECREF(self->conn);
-	self->conn = NULL;
+	Py_CLEAR(self->converter);
+	Py_CLEAR(self->conn);
 	return 0;
 }
 
@@ -796,8 +793,7 @@ _mysql_ConnectionObject_close(
 		return NULL;
 	}
 	_mysql_ConnectionObject_clear(self);
-	Py_INCREF(Py_None);
-	return Py_None;
+	Py_RETURN_NONE;
 }
 
 static char _mysql_ConnectionObject_affected_rows__doc__ [] =
@@ -2159,6 +2155,7 @@ _mysql_ConnectionObject_dealloc(
 		mysql_close(&(self->connection));
 		self->open = 0;
 	}
+	Py_CLEAR(self->converter);
 	MyFree(self);
 }
 
