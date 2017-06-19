@@ -522,6 +522,58 @@ class CursorUseResultMixIn(object):
     __next__ = next
 
 
+class CursorChunkFetchMixIn(CursorUseResultMixIn):
+    """This is a MixIn class which causes the result set to be
+    stored on the server side, but fetched in chunks of more than
+    one row at a time. The size of a chunk is equal to cursor.arraysize."""
+
+    @property
+    def cache(self):
+        """The cache is a deque, created if missing."""
+        try:
+            return self._cache
+        except AttributeError:
+            self._cache = deque()
+            return self._cache
+
+    @cache.setter
+    def cache(self, value):
+        self._cache = value
+
+    def fetchone(self):
+        """Returns a row from the cursor's cache. If the cache is empty,
+        fetches a new chunk and returns the first row. None indicates
+        that no more rows are available."""
+        self._check_executed()
+        if not self.cache:
+            if self.rownumber >= len(self._rows):
+                return None
+            chunk = super().fetchmany()
+            if not chunk:
+                self._warning_check()
+                return None
+            self.cache.extend(chunk)
+        return self.cache.popleft()
+
+    def fetchmany(self, size=None):
+        """Return up to size rows from the cursor's cache. If the cache is empty,
+        fetches up to size rows from cursor. Result set may be smaller
+        than size. If size is not defined, cursor.arraysize is used."""
+        self._check_executed()
+        if not self.cache:
+            return super().fetchmany(size)
+        return tuple(
+            self.cache.popleft()
+            for _ in range(min(size, len(self.cache)))
+        )
+
+    def fetchall(self):
+        """Fetch all available rows from cursor, append them to the cache,
+        and return the lot."""
+        self._check_executed()
+        return tuple(self.cache.extend(super().fetchall()))
+
+
 class CursorTupleRowsMixIn(object):
     """This is a MixIn class that causes all rows to be returned as tuples,
     which is the standard form required by DB API."""
@@ -590,5 +642,19 @@ class SSDictCursor(CursorUseResultMixIn, CursorDictRowsMixIn,
                    BaseCursor):
     """This is a Cursor class that returns rows as dictionaries and
     stores the result set in the server."""
+
+
+class ChunkingSSCursor(CursorChunkFetchMixIn, CursorTupleRowsMixIn,
+                       BaseCursor):
+    """This is a Cursor class that returns rows as tuples,
+    stores the result set in the server, and fetches
+    in chunks (cached locally) for fetchone()."""
+
+
+class ChunkingSSDictCursor(CursorChunkFetchMixIn, CursorDictRowsMixIn,
+                           BaseCursor):
+    """This is a Cursor class that returns rows as dictionaries,
+    stores the result set in the server, and fetches
+    in chunks (cached locally) even for fetchone()."""
 
 
