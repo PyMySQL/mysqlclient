@@ -4,6 +4,7 @@ This module implements Cursors of various types for MySQLdb. By
 default, MySQLdb uses the Cursor class.
 """
 from __future__ import print_function, absolute_import
+from collections import deque
 from functools import partial
 import re
 import sys
@@ -546,11 +547,8 @@ class CursorChunkFetchMixIn(CursorUseResultMixIn):
         that no more rows are available."""
         self._check_executed()
         if not self.store:
-            if self.rownumber >= len(self._rows):
-                return None
             chunk = super().fetchmany()
             if not chunk:
-                self._warning_check()
                 return None
             self.store.extend(chunk)
         return self.store.popleft()
