@@ -528,50 +528,50 @@ class CursorChunkFetchMixIn(CursorUseResultMixIn):
     one row at a time. The size of a chunk is equal to cursor.arraysize."""
 
     @property
-    def cache(self):
-        """The cache is a deque, created if missing."""
+    def store(self):
+        """The store is a deque, created if missing."""
         try:
-            return self._cache
+            return self._store
         except AttributeError:
-            self._cache = deque()
-            return self._cache
+            self._store = deque()
+            return self._store
 
-    @cache.setter
-    def cache(self, value):
-        self._cache = value
+    @store.setter
+    def store(self, value):
+        self._store = value
 
     def fetchone(self):
-        """Returns a row from the cursor's cache. If the cache is empty,
+        """Returns a row from the cursor's store. If the store is empty,
         fetches a new chunk and returns the first row. None indicates
         that no more rows are available."""
         self._check_executed()
-        if not self.cache:
+        if not self.store:
             if self.rownumber >= len(self._rows):
                 return None
             chunk = super().fetchmany()
             if not chunk:
                 self._warning_check()
                 return None
-            self.cache.extend(chunk)
-        return self.cache.popleft()
+            self.store.extend(chunk)
+        return self.store.popleft()
 
     def fetchmany(self, size=None):
-        """Return up to size rows from the cursor's cache. If the cache is empty,
+        """Return up to size rows from the cursor's store. If the store is empty,
         fetches up to size rows from cursor. Result set may be smaller
         than size. If size is not defined, cursor.arraysize is used."""
         self._check_executed()
-        if not self.cache:
+        if not self.store:
             return super().fetchmany(size)
         return tuple(
-            self.cache.popleft()
-            for _ in range(min(size, len(self.cache)))
+            self.store.popleft()
+            for _ in range(min(size, len(self.store)))
         )
 
     def fetchall(self):
-        """Fetch all available rows from cursor, append them to the cache,
+        """Fetch all available rows from cursor, append them to the store,
         and return the lot."""
         self._check_executed()
-        return tuple(self.cache.extend(super().fetchall()))
+        return tuple(self.store.extend(super().fetchall()))
 
 
 class CursorTupleRowsMixIn(object):
@@ -648,13 +648,13 @@ class ChunkingSSCursor(CursorChunkFetchMixIn, CursorTupleRowsMixIn,
                        BaseCursor):
     """This is a Cursor class that returns rows as tuples,
     stores the result set in the server, and fetches
-    in chunks (cached locally) for fetchone()."""
+    in chunks (stored locally) for fetchone()."""
 
 
 class ChunkingSSDictCursor(CursorChunkFetchMixIn, CursorDictRowsMixIn,
                            BaseCursor):
     """This is a Cursor class that returns rows as dictionaries,
     stores the result set in the server, and fetches
-    in chunks (cached locally) even for fetchone()."""
+    in chunks (stored locally) even for fetchone()."""
 
 
