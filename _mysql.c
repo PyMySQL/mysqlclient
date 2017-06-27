@@ -119,16 +119,7 @@ _mysql_Exception(_mysql_ConnectionObject *c)
 		return NULL;
 	}
 	merr = mysql_errno(&(c->connection));
-	if (!merr)
-		e = _mysql_InterfaceError;
-	else if (merr > CR_MAX_ERROR) {
-		PyTuple_SET_ITEM(t, 0, PyInt_FromLong(-1L));
-		PyTuple_SET_ITEM(t, 1, PyString_FromString("error totally whack"));
-		PyErr_SetObject(_mysql_InterfaceError, t);
-		Py_DECREF(t);
-		return NULL;
-	}
-	else switch (merr) {
+	switch (merr) {
 	case CR_COMMANDS_OUT_OF_SYNC:
 	case ER_DB_CREATE_EXISTS:
 	case ER_SYNTAX_ERROR:
