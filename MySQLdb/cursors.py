@@ -4,6 +4,7 @@ This module implements Cursors of various types for MySQLdb. By
 default, MySQLdb uses the Cursor class.
 """
 from __future__ import print_function, absolute_import
+from collections import deque
 from functools import partial
 import re
 import sys
@@ -522,6 +523,56 @@ class CursorUseResultMixIn(object):
     __next__ = next
 
 
+class CursorChunkFetchMixIn(CursorUseResultMixIn):
+    """This is a MixIn class which causes the result set to be
+    stored on the server side, but fetched in chunks of more than
+    one row at a time. The size of a chunk is equal to cursor.arraysize."""
+
+    @property
+    def store(self):
+        """The store is a deque, created if missing."""
+        try:
+            return self._store
+        except AttributeError:
+            self._store = deque()
+            return self._store
+
+    @store.setter
+    def store(self, value):
+        self._store = value
+
+    def fetchone(self):
+        """Returns a row from the cursor's store. If the store is empty,
+        fetches a new chunk and returns the first row. None indicates
+        that no more rows are available."""
+        self._check_executed()
+        if not self.store:
+            chunk = super().fetchmany()
+            if not chunk:
+                return None
+            self.store.extend(chunk)
+        return self.store.popleft()
+
+    def fetchmany(self, size=None):
+        """Return up to size rows from the cursor's store. If the store is empty,
+        fetches up to size rows from cursor. Result set may be smaller
+        than size. If size is not defined, cursor.arraysize is used."""
+        self._check_executed()
+        if not self.store:
+            return super().fetchmany(size)
+        return tuple(
+            self.store.popleft()
+            for _ in range(min(size, len(self.store)))
+        )
+
+    def fetchall(self):
+        """Fetch all available rows from cursor, append them to the store,
+        and return the lot."""
+        self._check_executed()
+        self.store.extend(super().fetchall())
+        return tuple(self.store)
+
+
 class CursorTupleRowsMixIn(object):
     """This is a MixIn class that causes all rows to be returned as tuples,
     which is the standard form required by DB API."""
@@ -590,5 +641,19 @@ class SSDictCursor(CursorUseResultMixIn, CursorDictRowsMixIn,
                    BaseCursor):
     """This is a Cursor class that returns rows as dictionaries and
     stores the result set in the server."""
+
+
+class ChunkingSSCursor(CursorChunkFetchMixIn, CursorTupleRowsMixIn,
+                       BaseCursor):
+    """This is a Cursor class that returns rows as tuples,
+    stores the result set in the server, and fetches
+    in chunks (stored locally) for fetchone()."""
+
+
+class ChunkingSSDictCursor(CursorChunkFetchMixIn, CursorDictRowsMixIn,
+                           BaseCursor):
+    """This is a Cursor class that returns rows as dictionaries,
+    stores the result set in the server, and fetches
+    in chunks (stored locally) even for fetchone()."""
 
 
