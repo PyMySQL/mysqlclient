@@ -569,7 +569,8 @@ class CursorChunkFetchMixIn(CursorUseResultMixIn):
         """Fetch all available rows from cursor, append them to the store,
         and return the lot."""
         self._check_executed()
-        return tuple(self.store.extend(super().fetchall()))
+        self.store.extend(super().fetchall())
+        return tuple(self.store)
 
 
 class CursorTupleRowsMixIn(object):
