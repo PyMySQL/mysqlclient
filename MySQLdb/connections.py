@@ -266,6 +266,48 @@ class Connection(_mysql.connection):
                 self.autocommit(autocommit)
         self.messages = []
 
+    @staticmethod
+    def _parse_endpoint(connection_string):
+        db_info = connection_string.replace('mysql://', '').strip()
+
+        user, pwd = None, None
+        if '@' in db_info:
+            auth_info, db_info = db_info.split('@')
+
+            user = auth_info
+            if ':' in auth_info:
+                user, pwd = auth_info.split(':')
+
+        db = None
+        if '/' in db_info:
+            db_info, db = db_info.split('/')
+
+        host = db_info
+        port = None
+        if ':' in db_info:
+            host, port = db_info.split(':')
+
+        return host, port, user, pwd, db
+
+    @classmethod
+    def string_connection(cls, connection_string, **kwargs):
+        host, port, user, pwd, db = cls._parse_endpoint(connection_string)
+
+        kwargs['host'] = host
+        if port:
+            kwargs['port'] = port
+
+        if user:
+            kwargs['user'] = user
+
+        if pwd:
+            kwargs['password'] = pwd
+
+        if db:
+            kwargs['database'] = db
+
+        return cls(**kwargs)
+
     def autocommit(self, on):
         on = bool(on)
         if self.get_autocommit() != on:

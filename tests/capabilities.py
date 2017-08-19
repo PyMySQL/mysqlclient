@@ -21,10 +21,13 @@ class DatabaseTest(unittest.TestCase):
     create_table_extra = ''
     rows = 10
     debug = False
+
+    def get_connection(self):
+        return connection_factory(**self.connect_kwargs)
     
     def setUp(self):
         import gc
-        db = connection_factory(**self.connect_kwargs)
+        db = self.get_connection()
         self.connection = db
         self.cursor = db.cursor()
         self.BLOBUText = u''.join([unichr(i) for i in range(16384)])
