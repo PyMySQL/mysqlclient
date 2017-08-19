@@ -5,8 +5,8 @@ from datetime import timedelta
 from contextlib import closing
 import unittest
 import MySQLdb
-from MySQLdb.compat import unicode
 from MySQLdb import cursors
+from MySQLdb.compat import unicode
 from configdb import connection_factory
 import warnings
 
@@ -198,6 +198,74 @@ class test_MySQLdb(capabilities.DatabaseTest):
                     # normal strings should not get prefix
                     c.execute('SELECT CHARSET(%s)', ('str',))
                     self.assertEqual(c.fetchall()[0][0], 'utf8')
+
+    def endpoint_from_params(
+            self, host, port=None, user=None, pwd=None, database=None, **kwargs
+    ):
+        auth = ''
+        if user:
+            auth = '{}:{}@'.format(user, pwd) if pwd else '{}@'.format(user)
+
+        db_port = ':{}'.format(port) if port else ''
+        db_name = '/{}'.format(database) if database else ''
+
+        # mysql://user:pwd@host:port/db_name
+        return 'mysql://{}{}{}{}'.format(auth, host, db_port, db_name)
+
+    def parse_connection_tests(
+            self, host='fake-host.com', port=None, user=None, pwd=None, db=None
+        ):
+
+        endpoint = self.endpoint_from_params(host, port, user, pwd, db)
+        found = self.connection._parse_endpoint(connection_string=endpoint)
+
+        self.assertEqual(host, found[0])
+        self.assertEqual(port, found[1])
+        self.assertEqual(user, found[2])
+        self.assertEqual(pwd, found[3])
+        self.assertEqual(db, found[4])
+
+    def test_string_connection_parser_full(self):
+        self.parse_connection_tests(
+            host='fake-host.com', port='3308',
+            user='fake', pwd='123456', db='testing'
+        )
+
+    def test_string_connection_host(self):
+        self.parse_connection_tests(host='my-host.gov')
+
+    def test_string_connection_user(self):
+        self.parse_connection_tests(user='fake-user')
+
+    def test_string_connection_user_pwd(self):
+        self.parse_connection_tests(user='fake-user', pwd='mypwd123')
+
+    def test_string_connection_port(self):
+        self.parse_connection_tests(port='3330')
+
+    def test_string_connection_database(self):
+        self.parse_connection_tests(db='db_fake')
+
+    def test_string_connection_port_database(self):
+        self.parse_connection_tests(port='1029', db='db_fake')
+
+
+class test_MySQLdb_string_connection(test_MySQLdb):
+
+    def get_connection(self):
+        try:
+            from configparser import ConfigParser
+        except ImportError:
+            from ConfigParser import ConfigParser
+        from configdb import conf_path
+        from MySQLdb.connections import Connection
+
+        config = ConfigParser()
+        config.readfp(open(conf_path))
+        endpoint = self.endpoint_from_params(
+            **{k: v for k, v in config.items('MySQLdb-tests')}
+        )
+        return Connection.string_connection(endpoint, **self.connect_kwargs)
 
 
 if __name__ == '__main__':
