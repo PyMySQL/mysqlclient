@@ -26,16 +26,8 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
 
-#include "my_config.h"
 #include "mysql.h"
 #include "mysqld_error.h"
-
-#ifdef HAVE_WCSCOLL
-#undef HAVE_WCSCOLL
-#endif
-#ifdef SIZEOF_SIZE_T
-#undef SIZEOF_SIZE_T
-#endif
 
 #include "Python.h"
 #if PY_MAJOR_VERSION >= 3
