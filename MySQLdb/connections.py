@@ -110,7 +110,7 @@ class Connection(_mysql.connection):
         :param type cursorclass:
             class object, used to create cursors (keyword only)
 
-        :param str use_unicode:
+        :param bool use_unicode:
             If True, text-like columns are returned as unicode objects
             using the connection's character set.  Otherwise, text-like
             columns are returned as strings.  columns are returned as
