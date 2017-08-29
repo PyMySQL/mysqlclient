@@ -1,4 +1,19 @@
 ======================
+ What's new in 1.3.11
+======================
+
+Support MariaDB 10.2 client library (#197, #177)
+
+Add NEWDECIMAL to the NUMBER DBAPISet (#167)
+
+Allow bulk insert which no space around `VALUES` (#179)
+
+fix leak of connection->converter. (#182)
+
+Support error numbers > CR_MAX_ERROR (#188)
+
+
+======================
  What's new in 1.3.10
 ======================
 
@@ -16,7 +31,7 @@ Don't use workaround of `bytes.decode('ascii', 'surrogateescape')` on Python 3.6
  What's new in 1.3.9
 =====================
 
-Revert adding _binary prefix for bytes/bytearray parameter. It broke backward compatibility.
+Revert adding `_binary` prefix for bytes/bytearray parameter. It broke backward compatibility.
 
 Fix Windows compile error on MSVC.
 
@@ -27,7 +42,7 @@ Fix Windows compile error on MSVC.
 
 Update error constants (#113)
 
-Use _binary prefix for bytes/bytearray parameters (#106)
+Use `_binary` prefix for bytes/bytearray parameters (#106)
 
 Use mysql_real_escape_string_quote() if exists (#109)
 
@@ -149,7 +164,7 @@ beta 5
 
 Another internal fix for handling remapped character sets.
 
-_mysql.c was broken for the case where read_timeout was *not* available. (Issue #6)
+`_mysql.c` was broken for the case where read_timeout was *not* available. (Issue #6)
 
 Documentation was converted to sphinx but there is a lot of cleanup left to do.
 
