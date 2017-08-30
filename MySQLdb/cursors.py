@@ -225,7 +225,7 @@ class BaseCursor(object):
         # db.literal(obj) always returns str.
 
         if PY2 and isinstance(query, unicode):
-            query = query.encode(db.unicode_literal.charset)
+            query = query.encode(db.encoding)
 
         if args is not None:
             if isinstance(args, dict):
@@ -233,14 +233,14 @@ class BaseCursor(object):
             else:
                 args = tuple(map(db.literal, args))
             if not PY2 and isinstance(query, (bytes, bytearray)):
-                query = query.decode(db.unicode_literal.charset)
+                query = query.decode(db.encoding)
             try:
                 query = query % args
             except TypeError as m:
                 self.errorhandler(self, ProgrammingError, str(m))
 
         if isinstance(query, unicode):
-            query = query.encode(db.unicode_literal.charset, 'surrogateescape')
+            query = query.encode(db.encoding, 'surrogateescape')
 
         res = None
         try:
@@ -353,7 +353,7 @@ class BaseCursor(object):
             q = "SET @_%s_%d=%s" % (procname, index,
                                          db.literal(arg))
             if isinstance(q, unicode):
-                q = q.encode(db.unicode_literal.charset, 'surrogateescape')
+                q = q.encode(db.encoding, 'surrogateescape')
             self._query(q)
             self.nextset()
 
@@ -361,7 +361,7 @@ class BaseCursor(object):
                              ','.join(['@_%s_%d' % (procname, i)
                                        for i in range(len(args))]))
         if isinstance(q, unicode):
-            q = q.encode(db.unicode_literal.charset, 'surrogateescape')
+            q = q.encode(db.encoding, 'surrogateescape')
         self._query(q)
         self._executed = q
         if not self._defer_warnings:

@@ -29,7 +29,6 @@ Conversion function:
 Don't modify conversions if you can avoid it. Instead, make copies
 (with the copy() method), modify the copies, and then pass them to
 MySQL.connect().
-
 """
 
 from _mysql import string_literal, escape, NULL
@@ -105,6 +104,7 @@ conversions = {
     DateTimeDeltaType: DateTimeDelta2literal,
     str: Thing2Literal,  # default
     set: Set2Str,
+
     FIELD_TYPE.TINY: int,
     FIELD_TYPE.SHORT: int,
     FIELD_TYPE.LONG: long,

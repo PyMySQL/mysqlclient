@@ -208,38 +208,28 @@ class Connection(_mysql.connection):
 
         self._server_version = tuple([ numeric_part(n) for n in self.get_server_info().split('.')[:2] ])
 
+        self.encoding = 'ascii'  # overriden in set_character_set()
         db = proxy(self)
-        def _get_string_literal():
-            # Note: string_literal() is called for bytes object on Python 3 (via bytes_literal)
-            def string_literal(obj, dummy=None):
-                return db.string_literal(obj)
-            return string_literal
 
-        def _get_unicode_literal():
-            if PY2:
-                # unicode_literal is called for only unicode object.
-                def unicode_literal(u, dummy=None):
-                    return db.string_literal(u.encode(unicode_literal.charset))
-            else:
-                # unicode_literal() is called for arbitrary object.
-                def unicode_literal(u, dummy=None):
-                    return db.string_literal(str(u).encode(unicode_literal.charset))
-            return unicode_literal
+        # Note: string_literal() is called for bytes object on Python 3 (via bytes_literal)
+        def string_literal(obj, dummy=None):
+            return db.string_literal(obj)
 
-        def _get_bytes_literal():
-            def bytes_literal(obj, dummy=None):
-                return b'_binary' + db.string_literal(obj)
-            return bytes_literal
+        if PY2:
+            # unicode_literal is called for only unicode object.
+            def unicode_literal(u, dummy=None):
+                return db.string_literal(u.encode(db.encoding))
+        else:
+            # unicode_literal() is called for arbitrary object.
+            def unicode_literal(u, dummy=None):
+                return db.string_literal(str(u).encode(db.encoding))
 
-        def _get_string_decoder():
-            def string_decoder(s):
-                return s.decode(string_decoder.charset)
-            return string_decoder
+        def bytes_literal(obj, dummy=None):
+            return b'_binary' + db.string_literal(obj)
 
-        string_literal = _get_string_literal()
-        self.unicode_literal = unicode_literal = _get_unicode_literal()
-        bytes_literal = _get_bytes_literal()
-        self.string_decoder = string_decoder = _get_string_decoder()
+        def string_decoder(s):
+            return s.decode(db.encoding)
+
         if not charset:
             charset = self.character_set_name()
         self.set_character_set(charset)
@@ -372,8 +362,6 @@ class Connection(_mysql.connection):
                     raise NotSupportedError("server is too old to set charset")
                 self.query('SET NAMES %s' % charset)
                 self.store_result()
-        self.string_decoder.charset = py_charset
-        self.unicode_literal.charset = py_charset
         self.encoding = py_charset
 
     def set_sql_mode(self, sql_mode):

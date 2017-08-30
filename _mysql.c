@@ -2777,12 +2777,14 @@ _mysql_methods[] = {
 		_mysql_escape__doc__
 	},
 	{
+		// deprecated.
 		"escape_sequence",
 		(PyCFunction)_mysql_escape_sequence,
 		METH_VARARGS,
 		_mysql_escape_sequence__doc__
 	},
 	{
+		// deprecated.
 		"escape_dict",
 		(PyCFunction)_mysql_escape_dict,
 		METH_VARARGS,
