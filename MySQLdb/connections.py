@@ -186,7 +186,7 @@ class Connection(_mysql.connection):
 
         use_unicode = kwargs2.pop('use_unicode', use_unicode)
         sql_mode = kwargs2.pop('sql_mode', '')
-        binary_prefix = kwargs2.pop('binary_prefix', False)
+        self._binary_prefix = kwargs2.pop('binary_prefix', False)
 
         client_flag = kwargs.get('client_flag', 0)
         client_version = tuple([ numeric_part(n) for n in _mysql.get_client_info().split('.')[:2] ])
@@ -208,38 +208,28 @@ class Connection(_mysql.connection):
 
         self._server_version = tuple([ numeric_part(n) for n in self.get_server_info().split('.')[:2] ])
 
+        self.encoding = 'ascii'  # overriden in set_character_set()
         db = proxy(self)
-        def _get_string_literal():
-            # Note: string_literal() is called for bytes object on Python 3 (via bytes_literal)
-            def string_literal(obj, dummy=None):
-                return db.string_literal(obj)
-            return string_literal
 
-        def _get_unicode_literal():
-            if PY2:
-                # unicode_literal is called for only unicode object.
-                def unicode_literal(u, dummy=None):
-                    return db.string_literal(u.encode(unicode_literal.charset))
-            else:
-                # unicode_literal() is called for arbitrary object.
-                def unicode_literal(u, dummy=None):
-                    return db.string_literal(str(u).encode(unicode_literal.charset))
-            return unicode_literal
+        # Note: string_literal() is called for bytes object on Python 3 (via bytes_literal)
+        def string_literal(obj, dummy=None):
+            return db.string_literal(obj)
 
-        def _get_bytes_literal():
-            def bytes_literal(obj, dummy=None):
-                return b'_binary' + db.string_literal(obj)
-            return bytes_literal
+        if PY2:
+            # unicode_literal is called for only unicode object.
+            def unicode_literal(u, dummy=None):
+                return db.string_literal(u.encode(db.encoding))
+        else:
+            # unicode_literal() is called for arbitrary object.
+            def unicode_literal(u, dummy=None):
+                return db.string_literal(str(u).encode(db.encoding))
 
-        def _get_string_decoder():
-            def string_decoder(s):
-                return s.decode(string_decoder.charset)
-            return string_decoder
+        def bytes_literal(obj, dummy=None):
+            return b'_binary' + db.string_literal(obj)
 
-        string_literal = _get_string_literal()
-        self.unicode_literal = unicode_literal = _get_unicode_literal()
-        bytes_literal = _get_bytes_literal()
-        self.string_decoder = string_decoder = _get_string_decoder()
+        def string_decoder(s):
+            return s.decode(db.encoding)
+
         if not charset:
             charset = self.character_set_name()
         self.set_character_set(charset)
@@ -253,12 +243,7 @@ class Connection(_mysql.connection):
             self.converter[FIELD_TYPE.VARCHAR].append((None, string_decoder))
             self.converter[FIELD_TYPE.BLOB].append((None, string_decoder))
 
-        if binary_prefix:
-            self.encoders[bytes] = string_literal if PY2 else bytes_literal
-            self.encoders[bytearray] = bytes_literal
-        else:
-            self.encoders[bytes] = string_literal
-
+        self.encoders[bytes] = string_literal
         self.encoders[unicode] = unicode_literal
         self._transactional = self.server_capabilities & CLIENT.TRANSACTIONS
         if self._transactional:
@@ -305,6 +290,16 @@ class Connection(_mysql.connection):
         else:
             self.commit()
 
+    def _bytes_literal(self, bs):
+        assert isinstance(bs, (bytes, bytearray))
+        x = self.string_literal(bs)  # x is escaped and quoted bytes
+        if self._binary_prefix:
+            return b'_binary' + x
+        return x
+
+    def _tuple_literal(self, t, d):
+        return "(%s)" % (','.join(map(self.literal, t)))
+
     def literal(self, o):
         """If o is a single object, returns an SQL literal as a string.
         If o is a non-string sequence, the items of the sequence are
@@ -313,7 +308,14 @@ class Connection(_mysql.connection):
         Non-standard. For internal use; do not use this in your
         applications.
         """
-        s = self.escape(o, self.encoders)
+        if isinstance(o, bytearray):
+            s = self._bytes_literal(o)
+        elif not PY2 and isinstance(o, bytes):
+            s = self._bytes_literal(o)
+        elif isinstance(o, (tuple, list)):
+            s = self._tuple_literal(o)
+        else:
+            s = self.escape(o, self.encoders)
         # Python 3(~3.4) doesn't support % operation for bytes object.
         # We should decode it before using %.
         # Decoding with ascii and surrogateescape allows convert arbitrary
@@ -360,8 +362,6 @@ class Connection(_mysql.connection):
                     raise NotSupportedError("server is too old to set charset")
                 self.query('SET NAMES %s' % charset)
                 self.store_result()
-        self.string_decoder.charset = py_charset
-        self.unicode_literal.charset = py_charset
         self.encoding = py_charset
 
     def set_sql_mode(self, sql_mode):

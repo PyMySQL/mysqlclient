@@ -29,10 +29,9 @@ Conversion function:
 Don't modify conversions if you can avoid it. Instead, make copies
 (with the copy() method), modify the copies, and then pass them to
 MySQL.connect().
-
 """
 
-from _mysql import string_literal, escape_sequence, escape_dict, escape, NULL
+from _mysql import string_literal, escape, NULL
 from MySQLdb.constants import FIELD_TYPE, FLAG
 from MySQLdb.times import *
 from MySQLdb.compat import PY2, long
@@ -53,6 +52,7 @@ def Str2Set(s):
     return set([ i for i in s.split(',') if i ])
 
 def Set2Str(s, d):
+    # Only support ascii string.  Not tested.
     return string_literal(','.join(s), d)
 
 def Thing2Str(s, d):
@@ -97,9 +97,6 @@ conversions = {
     long: Thing2Str,
     float: Float2Str,
     NoneType: None2NULL,
-    tuple: quote_tuple,
-    list: quote_tuple,
-    dict: escape_dict,
     ArrayType: array2Str,
     bool: Bool2Str,
     Date: Thing2Literal,
@@ -107,6 +104,7 @@ conversions = {
     DateTimeDeltaType: DateTimeDelta2literal,
     str: Thing2Literal,  # default
     set: Set2Str,
+
     FIELD_TYPE.TINY: int,
     FIELD_TYPE.SHORT: int,
     FIELD_TYPE.LONG: long,
