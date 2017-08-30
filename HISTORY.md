@@ -12,6 +12,8 @@ fix leak of connection->converter. (#182)
 
 Support error numbers > CR_MAX_ERROR (#188)
 
+Fix tuple argument support (#145)
+
 
 ======================
  What's new in 1.3.10
