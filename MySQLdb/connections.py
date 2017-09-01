@@ -297,7 +297,7 @@ class Connection(_mysql.connection):
             return b'_binary' + x
         return x
 
-    def _tuple_literal(self, t, d):
+    def _tuple_literal(self, t):
         return "(%s)" % (','.join(map(self.literal, t)))
 
     def literal(self, o):
