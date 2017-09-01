@@ -2,15 +2,15 @@
  What's new in 1.3.11
 ======================
 
-Support MariaDB 10.2 client library (#197, #177)
+Support MariaDB 10.2 client library (#197, #177, #200)
 
 Add NEWDECIMAL to the NUMBER DBAPISet (#167)
 
 Allow bulk insert which no space around `VALUES` (#179)
 
-fix leak of connection->converter. (#182)
+Fix leak of `connection->converter`. (#182)
 
-Support error numbers > CR_MAX_ERROR (#188)
+Support error `numbers > CR_MAX_ERROR` (#188)
 
 Fix tuple argument support (#145)
 
