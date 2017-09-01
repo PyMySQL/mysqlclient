@@ -112,6 +112,9 @@ _mysql_Exception(_mysql_ConnectionObject *c)
 	}
 	merr = mysql_errno(&(c->connection));
 	switch (merr) {
+	case 0:
+		e = _mysql_InterfaceError;
+		break;
 	case CR_COMMANDS_OUT_OF_SYNC:
 	case ER_DB_CREATE_EXISTS:
 	case ER_SYNTAX_ERROR:
