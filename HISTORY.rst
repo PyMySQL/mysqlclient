@@ -1,4 +1,12 @@
 ======================
+ What's new in 1.3.12
+======================
+
+Fix tuple argument again (#201)
+
+InterfaceError is raised when Connection.query() is called for closed connection (#202)
+
+======================
  What's new in 1.3.11
 ======================
 
