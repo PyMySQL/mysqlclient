@@ -9,9 +9,7 @@ except ImportError:
 # of mysql_config
 
 def dequote(s):
-    if s[0] in "\"'" and s[0] == s[-1]:
-        s = s[1:-1]
-    return s
+    return s.strip("'\"")
 
 def mysql_config(what):
     from os import popen
