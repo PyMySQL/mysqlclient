@@ -17,7 +17,7 @@ You may need to install the Python and MySQL development headers and libraries l
 
 `sudo yum install python-devel mysql-devel`  # Red Hat / CentOS
 
-On Windows, there are binary wheel you can install without MySQLConnector/C or MSVC. 
+On Windows, there are binary wheels you can install without MySQLConnector/C or MSVC. 
 
 #### Note on Python 3 : if you are using python3 then you need to install python3-dev using the following command :
 
@@ -26,6 +26,23 @@ On Windows, there are binary wheel you can install without MySQLConnector/C or M
 `sudo yum install python3-devel `  # Red Hat / CentOS
 
 `brew install mysql-connector-c`  # macOS (Homebrew)
+#### Note on macOS
+homebrew's `mysql-connector-c` may have incorrect configuration options that cause compilation errors.  Under the `#create options` comment on or about line 112 of `/usr/local/bin/mysql_config`: 
+
+changing 
+```
+# Create options 
+libs="-L$pkglibdir"
+libs="$libs -l "
+```
+
+to 
+```
+# Create options 
+libs="-L$pkglibdir"
+libs="$libs -lmysqlclient -lssl -lcrypto"
+```
+will resolve these issues.  An improper ssl configuration may also create issues; see `brew info openssl` for details. 
 
 ### Install from PyPI
 
