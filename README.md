@@ -26,23 +26,25 @@ On Windows, there are binary wheels you can install without MySQLConnector/C or 
 `sudo yum install python3-devel `  # Red Hat / CentOS
 
 `brew install mysql-connector-c`  # macOS (Homebrew)
-#### Note on macOS
-homebrew's `mysql-connector-c` may have incorrect configuration options that cause compilation errors.  Under the `#create options` comment on or about line 112 of `/usr/local/bin/mysql_config`: 
+#### MySQL note
+Versions of `mysql`may have incorrect default configuration options that cause compilation errors when `mysqlclient-python` is installed.  (As of November 2017, this is known to be true for homebrew's `mysql-connector-c` and `mysql` packages) 
 
-changing 
+Modification of `mysql_config` resolves these issues as follows. 
+Change
 ```
+# on macOS, on or about line 112:
 # Create options 
 libs="-L$pkglibdir"
 libs="$libs -l "
 ```
-
 to 
 ```
 # Create options 
 libs="-L$pkglibdir"
 libs="$libs -lmysqlclient -lssl -lcrypto"
 ```
-will resolve these issues.  An improper ssl configuration may also create issues; see `brew info openssl` for details. 
+
+An improper ssl configuration may also create issues; see, e.g, `brew info openssl` for details on macOS.
 
 ### Install from PyPI
 
