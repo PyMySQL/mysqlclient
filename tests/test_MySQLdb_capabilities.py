@@ -116,7 +116,7 @@ class test_MySQLdb(capabilities.DatabaseTest):
             c.execute("SELECT id, AsText(border) FROM test_MULTIPOLYGON")
             row = c.fetchone()
             self.assertEqual(row[0], 1)
-            self.assertEqual(row[1], b'MULTIPOLYGON(((1 1,1 -1,-1 -1,-1 1,1 1)),((1 1,3 1,3 3,1 3,1 1)))')
+            self.assertEqual(row[1], 'MULTIPOLYGON(((1 1,1 -1,-1 -1,-1 1,1 1)),((1 1,3 1,3 3,1 3,1 1)))')
 
             c.execute("SELECT id, AsWKB(border) FROM test_MULTIPOLYGON")
             row = c.fetchone()
