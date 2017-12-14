@@ -238,10 +238,9 @@ class Connection(_mysql.connection):
             self.set_sql_mode(sql_mode)
 
         if use_unicode:
-            self.converter[FIELD_TYPE.STRING].append((None, string_decoder))
-            self.converter[FIELD_TYPE.VAR_STRING].append((None, string_decoder))
-            self.converter[FIELD_TYPE.VARCHAR].append((None, string_decoder))
-            self.converter[FIELD_TYPE.BLOB].append((None, string_decoder))
+            for t in (FIELD_TYPE.STRING, FIELD_TYPE.VAR_STRING, FIELD_TYPE.VARCHAR, FIELD_TYPE.TINY_BLOB,
+                      FIELD_TYPE.MEDIUM_BLOB, FIELD_TYPE.LONG_BLOB, FIELD_TYPE.BLOB):
+                self.converter[t].append((None, string_decoder))
 
         self.encoders[bytes] = string_literal
         self.encoders[unicode] = unicode_literal
