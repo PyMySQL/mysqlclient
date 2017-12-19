@@ -443,6 +443,10 @@ class CursorStoreResultMixIn(object):
         else:
             result = self._rows
         self.rownumber = len(self._rows)
+        # to support python 3
+        if not PY2:
+            db = self._get_db()
+            result = tuple(tuple(word.decode(db.encoding) if isinstance(word, bytes) else word  for word in grant) for grant in result)
         return result
 
     def scroll(self, value, mode='relative'):
