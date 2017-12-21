@@ -2166,46 +2166,6 @@ _mysql_ResultObject_data_seek(
 	return Py_None;
 }
 
-static char _mysql_ResultObject_row_seek__doc__[] =
-"row_seek(n) -- seek by offset n rows of result set";
-static PyObject *
-_mysql_ResultObject_row_seek(
-     _mysql_ResultObject *self,
-     PyObject *args)
-{
-	int offset;
-        MYSQL_ROW_OFFSET r;
-	if (!PyArg_ParseTuple(args, "i:row_seek", &offset)) return NULL;
-	check_result_connection(self);
-	if (self->use) {
-		PyErr_SetString(_mysql_ProgrammingError,
-				"cannot be used with connection.use_result()");
-		return NULL;
-	}
-	r = mysql_row_tell(self->result);
-	mysql_row_seek(self->result, r+offset);
-	Py_INCREF(Py_None);
-	return Py_None;
-}
-
-static char _mysql_ResultObject_row_tell__doc__[] =
-"row_tell() -- return the current row number of the result set.";
-static PyObject *
-_mysql_ResultObject_row_tell(
-	_mysql_ResultObject *self,
-	PyObject *noargs)
-{
-	MYSQL_ROW_OFFSET r;
-	check_result_connection(self);
-	if (self->use) {
-		PyErr_SetString(_mysql_ProgrammingError,
-				"cannot be used with connection.use_result()");
-		return NULL;
-	}
-	r = mysql_row_tell(self->result);
-	return PyInt_FromLong(r-self->result->data->data);
-}
-
 static void
 _mysql_ResultObject_dealloc(
 	_mysql_ResultObject *self)
@@ -2503,18 +2463,6 @@ static PyMethodDef _mysql_ResultObject_methods[] = {
 		(PyCFunction)_mysql_ResultObject_data_seek,
 		METH_VARARGS,
 		_mysql_ResultObject_data_seek__doc__
-	},
-	{
-		"row_seek",
-		(PyCFunction)_mysql_ResultObject_row_seek,
-		METH_VARARGS,
-		_mysql_ResultObject_row_seek__doc__
-	},
-	{
-		"row_tell",
-		(PyCFunction)_mysql_ResultObject_row_tell,
-		METH_NOARGS,
-		_mysql_ResultObject_row_tell__doc__
 	},
 	{
 		"describe",
