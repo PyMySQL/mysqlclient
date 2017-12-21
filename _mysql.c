@@ -1879,7 +1879,7 @@ _mysql_ConnectionObject_ping(
 	if (!PyArg_ParseTuple(args, "|I", &reconnect)) return NULL;
 	check_connection(self);
 	if (reconnect != -1) {
-		my_bool recon = reconnect;
+		char recon = (char)reconnect;
 		mysql_options(&self->connection, MYSQL_OPT_RECONNECT, &recon);
 	}
 	Py_BEGIN_ALLOW_THREADS
