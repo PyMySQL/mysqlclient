@@ -80,6 +80,13 @@ typedef struct {
 	PyObject *converter;
 } _mysql_ResultObject;
 
+#define MYSQLCLIENT_ROWOFFSET_NAME "mysql_row_offset"
+
+typedef struct {
+	char             name[sizeof(MYSQLCLIENT_ROWOFFSET_NAME)]; /* "mysql_row_offset\0" */
+	MYSQL_ROW_OFFSET offset;
+} _mysql_RowOffset;
+
 extern PyTypeObject _mysql_ResultObject_Type;
 
 static int _mysql_server_init_done = 0;
@@ -2166,30 +2173,50 @@ _mysql_ResultObject_data_seek(
 	return Py_None;
 }
 
+static void
+_mysql_destroy_rowoffset_capsule(PyObject *obj) {
+	_mysql_RowOffset* ro = PyCapsule_GetPointer(obj, MYSQLCLIENT_ROWOFFSET_NAME);
+	PyMem_Free(ro);
+}
+
+static PyObject *
+_mysql_alloc_rowoffset_capsule(MYSQL_ROW_OFFSET off) {
+	_mysql_RowOffset* ro = PyMem_Malloc(sizeof(*ro));
+	strcpy(ro->name, MYSQLCLIENT_ROWOFFSET_NAME);
+	ro->offset = off;
+	return PyCapsule_New(ro, ro->name, &_mysql_destroy_rowoffset_capsule);
+}
+
 static char _mysql_ResultObject_row_seek__doc__[] =
-"row_seek(n) -- seek by offset n rows of result set";
+"row_seek(o) -- seek to row offset o and return the current row offset of the result set.";
 static PyObject *
 _mysql_ResultObject_row_seek(
      _mysql_ResultObject *self,
      PyObject *args)
 {
-	int offset;
-        MYSQL_ROW_OFFSET r;
-	if (!PyArg_ParseTuple(args, "i:row_seek", &offset)) return NULL;
+	PyObject *off_obj;
+	MYSQL_ROW_OFFSET r;
+	_mysql_RowOffset* ro;
+	if (!PyArg_ParseTuple(args, "O:row_seek", &off_obj)) return NULL;
+	if (!PyCapsule_IsValid(off_obj, MYSQLCLIENT_ROWOFFSET_NAME)) {
+		PyErr_SetString(PyExc_TypeError,
+				"a " MYSQLCLIENT_ROWOFFSET_NAME " is required");
+		return NULL;
+	}
 	check_result_connection(self);
 	if (self->use) {
 		PyErr_SetString(_mysql_ProgrammingError,
 				"cannot be used with connection.use_result()");
 		return NULL;
 	}
-	r = mysql_row_tell(self->result);
-	mysql_row_seek(self->result, r+offset);
+	ro = PyCapsule_GetPointer(off_obj, MYSQLCLIENT_ROWOFFSET_NAME);
+	r = mysql_row_seek(self->result, ro->offset);
 	Py_INCREF(Py_None);
-	return Py_None;
+	return _mysql_alloc_rowoffset_capsule(r);
 }
 
 static char _mysql_ResultObject_row_tell__doc__[] =
-"row_tell() -- return the current row number of the result set.";
+"row_tell() -- return the current row offset of the result set.";
 static PyObject *
 _mysql_ResultObject_row_tell(
 	_mysql_ResultObject *self,
@@ -2203,7 +2230,7 @@ _mysql_ResultObject_row_tell(
 		return NULL;
 	}
 	r = mysql_row_tell(self->result);
-	return PyInt_FromLong(r-self->result->data->data);
+	return _mysql_alloc_rowoffset_capsule(r);
 }
 
 static void
