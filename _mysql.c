@@ -363,12 +363,6 @@ _mysql_ResultObject_Initialize(
 	if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!|iO", kwlist,
 					 &_mysql_ConnectionObject_Type, &conn, &use, &conv))
 		return -1;
-	if (!conv) {
-		if (!(conv = PyDict_New()))
-			return -1;
-	}
-	else
-		Py_INCREF(conv);
 
 	self->conn = (PyObject *) conn;
 	Py_INCREF(conn);
@@ -387,13 +381,11 @@ _mysql_ResultObject_Initialize(
 		    return -1;
 		}
 		self->converter = PyTuple_New(0);
-		Py_DECREF(conv);
 		return 0;
 	}
 	n = mysql_num_fields(result);
 	self->nfields = n;
 	if (!(self->converter = PyTuple_New(n))) {
-		Py_DECREF(conv);
 		return -1;
 	}
 	fields = mysql_fetch_fields(result);
@@ -401,15 +393,13 @@ _mysql_ResultObject_Initialize(
 		PyObject *tmp, *fun;
 		tmp = PyInt_FromLong((long) fields[i].type);
 		if (!tmp) {
-			Py_DECREF(conv);
 			return -1;
 		}
-		fun = PyObject_GetItem(conv, tmp);
+		fun = conv ? PyObject_GetItem(conv, tmp) : NULL;
 		Py_DECREF(tmp);
 		if (!fun) {
 			if (PyErr_Occurred()) {
 				if (!PyErr_ExceptionMatches(PyExc_KeyError)) {
-					Py_DECREF(conv);
 					return -1;
 				}
 				PyErr_Clear();
@@ -428,7 +418,6 @@ _mysql_ResultObject_Initialize(
 				PyObject *t = PySequence_GetItem(fun, j);
 				if (!t) {
 					Py_DECREF(fun);
-					Py_DECREF(conv);
 					return -1;
 				}
 				if (PyTuple_Check(t) && PyTuple_GET_SIZE(t) == 2) {
@@ -463,7 +452,6 @@ _mysql_ResultObject_Initialize(
 		PyTuple_SET_ITEM(self->converter, i, fun);
 	}
 
-	Py_DECREF(conv);
 	return 0;
 }
 
