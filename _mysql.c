@@ -29,6 +29,11 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "mysql.h"
 #include "mysqld_error.h"
 
+#if MYSQL_VERSION_ID >= 80000
+// https://github.com/mysql/mysql-server/commit/eb821c023cedc029ca0b06456dfae365106bee84
+#define my_bool _Bool
+#endif
+
 #include "Python.h"
 #if PY_MAJOR_VERSION >= 3
 #define IS_PY3K
@@ -1879,7 +1884,7 @@ _mysql_ConnectionObject_ping(
 	if (!PyArg_ParseTuple(args, "|I", &reconnect)) return NULL;
 	check_connection(self);
 	if (reconnect != -1) {
-		char recon = (char)reconnect;
+		my_bool recon = (my_bool)reconnect;
 		mysql_options(&self->connection, MYSQL_OPT_RECONNECT, &recon);
 	}
 	Py_BEGIN_ALLOW_THREADS
