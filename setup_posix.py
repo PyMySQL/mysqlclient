@@ -9,7 +9,11 @@ except ImportError:
 # of mysql_config
 
 def dequote(s):
-    return s.strip("'\"")
+    if not s:
+        raise Exception("Wrong MySQL configuration: maybe https://bugs.mysql.com/bug.php?id=86971 ?")
+    if s[0] in "\"'" and s[0] == s[-1]:
+        s = s[1:-1]
+    return s
 
 def mysql_config(what):
     from os import popen
