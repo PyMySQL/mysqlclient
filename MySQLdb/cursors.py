@@ -21,7 +21,17 @@ if PY2:
 else:
     text_type = str
 
-
+def convert_to_str(var):
+    if isinstance(var,tuple):
+        return (convert_to_str(item) for item in var)
+    if isinstance(var,list):
+        return [convert_to_str(item) for item in var]
+    elif isinstance(var,dict):
+        return {convert_to_str(key):convert_to_str(value) for key,value in var.items()}
+    elif isinstance(var,bytes):
+        return var.decode('utf-8')
+    else:
+        return var
 #: Regular expression for :meth:`Cursor.executemany`.
 #: executemany only supports simple bulk insert.
 #: You can use it to load large dataset.
@@ -443,10 +453,9 @@ class CursorStoreResultMixIn(object):
         else:
             result = self._rows
         self.rownumber = len(self._rows)
-        # to support python 3
         if not PY2:
             db = self._get_db()
-            result = tuple(tuple(word.decode(db.encoding) if isinstance(word, bytes) else word  for word in grant) for grant in result)
+            result = tuple(convert_to_str(result))
         return result
 
     def scroll(self, value, mode='relative'):
