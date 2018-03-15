@@ -350,9 +350,9 @@ class BaseCursor(object):
 
         db = self._get_db()
         if args:
-            argFmt = '@_{0}_%d=%s'.format(procname)
-            q = 'SET %s' % ','.join(argFmt % (index, db.literal(arg))
-                                              for index, arg in enumerate(args))
+            fmt = '@_{0}_%d=%s'.format(procname)
+            q = 'SET %s' % ','.join(fmt % (index, db.literal(arg))
+                                    for index, arg in enumerate(args))
             if isinstance(q, unicode):
                 q = q.encode(db.encoding, 'surrogateescape')
             self._query(q)
