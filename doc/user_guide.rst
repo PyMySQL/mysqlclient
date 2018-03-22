@@ -385,7 +385,7 @@ threadsafety
       SSCursor (which uses ``mysql_use_result()``; with the latter you
       must ensure all the rows have been read before another query can
       be executed.  It is further complicated by the addition of
-      transactions, since transactions start when a cursor execute a
+      transactions, since transactions start when a cursor executes a
       query, but end when ``COMMIT`` or ``ROLLBACK`` is executed by
       the Connection object.  Two threads simply cannot share a
       connection while a transaction is in progress, in addition to
