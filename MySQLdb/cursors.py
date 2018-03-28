@@ -235,9 +235,20 @@ class BaseCursor(object):
             if not PY2 and isinstance(query, (bytes, bytearray)):
                 query = query.decode(db.encoding)
             try:
-                query = query % args
+                # Bug Using Below, args is None, somehow above fails.
+                #   - Django Version: 2.0.3
+                #   - Python Version: 3.6.4
+                #   - Error: ProgrammingError, not enough arguments for format string.
+                # Bug Fix:
+                #   - Should be Changed from using the deprecated % to .format() global function, requires global package changes
+                #   - Tested on Python Version 3.6.4
+                #   - Check if 'query' contains formating else skip
+                if query.contains('%'):
+                    query = query % args
+                else:
+                    query = query
             except TypeError as m:
-                self.errorhandler(self, ProgrammingError, str(m))
+                self.errorhandler(self, ProgrammingError, str(m)) 
 
         if isinstance(query, unicode):
             query = query.encode(db.encoding, 'surrogateescape')
