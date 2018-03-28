@@ -243,7 +243,7 @@ class BaseCursor(object):
                 #   - Changed from using deprecated % to .format() global function.
                 #   - Tested on Python Version 3.6.4
                 # query = query % args
-                query = query.format(**args)  
+                query = query.format(*args)  
             except TypeError as m:
                 self.errorhandler(self, ProgrammingError, str(m)) 
 
