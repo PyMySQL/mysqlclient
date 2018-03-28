@@ -240,10 +240,13 @@ class BaseCursor(object):
                 #   - Python Version: 3.6.4
                 #   - Error: ProgrammingError, not enough arguments for format string.
                 # Bug Fix:
-                #   - Changed from using deprecated % to .format() global function.
+                #   - Should be Changed from using the deprecated % to .format() global function, requires global package changes
                 #   - Tested on Python Version 3.6.4
-                # query = query % args
-                query = query.format(*args)  
+                #   - Check if 'query' contains formating else skip
+                if query.contains('%'):
+                    query = query % args
+                else:
+                    query = query
             except TypeError as m:
                 self.errorhandler(self, ProgrammingError, str(m)) 
 
