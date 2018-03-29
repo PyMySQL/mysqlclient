@@ -639,7 +639,8 @@ _mysql_ConnectionObject_Initialize(
 #endif
 
 	/* Disable SSL - JAK */
-	mysql_options(&(self->connection), MYSQL_OPT_SSL_MODE, SSL_MODE_DISABLED);
+	uint ssl_mode = SSL_MODE_DISABLED;
+	mysql_options(&(self->connection), MYSQL_OPT_SSL_MODE, &ssl_mode);
 
 	conn = mysql_real_connect(&(self->connection), host, user, passwd, db,
 				  port, unix_socket, client_flag);
