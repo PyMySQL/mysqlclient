@@ -91,6 +91,9 @@ def quote_tuple(t, d):
 
 # bytes or str regarding to BINARY_FLAG.
 _bytes_or_str = [(FLAG.BINARY, bytes)]
+_bytes_or_str_or_set = _bytes_or_str + [
+    (FLAG.SET, Str2Set),
+]
 
 conversions = {
     int: Thing2Str,
@@ -125,7 +128,7 @@ conversions = {
     FIELD_TYPE.MEDIUM_BLOB: _bytes_or_str,
     FIELD_TYPE.LONG_BLOB: _bytes_or_str,
     FIELD_TYPE.BLOB: _bytes_or_str,
-    FIELD_TYPE.STRING: _bytes_or_str,
+    FIELD_TYPE.STRING: _bytes_or_str_or_set,
     FIELD_TYPE.VAR_STRING: _bytes_or_str,
     FIELD_TYPE.VARCHAR: _bytes_or_str,
 }
