@@ -49,7 +49,7 @@ except AttributeError:
 def Bool2Str(s, d): return str(int(s))
 
 def Str2Set(s):
-    return set([ i for i in s.split(',') if i ])
+    return set([ i for i in s.decode().split(',') if i ])
 
 def Set2Str(s, d):
     # Only support ascii string.  Not tested.
