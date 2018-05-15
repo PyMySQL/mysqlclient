@@ -208,7 +208,7 @@ class Connection(_mysql.connection):
 
         self._server_version = tuple([ numeric_part(n) for n in self.get_server_info().split('.')[:2] ])
 
-        self.encoding = 'ascii'  # overriden in set_character_set()
+        self.encoding = 'ascii'  # overridden in set_character_set()
         db = proxy(self)
 
         # Note: string_literal() is called for bytes object on Python 3 (via bytes_literal)

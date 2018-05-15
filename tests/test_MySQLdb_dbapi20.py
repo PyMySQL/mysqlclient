@@ -35,7 +35,7 @@ class test_MySQLdb(dbapi20.DatabaseAPI20Test):
                 cur.execute(sql)
 
             # cursor.fetchall should raise an Error if called
-            # after executing a a statement that cannot return rows
+            # after executing a statement that cannot return rows
             #self.assertRaises(self.driver.Error,cur.fetchall)
 
             cur.execute('select name from %sbooze' % self.table_prefix)
