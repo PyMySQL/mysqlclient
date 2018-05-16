@@ -39,6 +39,14 @@ def get_config():
 
     extra_objects = []
     static = enabled(options, 'static')
+
+    # allow a command-line option to override the base config file to permit
+    # a static build to be created via requirements.txt
+    #
+    if '--static' in sys.argv:
+        static = True
+        sys.argv.remove('--static')
+
     if enabled(options, 'embedded'):
         libs = mysql_config("libmysqld-libs")
     elif enabled(options, 'threadsafe'):
