@@ -41,16 +41,12 @@ def get_config():
     static = enabled(options, 'static')
     if enabled(options, 'embedded'):
         libs = mysql_config("libmysqld-libs")
-        client = "mysqld"
     elif enabled(options, 'threadsafe'):
         libs = mysql_config("libs_r")
-        client = "mysqlclient_r"
         if not libs:
             libs = mysql_config("libs")
-            client = "mysqlclient"
     else:
         libs = mysql_config("libs")
-        client = "mysqlclient"
 
     library_dirs = [dequote(i[2:]) for i in libs if i.startswith('-L')]
     libraries = [dequote(i[2:]) for i in libs if i.startswith('-l')]
@@ -67,6 +63,16 @@ def get_config():
 
     include_dirs = [dequote(i[2:])
                     for i in mysql_config('include') if i.startswith('-I')]
+
+
+    # properly handle mysql client libraries that are not called libmysqlclient
+    client = None
+    CLIENT_LIST = ['mysqlclient', 'mysqlclient_r', 'mysqld',
+                   'perconaserverclient', 'perconaserverclient_r']
+    for c in CLIENT_LIST:
+        if c in libraries:
+            client = c
+            break
 
     if static:
         extra_objects.append(os.path.join(library_dirs[0], 'lib%s.a' % client))
