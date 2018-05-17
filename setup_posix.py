@@ -83,6 +83,7 @@ def get_config():
             break
 
     if static:
+        libraries.append('stdc++')
         extra_objects.append(os.path.join(library_dirs[0], 'lib%s.a' % client))
         if client in libraries:
             libraries.remove(client)
