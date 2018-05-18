@@ -8,7 +8,7 @@ MySQLdb User's Guide
 Introduction
 ------------
 
-MySQLdb is an thread-compatible interface to the popular MySQL
+MySQLdb is a thread-compatible interface to the popular MySQL
 database server that provides the Python database API.
 
 Installation
