@@ -30,7 +30,7 @@ before_script:
 
 script:
   - pip install -e .
-  - py.test --cov ./MySQLdb
+  - pytest --cov ./MySQLdb
 
 after_succes:
   - codecov

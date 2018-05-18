@@ -1,4 +1,4 @@
-import py.test
+import pytest
 import MySQLdb.cursors
 from configdb import connection_factory
 
