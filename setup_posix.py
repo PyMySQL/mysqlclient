@@ -83,7 +83,6 @@ def get_config():
             break
 
     if static:
-        libraries.append('stdc++')
         extra_objects.append(os.path.join(library_dirs[0], 'lib%s.a' % client))
         if client in libraries:
             libraries.remove(client)
@@ -109,6 +108,11 @@ def get_config():
         extra_objects = extra_objects,
         define_macros = define_macros,
         )
+
+    # newer versions of gcc require libstdc++ if doing a static build
+    if static:
+        ext_options['language'] = 'c++'
+
     return metadata, ext_options
 
 if __name__ == "__main__":
