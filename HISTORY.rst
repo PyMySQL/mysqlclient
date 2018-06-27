@@ -1,4 +1,17 @@
 ======================
+ What's new in 1.3.13
+======================
+
+Support build with MySQL 8
+
+Fix decoding tiny/medium/long blobs (#215)
+
+Remove broken row_seek() and row_tell() APIs (#220)
+
+Reduce callproc roundtrip time (#223)
+
+
+======================
  What's new in 1.3.12
 ======================
 
