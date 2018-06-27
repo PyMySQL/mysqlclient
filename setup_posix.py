@@ -108,6 +108,11 @@ def get_config():
         extra_objects = extra_objects,
         define_macros = define_macros,
         )
+
+    # newer versions of gcc require libstdc++ if doing a static build
+    if static:
+        ext_options['language'] = 'c++'
+
     return metadata, ext_options
 
 if __name__ == "__main__":
