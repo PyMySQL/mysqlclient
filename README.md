@@ -56,9 +56,9 @@ An improper ssl configuration may also create issues; see, e.g, `brew info opens
 
 `pip install mysqlclient`
 
-NOTE: Wheels for Windows may be not released with source package. You should pin version
-in your `requirements.txt` to avoid trying to install newest source package.
+**Windows:** Not all releases contain binary builds. Either install Visual Studio, or use the latest available binary build:
 
+    pip install --only-binary :all: mysqlclient
 
 ### Install from source
 
