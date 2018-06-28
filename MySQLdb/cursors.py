@@ -34,7 +34,7 @@ def convert_to_str(var):
     elif isinstance(var,dict):
         return {convert_to_str(key):convert_to_str(value) for key,value in var.items()}
     elif isinstance(var,bytes):
-        return var.decode('utf-8')
+        return var.decode('utf-8', 'ignore')
     
     return var
 
