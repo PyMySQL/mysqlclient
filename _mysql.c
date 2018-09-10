@@ -160,6 +160,9 @@ _mysql_Exception(_mysql_ConnectionObject *c)
 		break;
 #endif
 	case ER_DUP_ENTRY:
+#ifdef ER_CONSTRAINT_FAILED
+	case ER_CONSTRAINT_FAILED:
+#endif
 #ifdef ER_DUP_UNIQUE
 	case ER_DUP_UNIQUE:
 #endif
