@@ -72,22 +72,21 @@ def get_config():
     include_dirs = [dequote(i[2:])
                     for i in mysql_config('include') if i.startswith('-I')]
 
-
-    # properly handle mysql client libraries that are not called libmysqlclient
-    client = None
-    CLIENT_LIST = ['mysqlclient', 'mysqlclient_r', 'mysqld', 'mariadb',
-                   'perconaserverclient', 'perconaserverclient_r']
-    for c in CLIENT_LIST:
-        if c in libraries:
-            client = c
-            break
-
-    if client == 'mariadb':
-        client = 'mariadbclient'
-    if client is None:
-        raise ValueError("Couldn't identify mysql client library")
-
     if static:
+        # properly handle mysql client libraries that are not called libmysqlclient
+        client = None
+        CLIENT_LIST = ['mysqlclient', 'mysqlclient_r', 'mysqld', 'mariadb',
+                       'perconaserverclient', 'perconaserverclient_r']
+        for c in CLIENT_LIST:
+            if c in libraries:
+                client = c
+                break
+
+        if client == 'mariadb':
+            client = 'mariadbclient'
+        if client is None:
+            raise ValueError("Couldn't identify mysql client library")
+
         extra_objects.append(os.path.join(library_dirs[0], 'lib%s.a' % client))
         if client in libraries:
             libraries.remove(client)
