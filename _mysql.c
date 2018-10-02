@@ -2455,8 +2455,8 @@ static struct PyMemberDef _mysql_ConnectionObject_memberlist[] = {
 	{
 		"client_flag",
 		T_UINT,
-		READONLY,
 		offsetof(_mysql_ConnectionObject,connection.client_flag),
+		READONLY,
 		"Client flags; refer to MySQLdb.constants.CLIENT"
 	},
 	{NULL} /* Sentinel */
