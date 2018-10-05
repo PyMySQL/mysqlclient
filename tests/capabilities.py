@@ -195,12 +195,17 @@ class DatabaseTest(unittest.TestCase):
 
     def test_DECIMAL(self):
         # DECIMAL
+        from decimal import Decimal
         def generator(row,col):
-            from decimal import Decimal
             return Decimal("%d.%02d" % (row, col))
         self.check_data_integrity(
             ('col1 DECIMAL(5,2)',),
             generator)
+
+        self.cursor.execute('SELECT %s + %s', (Decimal('0.1'), Decimal('0.2')))
+        result = self.cursor.fetchone()[0]
+        self.assertEqual(result, Decimal('0.3'))
+        self.assertIsInstance(result, Decimal)
 
     def test_DATE(self):
         ticks = time()
