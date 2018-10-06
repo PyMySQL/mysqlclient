@@ -279,3 +279,9 @@ class DatabaseTest(unittest.TestCase):
                  ('col1 INT','col2 BLOB'),
                  generator)
 
+    def test_DOUBLE(self):
+        for val in (18014398509481982.0, 0.1):
+            self.cursor.execute('SELECT %s', (val,));
+            result = self.cursor.fetchone()[0]
+            self.assertEqual(result, val)
+            self.assertIsInstance(result, float)
