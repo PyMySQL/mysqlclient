@@ -31,7 +31,7 @@ See also: https://bugs.mysql.com/bug.php?id=86971
 
 Versions of MySQL Connector/C may have incorrect default configuration options that cause compilation errors when `mysqlclient-python` is installed.  (As of November 2017, this is known to be true for homebrew's `mysql-connector-c` and [official package](https://dev.mysql.com/downloads/connector/c/))
 
-Modification of `mysql_config` resolves these issues as follows.
+Modification of `mysql_config`(eg. /usr/local/bin/mysql_config) resolves these issues as follows.
 
 Change
 
