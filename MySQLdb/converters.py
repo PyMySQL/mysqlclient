@@ -139,5 +139,6 @@ try:
     from decimal import Decimal
     conversions[FIELD_TYPE.DECIMAL] = Decimal
     conversions[FIELD_TYPE.NEWDECIMAL] = Decimal
+    conversions[Decimal] = Thing2Str
 except ImportError:
     pass
