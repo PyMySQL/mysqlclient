@@ -66,7 +66,7 @@ def Unicode2Str(s, d):
     return s.encode()
 
 def Float2Str(o, d):
-    return '%.15g' % o
+    return '%.16e' % o
 
 def None2NULL(o, d):
     """Convert None to NULL."""
