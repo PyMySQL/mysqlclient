@@ -1686,6 +1686,28 @@ _mysql_ConnectionObject_get_character_set_info(
 }
 #endif
 
+static char _mysql_ConnectionObject_get_native_connection__doc__[] =
+"Return the internal MYSQL* wrapped in a PyCapsule object.\n\
+NOTE: this is a private API introduced ONLY for XTA integration,\n\
+      don't use it for different use cases.\n\
+      This method is supported only for XTA integration and support must\n\
+      be asked to LIXA project: http://www.tiian.org/lixa/\n\
+      Please DO NOT ask support to PyMySQL/mysqlclient-python project.\n\
+";
+
+static PyObject *
+_mysql_ConnectionObject_get_native_connection(
+	_mysql_ConnectionObject *self,
+	PyObject *noargs)
+{
+	PyObject *result;
+	check_connection(self);
+	result = PyCapsule_New(&(self->connection), 
+		"_mysql.connection.native_connection", NULL);
+	return result;
+}
+
+
 static char _mysql_get_client_info__doc__[] =
 "get_client_info() -- Returns a string that represents\n\
 the client library version.";
@@ -2271,6 +2293,12 @@ static PyMethodDef _mysql_ConnectionObject_methods[] = {
 		_mysql_ConnectionObject_get_character_set_info__doc__
 	},
 #endif
+	{
+		"_get_native_connection",
+		(PyCFunction)_mysql_ConnectionObject_get_native_connection,
+		METH_NOARGS,
+		_mysql_ConnectionObject_get_native_connection__doc__
+	},
 	{
 		"close",
 		(PyCFunction)_mysql_ConnectionObject_close,
