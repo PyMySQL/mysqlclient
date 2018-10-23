@@ -434,7 +434,7 @@ conv
       can be either:
 
       * a callable object which takes a string argument (the MySQL
-        value),' returning a Python value
+        value), returning a Python value
 
       * a sequence of 2-tuples, where the first value is a combination
 	of flags from ``MySQLdb.constants.FLAG``, and the second value
@@ -653,7 +653,6 @@ CursorTupleRowsMixIn
     Causes the cursor to return rows as a tuple of the column values.
 
 CursorDictRowsMixIn
-
     Causes the cursor to return rows as a dictionary, where the keys
     are column names and the values are column values. Note that if
     the column names are not unique, i.e., you are selecting from two
