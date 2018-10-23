@@ -92,3 +92,14 @@ class CoreAPI(unittest.TestCase):
         self.assertTrue(isinstance(self.conn.get_server_info(), str),
                         "Should return an str.")
 
+    def test_client_flag(self):
+        conn = connection_factory(
+            use_unicode=True,
+            client_flag=MySQLdb.constants.CLIENT.FOUND_ROWS)
+
+        self.assertIsInstance(conn.client_flag, (int, MySQLdb.compat.long))
+        self.assertTrue(conn.client_flag & MySQLdb.constants.CLIENT.FOUND_ROWS)
+        with self.assertRaises(TypeError if MySQLdb.compat.PY2 else AttributeError):
+            conn.client_flag = 0
+
+        conn.close()
