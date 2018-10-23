@@ -66,7 +66,10 @@ def Unicode2Str(s, d):
     return s.encode()
 
 def Float2Str(o, d):
-    return '%.16e' % o
+    s = repr(o)
+    if 'e' not in s:
+        s += 'e0'
+    return s
 
 def None2NULL(o, d):
     """Convert None to NULL."""
