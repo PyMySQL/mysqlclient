@@ -2,7 +2,6 @@ import os, sys
 try:
     from ConfigParser import SafeConfigParser
 except ImportError:
-    # Probably running Python 3.x
     from configparser import ConfigParser as SafeConfigParser
 
 # This dequote() business is required for some older versions
@@ -15,27 +14,29 @@ def dequote(s):
         s = s[1:-1]
     return s
 
+_mysql_config_path = "mysql_config"
+
 def mysql_config(what):
     from os import popen
 
-    f = popen("%s --%s" % (mysql_config.path, what))
+    f = popen("%s --%s" % (_mysql_config_path, what))
     data = f.read().strip().split()
     ret = f.close()
     if ret:
         if ret/256:
             data = []
         if ret/256 > 1:
-            raise EnvironmentError("%s not found" % (mysql_config.path,))
+            raise EnvironmentError("%s not found" % (_mysql_config_path,))
     return data
-mysql_config.path = "mysql_config"
 
 def get_config():
     from setup_common import get_metadata_and_options, enabled, create_release_file
+    global _mysql_config_path
 
     metadata, options = get_metadata_and_options()
 
     if 'mysql_config' in options:
-        mysql_config.path = options['mysql_config']
+        _mysql_config_path = options['mysql_config']
 
     extra_objects = []
     static = enabled(options, 'static')
@@ -47,15 +48,7 @@ def get_config():
         static = True
         sys.argv.remove('--static')
 
-    if enabled(options, 'embedded'):
-        libs = mysql_config("libmysqld-libs")
-    elif enabled(options, 'threadsafe'):
-        libs = mysql_config("libs_r")
-        if not libs:
-            libs = mysql_config("libs")
-    else:
-        libs = mysql_config("libs")
-
+    libs = mysql_config("libs")
     library_dirs = [dequote(i[2:]) for i in libs if i.startswith('-L')]
     libraries = [dequote(i[2:]) for i in libs if i.startswith('-l')]
     extra_link_args = [x for x in libs if not x.startswith(('-l', '-L'))]
@@ -92,8 +85,6 @@ def get_config():
             libraries.remove(client)
 
     name = "mysqlclient"
-    if enabled(options, 'embedded'):
-        name = name + "-embedded"
     metadata['name'] = name
 
     define_macros = [

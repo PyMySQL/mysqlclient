@@ -9,13 +9,6 @@
 Build Errors
 ------------
 
-  ld: fatal: library -lmysqlclient_r: not found
-
-mysqlclient_r is the thread-safe library. It's not available on
-all platforms, or all installations, apparently. You'll need to
-reconfigure site.cfg (in MySQLdb-1.2.1 and newer) to have
-threadsafe = False.
-
   mysql.h: No such file or directory
 
 This almost always mean you don't have development packages

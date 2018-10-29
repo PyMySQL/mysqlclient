@@ -42,20 +42,10 @@ Depending on which version of MySQL you have, you may have the option
 of using three different client libraries. To select the client library,
 edit the [options] section of site.cfg:
 
-    embedded
-        use embedded server library (libmysqld) if True; otherwise use
-	one of the client libraries (default).
-
-    threadsafe
-        thread-safe client library (libmysqlclient_r) if True (default);
-	otherwise use non-thread-safe (libmysqlclient). You should
-	always use the thread-safe library if you have the option;
-	otherwise you *may* have problems.
-
     static
         if True, try to link against a static library; otherwise link
-	against dynamic libraries (default). You may need static linking
-	to use the embedded server.
+        against dynamic libraries (default). You may need static linking
+        to use the embedded server.
         This option doesn't work for MySQL>5.6 since libmysqlclient
         requires libstdc++. If you want to use, add `-lstdc++` to
         mysql_config manually.
@@ -130,7 +120,7 @@ Debian GNU/Linux
 
 Packaged as `python-mysqldb`_::
 
-	# apt-get install python-mysqldb
+    # apt-get install python-mysqldb
 
 Or use Synaptic.
 
@@ -148,9 +138,9 @@ Gentoo Linux
 
 Packaged as `mysql-python`_. ::
 
-      # emerge sync
-      # emerge mysql-python
-      # emerge zmysqlda # if you use Zope
+    # emerge sync
+    # emerge mysql-python
+    # emerge zmysqlda # if you use Zope
 
 .. _`mysql-python`: https://packages.gentoo.org/packages/search?q=mysql-python
 
@@ -169,4 +159,3 @@ GPL or the original license based on Python 1.5.2's license.
 
 
 :Author: Andy Dustman <andy@dustman.net>
-:Revision: $Id$

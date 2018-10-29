@@ -680,33 +680,6 @@ SSDictCursor
     Like ``SSCursor`` except it returns rows as dictionaries.
 
 
-Embedded Server
----------------
-
-Instead of connecting to a stand-alone server over the network,
-the embedded server support lets you run a full server right in
-your Python code or application server.
-
-If you have built MySQLdb with embedded server support, there
-are two additional functions you will need to make use of:
-
-  server_init(args, groups)
-    Initialize embedded server. If this client is not linked against
-    the embedded server library, this function does nothing.
-
-    args
-	sequence of command-line arguments
-    groups
-	sequence of groups to use in defaults files
-
-  server_end()
-    Shut down embedded server. If not using an embedded server, this
-    does nothing.
-
-See the MySQL documentation for more information on the embedded
-server.
-
-
 
 :Title: MySQLdb: a Python interface for MySQL
 :Author: Andy Dustman
