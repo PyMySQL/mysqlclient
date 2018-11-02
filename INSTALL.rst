@@ -8,40 +8,17 @@ MySQLdb Installation
 Prerequisites
 -------------
 
-+ Python 2.6, 2.7, 3.3 or higher
-
-  * http://www.python.org/
++ Python 2.7, 3.4 or higher
 
 + setuptools
 
   * http://pypi.python.org/pypi/setuptools
 
-+ MySQL 5.0 or higher
++ MySQL 5.5 or higher
 
   * http://www.mysql.com/downloads/
 
-  * MySQL-4.0 and MySQL-4.1 may work, but not supported.
-
-  * MySQL-5.0 is supported and tested, including stored procedures.
-
-  * MySQL-5.1 is supported (currently a release candidate) but untested.
-    It should work.
-
-  * Red Hat Linux packages:
-
-    - mysql-devel to compile
-
-    - mysql and/or mysql-devel to run
-
-  * MySQL.com RPM packages:
-
-    - MySQL-devel to compile
-
-    - MySQL-shared if you want to use their shared
-      library. Otherwise you'll get a statically-linked module,
-      which may or may not be what you want.
-
-    - MySQL-shared to run if you compiled with MySQL-shared installed
+  * MySQL-5.0 may work, but not supported.
 
 + C compiler
 
