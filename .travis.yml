@@ -1,9 +1,11 @@
 dist: xenial
 language: python
+
+# See aws s3 ls s3://travis-python-archives/binaries/ubuntu/16.04/x86_64/
 python:
   - "nightly"
   - "pypy3.5"
-  - "pypy2.7-5.10"
+  - "pypy2.7-5.10.0"
   - "3.7"
   - "3.6"
   - "3.5"
