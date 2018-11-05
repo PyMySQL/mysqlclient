@@ -75,6 +75,7 @@ class BaseCursor(object):
         self._result = None
         self._warnings = None
         self.rownumber = None
+        self._rows = None
 
     def close(self):
         """Close the cursor. No further queries will be possible."""
@@ -373,11 +374,11 @@ class BaseCursor(object):
 
     def _query(self, q):
         db = self._get_db()
-        self._executed = q
         self._result = None
         db.query(q)
         self._do_get_result(db)
         self._post_get_result()
+        self._executed = q
         return self.rowcount
 
     def _fetch_row(self, size=1):
