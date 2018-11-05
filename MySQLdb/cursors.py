@@ -75,6 +75,7 @@ class BaseCursor(object):
         self._result = None
         self._warnings = None
         self.rownumber = None
+        self._rows = None
 
     def close(self):
         """Close the cursor. No further queries will be possible."""
@@ -172,22 +173,26 @@ class BaseCursor(object):
         nr = db.next_result()
         if nr == -1:
             return None
-        self._do_get_result()
+        self._do_get_result(db)
         self._post_get_result()
         self._warning_check()
         return 1
 
-    def _post_get_result(self): pass
+    def _do_get_result(self, db):
+        self._result = result = self._get_result()
+        if result is None:
+            self.description = self.description_flags = None
+        else:
+            self.description = result.describe()
+            self.description_flags = result.field_flags()
 
-    def _do_get_result(self):
-        db = self._get_db()
-        self._result = self._get_result()
         self.rowcount = db.affected_rows()
         self.rownumber = 0
-        self.description = self._result and self._result.describe() or None
-        self.description_flags = self._result and self._result.field_flags() or None
         self.lastrowid = db.insert_id()
         self._warnings = None
+
+    def _post_get_result(self):
+        pass
 
     def setinputsizes(self, *args):
         """Does nothing, required by DB API."""
@@ -248,7 +253,6 @@ class BaseCursor(object):
         except Exception:
             exc, value = sys.exc_info()[:2]
             self.errorhandler(self, exc, value)
-        self._executed = query
         if not self._defer_warnings:
             self._warning_check()
         return res
@@ -364,20 +368,18 @@ class BaseCursor(object):
         if isinstance(q, unicode):
             q = q.encode(db.encoding, 'surrogateescape')
         self._query(q)
-        self._executed = q
         if not self._defer_warnings:
             self._warning_check()
         return args
 
-    def _do_query(self, q):
-        db = self._get_db()
-        self._last_executed = q
-        db.query(q)
-        self._do_get_result()
-        return self.rowcount
-
     def _query(self, q):
-        return self._do_query(q)
+        db = self._get_db()
+        self._result = None
+        db.query(q)
+        self._do_get_result(db)
+        self._post_get_result()
+        self._executed = q
+        return self.rowcount
 
     def _fetch_row(self, size=1):
         if not self._result:
@@ -407,11 +409,6 @@ class CursorStoreResultMixIn(object):
 
     def _get_result(self):
         return self._get_db().store_result()
-
-    def _query(self, q):
-        rowcount = self._do_query(q)
-        self._post_get_result()
-        return rowcount
 
     def _post_get_result(self):
         self._rows = self._fetch_row(0)
@@ -481,7 +478,8 @@ class CursorUseResultMixIn(object):
 
     _defer_warnings = True
 
-    def _get_result(self): return self._get_db().use_result()
+    def _get_result(self):
+        return self._get_db().use_result()
 
     def fetchone(self):
         """Fetches a single row from the cursor."""
