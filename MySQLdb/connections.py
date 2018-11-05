@@ -200,6 +200,10 @@ class Connection(_mysql.connection):
         # PEP-249 requires autocommit to be initially off
         autocommit = kwargs2.pop('autocommit', False)
         self.waiter = kwargs2.pop('waiter', None)
+        if self.waiter:
+            from warnings import warn
+            warn("waiter is deprecated and will be removed in 1.4.",
+                 DeprecationWarning, 2)
 
         super(Connection, self).__init__(*args, **kwargs2)
         self.cursorclass = cursorclass
@@ -325,12 +329,10 @@ class Connection(_mysql.connection):
         return s
 
     def begin(self):
-        """Explicitly begin a connection. Non-standard.
-        DEPRECATED: Will be removed in 1.3.
-        Use an SQL BEGIN statement instead."""
-        from warnings import warn
-        warn("begin() is non-standard and will be removed in 1.4",
-             DeprecationWarning, 2)
+        """Explicitly begin a connection.
+
+        This method is not used when autocommit=False (default).
+        """
         self.query("BEGIN")
 
     if not hasattr(_mysql.connection, 'warning_count'):

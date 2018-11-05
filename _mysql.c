@@ -756,7 +756,7 @@ static int _mysql_ConnectionObject_clear(
 }
 
 static char _mysql_ConnectionObject_fileno__doc__[] =
-"Return underlaying fd for connection";
+"Return underlaying fd for connection (deprecated)";
 
 static PyObject *
 _mysql_ConnectionObject_fileno(
