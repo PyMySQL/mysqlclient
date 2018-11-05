@@ -1,9 +1,9 @@
-sudo: required
-dist: trusty
+dist: xenial
 language: python
 python:
   - "nightly"
-  - "pypy-5.3.1"
+  - "pypy3.5"
+  - "pypy2.7-5.10"
   - "3.7"
   - "3.6"
   - "3.5"
