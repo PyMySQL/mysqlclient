@@ -202,6 +202,12 @@ class DatabaseTest(unittest.TestCase):
             ('col1 DECIMAL(5,2)',),
             generator)
 
+        val = Decimal('1.11111111111111119E-7')
+        self.cursor.execute('SELECT %s', (val,))
+        result = self.cursor.fetchone()[0]
+        self.assertEqual(result, val)
+        self.assertIsInstance(result, Decimal)
+
         self.cursor.execute('SELECT %s + %s', (Decimal('0.1'), Decimal('0.2')))
         result = self.cursor.fetchone()[0]
         self.assertEqual(result, Decimal('0.3'))
