@@ -82,6 +82,8 @@ def Thing2Literal(o, d):
     that method when the connection is created."""
     return string_literal(o, d)
 
+def Decimal2Literal(o, d):
+    return format(o, 'f')
 
 def char_array(s):
     return array.array('c', s)
@@ -142,6 +144,6 @@ try:
     from decimal import Decimal
     conversions[FIELD_TYPE.DECIMAL] = Decimal
     conversions[FIELD_TYPE.NEWDECIMAL] = Decimal
-    conversions[Decimal] = Thing2Str
+    conversions[Decimal] = Decimal2Literal
 except ImportError:
     pass
