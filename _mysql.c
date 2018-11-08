@@ -99,7 +99,7 @@ static int _mysql_server_init_done = 0;
 #endif
 
 /* According to https://dev.mysql.com/doc/refman/5.1/en/mysql-options.html
-   The MYSQL_OPT_READ_TIMEOUT apear in the version 5.1.12 */
+   The MYSQL_OPT_READ_TIMEOUT appear in the version 5.1.12 */
 #if MYSQL_VERSION_ID > 50112
 #define HAVE_MYSQL_OPT_TIMEOUTS 1
 #endif
