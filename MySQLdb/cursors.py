@@ -61,7 +61,6 @@ class BaseCursor(object):
         InternalError, ProgrammingError, NotSupportedError,
     )
 
-    _defer_warnings = False
     connection = None
 
     def __init__(self, connection):
@@ -126,40 +125,6 @@ class BaseCursor(object):
         if not self._executed:
             raise ProgrammingError("execute() first")
 
-    def _warning_check(self):
-        from warnings import warn
-        db = self._get_db()
-
-        # None => warnings not interrogated for current query yet
-        # 0 => no warnings exists or have been handled already for this query
-        if self._warnings is None:
-            self._warnings = db.warning_count()
-        if self._warnings:
-            # Only propagate warnings for current query once
-            warning_count = self._warnings
-            self._warnings = 0
-            # When there is next result, fetching warnings cause "command
-            # out of sync" error.
-            if self._result and self._result.has_next:
-                msg = "There are %d MySQL warnings." % (warning_count,)
-                self.messages.append(msg)
-                warn(self.Warning(0, msg), stacklevel=3)
-                return
-
-            warnings = db.show_warnings()
-            if warnings:
-                # This is done in two loops in case
-                # Warnings are set to raise exceptions.
-                for w in warnings:
-                    self.messages.append((self.Warning, w))
-                for w in warnings:
-                    warn(self.Warning(*w[1:3]), stacklevel=3)
-            else:
-                info = db.info()
-                if info:
-                    self.messages.append((self.Warning, info))
-                    warn(self.Warning(0, info), stacklevel=3)
-
     def nextset(self):
         """Advance to the next result set.
 
@@ -175,7 +140,6 @@ class BaseCursor(object):
             return None
         self._do_get_result(db)
         self._post_get_result()
-        self._warning_check()
         return 1
 
     def _do_get_result(self, db):
@@ -248,8 +212,6 @@ class BaseCursor(object):
             query = query.encode(db.encoding, 'surrogateescape')
 
         res = self._query(query)
-        if not self._defer_warnings:
-            self._warning_check()
         return res
 
     def executemany(self, query, args):
@@ -363,8 +325,6 @@ class BaseCursor(object):
         if isinstance(q, unicode):
             q = q.encode(db.encoding, 'surrogateescape')
         self._query(q)
-        if not self._defer_warnings:
-            self._warning_check()
         return args
 
     def _query(self, q):
@@ -470,8 +430,6 @@ class CursorUseResultMixIn(object):
     close() the cursor before additional queries can be performed on
     the connection."""
 
-    _defer_warnings = True
-
     def _get_result(self):
         return self._get_db().use_result()
 
@@ -480,7 +438,6 @@ class CursorUseResultMixIn(object):
         self._check_executed()
         r = self._fetch_row(1)
         if not r:
-            self._warning_check()
             return None
         self.rownumber = self.rownumber + 1
         return r[0]
@@ -491,8 +448,6 @@ class CursorUseResultMixIn(object):
         self._check_executed()
         r = self._fetch_row(size or self.arraysize)
         self.rownumber = self.rownumber + len(r)
-        if not r:
-            self._warning_check()
         return r
 
     def fetchall(self):
@@ -500,7 +455,6 @@ class CursorUseResultMixIn(object):
         self._check_executed()
         r = self._fetch_row(0)
         self.rownumber = self.rownumber + len(r)
-        self._warning_check()
         return r
 
     def __iter__(self):
