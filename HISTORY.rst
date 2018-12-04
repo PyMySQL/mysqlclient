@@ -1,4 +1,28 @@
 ======================
+ What's new in 1.3.14
+======================
+
+Release: 2018-12-04
+
+* Support static linking of MariaDB Connector/C (#265)
+
+* Better converter for Decimal and Float (#267, #268, #273, #286)
+
+* Add ``Connection._get_native_connection`` for XTA project (#269)
+
+* Fix SEGV on MariaDB Connector/C when ``Connection.close()`` is called
+  for closed connection. (#270, #272, #276)
+
+* Fix ``Connection.client_flag`` (#266)
+
+* Fix SSCursor may raise same exception twice (#282)
+
+* ``waiter`` option is now deprecated. (#285)
+
+* Fixed SSL support is not detected when built with MySQL < 5.1 (#291)
+
+
+======================
  What's new in 1.3.13
 ======================
 

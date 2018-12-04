@@ -2,9 +2,7 @@
 
 import os
 import io
-import sys
 
-import distutils.errors
 import setuptools
 
 if os.name == "posix":
