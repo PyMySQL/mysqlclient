@@ -73,7 +73,6 @@ class BaseCursor(object):
         self._executed = None
         self.lastrowid = None
         self.messages = []
-        self.errorhandler = connection.errorhandler
         self._result = None
         self._warnings = None
         self.rownumber = None
@@ -88,7 +87,6 @@ class BaseCursor(object):
                 pass
         finally:
             self.connection = None
-            self.errorhandler = None
             self._result = None
 
     def __enter__(self):
@@ -126,7 +124,7 @@ class BaseCursor(object):
 
     def _check_executed(self):
         if not self._executed:
-            self.errorhandler(self, ProgrammingError, "execute() first")
+            raise ProgrammingError("execute() first")
 
     def _warning_check(self):
         from warnings import warn
@@ -244,17 +242,12 @@ class BaseCursor(object):
             try:
                 query = query % args
             except TypeError as m:
-                self.errorhandler(self, ProgrammingError, str(m))
+                raise ProgrammingError(str(m))
 
         if isinstance(query, unicode):
             query = query.encode(db.encoding, 'surrogateescape')
 
-        res = None
-        try:
-            res = self._query(query)
-        except Exception:
-            exc, value = sys.exc_info()[:2]
-            self.errorhandler(self, exc, value)
+        res = self._query(query)
         if not self._defer_warnings:
             self._warning_check()
         return res
@@ -458,10 +451,9 @@ class CursorStoreResultMixIn(object):
         elif mode == 'absolute':
             r = value
         else:
-            self.errorhandler(self, ProgrammingError,
-                              "unknown scroll mode %s" % repr(mode))
+            raise ProgrammingError("unknown scroll mode %s" % repr(mode))
         if r < 0 or r >= len(self._rows):
-            self.errorhandler(self, IndexError, "out of range")
+            raise IndexError("out of range")
         self.rownumber = r
 
     def __iter__(self):

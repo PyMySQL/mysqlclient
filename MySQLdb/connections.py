@@ -28,31 +28,6 @@ if not PY2:
             return s.decode('ascii', 'surrogateescape')
 
 
-def defaulterrorhandler(connection, cursor, errorclass, errorvalue):
-    """
-    If cursor is not None, (errorclass, errorvalue) is appended to
-    cursor.messages; otherwise it is appended to
-    connection.messages. Then errorclass is raised with errorvalue as
-    the value.
-
-    You can override this with your own error handler by assigning it
-    to the instance.
-    """
-    error = errorclass, errorvalue
-    if cursor:
-        cursor.messages.append(error)
-    else:
-        connection.messages.append(error)
-    del cursor
-    del connection
-    if isinstance(errorvalue, BaseException):
-        raise errorvalue
-    if errorclass is not None:
-        raise errorclass(errorvalue)
-    else:
-        raise Exception(errorvalue)
-
-
 re_numeric_part = re.compile(r"^(\d+)")
 
 def numeric_part(s):
@@ -393,7 +368,5 @@ class Connection(_mysql.connection):
     InternalError = InternalError
     ProgrammingError = ProgrammingError
     NotSupportedError = NotSupportedError
-
-    errorhandler = defaulterrorhandler
 
 # vim: colorcolumn=100
