@@ -367,7 +367,7 @@ _mysql_ConnectionObject_Initialize(
     MYSQL *conn = NULL;
     PyObject *conv = NULL;
     PyObject *ssl = NULL;
-    char *key = NULL, *cert = NULL, *ca = NULL,
+    const char *key = NULL, *cert = NULL, *ca = NULL,
          *capath = NULL, *cipher = NULL;
     PyObject *ssl_keepref[5] = {NULL};
     int n_ssl_keepref = 0;
@@ -2335,7 +2335,7 @@ _mysql_ConnectionObject_getattro(
     _mysql_ConnectionObject *self,
     PyObject *name)
 {
-    char *cname;
+    const char *cname;
 #ifdef IS_PY3K
     cname = PyUnicode_AsUTF8(name);
 #else
