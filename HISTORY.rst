@@ -21,6 +21,9 @@ Release: TBD
 * Remove ``fileno``, ``escape_sequence``, and ``escape_dict`` methods
   from Connection class.
 
+* Remove automatic MySQL warning checking.
+
+
 ======================
  What's new in 1.3.14
 ======================
