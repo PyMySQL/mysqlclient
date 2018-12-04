@@ -7,14 +7,13 @@ override Connection.default_cursor with a non-standard Cursor class.
 import re
 import sys
 
-from MySQLdb import cursors
+from MySQLdb import cursors, _mysql
 from MySQLdb.compat import unicode, PY2
-from _mysql_exceptions import (
+from MySQLdb._mysql_exceptions import (
     Warning, Error, InterfaceError, DataError,
     DatabaseError, OperationalError, IntegrityError, InternalError,
     NotSupportedError, ProgrammingError,
 )
-import _mysql
 
 
 if not PY2:

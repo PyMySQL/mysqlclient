@@ -1,6 +1,6 @@
 import unittest
 
-import _mysql
+from MySQLdb import _mysql
 import MySQLdb
 from MySQLdb.constants import FIELD_TYPE
 from configdb import connection_factory
