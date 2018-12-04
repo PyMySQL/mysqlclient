@@ -31,7 +31,7 @@ Don't modify conversions if you can avoid it. Instead, make copies
 MySQL.connect().
 """
 
-from _mysql import string_literal, escape, NULL
+from MySQLdb._mysql import string_literal, escape, NULL
 from MySQLdb.constants import FIELD_TYPE, FLAG
 from MySQLdb.times import *
 from MySQLdb.compat import PY2, long

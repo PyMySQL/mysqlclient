@@ -17,11 +17,11 @@ Installation
 The ``README`` file has complete installation instructions.
 
 
-_mysql
-------
+MySQLdb._mysql
+--------------
 
 If you want to write applications which are portable across databases,
-use MySQLdb_, and avoid using this module directly. ``_mysql``
+use MySQLdb_, and avoid using this module directly. ``MySQLdb._mysql``
 provides an interface which mostly implements the MySQL C API. For
 more information, see the `MySQL documentation`_. The documentation
 for this module is intentionally weak because you probably should use

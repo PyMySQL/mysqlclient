@@ -15,7 +15,7 @@ MySQLdb.converters module.
 
 from MySQLdb.release import __version__, version_info, __author__
 
-import _mysql
+from . import _mysql
 
 if version_info != _mysql.version_info:
     raise ImportError("this is MySQLdb version %s, but _mysql is version %r" %
@@ -25,7 +25,7 @@ threadsafety = 1
 apilevel = "2.0"
 paramstyle = "format"
 
-from _mysql import *
+from ._mysql import *
 from MySQLdb.compat import PY2
 from MySQLdb.constants import FIELD_TYPE
 from MySQLdb.times import Date, Time, Timestamp, \
