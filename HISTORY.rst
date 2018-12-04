@@ -18,6 +18,9 @@ Release: TBD
 
 * Remove ``waiter`` option from Connection.
 
+* Remove ``fileno``, ``escape_sequence``, and ``escape_dict`` methods
+  from Connection class.
+
 ======================
  What's new in 1.3.14
 ======================
