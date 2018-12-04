@@ -534,38 +534,6 @@ class CursorDictRowsMixIn(object):
 
     _fetch_type = 1
 
-    def fetchoneDict(self):
-        """Fetch a single row as a dictionary. Deprecated:
-        Use fetchone() instead. Will be removed in 1.3."""
-        from warnings import warn
-        warn("fetchoneDict() is non-standard and will be removed in 1.3",
-             DeprecationWarning, 2)
-        return self.fetchone()
-
-    def fetchmanyDict(self, size=None):
-        """Fetch several rows as a list of dictionaries. Deprecated:
-        Use fetchmany() instead. Will be removed in 1.3."""
-        from warnings import warn
-        warn("fetchmanyDict() is non-standard and will be removed in 1.3",
-             DeprecationWarning, 2)
-        return self.fetchmany(size)
-
-    def fetchallDict(self):
-        """Fetch all available rows as a list of dictionaries. Deprecated:
-        Use fetchall() instead. Will be removed in 1.3."""
-        from warnings import warn
-        warn("fetchallDict() is non-standard and will be removed in 1.3",
-             DeprecationWarning, 2)
-        return self.fetchall()
-
-
-class CursorOldDictRowsMixIn(CursorDictRowsMixIn):
-    """This is a MixIn class that returns rows as dictionaries with
-    the same key convention as the old Mysqldb (MySQLmodule). Don't
-    use this."""
-
-    _fetch_type = 2
-
 
 class Cursor(CursorStoreResultMixIn, CursorTupleRowsMixIn,
              BaseCursor):
@@ -589,5 +557,3 @@ class SSDictCursor(CursorUseResultMixIn, CursorDictRowsMixIn,
                    BaseCursor):
     """This is a Cursor class that returns rows as dictionaries and
     stores the result set in the server."""
-
-
