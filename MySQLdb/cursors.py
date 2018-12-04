@@ -55,9 +55,11 @@ class BaseCursor(object):
     #: Default value of max_allowed_packet is 1048576.
     max_stmt_length = 64*1024
 
-    from _mysql_exceptions import MySQLError, Warning, Error, InterfaceError, \
-         DatabaseError, DataError, OperationalError, IntegrityError, \
-         InternalError, ProgrammingError, NotSupportedError
+    from ._mysql_exceptions import (
+        MySQLError, Warning, Error, InterfaceError,
+        DatabaseError, DataError, OperationalError, IntegrityError,
+        InternalError, ProgrammingError, NotSupportedError,
+    )
 
     _defer_warnings = False
     connection = None
