@@ -1865,8 +1865,10 @@ _mysql_ConnectionObject_store_result(
     if (!kwarglist) goto error;
     r = MyAlloc(_mysql_ResultObject, _mysql_ResultObject_Type);
     if (!r) goto error;
-    if (_mysql_ResultObject_Initialize(r, arglist, kwarglist))
+    if (_mysql_ResultObject_Initialize(r, arglist, kwarglist)) {
+        Py_DECREF(r);
         goto error;
+    }
     result = (PyObject *) r;
     if (!(r->result)) {
         Py_DECREF(result);
@@ -1924,9 +1926,11 @@ _mysql_ConnectionObject_use_result(
     if (!kwarglist) goto error;
     r = MyAlloc(_mysql_ResultObject, _mysql_ResultObject_Type);
     if (!r) goto error;
-    result = (PyObject *) r;
-    if (_mysql_ResultObject_Initialize(r, arglist, kwarglist))
+    if (_mysql_ResultObject_Initialize(r, arglist, kwarglist)) {
+        Py_DECREF(r);
         goto error;
+    }
+    result = (PyObject *) r;
     if (!(r->result)) {
         Py_DECREF(result);
         Py_INCREF(Py_None);
