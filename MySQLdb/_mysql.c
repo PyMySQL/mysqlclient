@@ -607,17 +607,6 @@ static int _mysql_ConnectionObject_clear(
     return 0;
 }
 
-static char _mysql_ConnectionObject_fileno__doc__[] =
-"Return underlaying fd for connection (deprecated)";
-
-static PyObject *
-_mysql_ConnectionObject_fileno(
-    _mysql_ConnectionObject *self)
-{
-    check_connection(self);
-    return PyInt_FromLong(self->connection.net.fd);
-}
-
 static char _mysql_ConnectionObject_close__doc__[] =
 "Close the connection. No further activity possible.";
 
@@ -1034,71 +1023,6 @@ _mysql_escape(
         return _escape_item(o,
                ((_mysql_ConnectionObject *) self)->converter);
     }
-}
-
-static char _mysql_escape_sequence__doc__[] =
-"escape_sequence(seq, dict) -- escape any special characters in sequence\n\
-seq using mapping dict to provide quoting functions for each type.\n\
-Returns a tuple of escaped items.";
-static PyObject *
-_mysql_escape_sequence(
-    PyObject *self,
-    PyObject *args)
-{
-    PyObject *o=NULL, *d=NULL, *r=NULL, *item, *quoted;
-    int i, n;
-    if (!PyArg_ParseTuple(args, "OO:escape_sequence", &o, &d))
-        goto error;
-    if (!PyMapping_Check(d)) {
-              PyErr_SetString(PyExc_TypeError,
-                              "argument 2 must be a mapping");
-              return NULL;
-        }
-    if ((n = PyObject_Length(o)) == -1) goto error;
-    if (!(r = PyTuple_New(n))) goto error;
-    for (i=0; i<n; i++) {
-        item = PySequence_GetItem(o, i);
-        if (!item) goto error;
-        quoted = _escape_item(item, d);
-        Py_DECREF(item);
-        if (!quoted) goto error;
-        PyTuple_SET_ITEM(r, i, quoted);
-    }
-    return r;
-  error:
-    Py_XDECREF(r);
-    return NULL;
-}
-
-static char _mysql_escape_dict__doc__[] =
-"escape_sequence(d, dict) -- escape any special characters in\n\
-dictionary d using mapping dict to provide quoting functions for each type.\n\
-Returns a dictionary of escaped items.";
-static PyObject *
-_mysql_escape_dict(
-    PyObject *self,
-    PyObject *args)
-{
-    PyObject *o=NULL, *d=NULL, *r=NULL, *item, *quoted, *pkey;
-    Py_ssize_t ppos = 0;
-    if (!PyArg_ParseTuple(args, "O!O:escape_dict", &PyDict_Type, &o, &d))
-        goto error;
-    if (!PyMapping_Check(d)) {
-        PyErr_SetString(PyExc_TypeError,
-                "argument 2 must be a mapping");
-        return NULL;
-    }
-    if (!(r = PyDict_New())) goto error;
-    while (PyDict_Next(o, &ppos, &pkey, &item)) {
-        quoted = _escape_item(item, d);
-        if (!quoted) goto error;
-        if (PyDict_SetItem(r, pkey, quoted)==-1) goto error;
-        Py_DECREF(quoted);
-    }
-    return r;
-  error:
-    Py_XDECREF(r);
-    return NULL;
 }
 
 static char _mysql_ResultObject_describe__doc__[] =
@@ -2170,12 +2094,6 @@ static PyMethodDef _mysql_ConnectionObject_methods[] = {
         _mysql_ConnectionObject_close__doc__
     },
     {
-        "fileno",
-        (PyCFunction)_mysql_ConnectionObject_fileno,
-        METH_NOARGS,
-        _mysql_ConnectionObject_fileno__doc__
-    },
-    {
         "dump_debug_info",
         (PyCFunction)_mysql_ConnectionObject_dump_debug_info,
         METH_NOARGS,
@@ -2611,20 +2529,6 @@ _mysql_methods[] = {
         (PyCFunction)_mysql_escape,
         METH_VARARGS,
         _mysql_escape__doc__
-    },
-    {
-        // deprecated.
-        "escape_sequence",
-        (PyCFunction)_mysql_escape_sequence,
-        METH_VARARGS,
-        _mysql_escape_sequence__doc__
-    },
-    {
-        // deprecated.
-        "escape_dict",
-        (PyCFunction)_mysql_escape_dict,
-        METH_VARARGS,
-        _mysql_escape_dict__doc__
     },
     {
         "escape_string",

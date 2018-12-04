@@ -93,7 +93,7 @@ __all__ = [ 'BINARY', 'Binary', 'Connect', 'Connection', 'DATE',
     'MySQLError', 'NULL', 'NUMBER', 'NotSupportedError', 'DBAPISet',
     'OperationalError', 'ProgrammingError', 'ROWID', 'STRING', 'TIME',
     'TIMESTAMP', 'Warning', 'apilevel', 'connect', 'connections',
-    'constants', 'converters', 'cursors', 'debug', 'escape', 'escape_dict',
-    'escape_sequence', 'escape_string', 'get_client_info',
+    'constants', 'converters', 'cursors', 'debug', 'escape',
+    'escape_string', 'get_client_info',
     'paramstyle', 'string_literal', 'threadsafety', 'version_info']
 
