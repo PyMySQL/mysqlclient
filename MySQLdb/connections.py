@@ -253,20 +253,6 @@ class Connection(_mysql.connection):
         else:
             _mysql.connection.query(self, query)
 
-    def __enter__(self):
-        from warnings import warn
-        warn("context interface will be changed.  Use explicit conn.commit() or conn.rollback().",
-             DeprecationWarning, 2)
-        if self.get_autocommit():
-            self.query("BEGIN")
-        return self.cursor()
-
-    def __exit__(self, exc, value, tb):
-        if exc:
-            self.rollback()
-        else:
-            self.commit()
-
     def _bytes_literal(self, bs):
         assert isinstance(bs, (bytes, bytearray))
         x = self.string_literal(bs)  # x is escaped and quoted bytes
