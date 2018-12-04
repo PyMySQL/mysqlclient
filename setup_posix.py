@@ -94,7 +94,6 @@ def get_config():
     create_release_file(metadata)
     del metadata['version_info']
     ext_options = dict(
-        name = "_mysql",
         library_dirs = library_dirs,
         libraries = libraries,
         extra_compile_args = extra_compile_args,
@@ -102,7 +101,7 @@ def get_config():
         include_dirs = include_dirs,
         extra_objects = extra_objects,
         define_macros = define_macros,
-        )
+    )
 
     # newer versions of gcc require libstdc++ if doing a static build
     if static:

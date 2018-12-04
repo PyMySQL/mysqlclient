@@ -8,8 +8,8 @@ from functools import partial
 import re
 import sys
 
-from MySQLdb.compat import unicode
-from _mysql_exceptions import (
+from .compat import unicode
+from ._mysql_exceptions import (
     Warning, Error, InterfaceError, DataError,
     DatabaseError, OperationalError, IntegrityError, InternalError,
     NotSupportedError, ProgrammingError)
