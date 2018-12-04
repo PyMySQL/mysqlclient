@@ -300,7 +300,7 @@ class Connection(_mysql.connection):
         set can only be changed in MySQL-4.1 and newer. If you try
         to change the character set from the current value in an
         older version, NotSupportedError will be raised."""
-        if charset == "utf8mb4":
+        if charset in ("utf8mb4", "utf8mb3"):
             py_charset = "utf8"
         else:
             py_charset = charset
