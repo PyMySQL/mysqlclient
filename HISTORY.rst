@@ -11,6 +11,7 @@ Release: TBD
 * ``_mysql`` and ``_mysql_exceptions`` modules are moved under
   ``MySQLdb`` package. (#293)
 
+* Remove ``errorhandler`` from Connection and Cursor classes.
 
 ======================
  What's new in 1.3.14
