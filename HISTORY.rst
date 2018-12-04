@@ -13,6 +13,10 @@ Release: TBD
 
 * Remove ``errorhandler`` from Connection and Cursor classes.
 
+* Remove context manager API from Connection.  It was for transaction.
+  New context manager API for closing connection will be added in future version.
+
+
 ======================
  What's new in 1.3.14
 ======================
