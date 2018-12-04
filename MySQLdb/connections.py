@@ -50,7 +50,6 @@ class Connection(_mysql.connection):
     """MySQL Database Connection Object"""
 
     default_cursor = cursors.Cursor
-    waiter = None
 
     def __init__(self, *args, **kwargs):
         """
@@ -173,11 +172,6 @@ class Connection(_mysql.connection):
 
         # PEP-249 requires autocommit to be initially off
         autocommit = kwargs2.pop('autocommit', False)
-        self.waiter = kwargs2.pop('waiter', None)
-        if self.waiter:
-            from warnings import warn
-            warn("waiter is deprecated and will be removed in 1.4.",
-                 DeprecationWarning, 2)
 
         super(Connection, self).__init__(*args, **kwargs2)
         self.cursorclass = cursorclass
@@ -246,12 +240,7 @@ class Connection(_mysql.connection):
         # Since _mysql releases GIL while querying, we need immutable buffer.
         if isinstance(query, bytearray):
             query = bytes(query)
-        if self.waiter is not None:
-            self.send_query(query)
-            self.waiter(self.fileno())
-            self.read_query_result()
-        else:
-            _mysql.connection.query(self, query)
+        _mysql.connection.query(self, query)
 
     def _bytes_literal(self, bs):
         assert isinstance(bs, (bytes, bytearray))
