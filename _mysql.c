@@ -94,10 +94,6 @@ extern PyTypeObject _mysql_ResultObject_Type;
 static int _mysql_server_init_done = 0;
 #define check_server_init(x) if (!_mysql_server_init_done) { if (mysql_server_init(0, NULL, NULL)) { _mysql_Exception(NULL); return x; } else { _mysql_server_init_done = 1;} }
 
-#if MYSQL_VERSION_ID >= 50500
-#define HAVE_OPENSSL 1
-#endif
-
 /* According to https://dev.mysql.com/doc/refman/5.1/en/mysql-options.html
    The MYSQL_OPT_READ_TIMEOUT appear in the version 5.1.12 */
 #if MYSQL_VERSION_ID > 50112
@@ -502,12 +498,10 @@ _mysql_ConnectionObject_Initialize(
 	MYSQL *conn = NULL;
 	PyObject *conv = NULL;
 	PyObject *ssl = NULL;
-#if HAVE_OPENSSL
 	char *key = NULL, *cert = NULL, *ca = NULL,
 		 *capath = NULL, *cipher = NULL;
 	PyObject *ssl_keepref[5] = {NULL};
 	int n_ssl_keepref = 0;
-#endif
 	char *host = NULL, *user = NULL, *passwd = NULL,
 		 *db = NULL, *unix_socket = NULL;
 	unsigned int port = 0;
@@ -571,18 +565,12 @@ _mysql_ConnectionObject_Initialize(
 #endif
 
 	if (ssl) {
-#if HAVE_OPENSSL
 		PyObject *value = NULL;
 		_stringsuck(ca, value, ssl);
 		_stringsuck(capath, value, ssl);
 		_stringsuck(cert, value, ssl);
 		_stringsuck(key, value, ssl);
 		_stringsuck(cipher, value, ssl);
-#else
-		PyErr_SetString(_mysql_NotSupportedError,
-				"client library does not have SSL support");
-		return -1;
-#endif
 	}
 
 	Py_BEGIN_ALLOW_THREADS ;
@@ -620,18 +608,15 @@ _mysql_ConnectionObject_Initialize(
 	if (local_infile != -1)
 		mysql_options(&(self->connection), MYSQL_OPT_LOCAL_INFILE, (char *) &local_infile);
 
-#if HAVE_OPENSSL
 	if (ssl) {
 		mysql_ssl_set(&(self->connection), key, cert, ca, capath, cipher);
 	}
-#endif
 
 	conn = mysql_real_connect(&(self->connection), host, user, passwd, db,
 				  port, unix_socket, client_flag);
 
 	Py_END_ALLOW_THREADS ;
 
-#if HAVE_OPENSSL
 	if (ssl) {
 		int i;
 		for (i=0; i<n_ssl_keepref; i++) {
@@ -639,7 +624,6 @@ _mysql_ConnectionObject_Initialize(
 			ssl_keepref[i] = NULL;
 		}
 	}
-#endif
 
 	if (!conn) {
 		_mysql_Exception(self);
