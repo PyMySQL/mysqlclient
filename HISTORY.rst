@@ -1,4 +1,18 @@
 ======================
+ What's new in 1.4.0
+======================
+
+Release: TBD
+
+* Removed ``threadsafe`` and ``embedded`` build options.
+
+* Remove some deprecated cursor classes and methods.
+
+* ``_mysql`` and ``_mysql_exceptions`` modules are moved under
+  ``MySQLdb`` package. (#293)
+
+
+======================
  What's new in 1.3.14
 ======================
 
