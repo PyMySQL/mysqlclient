@@ -149,7 +149,7 @@ class test_MySQLdb(dbapi20.DatabaseAPI20Test):
     def help_nextset_setUp(self,cur):
         ''' Should create a procedure called deleteme
             that returns two result sets, first the 
-	    number of rows in booze then "name from booze"
+            number of rows in booze then "name from booze"
         '''
         sql="""
            create procedure deleteme()

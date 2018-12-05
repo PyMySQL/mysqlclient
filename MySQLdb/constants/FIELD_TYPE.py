@@ -2,7 +2,6 @@
 
 These constants represent the various column (field) types that are
 supported by MySQL.
-
 """
 
 DECIMAL = 0
@@ -34,4 +33,4 @@ STRING = 254
 GEOMETRY = 255
 
 CHAR = TINY
-INTERVAL = ENUM	
+INTERVAL = ENUM

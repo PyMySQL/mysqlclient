@@ -704,7 +704,7 @@ class DatabaseAPI20Test(unittest.TestCase):
     def help_nextset_setUp(self,cur):
         ''' Should create a procedure called deleteme
             that returns two result sets, first the 
-	    number of rows in booze then "name from booze"
+            number of rows in booze then "name from booze"
         '''
         raise NotImplementedError('Helper not implemented')
         #sql="""
