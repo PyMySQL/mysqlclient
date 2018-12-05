@@ -1044,7 +1044,11 @@ _mysql_ResultObject_describe(
     if (!(d = PyTuple_New(n))) return NULL;
     for (i=0; i<n; i++) {
         PyObject *t;
+#ifdef IS_PY3K
+        t = Py_BuildValue("(yiiiiii)",
+#else
         t = Py_BuildValue("(siiiiii)",
+#endif
                   fields[i].name,
                   (long) fields[i].type,
                   (long) fields[i].max_length,

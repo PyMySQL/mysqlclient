@@ -148,6 +148,9 @@ class BaseCursor(object):
             self.description = self.description_flags = None
         else:
             self.description = result.describe()
+            if not PY2:
+                name = self.description[0].decode(db.encoding, 'replace')
+                self.description = (name,) + self.description[1:]
             self.description_flags = result.field_flags()
 
         self.rowcount = db.affected_rows()
