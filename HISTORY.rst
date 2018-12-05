@@ -18,8 +18,7 @@ Release: TBD
 
 * Remove ``waiter`` option from Connection.
 
-* Remove ``fileno``, ``escape_sequence``, and ``escape_dict`` methods
-  from Connection class.
+* Remove ``escape_sequence``, and ``escape_dict`` methods from Connection class.
 
 * Remove automatic MySQL warning checking.
 
