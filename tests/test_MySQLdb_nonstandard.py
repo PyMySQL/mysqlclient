@@ -103,3 +103,6 @@ class CoreAPI(unittest.TestCase):
             conn.client_flag = 0
 
         conn.close()
+
+    def test_fileno(self):
+        self.assertGreaterEqual(self.conn.fileno(), 0)

@@ -1639,6 +1639,20 @@ _mysql_ConnectionObject_field_count(
     return PyInt_FromLong((long)mysql_field_count(&(self->connection)));
 }
 
+static char _mysql_ConnectionObject_fileno__doc__[] =
+"Return file descriptor of the underlying libmysqlclient connection.\n\
+This provides raw access to the underlying network connection.\n\
+";
+
+static PyObject *
+_mysql_ConnectionObject_fileno(
+    _mysql_ConnectionObject *self,
+    PyObject *noargs)
+{
+    check_connection(self);
+    return PyInt_FromLong(self->connection.net.fd);
+}
+
 static char _mysql_ResultObject_num_fields__doc__[] =
 "Returns the number of fields (column) in the result." ;
 
@@ -2132,6 +2146,12 @@ static PyMethodDef _mysql_ConnectionObject_methods[] = {
         (PyCFunction)_mysql_ConnectionObject_field_count,
         METH_NOARGS,
         _mysql_ConnectionObject_field_count__doc__
+    },
+    {
+        "fileno",
+        (PyCFunction)_mysql_ConnectionObject_fileno,
+        METH_NOARGS,
+        _mysql_ConnectionObject_fileno__doc__
     },
     {
         "get_host_info",
