@@ -1037,19 +1037,39 @@ _mysql_ResultObject_describe(
 {
     PyObject *d;
     MYSQL_FIELD *fields;
+    MY_CHARSET_INFO cs;
+    int isutf8 = 0;
     unsigned int i, n;
+
     check_result_connection(self);
+
+    mysql_get_character_set_info(&result_connection(self)->connection, &cs);
+    if (strncmp("utf8", cs.name, 4) == 0) {
+        isutf8 = 1;
+    }
+
     n = mysql_num_fields(self->result);
     fields = mysql_fetch_fields(self->result);
     if (!(d = PyTuple_New(n))) return NULL;
     for (i=0; i<n; i++) {
         PyObject *t;
 #ifdef IS_PY3K
-        t = Py_BuildValue("(yiiiiii)",
+        PyObject *name;
+        if (isutf8) {
+            name = PyUnicode_DecodeUTF8(fields[i].name, fields[i].name_length, "replace");
+        } else {
+            name = PyUnicode_Decode(fields[i].name, fields[i].name_length, cs.name, "replace");
+        }
+        if (name == NULL) {
+            goto error;
+        }
+
+        t = Py_BuildValue("(Niiiiii)",
+                  name,
 #else
         t = Py_BuildValue("(siiiiii)",
-#endif
                   fields[i].name,
+#endif
                   (long) fields[i].type,
                   (long) fields[i].max_length,
                   (long) fields[i].length,
