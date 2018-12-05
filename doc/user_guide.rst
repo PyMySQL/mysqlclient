@@ -8,7 +8,7 @@ MySQLdb User's Guide
 Introduction
 ------------
 
-MySQLdb is a thread-compatible interface to the popular MySQL
+MySQLdb is a interface to the popular MySQL
 database server that provides the Python database API.
 
 Installation
@@ -28,7 +28,7 @@ for this module is intentionally weak because you probably should use
 the higher-level MySQLdb module. If you really need it, use the
 standard MySQL docs and transliterate as necessary.
 
-.. _`MySQL documentation`: http://dev.mysql.com/doc/
+.. _`MySQL documentation`: https://dev.mysql.com/doc/
 
 
 MySQL C API translation
@@ -55,48 +55,48 @@ MySQL C API function mapping
       C API                         ``_mysql``
 =================================== ==================================
  ``mysql_affected_rows()``          ``conn.affected_rows()``
- ``mysql_autocommit()``		    ``conn.autocommit()`` 
- ``mysql_character_set_name()``	    ``conn.character_set_name()``
- ``mysql_close()``                  ``conn.close()`` 
- ``mysql_commit()``		    ``conn.commit()``
- ``mysql_connect()``		    ``_mysql.connect()`` 
- ``mysql_data_seek()``		    ``result.data_seek()`` 
- ``mysql_debug()``		    ``_mysql.debug()`` 
- ``mysql_dump_debug_info``	    ``conn.dump_debug_info()`` 
- ``mysql_escape_string()``	    ``_mysql.escape_string()`` 
- ``mysql_fetch_row()``		    ``result.fetch_row()`` 
+ ``mysql_autocommit()``             ``conn.autocommit()``
+ ``mysql_character_set_name()``     ``conn.character_set_name()``
+ ``mysql_close()``                  ``conn.close()``
+ ``mysql_commit()``                 ``conn.commit()``
+ ``mysql_connect()``                ``_mysql.connect()``
+ ``mysql_data_seek()``              ``result.data_seek()``
+ ``mysql_debug()``                  ``_mysql.debug()``
+ ``mysql_dump_debug_info``          ``conn.dump_debug_info()``
+ ``mysql_escape_string()``          ``_mysql.escape_string()``
+ ``mysql_fetch_row()``              ``result.fetch_row()``
  ``mysql_get_character_set_info()`` ``conn.get_character_set_info()``
- ``mysql_get_client_info()``	    ``_mysql.get_client_info()``
- ``mysql_get_host_info()``	    ``conn.get_host_info()`` 
- ``mysql_get_proto_info()``	    ``conn.get_proto_info()`` 
- ``mysql_get_server_info()``	    ``conn.get_server_info()`` 
- ``mysql_info()``		    ``conn.info()`` 
- ``mysql_insert_id()``		    ``conn.insert_id()`` 
- ``mysql_num_fields()``		    ``result.num_fields()`` 
- ``mysql_num_rows()``		    ``result.num_rows()`` 
- ``mysql_options()``		    various options to ``_mysql.connect()`` 
- ``mysql_ping()``		    ``conn.ping()`` 
- ``mysql_query()``		    ``conn.query()`` 
- ``mysql_real_connect()``	    ``_mysql.connect()`` 
- ``mysql_real_query()``		    ``conn.query()`` 
- ``mysql_real_escape_string()``	    ``conn.escape_string()`` 
- ``mysql_rollback()``		    ``conn.rollback()``
- ``mysql_row_seek()``		    ``result.row_seek()`` 
- ``mysql_row_tell()``		    ``result.row_tell()`` 
- ``mysql_select_db()``		    ``conn.select_db()`` 
- ``mysql_set_character_set()``	    ``conn.set_character_set()``
+ ``mysql_get_client_info()``        ``_mysql.get_client_info()``
+ ``mysql_get_host_info()``          ``conn.get_host_info()``
+ ``mysql_get_proto_info()``         ``conn.get_proto_info()``
+ ``mysql_get_server_info()``        ``conn.get_server_info()``
+ ``mysql_info()``                   ``conn.info()``
+ ``mysql_insert_id()``              ``conn.insert_id()``
+ ``mysql_num_fields()``             ``result.num_fields()``
+ ``mysql_num_rows()``               ``result.num_rows()``
+ ``mysql_options()``                various options to ``_mysql.connect()``
+ ``mysql_ping()``                   ``conn.ping()``
+ ``mysql_query()``                  ``conn.query()``
+ ``mysql_real_connect()``           ``_mysql.connect()``
+ ``mysql_real_query()``             ``conn.query()``
+ ``mysql_real_escape_string()``     ``conn.escape_string()``
+ ``mysql_rollback()``               ``conn.rollback()``
+ ``mysql_row_seek()``               ``result.row_seek()``
+ ``mysql_row_tell()``               ``result.row_tell()``
+ ``mysql_select_db()``              ``conn.select_db()``
+ ``mysql_set_character_set()``      ``conn.set_character_set()``
  ``mysql_ssl_set()``                ``ssl`` option to ``_mysql.connect()``
- ``mysql_stat()``		    ``conn.stat()`` 
- ``mysql_store_result()``	    ``conn.store_result()`` 
- ``mysql_thread_id()``		    ``conn.thread_id()`` 
- ``mysql_thread_safe_client()``	    ``conn.thread_safe_client()`` 
- ``mysql_use_result()``		    ``conn.use_result()``
- ``mysql_warning_count()``          ``conn.warning_count()`` 
- ``CLIENT_*``			    ``MySQLdb.constants.CLIENT.*`` 
- ``CR_*``			    ``MySQLdb.constants.CR.*`` 
- ``ER_*``			    ``MySQLdb.constants.ER.*`` 
- ``FIELD_TYPE_*``		    ``MySQLdb.constants.FIELD_TYPE.*`` 
- ``FLAG_*``			    ``MySQLdb.constants.FLAG.*`` 
+ ``mysql_stat()``                   ``conn.stat()``
+ ``mysql_store_result()``           ``conn.store_result()``
+ ``mysql_thread_id()``              ``conn.thread_id()``
+ ``mysql_thread_safe_client()``     ``conn.thread_safe_client()``
+ ``mysql_use_result()``             ``conn.use_result()``
+ ``mysql_warning_count()``          ``conn.warning_count()``
+ ``CLIENT_*``                       ``MySQLdb.constants.CLIENT.*``
+ ``CR_*``                           ``MySQLdb.constants.CR.*``
+ ``ER_*``                           ``MySQLdb.constants.ER.*``
+ ``FIELD_TYPE_*``                   ``MySQLdb.constants.FIELD_TYPE.*``
+ ``FLAG_*``                         ``MySQLdb.constants.FLAG.*``
 =================================== ==================================
 
 
@@ -126,7 +126,7 @@ We haven't even begun to touch upon all the parameters ``connect()``
 can take.  For this reason, I prefer to use keyword parameters::
 
     db=_mysql.connect(host="localhost",user="joebob",
-	              passwd="moonpie",db="thangs")
+                      passwd="moonpie",db="thangs")
 
 This does exactly what the last example did, but is arguably easier to
 read. But since the default host is "localhost", and if your login
@@ -260,19 +260,19 @@ Functions and attributes
 Only a few top-level functions and attributes are defined within
 MySQLdb.
 
-connect(parameters...)  
-	 Constructor for creating a connection to the
-	 database. Returns a Connection Object. Parameters are the
-	 same as for the MySQL C API.  In addition, there are a few
-	 additional keywords that correspond to what you would pass
-	 ``mysql_options()`` before connecting. Note that some
-	 parameters must be specified as keyword arguments! The
-	 default value for each parameter is NULL or zero, as
-	 appropriate. Consult the MySQL documentation for more
-	 details. The important parameters are:
+connect(parameters...)
+         Constructor for creating a connection to the
+         database. Returns a Connection Object. Parameters are the
+         same as for the MySQL C API.  In addition, there are a few
+         additional keywords that correspond to what you would pass
+         ``mysql_options()`` before connecting. Note that some
+         parameters must be specified as keyword arguments! The
+         default value for each parameter is NULL or zero, as
+         appropriate. Consult the MySQL documentation for more
+         details. The important parameters are:
 
          host
-            name of host to connect to. Default: use the local host 
+            name of host to connect to. Default: use the local host
             via a UNIX socket (where applicable)
 
          user
@@ -284,11 +284,11 @@ connect(parameters...)
          db
             database to use. Default: no default database.
 
-	 port
-	    TCP port of MySQL server. Default: standard port (3306).
+         port
+            TCP port of MySQL server. Default: standard port (3306).
 
          unix_socket
-	    location of UNIX socket. Default: use default location or
+            location of UNIX socket. Default: use default location or
             TCP for remote hosts.
 
          conv
@@ -331,45 +331,45 @@ connect(parameters...)
             connecting (MySQL-4.1 and later), you'll need to put the
             correct character set name in connection.charset.
 
-	    If False, text-like columns are returned as normal strings,
-	    but you can always write Unicode strings.
+            If False, text-like columns are returned as normal strings,
+            but you can always write Unicode strings.
 
-	    *This must be a keyword parameter.*
+            *This must be a keyword parameter.*
 
-	 charset
-	    If present, the connection character set will be changed
-	    to this character set, if they are not equal. Support for
-	    changing the character set requires MySQL-4.1 and later
-	    server; if the server is too old, UnsupportedError will be
-	    raised. This option implies use_unicode=True, but you can
-	    override this with use_unicode=False, though you probably
-	    shouldn't.
+         charset
+            If present, the connection character set will be changed
+            to this character set, if they are not equal. Support for
+            changing the character set requires MySQL-4.1 and later
+            server; if the server is too old, UnsupportedError will be
+            raised. This option implies use_unicode=True, but you can
+            override this with use_unicode=False, though you probably
+            shouldn't.
 
-	    If not present, the default character set is used.
+            If not present, the default character set is used.
 
-	    *This must be a keyword parameter.*
+            *This must be a keyword parameter.*
 
-	 sql_mode
-	    If present, the session SQL mode will be set to the given
-	    string. For more information on sql_mode, see the MySQL
-	    documentation. Only available for 4.1 and newer servers.
+         sql_mode
+            If present, the session SQL mode will be set to the given
+            string. For more information on sql_mode, see the MySQL
+            documentation. Only available for 4.1 and newer servers.
 
-	    If not present, the session SQL mode will be unchanged.
+            If not present, the session SQL mode will be unchanged.
 
-	    *This must be a keyword parameter.*
+            *This must be a keyword parameter.*
 
-	 ssl
-	    This parameter takes a dictionary or mapping, where the
-	    keys are parameter names used by the mysql_ssl_set_ MySQL
-	    C API call. If this is set, it initiates an SSL connection
-	    to the server; if there is no SSL support in the client,
-	    an exception is raised. *This must be a keyword
-	    parameter.*
+         ssl
+            This parameter takes a dictionary or mapping, where the
+            keys are parameter names used by the mysql_ssl_set_ MySQL
+            C API call. If this is set, it initiates an SSL connection
+            to the server; if there is no SSL support in the client,
+            an exception is raised. *This must be a keyword
+            parameter.*
 
 .. _mysql_ssl_set: http://dev.mysql.com/doc/refman/en/mysql-ssl-set.html
 
 
-apilevel 
+apilevel
       String constant stating the supported DB API level. '2.0'
 
 threadsafety
@@ -437,11 +437,11 @@ conv
         value), returning a Python value
 
       * a sequence of 2-tuples, where the first value is a combination
-	of flags from ``MySQLdb.constants.FLAG``, and the second value
-	is a function as above. The sequence is tested until the flags
-	on the field match those of the first value. If both values
-	are None, then the default conversion is done. Presently this
-	is only used to distinguish TEXT and BLOB columns.
+        of flags from ``MySQLdb.constants.FLAG``, and the second value
+        is a function as above. The sequence is tested until the flags
+        on the field match those of the first value. If both values
+        are None, then the default conversion is done. Presently this
+        is only used to distinguish TEXT and BLOB columns.
 
       If the key is a Python type or class, then the value is a
       callable Python object (usually a function) taking two arguments
@@ -522,7 +522,7 @@ close()
 
 info()
       Returns some information about the last query. Normally
-      you don't need to check this. If there are any MySQL 
+      you don't need to check this. If there are any MySQL
       warnings, it will cause a Warning to be issued through
       the Python warning module. By default, Warning causes a
       message to appear on the console. However, it is possible
@@ -542,7 +542,7 @@ nextset()
       sets, it returns None; otherwise it returns a true value.
 
       Note that MySQL doesn't support multiple result sets until 4.1.
-      
+
 
 Some examples
 .............
@@ -598,13 +598,13 @@ The only other method you are very likely to use is when you have to
 do a multi-row insert::
 
    c.executemany(
-	 """INSERT INTO breakfast (name, spam, eggs, sausage, price)
-	 VALUES (%s, %s, %s, %s, %s)""",
-	 [
-	 ("Spam and Sausage Lover's Plate", 5, 1, 8, 7.95 ),
-	 ("Not So Much Spam Plate", 3, 2, 0, 3.95 ),
-	 ("Don't Wany ANY SPAM! Plate", 0, 4, 3, 5.95 )
-	 ] )
+         """INSERT INTO breakfast (name, spam, eggs, sausage, price)
+         VALUES (%s, %s, %s, %s, %s)""",
+         [
+         ("Spam and Sausage Lover's Plate", 5, 1, 8, 7.95 ),
+         ("Not So Much Spam Plate", 3, 2, 0, 3.95 ),
+         ("Don't Wany ANY SPAM! Plate", 0, 4, 3, 5.95 )
+         ] )
 
 Here we are inserting three rows of five values. Notice that there is
 a mix of types (strings, ints, floats) though we still only use
