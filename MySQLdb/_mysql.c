@@ -1044,7 +1044,7 @@ _mysql_ResultObject_describe(
     check_result_connection(self);
 
     mysql_get_character_set_info(&result_connection(self)->connection, &cs);
-    if (strncmp("utf8", cs.name, 4) == 0) {
+    if (strncmp("utf8", cs.name, 4) == 0) { // utf8, utf8mb3, utf8mb4
         isutf8 = 1;
     }
 
