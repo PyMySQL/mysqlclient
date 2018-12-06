@@ -189,7 +189,7 @@ class BaseCursor(object):
             except TypeError as m:
                 raise ProgrammingError(str(m))
 
-        assert isinstance(query, bytes)
+        assert isinstance(query, (bytes, bytearray))
         res = self._query(query)
         return res
 
