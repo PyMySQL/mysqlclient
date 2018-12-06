@@ -16,18 +16,6 @@ from MySQLdb._mysql_exceptions import (
 )
 
 
-if not PY2:
-    if sys.version_info[:2] < (3, 6):
-        # See http://bugs.python.org/issue24870
-        _surrogateescape_table = [chr(i) if i < 0x80 else chr(i + 0xdc00) for i in range(256)]
-
-        def _fast_surrogateescape(s):
-            return s.decode('latin1').translate(_surrogateescape_table)
-    else:
-        def _fast_surrogateescape(s):
-            return s.decode('ascii', 'surrogateescape')
-
-
 re_numeric_part = re.compile(r"^(\d+)")
 
 def numeric_part(s):
@@ -183,21 +171,8 @@ class Connection(_mysql.connection):
         self.encoding = 'ascii'  # overridden in set_character_set()
         db = proxy(self)
 
-        # Note: string_literal() is called for bytes object on Python 3 (via bytes_literal)
-        def string_literal(obj, dummy=None):
-            return db.string_literal(obj)
-
-        if PY2:
-            # unicode_literal is called for only unicode object.
-            def unicode_literal(u, dummy=None):
-                return db.string_literal(u.encode(db.encoding))
-        else:
-            # unicode_literal() is called for arbitrary object.
-            def unicode_literal(u, dummy=None):
-                return db.string_literal(str(u).encode(db.encoding))
-
-        def bytes_literal(obj, dummy=None):
-            return b'_binary' + db.string_literal(obj)
+        def unicode_literal(u, dummy=None):
+            return db.string_literal(u.encode(db.encoding))
 
         def string_decoder(s):
             return s.decode(db.encoding)
@@ -214,7 +189,6 @@ class Connection(_mysql.connection):
                       FIELD_TYPE.MEDIUM_BLOB, FIELD_TYPE.LONG_BLOB, FIELD_TYPE.BLOB):
                 self.converter[t].append((None, string_decoder))
 
-        self.encoders[bytes] = string_literal
         self.encoders[unicode] = unicode_literal
         self._transactional = self.server_capabilities & CLIENT.TRANSACTIONS
         if self._transactional:
@@ -250,7 +224,7 @@ class Connection(_mysql.connection):
         return x
 
     def _tuple_literal(self, t):
-        return "(%s)" % (','.join(map(self.literal, t)))
+        return b"(%s)" % (b','.join(map(self.literal, t)))
 
     def literal(self, o):
         """If o is a single object, returns an SQL literal as a string.
@@ -260,7 +234,9 @@ class Connection(_mysql.connection):
         Non-standard. For internal use; do not use this in your
         applications.
         """
-        if isinstance(o, bytearray):
+        if isinstance(o, unicode):
+            s = self.string_literal(o.encode(self.encoding))
+        elif isinstance(o, bytearray):
             s = self._bytes_literal(o)
         elif not PY2 and isinstance(o, bytes):
             s = self._bytes_literal(o)
@@ -268,13 +244,9 @@ class Connection(_mysql.connection):
             s = self._tuple_literal(o)
         else:
             s = self.escape(o, self.encoders)
-        # Python 3(~3.4) doesn't support % operation for bytes object.
-        # We should decode it before using %.
-        # Decoding with ascii and surrogateescape allows convert arbitrary
-        # bytes to unicode and back again.
-        # See http://python.org/dev/peps/pep-0383/
-        if not PY2 and isinstance(s, (bytes, bytearray)):
-            return _fast_surrogateescape(s)
+            if isinstance(s, unicode):
+                s = s.encode(self.encoding)
+        assert isinstance(s, bytes)
         return s
 
     def begin(self):
@@ -282,7 +254,7 @@ class Connection(_mysql.connection):
 
         This method is not used when autocommit=False (default).
         """
-        self.query("BEGIN")
+        self.query(b"BEGIN")
 
     if not hasattr(_mysql.connection, 'warning_count'):
 

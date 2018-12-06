@@ -124,11 +124,11 @@ def Date_or_None(s):
 
 def DateTime2literal(d, c):
     """Format a DateTime object as an ISO timestamp."""
-    return string_literal(format_TIMESTAMP(d), c)
+    return string_literal(format_TIMESTAMP(d))
 
 def DateTimeDelta2literal(d, c):
     """Format a DateTimeDelta object as a time."""
-    return string_literal(format_TIMEDELTA(d),c)
+    return string_literal(format_TIMEDELTA(d))
 
 def mysql_timestamp_converter(s):
     """Convert a MySQL TIMESTAMP to a Timestamp object."""

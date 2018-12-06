@@ -15,13 +15,6 @@ from ._mysql_exceptions import (
     NotSupportedError, ProgrammingError)
 
 
-PY2 = sys.version_info[0] == 2
-if PY2:
-    text_type = unicode
-else:
-    text_type = str
-
-
 #: Regular expression for :meth:`Cursor.executemany`.
 #: executemany only supports simple bulk insert.
 #: You can use it to load large dataset.
@@ -95,31 +88,28 @@ class BaseCursor(object):
         del exc_info
         self.close()
 
-    def _ensure_bytes(self, x, encoding=None):
-        if isinstance(x, text_type):
-            x = x.encode(encoding)
-        elif isinstance(x, (tuple, list)):
-            x = type(x)(self._ensure_bytes(v, encoding=encoding) for v in x)
-        return x
-
     def _escape_args(self, args, conn):
-        ensure_bytes = partial(self._ensure_bytes, encoding=conn.encoding)
+        encoding = conn.encoding
+        literal = conn.literal
+
+        def ensure_bytes(x):
+            if isinstance(x, unicode):
+                return x.encode(encoding)
+            elif isinstance(x, tuple):
+                return tuple(map(ensure_bytes, x))
+            elif isinstance(x, list):
+                return list(map(ensure_bytes, x))
+            return x
 
         if isinstance(args, (tuple, list)):
-            if PY2:
-                args = tuple(map(ensure_bytes, args))
-            return tuple(conn.literal(arg) for arg in args)
+            return tuple(literal(ensure_bytes(arg)) for arg in args)
         elif isinstance(args, dict):
-            if PY2:
-                args = dict((ensure_bytes(key), ensure_bytes(val)) for
-                            (key, val) in args.items())
-            return dict((key, conn.literal(val)) for (key, val) in args.items())
+            return {ensure_bytes(key): literal(ensure_bytes(val))
+                    for (key, val) in args.items()}
         else:
             # If it's not a dictionary let's try escaping it anyways.
             # Worst case it will throw a Value error
-            if PY2:
-                args = ensure_bytes(args)
-            return conn.literal(args)
+            return literal(ensure_bytes(args))
 
     def _check_executed(self):
         if not self._executed:
@@ -186,14 +176,7 @@ class BaseCursor(object):
             pass
         db = self._get_db()
 
-        # NOTE:
-        # Python 2: query should be bytes when executing %.
-        # All unicode in args should be encoded to bytes on Python 2.
-        # Python 3: query should be str (unicode) when executing %.
-        # All bytes in args should be decoded with ascii and surrogateescape on Python 3.
-        # db.literal(obj) always returns str.
-
-        if PY2 and isinstance(query, unicode):
+        if isinstance(query, unicode):
             query = query.encode(db.encoding)
 
         if args is not None:
@@ -201,16 +184,12 @@ class BaseCursor(object):
                 args = dict((key, db.literal(item)) for key, item in args.items())
             else:
                 args = tuple(map(db.literal, args))
-            if not PY2 and isinstance(query, (bytes, bytearray)):
-                query = query.decode(db.encoding)
             try:
                 query = query % args
             except TypeError as m:
                 raise ProgrammingError(str(m))
 
-        if isinstance(query, unicode):
-            query = query.encode(db.encoding, 'surrogateescape')
-
+        assert isinstance(query, (bytes, bytearray))
         res = self._query(query)
         return res
 
@@ -247,29 +226,19 @@ class BaseCursor(object):
     def _do_execute_many(self, prefix, values, postfix, args, max_stmt_length, encoding):
         conn = self._get_db()
         escape = self._escape_args
-        if isinstance(prefix, text_type):
+        if isinstance(prefix, unicode):
             prefix = prefix.encode(encoding)
-        if PY2 and isinstance(values, text_type):
+        if isinstance(values, unicode):
             values = values.encode(encoding)
-        if isinstance(postfix, text_type):
+        if isinstance(postfix, unicode):
             postfix = postfix.encode(encoding)
         sql = bytearray(prefix)
         args = iter(args)
         v = values % escape(next(args), conn)
-        if isinstance(v, text_type):
-            if PY2:
-                v = v.encode(encoding)
-            else:
-                v = v.encode(encoding, 'surrogateescape')
         sql += v
         rows = 0
         for arg in args:
             v = values % escape(arg, conn)
-            if isinstance(v, text_type):
-                if PY2:
-                    v = v.encode(encoding)
-                else:
-                    v = v.encode(encoding, 'surrogateescape')
             if len(sql) + len(v) + len(postfix) + 1 > max_stmt_length:
                 rows += self.execute(sql + postfix)
                 sql = bytearray(prefix)
@@ -308,22 +277,19 @@ class BaseCursor(object):
         to advance through all result sets; otherwise you may get
         disconnected.
         """
-
         db = self._get_db()
+        if isinstance(procname, unicode):
+            procname = procname.encode(db.encoding)
         if args:
-            fmt = '@_{0}_%d=%s'.format(procname)
-            q = 'SET %s' % ','.join(fmt % (index, db.literal(arg))
-                                    for index, arg in enumerate(args))
-            if isinstance(q, unicode):
-                q = q.encode(db.encoding, 'surrogateescape')
+            fmt = b'@_' + procname + b'_%d=%s'
+            q = b'SET %s' % b','.join(fmt % (index, db.literal(arg))
+                                      for index, arg in enumerate(args))
             self._query(q)
             self.nextset()
 
-        q = "CALL %s(%s)" % (procname,
-                             ','.join(['@_%s_%d' % (procname, i)
-                                       for i in range(len(args))]))
-        if isinstance(q, unicode):
-            q = q.encode(db.encoding, 'surrogateescape')
+        q = b"CALL %s(%s)" % (procname,
+                              b','.join([b'@_%s_%d' % (procname, i)
+                                         for i in range(len(args))]))
         self._query(q)
         return args
 
