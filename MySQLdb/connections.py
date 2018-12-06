@@ -16,18 +16,6 @@ from MySQLdb._mysql_exceptions import (
 )
 
 
-if not PY2:
-    if sys.version_info[:2] < (3, 6):
-        # See http://bugs.python.org/issue24870
-        _surrogateescape_table = [chr(i) if i < 0x80 else chr(i + 0xdc00) for i in range(256)]
-
-        def _fast_surrogateescape(s):
-            return s.decode('latin1').translate(_surrogateescape_table)
-    else:
-        def _fast_surrogateescape(s):
-            return s.decode('ascii', 'surrogateescape')
-
-
 re_numeric_part = re.compile(r"^(\d+)")
 
 def numeric_part(s):
@@ -250,7 +238,7 @@ class Connection(_mysql.connection):
         return x
 
     def _tuple_literal(self, t):
-        return "(%s)" % (','.join(map(self.literal, t)))
+        return b"(%s)" % (b','.join(map(self.literal, t)))
 
     def literal(self, o):
         """If o is a single object, returns an SQL literal as a string.
@@ -268,13 +256,7 @@ class Connection(_mysql.connection):
             s = self._tuple_literal(o)
         else:
             s = self.escape(o, self.encoders)
-        # Python 3(~3.4) doesn't support % operation for bytes object.
-        # We should decode it before using %.
-        # Decoding with ascii and surrogateescape allows convert arbitrary
-        # bytes to unicode and back again.
-        # See http://python.org/dev/peps/pep-0383/
-        if not PY2 and isinstance(s, (bytes, bytearray)):
-            return _fast_surrogateescape(s)
+        assert isinstance(s, bytes)
         return s
 
     def begin(self):
@@ -282,7 +264,7 @@ class Connection(_mysql.connection):
 
         This method is not used when autocommit=False (default).
         """
-        self.query("BEGIN")
+        self.query(b"BEGIN")
 
     if not hasattr(_mysql.connection, 'warning_count'):
 
