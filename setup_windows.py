@@ -47,4 +47,3 @@ def get_config():
 
 if __name__ == "__main__":
     sys.stderr.write("""You shouldn't be running this directly; it is used by setup.py.""")
-    
