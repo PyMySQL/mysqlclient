@@ -915,14 +915,15 @@ _mysql.string_literal(obj) cannot handle character sets.";
 static PyObject *
 _mysql_string_literal(
     _mysql_ConnectionObject *self,
-    PyObject *args)
+    PyObject *o)
 {
-    PyObject *str, *s, *o, *d;
+    PyObject *str, *s;
     char *in, *out;
     int len, size;
+
     if (self && PyModule_Check((PyObject*)self))
         self = NULL;
-    if (!PyArg_ParseTuple(args, "O|O:string_literal", &o, &d)) return NULL;
+
     if (PyBytes_Check(o)) {
         s = o;
         Py_INCREF(s);
@@ -965,33 +966,25 @@ static PyObject *_mysql_NULL;
 
 static PyObject *
 _escape_item(
+    PyObject *self,
     PyObject *item,
     PyObject *d)
 {
     PyObject *quoted=NULL, *itemtype, *itemconv;
-    if (!(itemtype = PyObject_Type(item)))
-        goto error;
+    if (!(itemtype = PyObject_Type(item))) {
+        return NULL;
+    }
     itemconv = PyObject_GetItem(d, itemtype);
     Py_DECREF(itemtype);
     if (!itemconv) {
         PyErr_Clear();
-        itemconv = PyObject_GetItem(d,
-#ifdef IS_PY3K
-                 (PyObject *) &PyUnicode_Type);
-#else
-                 (PyObject *) &PyString_Type);
-#endif
-    }
-    if (!itemconv) {
-        PyErr_SetString(PyExc_TypeError,
-                "no default type converter defined");
-        goto error;
+        return _mysql_string_literal((_mysql_ConnectionObject*)self, item);
     }
     Py_INCREF(d);
     quoted = PyObject_CallFunction(itemconv, "OO", item, d);
     Py_DECREF(d);
     Py_DECREF(itemconv);
-error:
+
     return quoted;
 }
 
@@ -1013,14 +1006,14 @@ _mysql_escape(
                     "argument 2 must be a mapping");
             return NULL;
         }
-        return _escape_item(o, d);
+        return _escape_item(self, o, d);
     } else {
         if (!self) {
             PyErr_SetString(PyExc_TypeError,
                     "argument 2 must be a mapping");
             return NULL;
         }
-        return _escape_item(o,
+        return _escape_item(self, o,
                ((_mysql_ConnectionObject *) self)->converter);
     }
 }
@@ -2264,7 +2257,7 @@ static PyMethodDef _mysql_ConnectionObject_methods[] = {
     {
         "string_literal",
         (PyCFunction)_mysql_string_literal,
-        METH_VARARGS,
+        METH_O,
         _mysql_string_literal__doc__},
     {
         "thread_id",
@@ -2587,7 +2580,7 @@ _mysql_methods[] = {
     {
         "string_literal",
         (PyCFunction)_mysql_string_literal,
-        METH_VARARGS,
+        METH_O,
         _mysql_string_literal__doc__
     },
     {

@@ -258,6 +258,8 @@ class Connection(_mysql.connection):
             s = self._tuple_literal(o)
         else:
             s = self.escape(o, self.encoders)
+            if isinstance(s, unicode):
+                s = s.encode(self.encoding)
         assert isinstance(s, bytes)
         return s
 
