@@ -42,10 +42,11 @@ Release: 2018-12-04
 
 * Fix SSCursor may raise same exception twice (#282)
 
-  * This removed ``Cursor._last_executed`` which is duplicate of ``Cursor._executed``.
-    Both member are private.  So this type of change is not documented generally.
-    But Django used the private member for ``last_executed_query`` implementation.
-    If you use the method, you shouldn't upgrade mysqlclient to this version.
+  * This removed ``Cursor._last_executed`` which was duplicate of ``Cursor._executed``.
+    Both members are private.  So this type of changes are not documented in changelog
+    generally.  But Django used the private member for ``last_executed_query`` implementation.
+    If you use the method the method directly or indirectly, this version will break
+    your application.  See https://code.djangoproject.com/ticket/30013
 
 * ``waiter`` option is now deprecated. (#285)
 
