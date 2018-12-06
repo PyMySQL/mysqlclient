@@ -53,7 +53,7 @@ def Str2Set(s):
 
 def Set2Str(s, d):
     # Only support ascii string.  Not tested.
-    return string_literal(','.join(s), d)
+    return string_literal(','.join(s))
 
 def Thing2Str(s, d):
     """Convert something into a string via str()."""
@@ -80,7 +80,7 @@ def Thing2Literal(o, d):
     MySQL-3.23 or newer, string_literal() is a method of the
     _mysql.MYSQL object, and this function will be overridden with
     that method when the connection is created."""
-    return string_literal(o, d)
+    return string_literal(o)
 
 def Decimal2Literal(o, d):
     return format(o, 'f')

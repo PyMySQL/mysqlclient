@@ -171,21 +171,8 @@ class Connection(_mysql.connection):
         self.encoding = 'ascii'  # overridden in set_character_set()
         db = proxy(self)
 
-        # Note: string_literal() is called for bytes object on Python 3 (via bytes_literal)
-        def string_literal(obj, dummy=None):
-            return db.string_literal(obj)
-
-        if PY2:
-            # unicode_literal is called for only unicode object.
-            def unicode_literal(u, dummy=None):
-                return db.string_literal(u.encode(db.encoding))
-        else:
-            # unicode_literal() is called for arbitrary object.
-            def unicode_literal(u, dummy=None):
-                return db.string_literal(str(u).encode(db.encoding))
-
-        def bytes_literal(obj, dummy=None):
-            return b'_binary' + db.string_literal(obj)
+        def unicode_literal(u, dummy=None):
+            return db.string_literal(u.encode(db.encoding))
 
         def string_decoder(s):
             return s.decode(db.encoding)
@@ -202,7 +189,6 @@ class Connection(_mysql.connection):
                       FIELD_TYPE.MEDIUM_BLOB, FIELD_TYPE.LONG_BLOB, FIELD_TYPE.BLOB):
                 self.converter[t].append((None, string_decoder))
 
-        self.encoders[bytes] = string_literal
         self.encoders[unicode] = unicode_literal
         self._transactional = self.server_capabilities & CLIENT.TRANSACTIONS
         if self._transactional:
