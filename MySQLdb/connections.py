@@ -248,7 +248,9 @@ class Connection(_mysql.connection):
         Non-standard. For internal use; do not use this in your
         applications.
         """
-        if isinstance(o, bytearray):
+        if isinstance(o, unicode):
+            s = self.string_literal(o.encode(self.encoding))
+        elif isinstance(o, bytearray):
             s = self._bytes_literal(o)
         elif not PY2 and isinstance(o, bytes):
             s = self._bytes_literal(o)
