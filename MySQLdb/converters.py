@@ -30,8 +30,9 @@ Don't modify conversions if you can avoid it. Instead, make copies
 (with the copy() method), modify the copies, and then pass them to
 MySQL.connect().
 """
+from decimal import Decimal
 
-from MySQLdb._mysql import string_literal, escape, NULL
+from MySQLdb._mysql import string_literal, escape
 from MySQLdb.constants import FIELD_TYPE, FLAG
 from MySQLdb.times import *
 from MySQLdb.compat import PY2, long
@@ -46,10 +47,8 @@ except AttributeError:
     ArrayType = array.array
 
 
-def Bool2Str(s, d): return str(int(s))
-
-def Str2Set(s):
-    return set([ i for i in s.split(',') if i ])
+def Bool2Str(s, d):
+    return b'1' if s else b'0'
 
 def Set2Str(s, d):
     # Only support ascii string.  Not tested.
@@ -73,7 +72,7 @@ def Float2Str(o, d):
 
 def None2NULL(o, d):
     """Convert None to NULL."""
-    return NULL  # duh
+    return b"NULL"
 
 def Thing2Literal(o, d):
     """Convert something into a SQL string literal.  If using
@@ -84,9 +83,6 @@ def Thing2Literal(o, d):
 
 def Decimal2Literal(o, d):
     return format(o, 'f')
-
-def char_array(s):
-    return array.array('c', s)
 
 def array2Str(o, d):
     return Thing2Literal(o.tostring(), d)
@@ -109,18 +105,18 @@ conversions = {
     DateTimeDeltaType: DateTimeDelta2literal,
     str: Thing2Literal,  # default
     set: Set2Str,
+    Decimal = Decimal2Literal
 
     FIELD_TYPE.TINY: int,
     FIELD_TYPE.SHORT: int,
     FIELD_TYPE.LONG: long,
     FIELD_TYPE.FLOAT: float,
     FIELD_TYPE.DOUBLE: float,
-    FIELD_TYPE.DECIMAL: float,
-    FIELD_TYPE.NEWDECIMAL: float,
+    FIELD_TYPE.DECIMAL: Decimal,
+    FIELD_TYPE.NEWDECIMAL: Decimal,
     FIELD_TYPE.LONGLONG: long,
     FIELD_TYPE.INT24: int,
     FIELD_TYPE.YEAR: int,
-    FIELD_TYPE.SET: Str2Set,
     FIELD_TYPE.TIMESTAMP: mysql_timestamp_converter,
     FIELD_TYPE.DATETIME: DateTime_or_None,
     FIELD_TYPE.TIME: TimeDelta_or_None,
@@ -134,16 +130,3 @@ conversions = {
     FIELD_TYPE.VAR_STRING: _bytes_or_str,
     FIELD_TYPE.VARCHAR: _bytes_or_str,
 }
-
-if PY2:
-    conversions[unicode] = Unicode2Str
-else:
-    conversions[bytes] = Thing2Literal
-
-try:
-    from decimal import Decimal
-    conversions[FIELD_TYPE.DECIMAL] = Decimal
-    conversions[FIELD_TYPE.NEWDECIMAL] = Decimal
-    conversions[Decimal] = Decimal2Literal
-except ImportError:
-    pass

@@ -2737,9 +2737,6 @@ init_mysql(void)
           _mysql_NewException(dict, edict, "NotSupportedError")))
         goto error;
     Py_DECREF(emod);
-    if (!(_mysql_NULL = PyString_FromString("NULL")))
-        goto error;
-    if (PyDict_SetItemString(dict, "NULL", _mysql_NULL)) goto error;
   error:
     if (PyErr_Occurred()) {
         PyErr_SetString(PyExc_ImportError, "_mysql: init failed");
