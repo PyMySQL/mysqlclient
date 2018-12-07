@@ -25,10 +25,6 @@ class TestDBAPISet(unittest.TestCase):
 class TestCoreModule(unittest.TestCase):
     """Core _mysql module features."""
 
-    def test_NULL(self):
-        """Should have a NULL constant."""
-        self.assertEqual(_mysql.NULL, 'NULL')
-
     def test_version(self):
         """Version information sanity."""
         self.assertTrue(isinstance(_mysql.__version__, str))
