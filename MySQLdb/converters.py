@@ -105,7 +105,7 @@ conversions = {
     DateTimeDeltaType: DateTimeDelta2literal,
     str: Thing2Literal,  # default
     set: Set2Str,
-    Decimal = Decimal2Literal
+    Decimal: Decimal2Literal,
 
     FIELD_TYPE.TINY: int,
     FIELD_TYPE.SHORT: int,
