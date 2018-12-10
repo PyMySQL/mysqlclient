@@ -22,6 +22,12 @@ Release: TBD
 
 * Remove automatic MySQL warning checking.
 
+* Drop support for MySQL Connector/C with MySQL<5.1.12.
+
+* Remove ``_mysql.NULL`` constant.
+
+* Support non-ASCII field name with non-UTF-8 connection encoding. (#210)
+
 
 ======================
  What's new in 1.3.14
