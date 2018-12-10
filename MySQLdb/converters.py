@@ -35,7 +35,7 @@ from decimal import Decimal
 from MySQLdb._mysql import string_literal, escape
 from MySQLdb.constants import FIELD_TYPE, FLAG
 from MySQLdb.times import *
-from MySQLdb.compat import PY2, long
+from MySQLdb.compat import PY2, long, unicode
 
 NoneType = type(None)
 
@@ -91,7 +91,7 @@ def quote_tuple(t, d):
     return "(%s)" % (','.join(escape_sequence(t, d)))
 
 # bytes or str regarding to BINARY_FLAG.
-_bytes_or_str = [(FLAG.BINARY, bytes)]
+_bytes_or_str = ((FLAG.BINARY, bytes), (None, unicode))
 
 conversions = {
     int: Thing2Str,
@@ -122,11 +122,11 @@ conversions = {
     FIELD_TYPE.TIME: TimeDelta_or_None,
     FIELD_TYPE.DATE: Date_or_None,
 
-    FIELD_TYPE.TINY_BLOB: _bytes_or_str,
-    FIELD_TYPE.MEDIUM_BLOB: _bytes_or_str,
-    FIELD_TYPE.LONG_BLOB: _bytes_or_str,
-    FIELD_TYPE.BLOB: _bytes_or_str,
-    FIELD_TYPE.STRING: _bytes_or_str,
-    FIELD_TYPE.VAR_STRING: _bytes_or_str,
-    FIELD_TYPE.VARCHAR: _bytes_or_str,
+    FIELD_TYPE.TINY_BLOB: bytes,
+    FIELD_TYPE.MEDIUM_BLOB: bytes,
+    FIELD_TYPE.LONG_BLOB: bytes,
+    FIELD_TYPE.BLOB: bytes,
+    FIELD_TYPE.STRING: bytes,
+    FIELD_TYPE.VAR_STRING: bytes,
+    FIELD_TYPE.VARCHAR: bytes,
 }

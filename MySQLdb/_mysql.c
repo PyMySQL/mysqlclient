@@ -213,16 +213,16 @@ _get_encoding(MYSQL *mysql)
 {
     MY_CHARSET_INFO cs;
     mysql_get_character_set_info(mysql, &cs);
-    if (strncmp(utf8, cs.name, 4) == 0) { // utf8, utf8mb3, utf8mb4
+    if (strncmp(utf8, cs.csname, 4) == 0) { // utf8, utf8mb3, utf8mb4
         return utf8;
     }
-    else if (strncmp("koi8r", cs.name, 5) == 0) {
+    else if (strncmp("koi8r", cs.csname, 5) == 0) {
         return "koi8_r";
     }
-    else if (strncmp("koi8u", cs.name, 5) == 0) {
+    else if (strncmp("koi8u", cs.csname, 5) == 0) {
         return "koi8_u";
     }
-    return cs.name;
+    return cs.csname;
 }
 
 static char _mysql_thread_safe__doc__[] =
@@ -275,6 +275,7 @@ _mysql_ResultObject_Initialize(
     Py_END_ALLOW_THREADS ;
 
     self->encoding = _get_encoding(&(conn->connection));
+    //fprintf(stderr, "encoding=%s\n", self->encoding);
     if (!result) {
         if (mysql_errno(&(conn->connection))) {
             _mysql_Exception(conn);
@@ -313,6 +314,8 @@ _mysql_ResultObject_Initialize(
             int j, n2=PySequence_Size(fun);
             if (fields[i].charsetnr != 63) { /* maaagic */
                 flags &= ~BINARY_FLAG;
+            } else {
+                flags |= BINARY_FLAG;
             }
             for (j=0; j<n2; j++) {
                 PyObject *t = PySequence_GetItem(fun, j);
@@ -1128,18 +1131,25 @@ _mysql_field_to_python(
     if (rowitem) {
         if (converter == (PyObject*)&PyUnicode_Type) {
             if (encoding == utf8) {
+                //fprintf(stderr, "decoding with utf8!\n");
                 v = PyUnicode_DecodeUTF8(rowitem, length, NULL);
             } else {
+                //fprintf(stderr, "decoding with %s\n", encoding);
                 v = PyUnicode_Decode(rowitem, length, encoding, NULL);
             }
         }
         else if (converter == (PyObject*)&PyBytes_Type) {
+            //fprintf(stderr, "decoding with bytes\n", encoding);
             v = PyBytes_FromStringAndSize(rowitem, length);
         }
         else if (converter == (PyObject*)&PyInt_Type) {
+            //fprintf(stderr, "decoding with int\n", encoding);
             v = PyInt_FromString(rowitem, NULL, 10);
         }
         else if (converter != Py_None) {
+            //fprintf(stderr, "decoding with callback\n");
+            //PyObject_Print(converter, stderr, 0);
+            //fprintf(stderr, "\n");
             v = PyObject_CallFunction(converter,
 #ifdef IS_PY3K
                           binary ? "y#" : "s#",
@@ -1149,6 +1159,7 @@ _mysql_field_to_python(
                           rowitem,
                           (int)length);
         } else {
+            //fprintf(stderr, "converter=None\n");
 #ifdef IS_PY3K
             if (!binary) {
                 v = PyUnicode_FromStringAndSize(rowitem, (int)length);
@@ -2662,12 +2673,10 @@ init_mysql(void)
     _mysql_ConnectionObject_Type.ob_type = &PyType_Type;
     _mysql_ResultObject_Type.ob_type = &PyType_Type;
 #endif
-#if PY_VERSION_HEX >= 0x02020000
     _mysql_ConnectionObject_Type.tp_alloc = PyType_GenericAlloc;
     _mysql_ConnectionObject_Type.tp_new = PyType_GenericNew;
     _mysql_ResultObject_Type.tp_alloc = PyType_GenericAlloc;
     _mysql_ResultObject_Type.tp_new = PyType_GenericNew;
-#endif
 #ifdef IS_PY3K
     if (PyType_Ready(&_mysql_ConnectionObject_Type) < 0)
         return NULL;
