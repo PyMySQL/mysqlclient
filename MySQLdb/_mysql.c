@@ -37,6 +37,8 @@ PERFORMANCE OF THIS SOFTWARE.
 #include "Python.h"
 #if PY_MAJOR_VERSION >= 3
 #define IS_PY3K
+#define PyInt_Type PyLong_Type
+#define PyInt_FromString PyLong_FromString
 #define PyInt_FromLong(n) PyLong_FromLong(n)
 #define PyInt_Check(n) PyLong_Check(n)
 #define PyInt_AS_LONG(n) PyLong_AS_LONG(n)
@@ -87,6 +89,7 @@ typedef struct {
     int use;
     char has_next;
     PyObject *converter;
+    const char *encoding;
 } _mysql_ResultObject;
 
 extern PyTypeObject _mysql_ResultObject_Type;
@@ -203,6 +206,25 @@ _mysql_Exception(_mysql_ConnectionObject *c)
     return NULL;
 }
 
+static const char *utf8 = "utf8";
+
+static const char*
+_get_encoding(MYSQL *mysql)
+{
+    MY_CHARSET_INFO cs;
+    mysql_get_character_set_info(mysql, &cs);
+    if (strncmp(utf8, cs.name, 4) == 0) { // utf8, utf8mb3, utf8mb4
+        return utf8;
+    }
+    else if (strncmp("koi8r", cs.name, 5) == 0) {
+        return "koi8_r";
+    }
+    else if (strncmp("koi8u", cs.name, 5) == 0) {
+        return "koi8_u";
+    }
+    return cs.name;
+}
+
 static char _mysql_thread_safe__doc__[] =
 "Indicates whether the client is compiled as thread-safe.";
 
@@ -251,6 +273,8 @@ _mysql_ResultObject_Initialize(
     self->result = result;
     self->has_next = (char)mysql_more_results(&(conn->connection));
     Py_END_ALLOW_THREADS ;
+
+    self->encoding = _get_encoding(&(conn->connection));
     if (!result) {
         if (mysql_errno(&(conn->connection))) {
             _mysql_Exception(conn);
@@ -943,8 +967,6 @@ _mysql_string_literal(
     return (str);
 }
 
-static PyObject *_mysql_NULL;
-
 static PyObject *
 _escape_item(
     PyObject *self,
@@ -1011,16 +1033,9 @@ _mysql_ResultObject_describe(
 {
     PyObject *d;
     MYSQL_FIELD *fields;
-    MY_CHARSET_INFO cs;
-    int isutf8 = 0;
     unsigned int i, n;
 
     check_result_connection(self);
-
-    mysql_get_character_set_info(&result_connection(self)->connection, &cs);
-    if (strncmp("utf8", cs.name, 4) == 0) { // utf8, utf8mb3, utf8mb4
-        isutf8 = 1;
-    }
 
     n = mysql_num_fields(self->result);
     fields = mysql_fetch_fields(self->result);
@@ -1029,10 +1044,10 @@ _mysql_ResultObject_describe(
         PyObject *t;
 #ifdef IS_PY3K
         PyObject *name;
-        if (isutf8) {
+        if (self->encoding == utf8) {
             name = PyUnicode_DecodeUTF8(fields[i].name, fields[i].name_length, "replace");
         } else {
-            name = PyUnicode_Decode(fields[i].name, fields[i].name_length, cs.name, "replace");
+            name = PyUnicode_Decode(fields[i].name, fields[i].name_length, self->encoding, "replace");
         }
         if (name == NULL) {
             goto error;
@@ -1089,9 +1104,10 @@ _mysql_ResultObject_field_flags(
 static PyObject *
 _mysql_field_to_python(
     PyObject *converter,
-    char *rowitem,
+    const char *rowitem,
     unsigned long length,
-    MYSQL_FIELD *field)
+    MYSQL_FIELD *field,
+    const char *encoding)
 {
     PyObject *v;
 #ifdef IS_PY3K
@@ -1110,7 +1126,20 @@ _mysql_field_to_python(
     }
 #endif
     if (rowitem) {
-        if (converter != Py_None) {
+        if (converter == (PyObject*)&PyUnicode_Type) {
+            if (encoding == utf8) {
+                v = PyUnicode_DecodeUTF8(rowitem, length, NULL);
+            } else {
+                v = PyUnicode_Decode(rowitem, length, encoding, NULL);
+            }
+        }
+        else if (converter == (PyObject*)&PyBytes_Type) {
+            v = PyBytes_FromStringAndSize(rowitem, length);
+        }
+        else if (converter == (PyObject*)&PyInt_Type) {
+            v = PyInt_FromString(rowitem, NULL, 10);
+        }
+        else if (converter != Py_None) {
             v = PyObject_CallFunction(converter,
 #ifdef IS_PY3K
                           binary ? "y#" : "s#",
@@ -1153,7 +1182,7 @@ _mysql_row_to_tuple(
     for (i=0; i<n; i++) {
         PyObject *v;
         c = PyTuple_GET_ITEM(self->converter, i);
-        v = _mysql_field_to_python(c, row[i], length[i], &fields[i]);
+        v = _mysql_field_to_python(c, row[i], length[i], &fields[i], self->encoding);
         if (!v) goto error;
         PyTuple_SET_ITEM(r, i, v);
     }
@@ -1180,7 +1209,7 @@ _mysql_row_to_dict(
     for (i=0; i<n; i++) {
         PyObject *v;
         c = PyTuple_GET_ITEM(self->converter, i);
-        v = _mysql_field_to_python(c, row[i], length[i], &fields[i]);
+        v = _mysql_field_to_python(c, row[i], length[i], &fields[i], self->encoding);
         if (!v) goto error;
         if (!PyMapping_HasKeyString(r, fields[i].name)) {
             PyMapping_SetItemString(r, fields[i].name, v);
@@ -1219,7 +1248,7 @@ _mysql_row_to_dict_old(
     for (i=0; i<n; i++) {
         PyObject *v;
         c = PyTuple_GET_ITEM(self->converter, i);
-        v = _mysql_field_to_python(c, row[i], length[i], &fields[i]);
+        v = _mysql_field_to_python(c, row[i], length[i], &fields[i], self->encoding);
         if (!v) goto error;
         {
             int len=0;
@@ -1422,8 +1451,7 @@ _mysql_ConnectionObject_set_character_set(
     err = mysql_set_character_set(&(self->connection), s);
     Py_END_ALLOW_THREADS
     if (err) return _mysql_Exception(self);
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 #if MYSQL_VERSION_ID >= 50010
