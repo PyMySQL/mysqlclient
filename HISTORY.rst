@@ -30,6 +30,8 @@ Release: TBD
 
 * Optimize decoding speed of string and integer types.
 
+* Removed ``MySQLdb.constants.REFRESH`` module.
+
 ======================
  What's new in 1.3.14
 ======================
