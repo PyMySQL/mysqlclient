@@ -114,7 +114,7 @@ class Connection(_mysql.connection):
         documentation for the MySQL C API for some hints on what they do.
         """
         from MySQLdb.constants import CLIENT, FIELD_TYPE
-        from MySQLdb.converters import conversions
+        from MySQLdb.converters import conversions, _bytes_or_str
         from weakref import proxy
 
         kwargs2 = kwargs.copy()
@@ -174,9 +174,6 @@ class Connection(_mysql.connection):
         def unicode_literal(u, dummy=None):
             return db.string_literal(u.encode(db.encoding))
 
-        def string_decoder(s):
-            return s.decode(db.encoding)
-
         if not charset:
             charset = self.character_set_name()
         self.set_character_set(charset)
@@ -187,7 +184,7 @@ class Connection(_mysql.connection):
         if use_unicode:
             for t in (FIELD_TYPE.STRING, FIELD_TYPE.VAR_STRING, FIELD_TYPE.VARCHAR, FIELD_TYPE.TINY_BLOB,
                       FIELD_TYPE.MEDIUM_BLOB, FIELD_TYPE.LONG_BLOB, FIELD_TYPE.BLOB):
-                self.converter[t].append((None, string_decoder))
+                self.converter[t] = _bytes_or_str
 
         self.encoders[unicode] = unicode_literal
         self._transactional = self.server_capabilities & CLIENT.TRANSACTIONS
