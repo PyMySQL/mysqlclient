@@ -28,6 +28,7 @@ Release: TBD
 
 * Support non-ASCII field name with non-UTF-8 connection encoding. (#210)
 
+* Optimize decoding speed of string and integer types.
 
 ======================
  What's new in 1.3.14
