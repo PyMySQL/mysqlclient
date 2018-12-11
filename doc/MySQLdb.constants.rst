@@ -49,11 +49,3 @@ constants Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`REFRESH` Module
----------------------
-
-.. automodule:: MySQLdb.constants.REFRESH
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
