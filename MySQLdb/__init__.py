@@ -37,7 +37,6 @@ except NameError:
     from sets import ImmutableSet as frozenset
 
 class DBAPISet(frozenset):
-
     """A special type of set for which A == x is true if A is a
     DBAPISet and x is a member of that set."""
 
@@ -54,7 +53,7 @@ BINARY    = DBAPISet([FIELD_TYPE.BLOB, FIELD_TYPE.LONG_BLOB,
 NUMBER    = DBAPISet([FIELD_TYPE.DECIMAL, FIELD_TYPE.DOUBLE, FIELD_TYPE.FLOAT,
                      FIELD_TYPE.INT24, FIELD_TYPE.LONG, FIELD_TYPE.LONGLONG,
                      FIELD_TYPE.TINY, FIELD_TYPE.YEAR, FIELD_TYPE.NEWDECIMAL])
-DATE      = DBAPISet([FIELD_TYPE.DATE, FIELD_TYPE.NEWDATE])
+DATE      = DBAPISet([FIELD_TYPE.DATE])
 TIME      = DBAPISet([FIELD_TYPE.TIME])
 TIMESTAMP = DBAPISet([FIELD_TYPE.TIMESTAMP, FIELD_TYPE.DATETIME])
 DATETIME  = TIMESTAMP
