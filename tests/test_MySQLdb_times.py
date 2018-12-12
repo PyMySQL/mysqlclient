@@ -81,18 +81,6 @@ class TestTicks(unittest.TestCase):
         assert times.TimestampFromTicks(1430000000.123) == datetime(2015, 4, 25, 22, 13, 20)
 
 
-class TestTimestampConverter(unittest.TestCase):
-    def test_mysql_timestamp_converter(self):
-        assert times.mysql_timestamp_converter('2015-12-13') == date(2015, 12, 13)
-        assert times.mysql_timestamp_converter('2038-01-19 03:14:07') == datetime(2038, 1, 19, 3, 14, 7)
-
-        assert times.mysql_timestamp_converter('2015121310') == datetime(2015, 12, 13, 10, 0)
-        assert times.mysql_timestamp_converter('20151213101112') == datetime(2015, 12, 13, 10, 11, 12)
-
-        assert times.mysql_timestamp_converter('20151313') is None
-        assert times.mysql_timestamp_converter('2015-13-13') is None
-
-
 class TestToLiteral(unittest.TestCase):
     def test_datetime_to_literal(self):
         assert times.DateTime2literal(datetime(2015, 12, 13), '') == b"'2015-12-13 00:00:00'"
