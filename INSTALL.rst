@@ -8,17 +8,17 @@ MySQLdb Installation
 Prerequisites
 -------------
 
-+ Python 2.7, 3.4 or higher
++ Python 2.7, 3.5 or higher
 
 + setuptools
 
-  * http://pypi.python.org/pypi/setuptools
+  * https://pypi.org/project/setuptools/
 
 + MySQL 5.5 or higher
 
-  * http://www.mysql.com/downloads/
+  * https://www.mysql.com/downloads/
 
-  * MySQL-5.0 may work, but not supported.
+  * MySQL 5.1 may work, but not supported.
 
 + C compiler
 
@@ -44,8 +44,7 @@ edit the [options] section of site.cfg:
 
     static
         if True, try to link against a static library; otherwise link
-        against dynamic libraries (default). You may need static linking
-        to use the embedded server.
+        against dynamic libraries (default).
         This option doesn't work for MySQL>5.6 since libmysqlclient
         requires libstdc++. If you want to use, add `-lstdc++` to
         mysql_config manually.
@@ -94,25 +93,11 @@ contributes one, I will make it available. Several OS vendors have
 their own packages available.
 
 
-RPMs
-....
-
-If you prefer to install RPMs, you can use the bdist_rpm command with
-setup.py. This only builds the RPM; it does not install it. You may
-want to use the --python=XXX option, where XXX is the name of the
-Python executable, i.e. python, python2, python2.4; the default is
-python. Using this will incorporate the Python executable name into
-the package name for the RPM so you have install the package multiple
-times if you need to support more than one version of Python. You can
-also set this in setup.cfg.
-
-
 Red Hat Linux
 .............
 
 MySQL-python is pre-packaged in Red Hat Linux 7.x and newer. This
-includes Fedora Core and Red Hat Enterprise Linux. You can also
-build your own RPM packages as described above.
+includes Fedora Core and Red Hat Enterprise Linux.
 
 
 Debian GNU/Linux
