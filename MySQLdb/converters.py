@@ -117,7 +117,7 @@ conversions = {
     FIELD_TYPE.LONGLONG: int,
     FIELD_TYPE.INT24: int,
     FIELD_TYPE.YEAR: int,
-    FIELD_TYPE.TIMESTAMP: mysql_timestamp_converter,
+    FIELD_TYPE.TIMESTAMP: DateTime_or_None,
     FIELD_TYPE.DATETIME: DateTime_or_None,
     FIELD_TYPE.TIME: TimeDelta_or_None,
     FIELD_TYPE.DATE: Date_or_None,
