@@ -2635,9 +2635,7 @@ init_mysql(void)
 {
     PyObject *dict, *module, *emod, *edict;
 
-    _mysql_ConnectionObject_Type.tp_alloc = PyType_GenericAlloc;
     _mysql_ConnectionObject_Type.tp_new = PyType_GenericNew;
-    _mysql_ResultObject_Type.tp_alloc = PyType_GenericAlloc;
     _mysql_ResultObject_Type.tp_new = PyType_GenericNew;
 #ifdef IS_PY3K
     if (PyType_Ready(&_mysql_ConnectionObject_Type) < 0)
