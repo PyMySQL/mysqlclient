@@ -1165,6 +1165,7 @@ _mysql_field_to_python(
 #else
     return PyObject_CallFunction(converter,
             "s#", rowitem, (int)length);
+#endif
 }
 
 static PyObject *
