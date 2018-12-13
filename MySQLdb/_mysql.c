@@ -664,8 +664,7 @@ _mysql_debug(
     char *debug;
     if (!PyArg_ParseTuple(args, "s", &debug)) return NULL;
     mysql_debug(debug);
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 static char _mysql_ConnectionObject_dump_debug_info__doc__[] =
@@ -685,8 +684,7 @@ _mysql_ConnectionObject_dump_debug_info(
     err = mysql_dump_debug_info(&(self->connection));
     Py_END_ALLOW_THREADS
     if (err) return _mysql_Exception(self);
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 static char _mysql_ConnectionObject_autocommit__doc__[] =
@@ -704,8 +702,7 @@ _mysql_ConnectionObject_autocommit(
     err = mysql_autocommit(&(self->connection), flag);
     Py_END_ALLOW_THREADS
     if (err) return _mysql_Exception(self);
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 static char _mysql_ConnectionObject_get_autocommit__doc__[] =
@@ -737,8 +734,7 @@ _mysql_ConnectionObject_commit(
     err = mysql_commit(&(self->connection));
     Py_END_ALLOW_THREADS
     if (err) return _mysql_Exception(self);
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 static char _mysql_ConnectionObject_rollback__doc__[] =
@@ -1591,8 +1587,7 @@ _mysql_ConnectionObject_info(
     check_connection(self);
     s = mysql_info(&(self->connection));
     if (s) return PyString_FromString(s);
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 static char _mysql_ConnectionObject_insert_id__doc__[] =
@@ -1646,8 +1641,7 @@ _mysql_ConnectionObject_kill(
     r = mysql_kill(&(self->connection), pid);
     Py_END_ALLOW_THREADS
     if (r) return _mysql_Exception(self);
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 static char _mysql_ConnectionObject_field_count__doc__[] =
@@ -1741,8 +1735,7 @@ _mysql_ConnectionObject_ping(
     r = mysql_ping(&(self->connection));
     Py_END_ALLOW_THREADS
     if (r)     return _mysql_Exception(self);
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 static char _mysql_ConnectionObject_query__doc__[] =
@@ -1765,8 +1758,7 @@ _mysql_ConnectionObject_query(
     r = mysql_real_query(&(self->connection), query, len);
     Py_END_ALLOW_THREADS
     if (r) return _mysql_Exception(self);
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 
@@ -1789,8 +1781,7 @@ _mysql_ConnectionObject_send_query(
     r = mysql_send_query(mysql, query, len);
     Py_END_ALLOW_THREADS
     if (r) return _mysql_Exception(self);
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 
@@ -1810,8 +1801,7 @@ _mysql_ConnectionObject_read_query_result(
     r = (int)mysql_read_query_result(mysql);
     Py_END_ALLOW_THREADS
     if (r) return _mysql_Exception(self);
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 static char _mysql_ConnectionObject_select_db__doc__[] =
@@ -1839,8 +1829,7 @@ _mysql_ConnectionObject_select_db(
     r = mysql_select_db(&(self->connection), db);
     Py_END_ALLOW_THREADS
     if (r)     return _mysql_Exception(self);
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 static char _mysql_ConnectionObject_shutdown__doc__[] =
@@ -1859,8 +1848,7 @@ _mysql_ConnectionObject_shutdown(
     r = mysql_shutdown(&(self->connection), SHUTDOWN_DEFAULT);
     Py_END_ALLOW_THREADS
     if (r) return _mysql_Exception(self);
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 static char _mysql_ConnectionObject_stat__doc__[] =
@@ -2021,8 +2009,7 @@ _mysql_ResultObject_data_seek(
     if (!PyArg_ParseTuple(args, "i:data_seek", &row)) return NULL;
     check_result_connection(self);
     mysql_data_seek(self->result, row);
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 static void
