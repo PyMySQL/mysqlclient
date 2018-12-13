@@ -1146,9 +1146,13 @@ _mysql_field_to_python(
     case FIELD_TYPE_BLOB:
     case FIELD_TYPE_VAR_STRING:
     case FIELD_TYPE_STRING:
-    case FIELD_TYPE_JSON:
     case FIELD_TYPE_GEOMETRY:
     case FIELD_TYPE_BIT:
+#ifdef FIELD_TYPE_JSON
+    case FIELD_TYPE_JSON:
+#else
+    case 245: // JSON
+#endif
         // Call converter with bytes
         binary = 1;
     default: // e.g. FIELD_TYPE_DATETIME, etc.
