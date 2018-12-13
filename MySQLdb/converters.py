@@ -129,4 +129,5 @@ conversions = {
     FIELD_TYPE.STRING: bytes,
     FIELD_TYPE.VAR_STRING: bytes,
     FIELD_TYPE.VARCHAR: bytes,
+    FIELD_TYPE.JSON: bytes,
 }

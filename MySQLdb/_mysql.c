@@ -1138,7 +1138,7 @@ _mysql_field_to_python(
                 v = PyUnicode_Decode(rowitem, length, encoding, NULL);
             }
         }
-        else if (converter == (PyObject*)&PyBytes_Type) {
+        else if (converter == (PyObject*)&PyBytes_Type || converter == Py_None) {
             //fprintf(stderr, "decoding with bytes\n", encoding);
             v = PyBytes_FromStringAndSize(rowitem, length);
         }
@@ -1146,7 +1146,7 @@ _mysql_field_to_python(
             //fprintf(stderr, "decoding with int\n", encoding);
             v = PyInt_FromString(rowitem, NULL, 10);
         }
-        else if (converter != Py_None) {
+        else {
             //fprintf(stderr, "decoding with callback\n");
             //PyObject_Print(converter, stderr, 0);
             //fprintf(stderr, "\n");
@@ -1158,17 +1158,7 @@ _mysql_field_to_python(
 #endif
                           rowitem,
                           (int)length);
-        } else {
-            //fprintf(stderr, "converter=None\n");
-#ifdef IS_PY3K
-            if (!binary) {
-                v = PyUnicode_FromStringAndSize(rowitem, (int)length);
-            } else
-#endif
-            v = PyBytes_FromStringAndSize(rowitem, (int)length);
         }
-        if (!v)
-            return NULL;
     } else {
         Py_INCREF(Py_None);
         v = Py_None;
@@ -1414,7 +1404,7 @@ _mysql_ConnectionObject_change_user(
 {
     char *user, *pwd=NULL, *db=NULL;
     int r;
-        static char *kwlist[] = { "user", "passwd", "db", NULL } ;
+    static char *kwlist[] = { "user", "passwd", "db", NULL } ;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "s|ss:change_user",
                      kwlist, &user, &pwd, &db))
@@ -1424,8 +1414,7 @@ _mysql_ConnectionObject_change_user(
         r = mysql_change_user(&(self->connection), user, pwd, db);
     Py_END_ALLOW_THREADS
     if (r)     return _mysql_Exception(self);
-    Py_INCREF(Py_None);
-    return Py_None;
+    Py_RETURN_NONE;
 }
 
 static char _mysql_ConnectionObject_character_set_name__doc__[] =
