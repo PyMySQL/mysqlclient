@@ -183,8 +183,11 @@ class Connection(_mysql.connection):
 
         if use_unicode:
             for t in (FIELD_TYPE.STRING, FIELD_TYPE.VAR_STRING, FIELD_TYPE.VARCHAR, FIELD_TYPE.TINY_BLOB,
-                      FIELD_TYPE.MEDIUM_BLOB, FIELD_TYPE.LONG_BLOB, FIELD_TYPE.BLOB, FIELD_TYPE.JSON):
+                      FIELD_TYPE.MEDIUM_BLOB, FIELD_TYPE.LONG_BLOB, FIELD_TYPE.BLOB):
                 self.converter[t] = _bytes_or_str
+            # Unlike other string/blob types, JSON is always text.
+            # MySQL may return JSON with charset==binary.
+            self.converter[FIELD_TYPE.JSON] = unicode
 
         self.encoders[unicode] = unicode_literal
         self._transactional = self.server_capabilities & CLIENT.TRANSACTIONS

@@ -302,10 +302,13 @@ _mysql_ResultObject_Initialize(
             long flags = fields[i].flags;
             PyObject *fun2=NULL;
             int j, n2=PySequence_Size(fun);
-            if (fields[i].charsetnr != 63) { /* maaagic */
-                flags &= ~BINARY_FLAG;
-            } else {
+            // BINARY_FLAG means ***_bin collation is used.
+            // To distinguish text and binary, we shoud use charsetnr==63 (binary).
+            // But we abuse BINARY_FLAG for historical reason.
+            if (fields[i].charsetnr == 63) {
                 flags |= BINARY_FLAG;
+            } else {
+                flags &= ~BINARY_FLAG;
             }
             for (j=0; j<n2; j++) {
                 PyObject *t = PySequence_GetItem(fun, j);
@@ -1098,58 +1101,61 @@ _mysql_field_to_python(
     MYSQL_FIELD *field,
     const char *encoding)
 {
-    PyObject *v;
-#ifdef IS_PY3K
-    int field_type = field->type;
-    // Return bytes for binary and string types.
-    int binary = 0;
-    if (field_type == FIELD_TYPE_TINY_BLOB ||
-        field_type == FIELD_TYPE_MEDIUM_BLOB ||
-        field_type == FIELD_TYPE_LONG_BLOB ||
-        field_type == FIELD_TYPE_BLOB ||
-        field_type == FIELD_TYPE_VAR_STRING ||
-        field_type == FIELD_TYPE_STRING ||
-        field_type == FIELD_TYPE_GEOMETRY ||
-        field_type == FIELD_TYPE_BIT) {
-            binary = 1;
+    if (rowitem == NULL) {
+        Py_RETURN_NONE;
     }
-#endif
-    if (rowitem) {
-        if (converter == (PyObject*)&PyUnicode_Type) {
-            if (encoding == utf8) {
-                //fprintf(stderr, "decoding with utf8!\n");
-                v = PyUnicode_DecodeUTF8(rowitem, length, NULL);
-            } else {
-                //fprintf(stderr, "decoding with %s\n", encoding);
-                v = PyUnicode_Decode(rowitem, length, encoding, NULL);
-            }
+
+    // Fast paths for int, string and binary.
+    if (converter == (PyObject*)&PyUnicode_Type) {
+        if (encoding == utf8) {
+            //fprintf(stderr, "decoding with utf8!\n");
+            return PyUnicode_DecodeUTF8(rowitem, length, NULL);
+        } else {
+            //fprintf(stderr, "decoding with %s\n", encoding);
+            return PyUnicode_Decode(rowitem, length, encoding, NULL);
         }
-        else if (converter == (PyObject*)&PyBytes_Type || converter == Py_None) {
-            //fprintf(stderr, "decoding with bytes\n", encoding);
-            v = PyBytes_FromStringAndSize(rowitem, length);
-        }
-        else if (converter == (PyObject*)&PyInt_Type) {
-            //fprintf(stderr, "decoding with int\n", encoding);
-            v = PyInt_FromString(rowitem, NULL, 10);
-        }
-        else {
-            //fprintf(stderr, "decoding with callback\n");
-            //PyObject_Print(converter, stderr, 0);
-            //fprintf(stderr, "\n");
-            v = PyObject_CallFunction(converter,
+    }
+    if (converter == (PyObject*)&PyBytes_Type || converter == Py_None) {
+        //fprintf(stderr, "decoding with bytes\n", encoding);
+        return PyBytes_FromStringAndSize(rowitem, length);
+    }
+    if (converter == (PyObject*)&PyInt_Type) {
+        //fprintf(stderr, "decoding with int\n", encoding);
+        return PyInt_FromString(rowitem, NULL, 10);
+    }
+
+    //fprintf(stderr, "decoding with callback\n");
+    //PyObject_Print(converter, stderr, 0);
+    //fprintf(stderr, "\n");
 #ifdef IS_PY3K
-                          binary ? "y#" : "s#",
+    int binary;
+    switch (field->type) {
+    case FIELD_TYPE_TINY_BLOB:
+    case FIELD_TYPE_MEDIUM_BLOB:
+    case FIELD_TYPE_LONG_BLOB:
+    case FIELD_TYPE_BLOB:
+    case FIELD_TYPE_VAR_STRING:
+    case FIELD_TYPE_STRING:
+    case FIELD_TYPE_GEOMETRY:
+    case FIELD_TYPE_BIT:
+#ifdef FIELD_TYPE_JSON
+    case FIELD_TYPE_JSON:
 #else
-                          "s#",
+    case 245: // JSON
 #endif
-                          rowitem,
-                          (int)length);
-        }
-    } else {
-        Py_INCREF(Py_None);
-        v = Py_None;
+        // Call converter with bytes
+        binary = 1;
+    default: // e.g. FIELD_TYPE_DATETIME, etc.
+        // Call converter with unicode string
+        binary = 0;
     }
-    return v;
+    return PyObject_CallFunction(converter,
+            binary ? "y#" : "s#",
+            rowitem, (int)length);
+#else
+    return PyObject_CallFunction(converter,
+            "s#", rowitem, (int)length);
+#endif
 }
 
 static PyObject *
@@ -1226,7 +1232,7 @@ _mysql_row_to_dict_old(
     unsigned int n, i;
     unsigned long *length;
     PyObject *r, *c;
-        MYSQL_FIELD *fields;
+    MYSQL_FIELD *fields;
 
     n = mysql_num_fields(self->result);
     if (!(r = PyDict_New())) return NULL;
