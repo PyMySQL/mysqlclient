@@ -183,7 +183,7 @@ class Connection(_mysql.connection):
 
         if use_unicode:
             for t in (FIELD_TYPE.STRING, FIELD_TYPE.VAR_STRING, FIELD_TYPE.VARCHAR, FIELD_TYPE.TINY_BLOB,
-                      FIELD_TYPE.MEDIUM_BLOB, FIELD_TYPE.LONG_BLOB, FIELD_TYPE.BLOB):
+                      FIELD_TYPE.MEDIUM_BLOB, FIELD_TYPE.LONG_BLOB, FIELD_TYPE.BLOB, FIELD_TYPE.JSON):
                 self.converter[t] = _bytes_or_str
 
         self.encoders[unicode] = unicode_literal
