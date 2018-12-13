@@ -2468,7 +2468,7 @@ PyTypeObject _mysql_ConnectionObject_Type = {
     0, /* (long) tp_dictoffset */
     (initproc)_mysql_ConnectionObject_Initialize, /* tp_init */
     NULL, /* tp_alloc */
-    NULL, /* tp_new */
+    PyType_GenericNew, /* tp_new */
     NULL, /* tp_free Low-level free-memory routine */
     0, /* (PyObject *) tp_bases */
     0, /* (PyObject *) tp_mro method resolution order */
@@ -2536,7 +2536,7 @@ PyTypeObject _mysql_ResultObject_Type = {
     0, /* (long) tp_dictoffset */
     (initproc)_mysql_ResultObject_Initialize, /* tp_init */
     NULL, /* tp_alloc */
-    NULL, /* tp_new */
+    PyType_GenericNew, /* tp_new */
     NULL, /* tp_free Low-level free-memory routine */
     0, /* (PyObject *) tp_bases */
     0, /* (PyObject *) tp_mro method resolution order */
@@ -2635,8 +2635,6 @@ init_mysql(void)
 {
     PyObject *dict, *module, *emod, *edict;
 
-    _mysql_ConnectionObject_Type.tp_new = PyType_GenericNew;
-    _mysql_ResultObject_Type.tp_new = PyType_GenericNew;
 #ifdef IS_PY3K
     if (PyType_Ready(&_mysql_ConnectionObject_Type) < 0)
         return NULL;
