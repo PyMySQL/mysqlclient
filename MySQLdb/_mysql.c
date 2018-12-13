@@ -2635,10 +2635,6 @@ init_mysql(void)
 {
     PyObject *dict, *module, *emod, *edict;
 
-#ifndef IS_PY3K
-    _mysql_ConnectionObject_Type.ob_type = &PyType_Type;
-    _mysql_ResultObject_Type.ob_type = &PyType_Type;
-#endif
     _mysql_ConnectionObject_Type.tp_alloc = PyType_GenericAlloc;
     _mysql_ConnectionObject_Type.tp_new = PyType_GenericNew;
     _mysql_ResultObject_Type.tp_alloc = PyType_GenericAlloc;
@@ -2652,8 +2648,10 @@ init_mysql(void)
     module = PyModule_Create(&_mysqlmodule);
     if (!module) return module; /* this really should never happen */
 #else
-    _mysql_ConnectionObject_Type.tp_free = _PyObject_GC_Del;
-    _mysql_ResultObject_Type.tp_free = _PyObject_GC_Del;
+    if (PyType_Ready(&_mysql_ConnectionObject_Type) < 0)
+        return;
+    if (PyType_Ready(&_mysql_ResultObject_Type) < 0)
+        return;
     module = Py_InitModule4("_mysql", _mysql_methods, _mysql___doc__,
                 (PyObject *)NULL, PYTHON_API_VERSION);
     if (!module) return; /* this really should never happen */
