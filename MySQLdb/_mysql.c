@@ -225,16 +225,6 @@ _get_encoding(MYSQL *mysql)
     return cs.csname;
 }
 
-static char _mysql_thread_safe__doc__[] =
-"Indicates whether the client is compiled as thread-safe.";
-
-static PyObject *_mysql_thread_safe(
-    PyObject *self,
-    PyObject *noargs)
-{
-    return PyInt_FromLong((long)mysql_thread_safe());
-}
-
 static char _mysql_ResultObject__doc__[] =
 "result(connection, use=0, converter={}) -- Result set from a query.\n\
 \n\
@@ -2584,12 +2574,6 @@ _mysql_methods[] = {
         (PyCFunction)_mysql_get_client_info,
         METH_NOARGS,
         _mysql_get_client_info__doc__
-    },
-    {
-        "thread_safe",
-        (PyCFunction)_mysql_thread_safe,
-        METH_NOARGS,
-        _mysql_thread_safe__doc__
     },
     {NULL, NULL} /* sentinel */
 };
