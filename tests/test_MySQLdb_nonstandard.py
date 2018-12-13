@@ -35,9 +35,6 @@ class TestCoreModule(unittest.TestCase):
     def test_client_info(self):
         self.assertTrue(isinstance(_mysql.get_client_info(), str))
 
-    def test_thread_safe(self):
-        self.assertTrue(isinstance(_mysql.thread_safe(), int))
-
     def test_escape_string(self):
         self.assertEqual(_mysql.escape_string(b'foo"bar'),
                          b'foo\\"bar', "escape byte string")

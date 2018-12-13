@@ -89,7 +89,6 @@ MySQL C API function mapping
  ``mysql_stat()``                   ``conn.stat()``
  ``mysql_store_result()``           ``conn.store_result()``
  ``mysql_thread_id()``              ``conn.thread_id()``
- ``mysql_thread_safe_client()``     ``conn.thread_safe_client()``
  ``mysql_use_result()``             ``conn.use_result()``
  ``mysql_warning_count()``          ``conn.warning_count()``
  ``CLIENT_*``                       ``MySQLdb.constants.CLIENT.*``
