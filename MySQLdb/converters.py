@@ -59,12 +59,6 @@ def Thing2Str(s, d):
     """Convert something into a string via str()."""
     return str(s)
 
-def Unicode2Str(s, d):
-    """Convert a unicode object to a string using the default encoding.
-    This is only used as a placeholder for the real function, which
-    is connection-dependent."""
-    return s.encode()
-
 def Float2Str(o, d):
     s = repr(o)
     if s in ('inf', 'nan'):
@@ -90,9 +84,6 @@ def Decimal2Literal(o, d):
 def array2Str(o, d):
     return Thing2Literal(o.tostring(), d)
 
-def quote_tuple(t, d):
-    return "(%s)" % (','.join(escape_sequence(t, d)))
-
 # bytes or str regarding to BINARY_FLAG.
 _bytes_or_str = ((FLAG.BINARY, bytes), (None, unicode))
 
@@ -106,7 +97,6 @@ conversions = {
     Date: Thing2Literal,
     DateTimeType: DateTime2literal,
     DateTimeDeltaType: DateTimeDelta2literal,
-    str: Thing2Literal,  # default
     set: Set2Str,
     Decimal: Decimal2Literal,
 
