@@ -1,7 +1,7 @@
 _mysql Module
 =============
 
-.. automodule:: _mysql
+.. automodule:: MySQLdb._mysql
     :members:
     :undoc-members:
     :show-inheritance:

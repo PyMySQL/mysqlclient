@@ -1,7 +1,7 @@
-_mysql_exceptions Module
+_exceptions Module
 ========================
 
-.. automodule:: _mysql_exceptions
+.. automodule:: MySQLdb._exceptions
     :members:
     :undoc-members:
     :show-inheritance:
