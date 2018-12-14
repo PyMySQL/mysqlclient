@@ -9,7 +9,7 @@ import re
 import sys
 
 from .compat import unicode
-from ._mysql_exceptions import (
+from ._exceptions import (
     Warning, Error, InterfaceError, DataError,
     DatabaseError, OperationalError, IntegrityError, InternalError,
     NotSupportedError, ProgrammingError)
@@ -48,7 +48,7 @@ class BaseCursor(object):
     #: Default value of max_allowed_packet is 1048576.
     max_stmt_length = 64*1024
 
-    from ._mysql_exceptions import (
+    from ._exceptions import (
         MySQLError, Warning, Error, InterfaceError,
         DatabaseError, DataError, OperationalError, IntegrityError,
         InternalError, ProgrammingError, NotSupportedError,

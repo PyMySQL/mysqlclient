@@ -106,7 +106,7 @@ Okay, so you want to use ``_mysql`` anyway. Here are some examples.
 
 The simplest possible database connection is::
 
-    import _mysql
+    from MySQLdb import _mysql
     db=_mysql.connect()
 
 This creates a connection to the MySQL server running on the local
@@ -162,8 +162,8 @@ substitution, so you have to pass a complete query string to
              WHERE price < 5""")
 
 There's no return value from this, but exceptions can be raised. The
-exceptions are defined in a separate module, ``_mysql_exceptions``,
-but ``_mysql`` exports them. Read DB API specification PEP-249_ to
+exceptions are defined in a separate module, ``MySQLdb._exceptions``,
+but ``MySQLdb._mysql`` exports them. Read DB API specification PEP-249_ to
 find out what they are, or you can use the catch-all ``MySQLError``.
 
 .. _PEP-249: https://www.python.org/dev/peps/pep-0249/
@@ -213,7 +213,7 @@ implicitly asked for one row, since we didn't specify ``maxrows``.
 The other oddity is: Assuming these are numeric columns, why are they
 returned as strings? Because MySQL returns all data as strings and
 expects you to convert it yourself. This would be a real pain in the
-ass, but in fact, ``_mysql`` can do this for you. (And ``MySQLdb``
+ass, but in fact, ``MySQLdb._mysql`` can do this for you. (And ``MySQLdb``
 does do this for you.) To have automatic type conversion done, you
 need to create a type converter dictionary, and pass this to
 ``connect()`` as the ``conv`` keyword parameter.

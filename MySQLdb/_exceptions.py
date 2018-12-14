@@ -1,15 +1,10 @@
-"""_mysql_exceptions: Exception classes for _mysql and MySQLdb.
+"""Exception classes for _mysql and MySQLdb.
 
 These classes are dictated by the DB API v2.0:
 
     https://www.python.org/dev/peps/pep-0249/
 """
-
-try:
-    from exceptions import Exception, StandardError, Warning
-except ImportError:
-    # Python 3
-    StandardError = Exception
+from .compat import StandardError
 
 
 class MySQLError(StandardError):
@@ -19,6 +14,7 @@ class MySQLError(StandardError):
 class Warning(Warning, MySQLError):
     """Exception raised for important warnings like data truncations
     while inserting, etc."""
+
 
 class Error(MySQLError):
     """Exception that is the base class of all other error exceptions
