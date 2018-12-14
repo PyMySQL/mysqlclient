@@ -2669,7 +2669,7 @@ init_mysql(void)
                    (PyObject *)&_mysql_ResultObject_Type))
         goto error;
     Py_INCREF(&_mysql_ResultObject_Type);
-    if (!(emod = PyImport_ImportModule("MySQLdb._mysql_exceptions"))) {
+    if (!(emod = PyImport_ImportModule("MySQLdb._exceptions"))) {
         PyErr_Print();
         goto error;
     }

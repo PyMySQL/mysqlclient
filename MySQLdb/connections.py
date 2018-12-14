@@ -9,7 +9,7 @@ import sys
 
 from MySQLdb import cursors, _mysql
 from MySQLdb.compat import unicode, PY2
-from MySQLdb._mysql_exceptions import (
+from MySQLdb._exceptions import (
     Warning, Error, InterfaceError, DataError,
     DatabaseError, OperationalError, IntegrityError, InternalError,
     NotSupportedError, ProgrammingError,
