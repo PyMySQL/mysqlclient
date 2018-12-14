@@ -36,6 +36,7 @@ from MySQLdb._mysql import string_literal, escape
 from MySQLdb.constants import FIELD_TYPE, FLAG
 from MySQLdb.times import *
 from MySQLdb.compat import PY2, long, unicode
+from MySQLdb._exceptions import ProgrammingError
 
 NoneType = type(None)
 
@@ -66,6 +67,8 @@ def Unicode2Str(s, d):
 
 def Float2Str(o, d):
     s = repr(o)
+    if s in ('inf', 'nan'):
+        raise ProgrammingError("%s can not be used with MySQL" % s)
     if 'e' not in s:
         s += 'e0'
     return s
