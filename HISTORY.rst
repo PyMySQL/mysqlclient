@@ -26,11 +26,18 @@ Release: TBD
 
 * Remove ``_mysql.NULL`` constant.
 
+* Remove ``_mysql.thread_safe()`` function.
+
 * Support non-ASCII field name with non-UTF-8 connection encoding. (#210)
 
 * Optimize decoding speed of string and integer types.
 
-* Removed ``MySQLdb.constants.REFRESH`` module.
+* Remove ``MySQLdb.constants.REFRESH`` module.
+
+* Remove support for old datetime format for MySQL < 4.1.
+
+* Fix wrong errno is raised when ``mysql_real_connect`` is failed. (#316)
+
 
 ======================
  What's new in 1.3.14
