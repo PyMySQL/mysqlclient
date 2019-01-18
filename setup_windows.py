@@ -11,21 +11,24 @@ def get_config():
 
     extra_objects = []
 
-    if enabled(options, 'embedded'):
-        client = "mysqld"
-    else:
-        client = "mysqlclient"
+    # client = "mysqlclient"
+    client = "mariadbclient"
 
     vcversion = int(get_build_version())
-    library_dirs = [ os.path.join(connector, r'lib\vs%d' % vcversion) ]
-    libraries = [ 'kernel32', 'advapi32', 'wsock32', client ]
-    include_dirs = [ os.path.join(connector, r'include') ]
-    extra_compile_args = [ '/Zl' ]
+    if client == "mariadbclient":
+        library_dirs = [os.path.join(connector, 'lib', 'mariadb')]
+        libraries = ['kernel32', 'advapi32', 'wsock32', 'shlwapi', 'Ws2_32', client ]
+        include_dirs = [os.path.join(connector, 'include', 'mariadb')]
+    else:
+        library_dirs = [os.path.join(connector, r'lib\vs%d' % vcversion),
+                        os.path.join(connector, "lib")]
+        libraries = ['kernel32', 'advapi32', 'wsock32', client ]
+        include_dirs = [os.path.join(connector, r'include')]
+
+    extra_compile_args = ['/Zl', '/D_CRT_SECURE_NO_WARNINGS' ]
     extra_link_args = ['/MANIFEST']
 
     name = "mysqlclient"
-    if enabled(options, 'embedded'):
-        name = name + "-embedded"
     metadata['name'] = name
 
     define_macros = [

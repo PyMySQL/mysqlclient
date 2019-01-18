@@ -917,7 +917,8 @@ _mysql_string_literal(
 {
     PyObject *str, *s;
     char *in, *out;
-    int len, size;
+    unsigned long len;
+    Py_ssize_t size;
 
     if (self && PyModule_Check((PyObject*)self))
         self = NULL;
@@ -1986,12 +1987,10 @@ _mysql_ConnectionObject_repr(
 {
     char buf[300];
     if (self->open)
-        sprintf(buf, "<_mysql.connection open to '%.256s' at %lx>",
-            self->connection.host,
-            (long)self);
+        snprintf(buf, 300, "<_mysql.connection open to '%.256s' at %p>",
+            self->connection.host, self);
     else
-        sprintf(buf, "<_mysql.connection closed at %lx>",
-            (long)self);
+        snprintf(buf, 300, "<_mysql.connection closed at %p>", self);
     return PyString_FromString(buf);
 }
 
@@ -2024,7 +2023,7 @@ _mysql_ResultObject_repr(
     _mysql_ResultObject *self)
 {
     char buf[300];
-    sprintf(buf, "<_mysql.result object at %lx>", (long)self);
+    snprintf(buf, 300, "<_mysql.result object at %p>", self);
     return PyString_FromString(buf);
 }
 
