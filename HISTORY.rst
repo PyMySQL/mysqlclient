@@ -2,7 +2,7 @@
  What's new in 1.4.0
 ======================
 
-Release: TBD
+Release: 2019-01-18
 
 * Removed ``threadsafe`` and ``embedded`` build options.
 
