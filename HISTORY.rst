@@ -1,8 +1,18 @@
 ======================
+ What's new in 1.4.1
+======================
+
+Release: 2019-01-19
+
+* Fix dict parameter support (#323, regression of 1.4.0)
+
+======================
  What's new in 1.4.0
 ======================
 
 Release: 2019-01-18
+
+* Dropped Python 3.4 support.
 
 * Removed ``threadsafe`` and ``embedded`` build options.
 
