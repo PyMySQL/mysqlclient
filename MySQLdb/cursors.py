@@ -181,7 +181,12 @@ class BaseCursor(object):
 
         if args is not None:
             if isinstance(args, dict):
-                args = dict((key, db.literal(item)) for key, item in args.items())
+                nargs = {}
+                for key, item in args.items():
+                    if isinstance(key, unicode):
+                        key = key.encode(db.encoding)
+                    nargs[key] = db.literal(item)
+                args = nargs
             else:
                 args = tuple(map(db.literal, args))
             try:
