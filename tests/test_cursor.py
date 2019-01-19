@@ -1,3 +1,5 @@
+from __future__ import print_function, absolute_import
+
 import pytest
 import MySQLdb.cursors
 from configdb import connection_factory
@@ -76,3 +78,13 @@ def test_executemany():
         assert cursor._executed.endswith(b"(3, 4),(5, 6)"), "executemany with %% not in one query"
     finally:
         cursor.execute("DROP TABLE IF EXISTS percent_test")
+
+
+def test_pyparam():
+    conn = connect()
+    cursor = conn.cursor()
+
+    cursor.execute(u"SELECT %(a)s, %(b)s", {u'a': 1, u'b': 2})
+    assert cursor._executed == b"SELECT 1, 2"
+    cursor.execute(b"SELECT %(a)s, %(b)s", {b'a': 3, b'b': 4})
+    assert cursor._executed == b"SELECT 3, 4"
