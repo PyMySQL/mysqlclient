@@ -171,7 +171,6 @@ class Connection(_mysql.connection):
         # they are in security-only fix mode.
         # So keep this garbage for now.  This will be removed in 1.5.
         # See PyMySQL/mysqlclient-python#306
-        self.encoders[unicode] = unicode
         self.encoders[bytes] = bytes
 
         self._server_version = tuple([ numeric_part(n) for n in self.get_server_info().split('.')[:2] ])
