@@ -245,8 +245,11 @@ class Connection(_mysql.connection):
             s = self.string_literal(o.encode(self.encoding))
         elif isinstance(o, bytearray):
             s = self._bytes_literal(o)
-        elif not PY2 and isinstance(o, bytes):
-            s = self._bytes_literal(o)
+        elif isinstance(o, bytes):
+            if PY2:
+                s = self.string_literal(o)
+            else:
+                s = self._bytes_literal(o)
         elif isinstance(o, (tuple, list)):
             s = self._tuple_literal(o)
         else:
