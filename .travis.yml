@@ -50,6 +50,7 @@ matrix:
       before_script:
         - mysql -e 'create user django identified by "secret"'
         - mysql -e 'grant all on *.* to django'
+        - mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql mysql
 
       script:
         - cd django-1.11.18/tests/
