@@ -53,6 +53,6 @@ matrix:
 
       script:
         - cd django-1.11.18/tests/
-        - ./runtests.py -v2 --parallel=1 --settings=test_mysql
+        - ./runtests.py --parallel=1 --settings=test_mysql
 
 # vim: sw=2 ts=2 sts=2
