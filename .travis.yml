@@ -36,4 +36,23 @@ script:
 after_succes:
   - codecov
 
+matrix:
+  include:
+    - python: "2.7"
+      install:
+        - pip install -U pip
+        - wget https://github.com/django/django/archive/1.11.18.tar.gz
+        - tar xf 1.11.18.tar.gz
+        - pip install django-1.11.18/
+        - cp ci/test_mysql.py django-1.11.18/tests/
+        - pip install .
+
+      before_script:
+        - mysql -e 'create user django identified by "secret"'
+        - mysql -e 'grant all on *.* to django'
+
+      script:
+        - cd django-1.11.18/tests/
+        - ./runtests.py -v2 --parallel=1 --settings=test_mysql
+
 # vim: sw=2 ts=2 sts=2
