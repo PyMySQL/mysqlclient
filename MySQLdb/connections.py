@@ -166,6 +166,13 @@ class Connection(_mysql.connection):
         self.encoders = dict([ (k, v) for k, v in conv.items()
                                if type(k) is not int ])
 
+        # XXX THIS IS GARBAGE: While this is just a garbage and undocumented,
+        # Django 1.11 depends on it.  And they don't fix it because
+        # they are in security-only fix mode.
+        # So keep this garbage for now.  This will be removed in 1.5.
+        # See PyMySQL/mysqlclient-python#306
+        self.encoders[bytes] = bytes
+
         self._server_version = tuple([ numeric_part(n) for n in self.get_server_info().split('.')[:2] ])
 
         self.encoding = 'ascii'  # overridden in set_character_set()
@@ -238,8 +245,11 @@ class Connection(_mysql.connection):
             s = self.string_literal(o.encode(self.encoding))
         elif isinstance(o, bytearray):
             s = self._bytes_literal(o)
-        elif not PY2 and isinstance(o, bytes):
-            s = self._bytes_literal(o)
+        elif isinstance(o, bytes):
+            if PY2:
+                s = self.string_literal(o)
+            else:
+                s = self._bytes_literal(o)
         elif isinstance(o, (tuple, list)):
             s = self._tuple_literal(o)
         else:

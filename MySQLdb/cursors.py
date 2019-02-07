@@ -63,6 +63,14 @@ class BaseCursor(object):
         self.rowcount = -1
         self.arraysize = 1
         self._executed = None
+
+        # XXX THIS IS GARBAGE: While this is totally garbage and private,
+        # Django 1.11 depends on it.  And they don't fix it because
+        # they are in security-only fix mode.
+        # So keep this garbage for now.  This will be removed in 1.5.
+        # See PyMySQL/mysqlclient-python#303
+        self._last_executed = None
+
         self.lastrowid = None
         self.messages = []
         self._result = None
@@ -305,6 +313,7 @@ class BaseCursor(object):
         self._do_get_result(db)
         self._post_get_result()
         self._executed = q
+        self._last_executed = q  # XXX THIS IS GARBAGE: See above.
         return self.rowcount
 
     def _fetch_row(self, size=1):
