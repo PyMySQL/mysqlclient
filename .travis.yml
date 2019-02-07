@@ -38,7 +38,8 @@ after_succes:
 
 matrix:
   include:
-    - python: "2.7"
+    - &django_py27
+      python: "2.7"
       install:
         - pip install -U pip
         - wget https://github.com/django/django/archive/1.11.18.tar.gz
@@ -55,5 +56,9 @@ matrix:
       script:
         - cd django-1.11.18/tests/
         - ./runtests.py --parallel=1 --settings=test_mysql
+
+    - &django_py3
+      <<: *django_py27
+      python: "3.7"
 
 # vim: sw=2 ts=2 sts=2
