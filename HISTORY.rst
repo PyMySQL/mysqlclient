@@ -1,4 +1,16 @@
 ======================
+ What's new in 1.4.2
+======================
+
+Release: 2019-02-08
+
+* Fix Django 1.11 compatibility. (#327)
+  mysqlclient 1.5 will not support Django 1.11.  It is not because
+  mysqlclient will break backward compatibility, but Django used
+  unsupported APIs and Django 1.11 don't fix bugs including
+  compatibility issues.
+
+======================
  What's new in 1.4.1
 ======================
 
