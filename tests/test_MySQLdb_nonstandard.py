@@ -83,7 +83,7 @@ class CoreAPI(unittest.TestCase):
 
     def test_server_info(self):
         self.assertTrue(isinstance(self.conn.get_server_info(), str),
-                        "Should return an str.")
+                        "Should return a string.")
 
     def test_client_flag(self):
         conn = connection_factory(
