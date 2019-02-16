@@ -33,7 +33,7 @@ script:
   - pip install -e .
   - pytest --cov ./MySQLdb
 
-after_succes:
+after_success:
   - codecov
 
 matrix:
