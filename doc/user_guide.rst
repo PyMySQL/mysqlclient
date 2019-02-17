@@ -8,7 +8,7 @@ MySQLdb User's Guide
 Introduction
 ------------
 
-MySQLdb is a interface to the popular MySQL
+MySQLdb is an interface to the popular MySQL
 database server that provides the Python database API.
 
 Installation
