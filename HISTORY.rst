@@ -73,8 +73,8 @@ Release: 2018-12-04
 
 * Add ``Connection._get_native_connection`` for XTA project (#269)
 
-* Fix SEGV on MariaDB Connector/C when ``Connection.close()`` is called
-  for closed connection. (#270, #272, #276)
+* Fix SEGV on MariaDB Connector/C when ``Connection.rollback()`` or
+  ``Connection.commit()`` is called for closed connection. (#270, #272, #276)
 
 * Fix ``Connection.client_flag`` (#266)
 
