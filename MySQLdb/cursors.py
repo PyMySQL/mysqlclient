@@ -471,7 +471,7 @@ class Cursor(CursorStoreResultMixIn, CursorTupleRowsMixIn,
 
 class DictCursor(CursorStoreResultMixIn, CursorDictRowsMixIn,
                  BaseCursor):
-     """This is a Cursor class that returns rows as dictionaries and
+    """This is a Cursor class that returns rows as dictionaries and
     stores the result set in the client."""
 
 

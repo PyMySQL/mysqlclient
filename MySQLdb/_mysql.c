@@ -732,7 +732,7 @@ _mysql_ConnectionObject_commit(
 }
 
 static char _mysql_ConnectionObject_rollback__doc__[] =
-"Rolls backs the current transaction\n\
+"Rolls back the current transaction\n\
 ";
 static PyObject *
 _mysql_ConnectionObject_rollback(
