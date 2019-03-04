@@ -73,8 +73,9 @@ Release: 2018-12-04
 
 * Add ``Connection._get_native_connection`` for XTA project (#269)
 
-* Fix SEGV on MariaDB Connector/C when ``Connection.close()`` is called
-  for closed connection. (#270, #272, #276)
+* Fix SEGV on MariaDB Connector/C when some methods of ``Connection``
+  objects are called after ``Connection.close()`` is called. (#270, #272, #276)
+  See https://jira.mariadb.org/browse/CONC-289
 
 * Fix ``Connection.client_flag`` (#266)
 
