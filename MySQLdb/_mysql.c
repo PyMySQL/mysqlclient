@@ -1771,12 +1771,11 @@ _mysql_ConnectionObject_send_query(
 {
     char *query;
     int len, r;
-    MYSQL *mysql = &(self->connection);
     if (!PyArg_ParseTuple(args, "s#:query", &query, &len)) return NULL;
     check_connection(self);
 
     Py_BEGIN_ALLOW_THREADS
-    r = mysql_send_query(mysql, query, len);
+    r = mysql_send_query(&(self->connection), query, len);
     Py_END_ALLOW_THREADS
     if (r) return _mysql_Exception(self);
     Py_RETURN_NONE;
@@ -1792,11 +1791,10 @@ _mysql_ConnectionObject_read_query_result(
     PyObject *noargs)
 {
     int r;
-    MYSQL *mysql = &(self->connection);
     check_connection(self);
 
     Py_BEGIN_ALLOW_THREADS
-    r = (int)mysql_read_query_result(mysql);
+    r = (int)mysql_read_query_result(&(self->connection));
     Py_END_ALLOW_THREADS
     if (r) return _mysql_Exception(self);
     Py_RETURN_NONE;
