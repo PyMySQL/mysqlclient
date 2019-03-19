@@ -357,6 +357,17 @@ connect(parameters...)
 
             *This must be a keyword parameter.*
 
+         ssl_mode
+            If present, specify the security settings for the
+            connection to the server. For more information on ssl_mode,
+            see the MySQL documentation. The constants can be referenced
+            as follows: ``MySQLdb.constants.PREFERRED``
+
+            If not present, the session ssl_mode will be unchanged,
+            but it becomes PREFERRED in Version 5.7 or later.
+
+            *This must be a keyword parameter.*
+
          ssl
             This parameter takes a dictionary or mapping, where the
             keys are parameter names used by the mysql_ssl_set_ MySQL

@@ -27,7 +27,7 @@ paramstyle = "format"
 
 from ._mysql import *
 from MySQLdb.compat import PY2
-from MySQLdb.constants import FIELD_TYPE
+from MySQLdb.constants import FIELD_TYPE, SSL_MODE
 from MySQLdb.times import Date, Time, Timestamp, \
     DateFromTicks, TimeFromTicks, TimestampFromTicks
 
