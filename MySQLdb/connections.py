@@ -74,24 +74,22 @@ class Connection(_mysql.connection):
         :param bool use_unicode:
             If True, text-like columns are returned as unicode objects
             using the connection's character set. Otherwise, text-like
-            columns are returned as strings. Unicode objects will always
+            columns are returned as bytes. Unicode objects will always
             be encoded to the connection's character set regardless of
-            this setting. Default to False on Python 2 and True on Python 3
-            so that you can always get python string(`string` object in
-            Python 2 and `unicode` object in Python3) in both of these two
-            python versions by default.
+            this setting.
+            Default to False on Python 2 and True on Python 3
+            so that you can always get python `str` object by default.
 
         :param str charset:
             If supplied, the connection character set will be changed
-            to this character set (MySQL-4.1 and newer). This implies
-            use_unicode=True when defined without use_unicode, and you
-            can override this with use_unicode=False, though you probably
-            shouldn't.
+            to this character set.
+            On Python 2, this option changes default value of `use_unicode`
+            option from False to True.
 
         :param str sql_mode:
             If supplied, the session SQL mode will be changed to this
-            setting (MySQL-4.1 and newer). For more details and legal
-            values, see the MySQL documentation.
+            setting.
+            For more details and legal values, see the MySQL documentation.
 
         :param int client_flag:
             flags to use or 0 (see MySQL docs or constants/CLIENTS.py)
