@@ -1147,6 +1147,7 @@ _mysql_field_to_python(
 #endif
         // Call converter with bytes
         binary = 1;
+        break;
     default: // e.g. FIELD_TYPE_DATETIME, etc.
         // Call converter with unicode string
         binary = 0;
