@@ -385,6 +385,7 @@ _mysql_ConnectionObject_Initialize(
          *capath = NULL, *cipher = NULL;
     PyObject *ssl_keepref[5] = {NULL};
     int n_ssl_keepref = 0;
+    int ssl_mode = 0;
     char *host = NULL, *user = NULL, *passwd = NULL,
          *db = NULL, *unix_socket = NULL;
     unsigned int port = 0;
@@ -394,7 +395,7 @@ _mysql_ConnectionObject_Initialize(
                   "connect_timeout", "compress",
                   "named_pipe", "init_command",
                   "read_default_file", "read_default_group",
-                  "client_flag", "ssl",
+                  "client_flag", "ssl", "ssl_mode",
                   "local_infile",
                   "read_timeout", "write_timeout",
                   NULL } ;
@@ -410,7 +411,7 @@ _mysql_ConnectionObject_Initialize(
     self->open = 0;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs,
-                "|ssssisOiiisssiOiii:connect",
+                "|ssssisOiiisssiOiiii:connect",
                 kwlist,
                 &host, &user, &passwd, &db,
                 &port, &unix_socket, &conv,
@@ -418,7 +419,7 @@ _mysql_ConnectionObject_Initialize(
                 &compress, &named_pipe,
                 &init_command, &read_default_file,
                 &read_default_group,
-                &client_flag, &ssl,
+                &client_flag, &ssl, &ssl_mode,
                 &local_infile,
                 &read_timeout,
                 &write_timeout
@@ -478,6 +479,9 @@ _mysql_ConnectionObject_Initialize(
     if (local_infile != -1)
         mysql_options(&(self->connection), MYSQL_OPT_LOCAL_INFILE, (char *) &local_infile);
 
+    if (ssl_mode) {
+        mysql_options(&(self->connection), MYSQL_OPT_SSL_MODE, &ssl_mode);
+    }
     if (ssl) {
         mysql_ssl_set(&(self->connection), key, cert, ca, capath, cipher);
     }
