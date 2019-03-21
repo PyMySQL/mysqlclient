@@ -1284,9 +1284,13 @@ _mysql__fetch_row(
         if (!self->use)
             row = mysql_fetch_row(self->result);
         else {
+            // This is to prevent gc.get_referrers shenanigans from causing
+            // the _PyTuple_Resize below from raising a SystemError
+            PyObject_GC_UnTrack(*r);
             Py_BEGIN_ALLOW_THREADS;
             row = mysql_fetch_row(self->result);
             Py_END_ALLOW_THREADS;
+            PyObject_GC_Track(*r);
         }
         if (!row && mysql_errno(&(((_mysql_ConnectionObject *)(self->conn))->connection))) {
             _mysql_Exception((_mysql_ConnectionObject *)self->conn);
