@@ -446,6 +446,8 @@ _mysql_ConnectionObject_Initialize(
 
     Py_BEGIN_ALLOW_THREADS ;
     conn = mysql_init(&(self->connection));
+    if (!conn)
+        return PyErr_NoMemory();
     self->open = 1;
     if (connect_timeout) {
         unsigned int timeout = connect_timeout;
@@ -497,7 +499,6 @@ _mysql_ConnectionObject_Initialize(
 
     if (!conn) {
         _mysql_Exception(self);
-        self->open = 0;
         return -1;
     }
 
