@@ -445,9 +445,10 @@ _mysql_ConnectionObject_Initialize(
     }
 
     conn = mysql_init(&(self->connection));
-    if (!conn)
+    if (!conn) {
         PyErr_SetNone(PyExc_MemoryError);
         return -1;
+    }
     Py_BEGIN_ALLOW_THREADS ;
     self->open = 1;
     if (connect_timeout) {
