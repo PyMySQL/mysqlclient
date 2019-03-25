@@ -444,10 +444,11 @@ _mysql_ConnectionObject_Initialize(
         _stringsuck(cipher, value, ssl);
     }
 
-    Py_BEGIN_ALLOW_THREADS ;
     conn = mysql_init(&(self->connection));
     if (!conn)
-        return PyErr_NoMemory();
+        PyErr_SetNone(PyExc_MemoryError);
+        return -1;
+    Py_BEGIN_ALLOW_THREADS ;
     self->open = 1;
     if (connect_timeout) {
         unsigned int timeout = connect_timeout;
