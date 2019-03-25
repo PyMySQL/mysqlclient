@@ -1284,8 +1284,10 @@ _mysql__fetch_row(
         if (!self->use)
             row = mysql_fetch_row(self->result);
         else {
-            // This is to prevent gc.get_referrers shenanigans from causing
-            // the _PyTuple_Resize below from raising a SystemError
+            // see: https://docs.python.org/3/library/gc.html#gc.get_referrers
+            // This function can get a reference to the tuple r, and if that
+            // code is preempted while holding a ref to r, the _PyTuple_Resize
+            // will raise a SystemError because the ref count is 2.
             PyObject_GC_UnTrack(*r);
             Py_BEGIN_ALLOW_THREADS;
             row = mysql_fetch_row(self->result);
