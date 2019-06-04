@@ -1,13 +1,19 @@
-import os, sys
-from distutils.msvccompiler import get_build_version
+import os, platform, sys
+from distutils.msvccompiler import get_build_version, get_build_architecture
 
 
 def get_config():
     from setup_common import get_metadata_and_options, enabled, create_release_file
 
+    interpreter_arch = get_build_architecture()
+    machine_arch = platform.machine()
     metadata, options = get_metadata_and_options()
 
-    connector = options["connector"]
+    connector = options.get('connector')
+    if not connector and machine_arch == 'AMD64' and interpreter_arch == 'Intel':
+        connector = 'C:\Program Files (x86)\MySQL\MySQL Connector C 6.1'
+    elif not connector:
+        connector = 'C:\Program Files\MySQL\MySQL Connector C 6.1'
 
     extra_objects = []
 
