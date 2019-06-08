@@ -1750,8 +1750,8 @@ _mysql_ConnectionObject_query(
     PyObject *args)
 {
     char *query;
-    Py_ssize_t len
-    int  r;
+    Py_ssize_t len;
+    int r;
     if (!PyArg_ParseTuple(args, "s#:query", &query, &len)) return NULL;
     check_connection(self);
 
