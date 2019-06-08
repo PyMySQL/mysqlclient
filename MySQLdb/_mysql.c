@@ -34,6 +34,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #define my_bool _Bool
 #endif
 
+#define PY_SSIZE_T_CLEAN 1
 #include "Python.h"
 #if PY_MAJOR_VERSION >= 3
 #define IS_PY3K
@@ -879,7 +880,8 @@ _mysql_escape_string(
 {
     PyObject *str;
     char *in, *out;
-    int len, size;
+    int len;
+    Py_ssize_t size;
     if (!PyArg_ParseTuple(args, "s#:escape_string", &in, &size)) return NULL;
     str = PyBytes_FromStringAndSize((char *) NULL, size*2+1);
     if (!str) return PyErr_NoMemory();
@@ -1099,7 +1101,7 @@ static PyObject *
 _mysql_field_to_python(
     PyObject *converter,
     const char *rowitem,
-    unsigned long length,
+    Py_ssize_t length,
     MYSQL_FIELD *field,
     const char *encoding)
 {
@@ -1153,10 +1155,10 @@ _mysql_field_to_python(
     }
     return PyObject_CallFunction(converter,
             binary ? "y#" : "s#",
-            rowitem, (int)length);
+            rowitem, (Py_ssize_t)length);
 #else
     return PyObject_CallFunction(converter,
-            "s#", rowitem, (int)length);
+            "s#", rowitem, (Py_ssize_t)length);
 #endif
 }
 
@@ -1748,7 +1750,8 @@ _mysql_ConnectionObject_query(
     PyObject *args)
 {
     char *query;
-    int len, r;
+    Py_ssize_t len
+    int  r;
     if (!PyArg_ParseTuple(args, "s#:query", &query, &len)) return NULL;
     check_connection(self);
 
@@ -1770,7 +1773,8 @@ _mysql_ConnectionObject_send_query(
     PyObject *args)
 {
     char *query;
-    int len, r;
+    Py_ssize_t len;
+    int r;
     MYSQL *mysql = &(self->connection);
     if (!PyArg_ParseTuple(args, "s#:query", &query, &len)) return NULL;
     check_connection(self);
