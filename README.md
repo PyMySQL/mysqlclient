@@ -25,6 +25,14 @@ On Windows, there are binary wheels you can install without MySQLConnector/C or 
 
 `sudo yum install python3-devel `  # Red Hat / CentOS
 
+#### Note on newer Debian releases using MariaDB
+
+From Debian 10.0 ('buster') the migration to MariaDB has removed `mysql_config` altogether which breaks
+the build of this package.  The following command is needed to install a compatibility package that
+restores the needed file:
+
+`sudo apt install libmariadb-dev-compat`
+
 #### **Note about bug of MySQL Connector/C on macOS**
 
 See also: https://bugs.mysql.com/bug.php?id=86971
