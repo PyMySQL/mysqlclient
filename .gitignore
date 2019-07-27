@@ -12,3 +12,4 @@ build/
 dist/
 MySQLdb/release.py
 .coverage
+.idea

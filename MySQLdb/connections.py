@@ -357,4 +357,7 @@ class Connection(_mysql.connection):
     NotSupportedError = NotSupportedError
 
 
+SessionVariableChange = _mysql.session_variable_change_type
+TransactionState = _mysql.transaction_state_type
+
 # vim: colorcolumn=100
