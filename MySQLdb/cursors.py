@@ -119,7 +119,7 @@ class BaseCursor(object):
             # Worst case it will throw a Value error
             ret = literal(ensure_bytes(args))
 
-        del ensure_bytes  # break circular reference
+        ensure_bytes = None  # break circular reference
         return ret
 
     def _check_executed(self):
