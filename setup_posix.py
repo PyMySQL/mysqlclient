@@ -37,6 +37,16 @@ def get_config():
 
     if 'mysql_config' in options:
         _mysql_config_path = options['mysql_config']
+    else:
+        try:
+            mysql_config('version')
+        except EnvironmentError:
+            # try mariadb_config
+            _mysql_config_path = "mariadb_config"
+            try:
+                mysql_config('version')
+            except EnvironmentError:
+                _mysql_config_path = "mysql_config"
 
     extra_objects = []
     static = enabled(options, 'static')
