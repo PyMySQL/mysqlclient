@@ -110,14 +110,17 @@ class BaseCursor(object):
             return x
 
         if isinstance(args, (tuple, list)):
-            return tuple(literal(ensure_bytes(arg)) for arg in args)
+            ret = tuple(literal(ensure_bytes(arg)) for arg in args)
         elif isinstance(args, dict):
-            return {ensure_bytes(key): literal(ensure_bytes(val))
-                    for (key, val) in args.items()}
+            ret = {ensure_bytes(key): literal(ensure_bytes(val))
+                   for (key, val) in args.items()}
         else:
             # If it's not a dictionary let's try escaping it anyways.
             # Worst case it will throw a Value error
-            return literal(ensure_bytes(args))
+            ret = literal(ensure_bytes(args))
+
+        ensure_bytes = None  # break circular reference
+        return ret
 
     def _check_executed(self):
         if not self._executed:
