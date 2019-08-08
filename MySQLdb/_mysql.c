@@ -2643,6 +2643,15 @@ init_mysql(void)
 {
     PyObject *dict, *module, *emod, *edict;
 
+    if (mysql_library_init(0, NULL, NULL)) {
+        PyErr_SetString(PyExc_ImportError, "_mysql: mysql_library_init failed");
+#ifdef IS_PY3K
+        return NULL;
+#else
+        return;
+#endif
+    }
+
 #ifdef IS_PY3K
     if (PyType_Ready(&_mysql_ConnectionObject_Type) < 0)
         return NULL;
