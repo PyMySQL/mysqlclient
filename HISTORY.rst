@@ -1,4 +1,15 @@
 ======================
+ What's new in 1.4.4
+======================
+
+Release: 2019-08-12
+
+* ``charset`` option is passed to ``mysql_options(mysql, MYSQL_SET_CHARSET_NAME, charset)``
+  before ``mysql_real_connect`` is called.
+  This avoid extra ``SET NAMES <charset>`` query when creating connection.
+
+
+======================
  What's new in 1.4.3
 ======================
 
