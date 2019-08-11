@@ -140,7 +140,7 @@ class Connection(_mysql.connection):
         kwargs2['conv'] = conv2
 
         cursorclass = kwargs2.pop('cursorclass', self.default_cursor)
-        charset = kwargs2.pop('charset', '')
+        charset = kwargs2.get('charset', '')
 
         if charset or not PY2:
             use_unicode = True
