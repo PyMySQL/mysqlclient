@@ -59,6 +59,26 @@ An improper ssl configuration may also create issues; see, e.g, `brew info opens
 NOTE: Wheels for Windows may be not released with source package. You should pin version
 in your `requirements.txt` to avoid trying to install newest source package.
 
+NOTE: On Centos pip install fails with gcc error
+
+Error
+``` /usr/bin/ld: cannot find -lmariadb                     
+    collect2: error: ld returned 1 exit status             
+    error: command 'gcc' failed with exit status 1```
+
+change mysql_config 
+
+```
+89:libs="-L$pkglibdir  -lmariadb -lpthread -lz -ldl -lm -lssl -lcrypto"
+90:embedded_libs="-L$pkglibdir  -lmysqld -lpthread -lz -lm -ldl -lssl -lcrypto -lcrypt -llzma -laio -lsystemd"
+```
+to
+
+```
+89:libs="-L$pkglibdir  -lmariadb -lpthread -lz -ldl -lm -lssl -lcrypto"
+90:embedded_libs="-L$pkglibdir  -lmysqld -lpthread -lz -lm -ldl -lssl -lcrypto -lcrypt -llzma -laio -lsystemd"
+91:libs="$embedded_libs"
+```
 
 ### Install from source
 
