@@ -64,7 +64,8 @@ NOTE: On Centos pip install fails with gcc error
 Error
 ``` /usr/bin/ld: cannot find -lmariadb                     
     collect2: error: ld returned 1 exit status             
-    error: command 'gcc' failed with exit status 1```
+    error: command 'gcc' failed with exit status 1
+```
 
 change mysql_config 
 
