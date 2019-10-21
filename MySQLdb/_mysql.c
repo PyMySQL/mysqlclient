@@ -398,6 +398,7 @@ _mysql_ConnectionObject_Initialize(
                   "client_flag", "ssl",
                   "local_infile",
                   "read_timeout", "write_timeout", "charset",
+                  "auth_plugin",
                   NULL } ;
     int connect_timeout = 0;
     int read_timeout = 0;
@@ -406,13 +407,14 @@ _mysql_ConnectionObject_Initialize(
     char *init_command=NULL,
          *read_default_file=NULL,
          *read_default_group=NULL,
-         *charset=NULL;
+         *charset=NULL,
+         *auth_plugin=NULL;
 
     self->converter = NULL;
     self->open = 0;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs,
-                "|ssssisOiiisssiOiiis:connect",
+                "|ssssisOiiisssiOiiiss:connect",
                 kwlist,
                 &host, &user, &passwd, &db,
                 &port, &unix_socket, &conv,
@@ -424,7 +426,8 @@ _mysql_ConnectionObject_Initialize(
                 &local_infile,
                 &read_timeout,
                 &write_timeout,
-                &charset
+                &charset,
+                &auth_plugin
     ))
         return -1;
 
@@ -490,6 +493,9 @@ _mysql_ConnectionObject_Initialize(
     }
     if (charset) {
         mysql_options(&(self->connection), MYSQL_SET_CHARSET_NAME, charset);
+    }
+    if (auth_plugin) {
+        mysql_options(&(self->connection), MYSQL_DEFAULT_AUTH, auth_plugin);
     }
 
     conn = mysql_real_connect(&(self->connection), host, user, passwd, db,

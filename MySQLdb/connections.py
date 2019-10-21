@@ -86,6 +86,11 @@ class Connection(_mysql.connection):
             On Python 2, this option changes default value of `use_unicode`
             option from False to True.
 
+        :param str auth_plugin:
+            If supplied, the connection default authentication plugin will be
+            changed to this value. Example values:
+            `mysql_native_password` or `caching_sha2_password`
+
         :param str sql_mode:
             If supplied, the session SQL mode will be changed to this
             setting.
