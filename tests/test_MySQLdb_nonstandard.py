@@ -92,7 +92,7 @@ class CoreAPI(unittest.TestCase):
 
         self.assertIsInstance(conn.client_flag, (int, MySQLdb.compat.long))
         self.assertTrue(conn.client_flag & MySQLdb.constants.CLIENT.FOUND_ROWS)
-        with self.assertRaises(TypeError if MySQLdb.compat.PY2 else AttributeError):
+        with self.assertRaises(AttributeError):
             conn.client_flag = 0
 
         conn.close()

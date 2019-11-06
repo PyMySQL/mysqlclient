@@ -8,7 +8,6 @@ import re
 import sys
 
 from MySQLdb import cursors, _mysql
-from MySQLdb.compat import unicode, PY2
 from MySQLdb._exceptions import (
     Warning, Error, InterfaceError, DataError,
     DatabaseError, OperationalError, IntegrityError, InternalError,
@@ -147,7 +146,7 @@ class Connection(_mysql.connection):
         cursorclass = kwargs2.pop('cursorclass', self.default_cursor)
         charset = kwargs2.get('charset', '')
 
-        if charset or not PY2:
+        if charset:
             use_unicode = True
         else:
             use_unicode = False
@@ -253,10 +252,7 @@ class Connection(_mysql.connection):
         elif isinstance(o, bytearray):
             s = self._bytes_literal(o)
         elif isinstance(o, bytes):
-            if PY2:
-                s = self.string_literal(o)
-            else:
-                s = self._bytes_literal(o)
+            s = self._bytes_literal(o)
         elif isinstance(o, (tuple, list)):
             s = self._tuple_literal(o)
         else:

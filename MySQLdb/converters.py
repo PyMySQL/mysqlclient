@@ -35,7 +35,6 @@ from decimal import Decimal
 from MySQLdb._mysql import string_literal, escape
 from MySQLdb.constants import FIELD_TYPE, FLAG
 from MySQLdb.times import *
-from MySQLdb.compat import PY2, long, unicode
 from MySQLdb._exceptions import ProgrammingError
 
 NoneType = type(None)

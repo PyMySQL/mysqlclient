@@ -8,7 +8,6 @@ from functools import partial
 import re
 import sys
 
-from .compat import unicode
 from ._exceptions import (
     Warning, Error, InterfaceError, DataError,
     DatabaseError, OperationalError, IntegrityError, InternalError,
