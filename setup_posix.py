@@ -62,10 +62,14 @@ def get_config():
         static = True
         sys.argv.remove("--static")
 
-    libs = mysql_config("libs")
-    library_dirs = [dequote(i[2:]) for i in libs if i.startswith("-L")]
-    libraries = [dequote(i[2:]) for i in libs if i.startswith("-l")]
-    extra_link_args = [x for x in libs if not x.startswith(("-l", "-L"))]
+    if enabled(options, 'embedded'):
+        libs = mysql_config("libmysqld-libs")
+    else:
+        libs = mysql_config("libs")
+
+    library_dirs = [dequote(i[2:]) for i in libs if i.startswith('-L')]
+    libraries = [dequote(i[2:]) for i in libs if i.startswith('-l')]
+    extra_link_args = [x for x in libs if not x.startswith(('-l', '-L'))]
 
     removable_compile_args = ("-I", "-L", "-l")
     extra_compile_args = [
@@ -91,6 +95,7 @@ def get_config():
             "mysqlclient_r",
             "mysqld",
             "mariadb",
+            "mariadbd",
             "mariadbclient",
             "perconaserverclient",
             "perconaserverclient_r",
@@ -116,7 +121,9 @@ def get_config():
                 libraries.remove(L)
 
     name = "mysqlclient"
-    metadata["name"] = name
+    if enabled(options, 'embedded'):
+        name = name + "-embedded"
+    metadata['name'] = name
 
     define_macros = [
         ("version_info", metadata["version_info"]),

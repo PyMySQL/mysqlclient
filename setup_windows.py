@@ -12,8 +12,10 @@ def get_config():
 
     extra_objects = []
 
-    # client = "mysqlclient"
-    client = "mariadbclient"
+    if enabled(options, 'embedded'):
+        client = "mariadbd"
+    else:
+        client = "mariadbclient"
 
     vcversion = int(get_build_version())
     if client == "mariadbclient":
@@ -32,7 +34,9 @@ def get_config():
     extra_link_args = ["/MANIFEST"]
 
     name = "mysqlclient"
-    metadata["name"] = name
+    if enabled(options, 'embedded'):
+        name = name + "-embedded"
+    metadata['name'] = name
 
     define_macros = [
         ("version_info", metadata["version_info"]),
