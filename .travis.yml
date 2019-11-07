@@ -40,7 +40,7 @@ after_success:
 matrix:
   include:
     - &django_py27
-      name: "Django test (Python 2.7)
+      name: "Django test (Python 2.7)"
       python: "2.7"
       install:
         - pip install -U pip
