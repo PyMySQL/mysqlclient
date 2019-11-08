@@ -1,15 +1,15 @@
 #!/usr/bin/env python
 import dbapi20
 import unittest
-import MySQLdb
+import tiledb.sql
 from configdb import connection_kwargs
 import warnings
 
 warnings.simplefilter("ignore")
 
 
-class test_MySQLdb(dbapi20.DatabaseAPI20Test):
-    driver = MySQLdb
+class test_tiledb_sql(dbapi20.DatabaseAPI20Test):
+    driver = tiledb.sql
     connect_args = ()
     connect_kw_args = connection_kwargs(
         dict(sql_mode="ANSI,STRICT_TRANS_TABLES,TRADITIONAL")

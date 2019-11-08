@@ -4,7 +4,7 @@ constants Package
 :mod:`constants` Package
 ------------------------
 
-.. automodule:: MySQLdb.constants
+.. automodule:: tiledb.sql.constants
     :members:
     :undoc-members:
     :show-inheritance:
@@ -12,7 +12,7 @@ constants Package
 :mod:`CLIENT` Module
 --------------------
 
-.. automodule:: MySQLdb.constants.CLIENT
+.. automodule:: tiledb.sql.constants.CLIENT
     :members:
     :undoc-members:
     :show-inheritance:
@@ -20,7 +20,7 @@ constants Package
 :mod:`CR` Module
 ----------------
 
-.. automodule:: MySQLdb.constants.CR
+.. automodule:: tiledb.sql.constants.CR
     :members:
     :undoc-members:
     :show-inheritance:
@@ -28,7 +28,7 @@ constants Package
 :mod:`ER` Module
 ----------------
 
-.. automodule:: MySQLdb.constants.ER
+.. automodule:: tiledb.sql.constants.ER
     :members:
     :undoc-members:
     :show-inheritance:
@@ -36,7 +36,7 @@ constants Package
 :mod:`FIELD_TYPE` Module
 ------------------------
 
-.. automodule:: MySQLdb.constants.FIELD_TYPE
+.. automodule:: tiledb.sql.constants.FIELD_TYPE
     :members:
     :undoc-members:
     :show-inheritance:
@@ -44,7 +44,7 @@ constants Package
 :mod:`FLAG` Module
 ------------------
 
-.. automodule:: MySQLdb.constants.FLAG
+.. automodule:: tiledb.sql.constants.FLAG
     :members:
     :undoc-members:
     :show-inheritance:

@@ -11,4 +11,6 @@
 build/
 dist/
 MySQLdb/release.py
+tiledb/sql/release.py
 .coverage
+.idea

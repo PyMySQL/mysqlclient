@@ -1,7 +1,7 @@
-"""MySQLdb Cursors
+"""TileDB SQL Cursors
 
-This module implements Cursors of various types for MySQLdb. By
-default, MySQLdb uses the Cursor class.
+This module implements Cursors of various types for TileDB SQL. By
+default, TileDB SQL uses the Cursor class.
 """
 import re
 
@@ -33,7 +33,7 @@ class BaseCursor:
     description_flags
         Tuple of column flags for last query, one entry per column
         in the result set. Values correspond to those in
-        MySQLdb.constants.FLAG. See MySQL documentation (C API)
+        tiledb.sql.constants.FLAG. See MySQL documentation (C API)
         for more information. Non-standard extension.
 
     arraysize

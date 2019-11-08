@@ -1,10 +1,10 @@
-MySQLdb Package
-===============
+TileDB-SQL Package
+==================
 
-:mod:`MySQLdb` Package
-----------------------
+:mod:`tiledb.sql` Package
+-------------------------
 
-.. automodule:: MySQLdb
+.. automodule:: tiledb.sql
     :members:
     :undoc-members:
     :show-inheritance:
@@ -12,7 +12,7 @@ MySQLdb Package
 :mod:`connections` Module
 -------------------------
 
-.. automodule:: MySQLdb.connections
+.. automodule:: tiledb.sql.connections
     :members: Connection
     :undoc-members:
     :show-inheritance:
@@ -20,7 +20,7 @@ MySQLdb Package
 :mod:`converters` Module
 ------------------------
 
-.. automodule:: MySQLdb.converters
+.. automodule:: tiledb.sql.converters
     :members:
     :undoc-members:
     :show-inheritance:
@@ -28,7 +28,7 @@ MySQLdb Package
 :mod:`cursors` Module
 ---------------------
 
-.. automodule:: MySQLdb.cursors
+.. automodule:: tiledb.sql.cursors
     :members: Cursor
     :undoc-members:
     :show-inheritance:
@@ -36,7 +36,7 @@ MySQLdb Package
 :mod:`times` Module
 -------------------
 
-.. automodule:: MySQLdb.times
+.. automodule:: tiledb.sql.times
     :members:
     :undoc-members:
     :show-inheritance:
@@ -63,5 +63,5 @@ Subpackages
 
 .. toctree::
 
-    MySQLdb.constants
+    tiledb.sql.constants
 

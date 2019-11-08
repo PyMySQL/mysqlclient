@@ -1,6 +1,6 @@
-====================
-MySQLdb User's Guide
-====================
+=======================
+TileDB-SQL User's Guide
+=======================
 
 .. contents::
 ..
@@ -8,7 +8,7 @@ MySQLdb User's Guide
 Introduction
 ------------
 
-MySQLdb is an interface to the popular MySQL
+TileDB-SQL is an interface to the popular MySQL
 database server that provides the Python database API.
 
 Installation
@@ -17,15 +17,15 @@ Installation
 The ``README`` file has complete installation instructions.
 
 
-MySQLdb._mysql
---------------
+tiledb.sql._mysql
+-----------------
 
 If you want to write applications which are portable across databases,
-use MySQLdb_, and avoid using this module directly. ``MySQLdb._mysql``
+use tiledb.sql_, and avoid using this module directly. ``tiledb.sql._mysql``
 provides an interface which mostly implements the MySQL C API. For
 more information, see the `MySQL documentation`_. The documentation
 for this module is intentionally weak because you probably should use
-the higher-level MySQLdb module. If you really need it, use the
+the higher-level tiledb.sql module. If you really need it, use the
 standard MySQL docs and transliterate as necessary.
 
 .. _`MySQL documentation`: https://dev.mysql.com/doc/
@@ -91,11 +91,11 @@ MySQL C API function mapping
  ``mysql_thread_id()``              ``conn.thread_id()``
  ``mysql_use_result()``             ``conn.use_result()``
  ``mysql_warning_count()``          ``conn.warning_count()``
- ``CLIENT_*``                       ``MySQLdb.constants.CLIENT.*``
- ``CR_*``                           ``MySQLdb.constants.CR.*``
- ``ER_*``                           ``MySQLdb.constants.ER.*``
- ``FIELD_TYPE_*``                   ``MySQLdb.constants.FIELD_TYPE.*``
- ``FLAG_*``                         ``MySQLdb.constants.FLAG.*``
+ ``CLIENT_*``                       ``tiledb.sql.constants.CLIENT.*``
+ ``CR_*``                           ``tiledb.sql.constants.CR.*``
+ ``ER_*``                           ``tiledb.sql.constants.ER.*``
+ ``FIELD_TYPE_*``                   ``tiledb.sql.constants.FIELD_TYPE.*``
+ ``FLAG_*``                         ``tiledb.sql.constants.FLAG.*``
 =================================== ==================================
 
 
@@ -106,7 +106,7 @@ Okay, so you want to use ``_mysql`` anyway. Here are some examples.
 
 The simplest possible database connection is::
 
-    from MySQLdb import _mysql
+    from tiledb.sql import _mysql
     db=_mysql.connect()
 
 This creates a connection to the MySQL server running on the local
@@ -162,8 +162,8 @@ substitution, so you have to pass a complete query string to
              WHERE price < 5""")
 
 There's no return value from this, but exceptions can be raised. The
-exceptions are defined in a separate module, ``MySQLdb._exceptions``,
-but ``MySQLdb._mysql`` exports them. Read DB API specification PEP-249_ to
+exceptions are defined in a separate module, ``tiledb.sql._exceptions``,
+but ``tiledb.sql._mysql`` exports them. Read DB API specification PEP-249_ to
 find out what they are, or you can use the catch-all ``MySQLError``.
 
 .. _PEP-249: https://www.python.org/dev/peps/pep-0249/
@@ -213,7 +213,7 @@ implicitly asked for one row, since we didn't specify ``maxrows``.
 The other oddity is: Assuming these are numeric columns, why are they
 returned as strings? Because MySQL returns all data as strings and
 expects you to convert it yourself. This would be a real pain in the
-ass, but in fact, ``MySQLdb._mysql`` can do this for you. (And ``MySQLdb``
+ass, but in fact, ``tiledb.sql._mysql`` can do this for you. (And ``tiledb.sql``
 does do this for you.) To have automatic type conversion done, you
 need to create a type converter dictionary, and pass this to
 ``connect()`` as the ``conv`` keyword parameter.
@@ -221,7 +221,7 @@ need to create a type converter dictionary, and pass this to
 The keys of ``conv`` should be MySQL column types, which in the
 C API are ``FIELD_TYPE_*``. You can get these values like this::
 
-    from MySQLdb.constants import FIELD_TYPE
+    from tiledb.sql.constants import FIELD_TYPE
 
 By default, any column type that can't be found in ``conv`` is
 returned as a string, which works for a lot of stuff. For our
@@ -234,17 +234,17 @@ function on it.  Note that ``FIELD_TYPE_LONG`` is an ``INTEGER``
 column, which corresponds to a C ``long``, which is also the type used
 for a normal Python integer. But beware: If it's really an ``UNSIGNED
 INTEGER`` column, this could cause overflows. For this reason,
-``MySQLdb`` actually uses ``long()`` to do the conversion. But we'll
+``tiledb.sql`` actually uses ``long()`` to do the conversion. But we'll
 ignore this potential problem for now.
 
 Then if you use ``db=_mysql.connect(conv=my_conv...)``, the
 results will come back ``((3, 2, 0),)``, which is what you would
 expect.
 
-MySQLdb
--------
+tiledb.sql
+----------
 
-MySQLdb is a thin Python wrapper around ``_mysql`` which makes it
+tiledb.sql is a thin Python wrapper around ``_mysql`` which makes it
 compatible with the Python DB API interface (version 2).  In reality,
 a fair amount of the code which implements the API is in ``_mysql``
 for the sake of efficiency.
@@ -257,7 +257,7 @@ Functions and attributes
 ........................
 
 Only a few top-level functions and attributes are defined within
-MySQLdb.
+tiledb.sql.
 
 connect(parameters...)
          Constructor for creating a connection to the
@@ -292,7 +292,7 @@ connect(parameters...)
 
          conv
             type conversion dictionary.  Default: a copy of
-            ``MySQLdb.converters.conversions``
+            ``tiledb.sql.converters.conversions``
 
          compress
             Enable protocol compression. Default: no compression.
@@ -318,7 +318,7 @@ connect(parameters...)
 
          cursorclass
             cursor class that ``cursor()`` uses, unless
-            overridden. Default: ``MySQLdb.cursors.Cursor``.  *This
+            overridden. Default: ``tiledb.sql.cursors.Cursor``.  *This
             must be a keyword parameter.*
 
          use_unicode
@@ -389,7 +389,7 @@ threadsafety
       share the module.
 
       The MySQL protocol can not handle multiple threads using the
-      same connection at once. Some earlier versions of MySQLdb
+      same connection at once. Some earlier versions of tiledb.sql
       utilized locking to achieve a threadsafety of 2. While this is
       not terribly hard to accomplish using the standard Cursor class
       (which uses ``mysql_store_result()``), it is complicated by
@@ -448,7 +448,7 @@ conv
         value), returning a Python value
 
       * a sequence of 2-tuples, where the first value is a combination
-        of flags from ``MySQLdb.constants.FLAG``, and the second value
+        of flags from ``tiledb.sql.constants.FLAG``, and the second value
         is a function as above. The sequence is tested until the flags
         on the field match those of the first value. If both values
         are None, then the default conversion is done. Presently this
@@ -462,7 +462,7 @@ conv
       This is initialized with reasonable defaults for most
       types. When creating a Connection object, you can pass your own
       type converter dictionary as a keyword parameter. Otherwise, it
-      uses a copy of ``MySQLdb.converters.conversions``.  Several
+      uses a copy of ``tiledb.sql.converters.conversions``.  Several
       non-standard types are returned as strings, which is how MySQL
       returns all columns. For more details, see the built-in module
       documentation.
@@ -510,7 +510,7 @@ callproc(procname, args)
       procedure arguments must be passed as server variables, and
       can only be returned with a SELECT statement. Since a stored
       procedure may return zero or more result sets, it is impossible
-      for MySQLdb to determine if there are result sets to fetch
+      for tiledb.sql to determine if there are result sets to fetch
       before the modified parmeters are accessible.
 
       The parameters are stored in the server as @_*procname*_*n*,
@@ -558,10 +558,10 @@ nextset()
 Some examples
 .............
 
-The ``connect()`` method works nearly the same as with `MySQLDB._mysql`_::
+The ``connect()`` method works nearly the same as with `tiledb.sql._mysql`_::
 
-    import MySQLdb
-    db=MySQLdb.connect(passwd="moonpie",db="thangs")
+    import tiledb.sql
+    db=tiledb.sql.connect(passwd="moonpie",db="thangs")
 
 To perform a query, you first need a cursor, and then you can execute
 queries on it::
@@ -572,7 +572,7 @@ queries on it::
               WHERE price < %s""", (max_price,))
 
 In this example, ``max_price=5`` Why, then, use ``%s`` in the
-string? Because MySQLdb will convert it to a SQL literal value, which
+string? Because tiledb.sql will convert it to a SQL literal value, which
 is the string '5'. When it's finished, the query will actually say,
 "...WHERE price < 5".
 
@@ -620,7 +620,7 @@ do a multi-row insert::
 Here we are inserting three rows of five values. Notice that there is
 a mix of types (strings, ints, floats) though we still only use
 ``%s``. And also note that we only included format strings for one
-row. MySQLdb picks those out and duplicates them for each row.
+row. tiledb.sql picks those out and duplicates them for each row.
 
 Using and extending
 -------------------
@@ -643,9 +643,9 @@ application to a new database should be a relatively simple matter of
 creating a new subclass, assuming the new database is reasonably
 standard.
 
-Because MySQLdb's Connection and Cursor objects are written in Python,
+Because tiledb.sql's Connection and Cursor objects are written in Python,
 you can easily derive your own subclasses. There are several Cursor
-classes in MySQLdb.cursors:
+classes in tiledb.sql.cursors:
 
 BaseCursor
     The base class for Cursor objects.  This does not raise Warnings.
@@ -692,6 +692,6 @@ SSDictCursor
 
 
 
-:Title: MySQLdb: a Python interface for MySQL
+:Title: tiledb.sql: a Python interface for MySQL
 :Author: Andy Dustman
 :Version: $Revision$

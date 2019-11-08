@@ -30,7 +30,7 @@ before_script:
 
 script:
   - pip install -e .
-  - pytest --cov ./MySQLdb
+  - pytest --cov ./tiledb/sql
 
 after_success:
   - codecov

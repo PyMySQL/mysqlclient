@@ -9,7 +9,6 @@ from time import time
 import unittest
 from configdb import connection_factory
 
-
 class DatabaseTest(unittest.TestCase):
 
     db_module = None

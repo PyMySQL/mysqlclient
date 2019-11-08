@@ -366,7 +366,7 @@ static char _mysql_ResultObject__doc__[] =
 Creating instances of this class directly is an excellent way to\n\
 shoot yourself in the foot. If using _mysql.connection directly,\n\
 use connection.store_result() or connection.use_result() instead.\n\
-If using MySQLdb.Connection, this is done by the cursor class.\n\
+If using tiledb.sql.Connection, this is done by the cursor class.\n\
 Just forget you ever saw this. Forget... FOR-GET...";
 
 static int
@@ -746,7 +746,7 @@ read_default_group\n\
   see the MySQL documentation for mysql_options()\n\
 \n\
 client_flag\n\
-  client flags from MySQLdb.constants.CLIENT\n\
+  client flags from tiledb.sql.constants.CLIENT\n\
 \n\
 load_infile\n\
   int, non-zero enables LOAD LOCAL INFILE, zero disables\n\
@@ -2459,7 +2459,7 @@ static struct PyMemberDef _mysql_ConnectionObject_memberlist[] = {
         T_ULONG,
         offsetof(_mysql_ConnectionObject,connection.server_capabilities),
         READONLY,
-        "Capabilities of server; consult MySQLdb.constants.CLIENT"
+        "Capabilities of server; consult tiledb.sql.constants.CLIENT"
     },
     {
         "port",
@@ -2473,7 +2473,7 @@ static struct PyMemberDef _mysql_ConnectionObject_memberlist[] = {
         T_ULONG,
         offsetof(_mysql_ConnectionObject,connection.client_flag),
         READONLY,
-        "Client flags; refer to MySQLdb.constants.CLIENT"
+        "Client flags; refer to tiledb.sql.constants.CLIENT"
     },
     {NULL} /* Sentinel */
 };
@@ -2786,7 +2786,7 @@ _mysql_NewException(
 static char _mysql___doc__[] =
 "an adaptation of the MySQL C API (mostly)\n\
 \n\
-You probably are better off using MySQLdb instead of using this\n\
+You probably are better off using tiledb.sql instead of using this\n\
 module directly.\n\
 \n\
 In general, renaming goes from mysql_* to _mysql.*. _mysql.connect()\n\
@@ -2840,7 +2840,7 @@ PyInit__mysql(void)
                    (PyObject *)&_mysql_ResultObject_Type))
         goto error;
     Py_INCREF(&_mysql_ResultObject_Type);
-    if (!(emod = PyImport_ImportModule("MySQLdb._exceptions"))) {
+    if (!(emod = PyImport_ImportModule("tiledb.sql._exceptions"))) {
         PyErr_Print();
         goto error;
     }

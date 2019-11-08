@@ -6,7 +6,7 @@ Use Python datetime module to handle date and time columns.
 """
 from time import localtime
 from datetime import date, datetime, time, timedelta
-from MySQLdb._mysql import string_literal
+from tiledb.sql._mysql import string_literal
 
 Date = date
 Time = time

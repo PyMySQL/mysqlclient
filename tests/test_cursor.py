@@ -1,5 +1,5 @@
-# import pytest
-import MySQLdb.cursors
+#import pytest
+import tiledb.sql.cursors
 from configdb import connection_factory
 
 
@@ -34,25 +34,25 @@ def test_executemany():
     cursor.execute("create table test (data varchar(10))")
     _tables.append("test")
 
-    m = MySQLdb.cursors.RE_INSERT_VALUES.match(
+    m = tiledb.sql.cursors.RE_INSERT_VALUES.match(
         "INSERT INTO TEST (ID, NAME) VALUES (%s, %s)"
     )
     assert m is not None, "error parse %s"
     assert m.group(3) == "", "group 3 not blank, bug in RE_INSERT_VALUES?"
 
-    m = MySQLdb.cursors.RE_INSERT_VALUES.match(
+    m = tiledb.sql.cursors.RE_INSERT_VALUES.match(
         "INSERT INTO TEST (ID, NAME) VALUES (%(id)s, %(name)s)"
     )
     assert m is not None, "error parse %(name)s"
     assert m.group(3) == "", "group 3 not blank, bug in RE_INSERT_VALUES?"
 
-    m = MySQLdb.cursors.RE_INSERT_VALUES.match(
+    m = tiledb.sql.cursors.RE_INSERT_VALUES.match(
         "INSERT INTO TEST (ID, NAME) VALUES (%(id_name)s, %(name)s)"
     )
     assert m is not None, "error parse %(id_name)s"
     assert m.group(3) == "", "group 3 not blank, bug in RE_INSERT_VALUES?"
 
-    m = MySQLdb.cursors.RE_INSERT_VALUES.match(
+    m = tiledb.sql.cursors.RE_INSERT_VALUES.match(
         "INSERT INTO TEST (ID, NAME) VALUES (%(id_name)s, %(name)s) ON duplicate update"
     )
     assert m is not None, "error parse %(id_name)s"
@@ -61,7 +61,7 @@ def test_executemany():
     ), "group 3 not ON duplicate update, bug in RE_INSERT_VALUES?"
 
     # https://github.com/PyMySQL/mysqlclient-python/issues/178
-    m = MySQLdb.cursors.RE_INSERT_VALUES.match(
+    m = tiledb.sql.cursors.RE_INSERT_VALUES.match(
         "INSERT INTO bloup(foo, bar)VALUES(%s, %s)"
     )
     assert m is not None
@@ -94,7 +94,7 @@ def test_executemany():
     )
     try:
         q = "INSERT INTO percent_test (`A%%`, `B%%`) VALUES (%s, %s)"
-        assert MySQLdb.cursors.RE_INSERT_VALUES.match(q) is not None
+        assert tiledb.sql.cursors.RE_INSERT_VALUES.match(q) is not None
         cursor.executemany(q, [(3, 4), (5, 6)])
         assert cursor._executed.endswith(
             b"(3, 4),(5, 6)"

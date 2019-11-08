@@ -1,4 +1,4 @@
-"""Exception classes for _mysql and MySQLdb.
+"""Exception classes for _mysql and TileDB SQL.
 
 These classes are dictated by the DB API v2.0:
 

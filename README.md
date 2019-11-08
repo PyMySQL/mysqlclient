@@ -2,71 +2,68 @@
 
 [![Build Status](https://secure.travis-ci.org/PyMySQL/mysqlclient-python.png)](http://travis-ci.org/PyMySQL/mysqlclient-python)
 
-This is a fork of [MySQLdb1](https://github.com/farcepest/MySQLdb1).
+This is a fork of [mysqlclient-python](https://github.com/PyMySQL/mysqlclient-python).
 
-This project adds Python 3 support and bug fixes.
-I hope this fork is merged back to MySQLdb1 like distribute was merged back to setuptools.
+This project is designed to be used with TileDB-SQL which is a reduced build of MariaDB with support for using
+the [MyTile](https://github.com/TileDB-Inc/TileDB-MariaDB) storage engine for accessing TileDB Arrays.
 
+This is not meant to be used a general purpose MariaDB Client, it is only meant to be used with linking against
+the embedded version of MariaDB. This has been tested only with MariaDB 10.4 and the MyTile storage engine.
 
-## Support
+# Install
 
-**Do Not use Github Issue Tracker to ask help.  OSS Maintainer is not free tech support**
+## Conda
 
-When your question looks relating to Python rather than MySQL:
-
-* Python mailing list [python-list](https://mail.python.org/mailman/listinfo/python-list)
-* Slack [pythondev.slack.com](https://pyslackers.com/web/slack)
-
-Or when you have question about MySQL:
-
-* [MySQL Community on Slack](https://lefred.be/mysql-community-on-slack/)
-
-
-## Install
-
-### Windows
-
-Building mysqlclient on Windows is very hard.
-But there are some binary wheels you can install easily.
-
-### macOS (Homebrew)
-
-Install MySQL and mysqlclient:
+Conda packages will be available on conda forge soon.
 
 ```
-# Assume you are activating Python 3 venv
-$ brew install mysql
-$ pip install mysqlclient
+conda install -c conda-forge tiledb-sql
 ```
 
-If you don't want to install MySQL server, you can use mysql-client instead:
+## Pypi
+
+A pypi package will be build from conda using conda-press
 
 ```
-# Assume you are activating Python 3 venv
-$ brew install mysql-client
-$ echo 'export PATH="/usr/local/opt/mysql-client/bin:$PATH"' >> ~/.bash_profile
-$ export PATH="/usr/local/opt/mysql-client/bin:$PATH"
-$ pip install mysqlclient
+pip install tiledb-sql
 ```
 
-### Linux
+## Compiling From Source
 
-**Note that this is a basic step.  I can not support complete step for build for all
-environment.  If you can see some error, you should fix it by yourself, or ask for
-support in some user forum.  Don't file a issue on the issue tracker.**
+### Prerequisites
 
-You may need to install the Python 3 and MySQL development headers and libraries like so:
+You may need to install the Python development headers and compile MariaDB from source
 
-* `$ sudo apt-get install python3-dev default-libmysqlclient-dev build-essential`  # Debian / Ubuntu
-* `% sudo yum install python3-devel mysql-devel`  # Red Hat / CentOS
+#### Python development headers
 
-Then you can install mysqlclient via pip now:
+* `sudo apt-get install python-dev default-libmysqlclient-dev`  # Debian / Ubuntu
+* `sudo yum install python-devel mysql-devel`  # Red Hat / CentOS
+* `brew install mysql-connector-c`  # macOS (Homebrew)  (Currently, it has bug. See below)
+
+On Windows, there are binary wheels you can install without MySQLConnector/C or MSVC.
+
+#### Compiling MyTile
+
+Please follow the [MyTile compilation instructions](https://docs.tiledb.com/developer/mariadb/installation)
+
+### Building TileDB-SQL-Py package
+
+If you've installed mytile into `$HOME/mytile_server` simply build the python package with:
 
 ```
-$ pip install mysqlclient
+PATH="$HOME/mytile_server/bin:${PATH}" python setup.py build_ext --inplace
 ```
 
-### Documentation
+Now you can use it with
 
-Documentation is hosted on [Read The Docs](https://mysqlclient.readthedocs.io/)
+```
+import tiledb.sql
+import pandas
+db = tiledb.sql.connect(db="test")
+pd.read_sql(sql="select * from `s3://my_bucket/my_array`, con=db)
+```
+
+# Documentation
+
+Documentation is hosted on [TileDB Developer Docs](https://docs.tiledb.com/developer/api-usage/running-sql)
 

@@ -1,6 +1,6 @@
-====================================
- MySQLdb Frequently Asked Questions
-====================================
+======================================
+ TileDB-SQL Frequently Asked Questions
+======================================
 
 .. contents::
 ..
@@ -18,7 +18,7 @@ what that is and install it, but often the name ends with -devel.
 
 Another possibility: Some older versions of mysql_config behave oddly
 and may throw quotes around some of the path names, which confused
-MySQLdb-1.2.0. 1.2.1 works around these problems. If you see things
+tiledb-sql-1.2.0. 1.2.1 works around these problems. If you see things
 like -I'/usr/local/include/mysql' in your compile command, that's
 probably the issue, but it shouldn't happen any more.
 
@@ -29,10 +29,10 @@ ImportError
   ImportError: No module named _mysql
 
 If you see this, it's likely you did some wrong when installing
-MySQLdb; re-read (or read) README. _mysql is the low-level C module
+tiledb-sql; re-read (or read) README. _mysql is the low-level C module
 that interfaces with the MySQL client library.
 
-Various versions of MySQLdb in the past have had build issues on
+Various versions of tiledb-sql in the past have had build issues on
 "weird" platforms; "weird" in this case means "not Linux", though
 generally there aren't problems on Unix/POSIX platforms, including
 BSDs and Mac OS X. Windows has been more problematic, in part because
@@ -45,11 +45,11 @@ to find MySQL and what libraries to include.
   ImportError: libmysqlclient_r.so.14: cannot open shared object file: No such file or directory
 
 The number after .so may vary, but this means you have a version of
-MySQLdb compiled against one version of MySQL, and are now trying to
+tiledb-sql compiled against one version of MySQL, and are now trying to
 run it against a different version. The shared library version tends
 to change between major releases.
 
-Solution: Rebuilt MySQLdb, or get the matching version of MySQL.
+Solution: Rebuilt tiledb-sql, or get the matching version of MySQL.
 
 Another thing that can cause this: The MySQL libraries may not be on
 your system path.
@@ -93,7 +93,7 @@ problematic.
 My data disappeared! (or won't go away!)
 ----------------------------------------
 
-Starting with 1.2.0, MySQLdb disables autocommit by default, as
+Starting with 1.2.0, tiledb-sql disables autocommit by default, as
 required by the DB-API standard (`PEP-249`_). If you are using InnoDB
 tables or some other type of transactional table type, you'll need
 to do connection.commit() before closing the connection, or else

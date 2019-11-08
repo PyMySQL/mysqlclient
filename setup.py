@@ -14,7 +14,7 @@ with open("README.md", encoding="utf-8") as f:
 
 metadata, options = get_config()
 metadata["ext_modules"] = [
-    setuptools.Extension("MySQLdb._mysql", sources=["MySQLdb/_mysql.c"], **options)
+    setuptools.Extension("tiledb.sql._mysql", sources=['tiledb/sql/_mysql.c'], **options)
 ]
 metadata["long_description"] = readme
 metadata["long_description_content_type"] = "text/markdown"

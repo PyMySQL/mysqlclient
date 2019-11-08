@@ -1,5 +1,5 @@
-Welcome to MySQLdb's documentation!
-===================================
+Welcome to TileDB SQL's documentation!
+======================================
 
 Contents:
 
@@ -7,7 +7,7 @@ Contents:
     :maxdepth: 3
 
     user_guide
-    MySQLdb
+    tiledb.sql
     FAQ
 
 Indices and tables

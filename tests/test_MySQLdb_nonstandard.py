@@ -1,8 +1,8 @@
 import unittest
 
-from MySQLdb import _mysql
-import MySQLdb
-from MySQLdb.constants import FIELD_TYPE
+from tiledb.sql import _mysql
+import tiledb.sql
+from tiledb.sql.constants import FIELD_TYPE
 from configdb import connection_factory
 import warnings
 
@@ -11,16 +11,16 @@ warnings.simplefilter("ignore")
 
 class TestDBAPISet(unittest.TestCase):
     def test_set_equality(self):
-        self.assertTrue(MySQLdb.STRING == MySQLdb.STRING)
+        self.assertTrue(tiledb.sql.STRING == tiledb.sql.STRING)
 
     def test_set_inequality(self):
-        self.assertTrue(MySQLdb.STRING != MySQLdb.NUMBER)
+        self.assertTrue(tiledb.sql.STRING != tiledb.sql.NUMBER)
 
     def test_set_equality_membership(self):
-        self.assertTrue(FIELD_TYPE.VAR_STRING == MySQLdb.STRING)
+        self.assertTrue(FIELD_TYPE.VAR_STRING == tiledb.sql.STRING)
 
     def test_set_inequality_membership(self):
-        self.assertTrue(FIELD_TYPE.DATE != MySQLdb.STRING)
+        self.assertTrue(FIELD_TYPE.DATE != tiledb.sql.STRING)
 
 
 class TestCoreModule(unittest.TestCase):
@@ -97,11 +97,11 @@ class CoreAPI(unittest.TestCase):
 
     def test_client_flag(self):
         conn = connection_factory(
-            use_unicode=True, client_flag=MySQLdb.constants.CLIENT.FOUND_ROWS
+            use_unicode=True, client_flag=tiledb.sql.constants.CLIENT.FOUND_ROWS
         )
 
         self.assertIsInstance(conn.client_flag, int)
-        self.assertTrue(conn.client_flag & MySQLdb.constants.CLIENT.FOUND_ROWS)
+        self.assertTrue(conn.client_flag & tiledb.sql.constants.CLIENT.FOUND_ROWS)
         with self.assertRaises(AttributeError):
             conn.client_flag = 0
 
