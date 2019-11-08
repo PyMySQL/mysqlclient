@@ -12,6 +12,15 @@ the embedded version of MariaDB. This has been tested only with MariaDB 10.4 and
 
 # Install
 
+## Docker
+
+A docker image is available on dockerhub under [tiledb/tiledb-sql-py](https://hub.docker.com/r/tiledb/tiledb-sql-py/).
+This docker image will drop you into a python shell and has tiledb, tiledb-sql-py, pandas and numpy preinstalled.
+
+```
+docker run -it --rm tiledb/tiledb-sql-py
+```
+
 ## Conda
 
 Conda packages will be available on conda forge soon.
