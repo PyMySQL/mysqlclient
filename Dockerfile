@@ -130,4 +130,6 @@ RUN pip3 install .
 
 RUN pip3 install pandas numpy tiledb
 
+WORKDIR /opt/
+
 CMD ["python3"]
