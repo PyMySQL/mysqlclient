@@ -57,6 +57,12 @@ from tiledb.sql.times import (
     TimestampFromTicks,
 )
 
+import os
+module_path = os.path.dirname(os.path.realpath(__file__))
+
+# Init the embedded server on module load
+server_init(args=["--lc_messages_dir={}".format(module_path), "--language={}/".format(module_path)])
+
 try:
     frozenset
 except NameError:

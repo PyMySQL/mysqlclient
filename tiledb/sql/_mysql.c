@@ -99,7 +99,9 @@ typedef struct {
 extern PyTypeObject _mysql_ResultObject_Type;
 
 static int _mysql_server_init_done = 0;
-#define check_server_init(x) if (!_mysql_server_init_done) { if (mysql_server_init(0, NULL, NULL)) { _mysql_Exception(NULL); return x; } else { _mysql_server_init_done = 1;} }
+char **server_options;
+int items = 0;
+#define check_server_init(x) if (!_mysql_server_init_done) { if (mysql_server_init(items, server_options, NULL)) { _mysql_Exception(NULL); return x; } else { _mysql_server_init_done = 1;} }
 
 PyObject *
 _mysql_Exception(_mysql_ConnectionObject *c)
@@ -307,6 +309,10 @@ static PyObject *_mysql_server_init(
 		}
 		groups_c[groupc] = (char *)NULL;
 	}
+
+	// Save options globally incase of server reinit
+	server_options = cmd_args_c;
+	items = (sizeof(server_options) / sizeof(char *)) - 1;
 	/* even though this may block, don't give up the interpreter lock
 	   so that the server can't be initialized multiple times. */
 	if (mysql_server_init(cmd_argc, cmd_args_c, groups_c)) {
@@ -2811,6 +2817,8 @@ PyInit__mysql(void)
 {
     PyObject *dict, *module, *emod, *edict;
 
+    // This is added in rebase, from https://github.com/PyMySQL/mysqlclient-python/commit/62c8c8c62bd0c7e943c5dc68678d9fb2a0fd1610
+    // might need to remove it
     if (mysql_library_init(0, NULL, NULL)) {
         PyErr_SetString(PyExc_ImportError, "_mysql: mysql_library_init failed");
         return NULL;
