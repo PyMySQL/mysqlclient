@@ -33,9 +33,7 @@ def get_config():
     extra_compile_args = ["/Zl", "/D_CRT_SECURE_NO_WARNINGS"]
     extra_link_args = ["/MANIFEST"]
 
-    name = "mysqlclient"
-    if enabled(options, 'embedded'):
-        name = name + "-embedded"
+    name = "tiledb-sql"
     metadata['name'] = name
 
     define_macros = [

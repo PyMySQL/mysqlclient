@@ -120,9 +120,7 @@ def get_config():
             if L in libraries:
                 libraries.remove(L)
 
-    name = "mysqlclient"
-    if enabled(options, 'embedded'):
-        name = name + "-embedded"
+    name = "tiledb-sql"
     metadata['name'] = name
 
     define_macros = [
