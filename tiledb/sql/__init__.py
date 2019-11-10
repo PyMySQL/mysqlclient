@@ -65,6 +65,8 @@ import shutil
 
 dirpath = tempfile.mkdtemp()
 
+os.mkdir(os.path.join(dirpath, 'test'))
+
 # Init the embedded server on module load
 server_init(args=["--lc_messages_dir={}".format(module_path), "--language={}/".format(module_path), "--datadir={}".format(dirpath)])
 

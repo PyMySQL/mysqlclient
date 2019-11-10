@@ -149,8 +149,11 @@ class Connection(_mysql.connection):
         if "password" in kwargs2:
             kwargs2["passwd"] = kwargs2.pop("password")
 
-        if "conv" in kwargs:
-            conv = kwargs["conv"]
+        if 'db' not in kwargs2:
+            kwargs2['db'] = 'test'
+
+        if 'conv' in kwargs:
+            conv = kwargs['conv']
         else:
             conv = conversions
 
