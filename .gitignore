@@ -14,3 +14,4 @@ MySQLdb/release.py
 tiledb/sql/release.py
 .coverage
 .idea
+tiledb/sql/version.py
