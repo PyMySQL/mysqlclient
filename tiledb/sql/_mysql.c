@@ -2833,11 +2833,7 @@ PyInit__mysql(void)
     if (!module) return module; /* this really should never happen */
 
     if (!(dict = PyModule_GetDict(module))) goto error;
-    if (PyDict_SetItemString(dict, "version_info",
-                   PyRun_String(QUOTE(version_info), Py_eval_input,
-                       dict, dict)))
-        goto error;
-    if (PyDict_SetItemString(dict, "__version__",
+    if (PyDict_SetItemString(dict, "version",
                    PyUnicode_FromString(QUOTE(__version__))))
         goto error;
     if (PyDict_SetItemString(dict, "connection",

@@ -126,6 +126,8 @@ WORKDIR /opt/tiledb-sql-py
 # Newer setup tools needed for find_namespace_packages
 RUN pip3 install --upgrade setuptools
 
+RUN pip3 install -r requirements.txt
+
 RUN pip3 install .
 
 RUN pip3 install pandas numpy tiledb

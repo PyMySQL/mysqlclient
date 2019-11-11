@@ -13,17 +13,9 @@ For information on how TileDB SQL handles type conversion, see the
 tiledb.sql.converters module.
 """
 
-try:
-    from tiledb.sql.release import version_info
-    from . import _mysql
+from tiledb.sql.version import version
 
-    assert version_info == _mysql.version_info
-except Exception:
-    raise ImportError(
-        "this is tiledb.sql version {}, but _mysql is version {!r}\n_mysql: {!r}".format(
-            version_info, _mysql.version_info, _mysql.__file__
-        )
-    )
+from . import _mysql
 
 threadsafety = 1
 apilevel = "2.0"
@@ -191,5 +183,5 @@ __all__ = [
     "paramstyle",
     "string_literal",
     "threadsafety",
-    "version_info",
+    "version",
 ]

@@ -30,15 +30,3 @@ def enabled(options, option):
         return False
     else:
         raise ValueError("Unknown value {} for option {}".format(value, option))
-
-
-def create_release_file(metadata):
-    with open("tiledb/sql/release.py",'w') as rel:
-        rel.write(
-            """
-__author__ = "%(author)s <%(author_email)s>"
-version_info = %(version_info)s
-__version__ = "%(version)s"
-"""
-            % metadata
-        )
