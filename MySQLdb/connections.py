@@ -15,6 +15,14 @@ from MySQLdb._exceptions import (
     NotSupportedError, ProgrammingError,
 )
 
+# Mapping from MySQL charset name to Python codec name
+_charset_to_encoding = {
+    "utf8mb4": "utf8",
+    "utf8mb3": "utf8",
+    "latin1": "cp1252",
+    "koi8r": "koi8_r",
+    "koi8u": "koi8_u",
+}
 
 re_numeric_part = re.compile(r"^(\d+)")
 
@@ -289,10 +297,7 @@ class Connection(_mysql.connection):
         set can only be changed in MySQL-4.1 and newer. If you try
         to change the character set from the current value in an
         older version, NotSupportedError will be raised."""
-        if charset in ("utf8mb4", "utf8mb3"):
-            py_charset = "utf8"
-        else:
-            py_charset = charset
+        py_charset = _charset_to_encoding.get(charset, charset)
         if self.character_set_name() != charset:
             try:
                 super(Connection, self).set_character_set(charset)
