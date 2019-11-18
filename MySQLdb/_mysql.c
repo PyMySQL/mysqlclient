@@ -217,6 +217,9 @@ _get_encoding(MYSQL *mysql)
     if (strncmp(utf8, cs.csname, 4) == 0) { // utf8, utf8mb3, utf8mb4
         return utf8;
     }
+    else if (strncmp("latin1", cs.csname, 6) == 0) {
+        return "cp1252";
+    }
     else if (strncmp("koi8r", cs.csname, 5) == 0) {
         return "koi8_r";
     }
