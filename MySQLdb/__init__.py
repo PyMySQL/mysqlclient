@@ -18,8 +18,8 @@ from MySQLdb.release import __version__, version_info, __author__
 from . import _mysql
 
 if version_info != _mysql.version_info:
-    raise ImportError("this is MySQLdb version %s, but _mysql is version %r" %
-                      (version_info, _mysql.version_info))
+    raise ImportError("this is MySQLdb version %s, but _mysql is version %r\n_mysql: %r" %
+                      (version_info, _mysql.version_info, _mysql.__file__))
 
 threadsafety = 1
 apilevel = "2.0"
