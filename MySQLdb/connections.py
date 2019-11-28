@@ -195,9 +195,9 @@ class Connection(_mysql.connection):
                 self.converter[t] = _bytes_or_str
             # Unlike other string/blob types, JSON is always text.
             # MySQL may return JSON with charset==binary.
-            self.converter[FIELD_TYPE.JSON] = unicode
+            self.converter[FIELD_TYPE.JSON] = str
 
-        self.encoders[unicode] = unicode_literal
+        self.encoders[str] = unicode_literal
         self._transactional = self.server_capabilities & CLIENT.TRANSACTIONS
         if self._transactional:
             if autocommit is not None:
@@ -242,7 +242,7 @@ class Connection(_mysql.connection):
         Non-standard. For internal use; do not use this in your
         applications.
         """
-        if isinstance(o, unicode):
+        if isinstance(o, str):
             s = self.string_literal(o.encode(self.encoding))
         elif isinstance(o, bytearray):
             s = self._bytes_literal(o)
@@ -252,7 +252,7 @@ class Connection(_mysql.connection):
             s = self._tuple_literal(o)
         else:
             s = self.escape(o, self.encoders)
-            if isinstance(s, unicode):
+            if isinstance(s, str):
                 s = s.encode(self.encoding)
         assert isinstance(s, bytes)
         return s
