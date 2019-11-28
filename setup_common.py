@@ -1,9 +1,4 @@
-try:
-    # Python 2.x
-    from ConfigParser import SafeConfigParser
-except ImportError:
-    # Python 3.x
-    from configparser import ConfigParser as SafeConfigParser
+from configparser import ConfigParser as SafeConfigParser
 
 def get_metadata_and_options():
     config = SafeConfigParser()
@@ -28,10 +23,9 @@ def enabled(options, option):
         raise ValueError("Unknown value %s for option %s" % (value, option))
 
 def create_release_file(metadata):
-    rel = open("MySQLdb/release.py",'w')
-    rel.write("""
+    with open("MySQLdb/release.py",'w') as rel:
+        rel.write("""
 __author__ = "%(author)s <%(author_email)s>"
 version_info = %(version_info)s
 __version__ = "%(version)s"
 """ % metadata)
-    rel.close()
