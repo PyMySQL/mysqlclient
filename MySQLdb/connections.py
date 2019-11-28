@@ -76,14 +76,11 @@ class Connection(_mysql.connection):
             columns are returned as bytes. Unicode objects will always
             be encoded to the connection's character set regardless of
             this setting.
-            Default to False on Python 2 and True on Python 3
-            so that you can always get python `str` object by default.
+            Default to True.
 
         :param str charset:
             If supplied, the connection character set will be changed
             to this character set.
-            On Python 2, this option changes default value of `use_unicode`
-            option from False to True.
 
         :param str auth_plugin:
             If supplied, the connection default authentication plugin will be
@@ -145,8 +142,7 @@ class Connection(_mysql.connection):
 
         cursorclass = kwargs2.pop('cursorclass', self.default_cursor)
         charset = kwargs2.get('charset', '')
-        use_unicode = bool(charset)
-        use_unicode = kwargs2.pop('use_unicode', use_unicode)
+        use_unicode = kwargs2.pop('use_unicode', True)
         sql_mode = kwargs2.pop('sql_mode', '')
         self._binary_prefix = kwargs2.pop('binary_prefix', False)
 
