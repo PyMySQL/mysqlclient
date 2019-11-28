@@ -145,12 +145,7 @@ class Connection(_mysql.connection):
 
         cursorclass = kwargs2.pop('cursorclass', self.default_cursor)
         charset = kwargs2.get('charset', '')
-
-        if charset:
-            use_unicode = True
-        else:
-            use_unicode = False
-
+        use_unicode = bool(charset)
         use_unicode = kwargs2.pop('use_unicode', use_unicode)
         sql_mode = kwargs2.pop('sql_mode', '')
         self._binary_prefix = kwargs2.pop('binary_prefix', False)
