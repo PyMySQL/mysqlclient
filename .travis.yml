@@ -5,12 +5,10 @@ language: python
 python:
   - "nightly"
   - "pypy3"
-  - "pypy"
   - "3.8"
   - "3.7"
   - "3.6"
   - "3.5"
-  - "2.7"
 
 cache: pip
 
@@ -39,9 +37,9 @@ after_success:
 
 matrix:
   include:
-    - &django_py27
-      name: "Django test (Python 2.7)"
-      python: "2.7"
+    - &django_py3
+      name: "Django 1.11 test (Python 3.7)"
+      python: "3.7"
       install:
         - pip install -U pip
         - wget https://github.com/django/django/archive/1.11.18.tar.gz
@@ -58,10 +56,5 @@ matrix:
       script:
         - cd django-1.11.18/tests/
         - ./runtests.py --parallel=1 --settings=test_mysql
-
-    - &django_py3
-      <<: *django_py27
-      name: "Django test (Python 3.7)"
-      python: "3.7"
 
 # vim: sw=2 ts=2 sts=2
