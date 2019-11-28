@@ -90,7 +90,7 @@ class CoreAPI(unittest.TestCase):
             use_unicode=True,
             client_flag=MySQLdb.constants.CLIENT.FOUND_ROWS)
 
-        self.assertIsInstance(conn.client_flag, (int, MySQLdb.compat.long))
+        self.assertIsInstance(conn.client_flag, int)
         self.assertTrue(conn.client_flag & MySQLdb.constants.CLIENT.FOUND_ROWS)
         with self.assertRaises(AttributeError):
             conn.client_flag = 0
