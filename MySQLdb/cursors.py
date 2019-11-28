@@ -3,7 +3,6 @@
 This module implements Cursors of various types for MySQLdb. By
 default, MySQLdb uses the Cursor class.
 """
-from __future__ import print_function, absolute_import
 from functools import partial
 import re
 import sys
@@ -100,7 +99,7 @@ class BaseCursor(object):
         literal = conn.literal
 
         def ensure_bytes(x):
-            if isinstance(x, unicode):
+            if isinstance(x, str):
                 return x.encode(encoding)
             elif isinstance(x, tuple):
                 return tuple(map(ensure_bytes, x))
@@ -186,14 +185,14 @@ class BaseCursor(object):
             pass
         db = self._get_db()
 
-        if isinstance(query, unicode):
+        if isinstance(query, str):
             query = query.encode(db.encoding)
 
         if args is not None:
             if isinstance(args, dict):
                 nargs = {}
                 for key, item in args.items():
-                    if isinstance(key, unicode):
+                    if isinstance(key, str):
                         key = key.encode(db.encoding)
                     nargs[key] = db.literal(item)
                 args = nargs
@@ -241,11 +240,11 @@ class BaseCursor(object):
     def _do_execute_many(self, prefix, values, postfix, args, max_stmt_length, encoding):
         conn = self._get_db()
         escape = self._escape_args
-        if isinstance(prefix, unicode):
+        if isinstance(prefix, str):
             prefix = prefix.encode(encoding)
-        if isinstance(values, unicode):
+        if isinstance(values, str):
             values = values.encode(encoding)
-        if isinstance(postfix, unicode):
+        if isinstance(postfix, str):
             postfix = postfix.encode(encoding)
         sql = bytearray(prefix)
         args = iter(args)
@@ -293,7 +292,7 @@ class BaseCursor(object):
         disconnected.
         """
         db = self._get_db()
-        if isinstance(procname, unicode):
+        if isinstance(procname, str):
             procname = procname.encode(db.encoding)
         if args:
             fmt = b'@_' + procname + b'_%d=%s'
