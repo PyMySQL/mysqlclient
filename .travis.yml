@@ -37,15 +37,15 @@ after_success:
 
 matrix:
   include:
-    - &django_py3
+    - &django_1_11
       name: "Django 1.11 test (Python 3.7)"
       python: "3.7"
       install:
         - pip install -U pip
-        - wget https://github.com/django/django/archive/1.11.18.tar.gz
-        - tar xf 1.11.18.tar.gz
-        - pip install django-1.11.18/
-        - cp ci/test_mysql.py django-1.11.18/tests/
+        - wget https://github.com/django/django/archive/1.11.26.tar.gz
+        - tar xf 1.11.26.tar.gz
+        - pip install django-1.11.26/
+        - cp ci/test_mysql.py django-1.11.26/tests/
         - pip install .
 
       before_script:
@@ -54,7 +54,23 @@ matrix:
         - mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql mysql
 
       script:
-        - cd django-1.11.18/tests/
+        - cd django-1.11.26/tests/
+        - ./runtests.py --parallel=1 --settings=test_mysql
+
+    - &django_2_2
+      <<: *django_py27
+      name: "Django 2.2 test (Python 3.8)"
+      python: "3.8"
+      install:
+        - pip install -U pip
+        - wget https://github.com/django/django/archive/2.2.7.tar.gz
+        - tar xf 2.2.7.tar.gz
+        - pip install django-2.2.7/
+        - cp ci/test_mysql.py django-2.2.7/tests/
+        - pip install .
+
+      script:
+        - cd django-2.2.7/tests/
         - ./runtests.py --parallel=1 --settings=test_mysql
 
 # vim: sw=2 ts=2 sts=2
