@@ -88,7 +88,6 @@ _bytes_or_str = ((FLAG.BINARY, bytes), (None, str))
 
 conversions = {
     int: Thing2Str,
-    long: Thing2Str,
     float: Float2Str,
     NoneType: None2NULL,
     ArrayType: array2Str,
