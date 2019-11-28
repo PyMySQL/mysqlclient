@@ -84,7 +84,7 @@ def array2Str(o, d):
     return Thing2Literal(o.tostring(), d)
 
 # bytes or str regarding to BINARY_FLAG.
-_bytes_or_str = ((FLAG.BINARY, bytes), (None, unicode))
+_bytes_or_str = ((FLAG.BINARY, bytes), (None, str))
 
 conversions = {
     int: Thing2Str,
