@@ -5,7 +5,6 @@ from datetime import timedelta
 from contextlib import closing
 import unittest
 import MySQLdb
-from MySQLdb.compat import unicode
 from MySQLdb import cursors
 from configdb import connection_factory
 import warnings

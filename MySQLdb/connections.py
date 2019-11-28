@@ -8,7 +8,6 @@ import re
 import sys
 
 from MySQLdb import cursors, _mysql
-from MySQLdb.compat import unicode, PY2
 from MySQLdb._exceptions import (
     Warning, Error, InterfaceError, DataError,
     DatabaseError, OperationalError, IntegrityError, InternalError,
@@ -85,14 +84,11 @@ class Connection(_mysql.connection):
             columns are returned as bytes. Unicode objects will always
             be encoded to the connection's character set regardless of
             this setting.
-            Default to False on Python 2 and True on Python 3
-            so that you can always get python `str` object by default.
+            Default to True.
 
         :param str charset:
             If supplied, the connection character set will be changed
             to this character set.
-            On Python 2, this option changes default value of `use_unicode`
-            option from False to True.
 
         :param str auth_plugin:
             If supplied, the connection default authentication plugin will be
@@ -154,13 +150,7 @@ class Connection(_mysql.connection):
 
         cursorclass = kwargs2.pop('cursorclass', self.default_cursor)
         charset = kwargs2.get('charset', '')
-
-        if charset or not PY2:
-            use_unicode = True
-        else:
-            use_unicode = False
-
-        use_unicode = kwargs2.pop('use_unicode', use_unicode)
+        use_unicode = kwargs2.pop('use_unicode', True)
         sql_mode = kwargs2.pop('sql_mode', '')
         self._binary_prefix = kwargs2.pop('binary_prefix', False)
 
@@ -209,9 +199,9 @@ class Connection(_mysql.connection):
                 self.converter[t] = _bytes_or_str
             # Unlike other string/blob types, JSON is always text.
             # MySQL may return JSON with charset==binary.
-            self.converter[FIELD_TYPE.JSON] = unicode
+            self.converter[FIELD_TYPE.JSON] = str
 
-        self.encoders[unicode] = unicode_literal
+        self.encoders[str] = unicode_literal
         self._transactional = self.server_capabilities & CLIENT.TRANSACTIONS
         if self._transactional:
             if autocommit is not None:
@@ -256,20 +246,17 @@ class Connection(_mysql.connection):
         Non-standard. For internal use; do not use this in your
         applications.
         """
-        if isinstance(o, unicode):
+        if isinstance(o, str):
             s = self.string_literal(o.encode(self.encoding))
         elif isinstance(o, bytearray):
             s = self._bytes_literal(o)
         elif isinstance(o, bytes):
-            if PY2:
-                s = self.string_literal(o)
-            else:
-                s = self._bytes_literal(o)
+            s = self._bytes_literal(o)
         elif isinstance(o, (tuple, list)):
             s = self._tuple_literal(o)
         else:
             s = self.escape(o, self.encoders)
-            if isinstance(s, unicode):
+            if isinstance(s, str):
                 s = s.encode(self.encoding)
         assert isinstance(s, bytes)
         return s

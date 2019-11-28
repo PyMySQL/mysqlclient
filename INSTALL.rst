@@ -8,7 +8,7 @@ MySQLdb Installation
 Prerequisites
 -------------
 
-+ Python 2.7, 3.5 or higher
++ Python 3.5 or higher
 
 + setuptools
 
