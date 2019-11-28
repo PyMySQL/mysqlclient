@@ -48,7 +48,7 @@ except AttributeError:
 
 
 def Bool2Str(s, d):
-    return b'1' if s else b'0'
+    return b'TRUE' if s else b'FALSE'
 
 def Set2Str(s, d):
     # Only support ascii string.  Not tested.
