@@ -35,7 +35,8 @@ script:
 after_success:
   - codecov
 
-matrix:
+jobs:
+  fast_finish: true
   include:
     - &django_2_2
       name: "Django 2.2 test"
