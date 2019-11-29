@@ -99,3 +99,8 @@ class CoreAPI(unittest.TestCase):
 
     def test_fileno(self):
         self.assertGreaterEqual(self.conn.fileno(), 0)
+
+    def test_context_manager(self):
+        with connection_factory() as conn:
+            self.assertFalse(conn.closed)
+        self.assertTrue(conn.closed)

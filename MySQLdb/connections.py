@@ -207,6 +207,12 @@ class Connection(_mysql.connection):
                 self.autocommit(autocommit)
         self.messages = []
 
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
+
     def autocommit(self, on):
         on = bool(on)
         if self.get_autocommit() != on:
