@@ -479,9 +479,15 @@ _mysql_ConnectionObject_Initialize(
     if (local_infile != -1)
         mysql_options(&(self->connection), MYSQL_OPT_LOCAL_INFILE, (char *) &local_infile);
 
+#if ((MYSQL_VERSION_ID >= 50555 && MYSQL_VERSION_ID <= 50599) || \
+(MYSQL_VERSION_ID >= 50636 && MYSQL_VERSION_ID <= 50699) || \
+(MYSQL_VERSION_ID >= 50711 && MYSQL_VERSION_ID <= 50799) || \
+(MYSQL_VERSION_ID >= 80000)) && \
+!defined(MARIADB_BASE_VERSION) && !defined(MARIADB_VERSION_ID)
     if (ssl_mode) {
         mysql_options(&(self->connection), MYSQL_OPT_SSL_MODE, &ssl_mode);
     }
+#endif
     if (ssl) {
         mysql_ssl_set(&(self->connection), key, cert, ca, capath, cipher);
     }
