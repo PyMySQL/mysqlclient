@@ -38,10 +38,10 @@ after_success:
 matrix:
   include:
     - &django_2_2
-      name: "Django 2.2 test (Python 3.5)"
+      name: "Django 2.2 test (Python 3.6)"
       env:
         - DJANGO_VERSION=2.2.7
-      python: "3.5"
+      python: "3.6"
       install:
         - pip install -U pip
         - wget https://github.com/django/django/archive/${DJANGO_VERSION}.tar.gz
