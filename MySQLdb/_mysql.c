@@ -1132,25 +1132,16 @@ _mysql_field_to_python(
     //fprintf(stderr, "\n");
     int binary;
     switch (field->type) {
-    case FIELD_TYPE_TINY_BLOB:
-    case FIELD_TYPE_MEDIUM_BLOB:
-    case FIELD_TYPE_LONG_BLOB:
-    case FIELD_TYPE_BLOB:
-    case FIELD_TYPE_VAR_STRING:
-    case FIELD_TYPE_STRING:
-    case FIELD_TYPE_GEOMETRY:
-    case FIELD_TYPE_BIT:
-#ifdef FIELD_TYPE_JSON
-    case FIELD_TYPE_JSON:
-#else
-    case 245: // JSON
-#endif
-        // Call converter with bytes
-        binary = 1;
+    case FIELD_TYPE_DECIMAL:
+    case FIELD_TYPE_NEWDECIMAL:
+    case FIELD_TYPE_TIMESTAMP:
+    case FIELD_TYPE_DATETIME:
+    case FIELD_TYPE_TIME:
+    case FIELD_TYPE_DATE:
+        binary = 0;  // pass str, because these converters expect it
         break;
-    default: // e.g. FIELD_TYPE_DATETIME, etc.
-        // Call converter with unicode string
-        binary = 0;
+    default: // Default to just passing bytes
+        binary = 1;
     }
     return PyObject_CallFunction(converter,
             binary ? "y#" : "s#",
