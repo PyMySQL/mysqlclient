@@ -1,4 +1,15 @@
 ======================
+ What's new in 2.0.0
+======================
+
+Release: TBD
+
+* Dropped Python 2 support
+* Dropped Django 1.11 support
+* Add context manager interface to Connection which closes the connection on ``__exit__``.
+
+
+======================
  What's new in 1.4.6
 ======================
 
