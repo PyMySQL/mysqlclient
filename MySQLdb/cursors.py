@@ -3,14 +3,9 @@
 This module implements Cursors of various types for MySQLdb. By
 default, MySQLdb uses the Cursor class.
 """
-from functools import partial
 import re
-import sys
 
-from ._exceptions import (
-    Warning, Error, InterfaceError, DataError,
-    DatabaseError, OperationalError, IntegrityError, InternalError,
-    NotSupportedError, ProgrammingError)
+from ._exceptions import ProgrammingError
 
 
 #: Regular expression for :meth:`Cursor.executemany`.

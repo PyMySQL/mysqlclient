@@ -5,10 +5,9 @@ want to make your own subclasses. In most cases, you will probably
 override Connection.default_cursor with a non-standard Cursor class.
 """
 import re
-import sys
 
-from MySQLdb import cursors, _mysql
-from MySQLdb._exceptions import (
+from . import cursors, _mysql
+from ._exceptions import (
     Warning, Error, InterfaceError, DataError,
     DatabaseError, OperationalError, IntegrityError, InternalError,
     NotSupportedError, ProgrammingError,
