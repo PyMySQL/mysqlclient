@@ -62,13 +62,6 @@ class BaseCursor(object):
         self.arraysize = 1
         self._executed = None
 
-        # XXX THIS IS GARBAGE: While this is totally garbage and private,
-        # Django 1.11 depends on it.  And they don't fix it because
-        # they are in security-only fix mode.
-        # So keep this garbage for now.  This will be removed in 1.5.
-        # See PyMySQL/mysqlclient-python#303
-        self._last_executed = None
-
         self.lastrowid = None
         self.messages = []
         self._result = None

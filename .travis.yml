@@ -37,10 +37,10 @@ after_success:
 
 matrix:
   include:
-    - &django_1_11
-      name: "Django 1.11 test (Python 3.7)"
+    - &django_2_2
+      name: "Django 2.2 test (Python 3.5)"
       env:
-        - DJANGO_VERSION=1.11.26
+        - DJANGO_VERSION=2.2.7
       python: "3.5"
       install:
         - pip install -U pip
@@ -59,11 +59,9 @@ matrix:
         - cd django-${DJANGO_VERSION}/tests/
         - ./runtests.py --parallel=1 --settings=test_mysql
 
-    - &django_2_2
-      <<: *django_py27
-      name: "Django 2.2 test (Python 3.8)"
-      python: "3.8"
-      env:
-        - DJANGO_VERSION=2.2.7
+    #- &django_3_0
+    #  <<: *django_2_2
+    #  name: "Django 3.0 test (Python 3.8)"
+    #  python: "3.8"
 
 # vim: sw=2 ts=2 sts=2
