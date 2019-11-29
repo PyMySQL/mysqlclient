@@ -90,6 +90,12 @@ def get_config():
         extra_objects.append(os.path.join(library_dirs[0], 'lib%s.a' % client))
         if client in libraries:
             libraries.remove(client)
+    else:
+        # mysql_config may have "-lmysqlclient -lz -lssl -lcrypto", but zlib and
+        # ssl is not used by _mysql.  They are needed only for static build.
+        for L in ('crypto', 'ssl', 'z'):
+            if L in libraries:
+                libraries.remove(L)
 
     name = "mysqlclient"
     metadata['name'] = name
