@@ -37,15 +37,17 @@ after_success:
 
 matrix:
   include:
-    - &django_py3
+    - &django_1_11
       name: "Django 1.11 test (Python 3.7)"
-      python: "3.7"
+      env:
+        - DJANGO_VERSION=1.11.26
+      python: "3.5"
       install:
         - pip install -U pip
-        - wget https://github.com/django/django/archive/1.11.18.tar.gz
-        - tar xf 1.11.18.tar.gz
-        - pip install django-1.11.18/
-        - cp ci/test_mysql.py django-1.11.18/tests/
+        - wget https://github.com/django/django/archive/${DJANGO_VERSION}.tar.gz
+        - tar xf ${DJANGO_VERSION}.tar.gz
+        - pip install django-${DJANGO_VERSION}/
+        - cp ci/test_mysql.py django-${DJANGO_VERSION}/tests/
         - pip install .
 
       before_script:
@@ -54,7 +56,14 @@ matrix:
         - mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql mysql
 
       script:
-        - cd django-1.11.18/tests/
+        - cd django-${DJANGO_VERSION}/tests/
         - ./runtests.py --parallel=1 --settings=test_mysql
+
+    - &django_2_2
+      <<: *django_py27
+      name: "Django 2.2 test (Python 3.8)"
+      python: "3.8"
+      env:
+        - DJANGO_VERSION=2.2.7
 
 # vim: sw=2 ts=2 sts=2
