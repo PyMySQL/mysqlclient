@@ -1,4 +1,47 @@
 ======================
+ What's new in 1.4.6
+======================
+
+Release: 2019-11-21
+
+* The ``cp1252`` encoding is used when charset is "latin1". (#390)
+
+======================
+ What's new in 1.4.5
+======================
+
+Release: 2019-11-06
+
+* The ``auth_plugin`` option is added. (#389)
+
+
+======================
+ What's new in 1.4.4
+======================
+
+Release: 2019-08-12
+
+* ``charset`` option is passed to ``mysql_options(mysql, MYSQL_SET_CHARSET_NAME, charset)``
+  before ``mysql_real_connect`` is called.
+  This avoid extra ``SET NAMES <charset>`` query when creating connection.
+
+
+======================
+ What's new in 1.4.3
+======================
+
+Release: 2019-08-09
+
+* ``--static`` build supports ``libmariadbclient.a``
+* Try ``mariadb_config`` when ``mysql_config`` is not found
+* Fixed warning happend in Python 3.8 (#359)
+* Fixed ``from MySQLdb import *``, while I don't recommend it. (#369)
+* Fixed SEGV ``MySQLdb.escape_string("1")`` when libmariadb is used and
+  no connection is created. (#367)
+* Fixed many circular references are created in ``Cursor.executemany()``. (#375)
+
+
+======================
  What's new in 1.4.2
 ======================
 

@@ -1,8 +1,5 @@
 import os, sys
-try:
-    from ConfigParser import SafeConfigParser
-except ImportError:
-    from configparser import ConfigParser as SafeConfigParser
+from configparser import ConfigParser as SafeConfigParser
 
 # This dequote() business is required for some older versions
 # of mysql_config
@@ -37,6 +34,16 @@ def get_config():
 
     if 'mysql_config' in options:
         _mysql_config_path = options['mysql_config']
+    else:
+        try:
+            mysql_config('version')
+        except EnvironmentError:
+            # try mariadb_config
+            _mysql_config_path = "mariadb_config"
+            try:
+                mysql_config('version')
+            except EnvironmentError:
+                _mysql_config_path = "mysql_config"
 
     extra_objects = []
     static = enabled(options, 'static')
@@ -69,7 +76,7 @@ def get_config():
         # properly handle mysql client libraries that are not called libmysqlclient
         client = None
         CLIENT_LIST = ['mysqlclient', 'mysqlclient_r', 'mysqld', 'mariadb',
-                       'perconaserverclient', 'perconaserverclient_r']
+                       'mariadbclient', 'perconaserverclient', 'perconaserverclient_r']
         for c in CLIENT_LIST:
             if c in libraries:
                 client = c
@@ -83,6 +90,12 @@ def get_config():
         extra_objects.append(os.path.join(library_dirs[0], 'lib%s.a' % client))
         if client in libraries:
             libraries.remove(client)
+    else:
+        # mysql_config may have "-lmysqlclient -lz -lssl -lcrypto", but zlib and
+        # ssl is not used by _mysql.  They are needed only for static build.
+        for L in ('crypto', 'ssl', 'z'):
+            if L in libraries:
+                libraries.remove(L)
 
     name = "mysqlclient"
     metadata['name'] = name

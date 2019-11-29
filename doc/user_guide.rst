@@ -557,7 +557,7 @@ nextset()
 Some examples
 .............
 
-The ``connect()`` method works nearly the same as with `_mysql`_::
+The ``connect()`` method works nearly the same as with `MySQLDB._mysql`_::
 
     import MySQLdb
     db=MySQLdb.connect(passwd="moonpie",db="thangs")

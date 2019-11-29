@@ -10,8 +10,6 @@ import array
 import unittest
 from configdb import connection_factory
 
-from MySQLdb.compat import unichr
-
 
 class DatabaseTest(unittest.TestCase):
 
@@ -27,8 +25,8 @@ class DatabaseTest(unittest.TestCase):
         db = connection_factory(**self.connect_kwargs)
         self.connection = db
         self.cursor = db.cursor()
-        self.BLOBUText = u''.join([unichr(i) for i in range(16384)])
-        self.BLOBBinary = self.db_module.Binary((u''.join([unichr(i) for i in range(256)] * 16)).encode('latin1'))
+        self.BLOBUText = u''.join([chr(i) for i in range(16384)])
+        self.BLOBBinary = self.db_module.Binary((u''.join([chr(i) for i in range(256)] * 16)).encode('latin1'))
 
     leak_test = True
 

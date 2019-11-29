@@ -35,7 +35,6 @@ from decimal import Decimal
 from MySQLdb._mysql import string_literal, escape
 from MySQLdb.constants import FIELD_TYPE, FLAG
 from MySQLdb.times import *
-from MySQLdb.compat import PY2, long, unicode
 from MySQLdb._exceptions import ProgrammingError
 
 NoneType = type(None)
@@ -85,11 +84,10 @@ def array2Str(o, d):
     return Thing2Literal(o.tostring(), d)
 
 # bytes or str regarding to BINARY_FLAG.
-_bytes_or_str = ((FLAG.BINARY, bytes), (None, unicode))
+_bytes_or_str = ((FLAG.BINARY, bytes), (None, str))
 
 conversions = {
     int: Thing2Str,
-    long: Thing2Str,
     float: Float2Str,
     NoneType: None2NULL,
     ArrayType: array2Str,

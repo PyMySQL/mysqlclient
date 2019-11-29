@@ -5,16 +5,22 @@ want to make your own subclasses. In most cases, you will probably
 override Connection.default_cursor with a non-standard Cursor class.
 """
 import re
-import sys
 
-from MySQLdb import cursors, _mysql
-from MySQLdb.compat import unicode, PY2
-from MySQLdb._exceptions import (
+from . import cursors, _mysql
+from ._exceptions import (
     Warning, Error, InterfaceError, DataError,
     DatabaseError, OperationalError, IntegrityError, InternalError,
     NotSupportedError, ProgrammingError,
 )
 
+# Mapping from MySQL charset name to Python codec name
+_charset_to_encoding = {
+    "utf8mb4": "utf8",
+    "utf8mb3": "utf8",
+    "latin1": "cp1252",
+    "koi8r": "koi8_r",
+    "koi8u": "koi8_u",
+}
 
 re_numeric_part = re.compile(r"^(\d+)")
 
@@ -73,21 +79,25 @@ class Connection(_mysql.connection):
 
         :param bool use_unicode:
             If True, text-like columns are returned as unicode objects
-            using the connection's character set.  Otherwise, text-like
-            columns are returned as strings.  columns are returned as
-            normal strings. Unicode objects will always be encoded to
-            the connection's character set regardless of this setting.
-            Default to False on Python 2 and True on Python 3.
+            using the connection's character set. Otherwise, text-like
+            columns are returned as bytes. Unicode objects will always
+            be encoded to the connection's character set regardless of
+            this setting.
+            Default to True.
 
         :param str charset:
             If supplied, the connection character set will be changed
-            to this character set (MySQL-4.1 and newer). This implies
-            use_unicode=True.
+            to this character set.
+
+        :param str auth_plugin:
+            If supplied, the connection default authentication plugin will be
+            changed to this value. Example values:
+            `mysql_native_password` or `caching_sha2_password`
 
         :param str sql_mode:
             If supplied, the session SQL mode will be changed to this
-            setting (MySQL-4.1 and newer). For more details and legal
-            values, see the MySQL documentation.
+            setting.
+            For more details and legal values, see the MySQL documentation.
 
         :param int client_flag:
             flags to use or 0 (see MySQL docs or constants/CLIENTS.py)
@@ -138,14 +148,8 @@ class Connection(_mysql.connection):
         kwargs2['conv'] = conv2
 
         cursorclass = kwargs2.pop('cursorclass', self.default_cursor)
-        charset = kwargs2.pop('charset', '')
-
-        if charset or not PY2:
-            use_unicode = True
-        else:
-            use_unicode = False
-
-        use_unicode = kwargs2.pop('use_unicode', use_unicode)
+        charset = kwargs2.get('charset', '')
+        use_unicode = kwargs2.pop('use_unicode', True)
         sql_mode = kwargs2.pop('sql_mode', '')
         self._binary_prefix = kwargs2.pop('binary_prefix', False)
 
@@ -194,9 +198,9 @@ class Connection(_mysql.connection):
                 self.converter[t] = _bytes_or_str
             # Unlike other string/blob types, JSON is always text.
             # MySQL may return JSON with charset==binary.
-            self.converter[FIELD_TYPE.JSON] = unicode
+            self.converter[FIELD_TYPE.JSON] = str
 
-        self.encoders[unicode] = unicode_literal
+        self.encoders[str] = unicode_literal
         self._transactional = self.server_capabilities & CLIENT.TRANSACTIONS
         if self._transactional:
             if autocommit is not None:
@@ -241,20 +245,17 @@ class Connection(_mysql.connection):
         Non-standard. For internal use; do not use this in your
         applications.
         """
-        if isinstance(o, unicode):
+        if isinstance(o, str):
             s = self.string_literal(o.encode(self.encoding))
         elif isinstance(o, bytearray):
             s = self._bytes_literal(o)
         elif isinstance(o, bytes):
-            if PY2:
-                s = self.string_literal(o)
-            else:
-                s = self._bytes_literal(o)
+            s = self._bytes_literal(o)
         elif isinstance(o, (tuple, list)):
             s = self._tuple_literal(o)
         else:
             s = self.escape(o, self.encoders)
-            if isinstance(s, unicode):
+            if isinstance(s, str):
                 s = s.encode(self.encoding)
         assert isinstance(s, bytes)
         return s
@@ -282,10 +283,7 @@ class Connection(_mysql.connection):
         set can only be changed in MySQL-4.1 and newer. If you try
         to change the character set from the current value in an
         older version, NotSupportedError will be raised."""
-        if charset in ("utf8mb4", "utf8mb3"):
-            py_charset = "utf8"
-        else:
-            py_charset = charset
+        py_charset = _charset_to_encoding.get(charset, charset)
         if self.character_set_name() != charset:
             try:
                 super(Connection, self).set_character_set(charset)

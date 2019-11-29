@@ -18,15 +18,14 @@ from MySQLdb.release import __version__, version_info, __author__
 from . import _mysql
 
 if version_info != _mysql.version_info:
-    raise ImportError("this is MySQLdb version %s, but _mysql is version %r" %
-                      (version_info, _mysql.version_info))
+    raise ImportError("this is MySQLdb version %s, but _mysql is version %r\n_mysql: %r" %
+                      (version_info, _mysql.version_info, _mysql.__file__))
 
 threadsafety = 1
 apilevel = "2.0"
 paramstyle = "format"
 
 from ._mysql import *
-from MySQLdb.compat import PY2
 from MySQLdb.constants import FIELD_TYPE, SSL_MODE
 from MySQLdb.times import Date, Time, Timestamp, \
     DateFromTicks, TimeFromTicks, TimestampFromTicks
@@ -71,12 +70,8 @@ def test_DBAPISet_set_equality_membership():
 def test_DBAPISet_set_inequality_membership():
     assert FIELD_TYPE.DATE != STRING
 
-if PY2:
-    def Binary(x):
-        return bytearray(x)
-else:
-    def Binary(x):
-        return bytes(x)
+def Binary(x):
+    return bytes(x)
 
 def Connect(*args, **kwargs):
     """Factory function for connections.Connection."""
@@ -89,7 +84,7 @@ __all__ = [ 'BINARY', 'Binary', 'Connect', 'Connection', 'DATE',
     'Date', 'Time', 'Timestamp', 'DateFromTicks', 'TimeFromTicks',
     'TimestampFromTicks', 'DataError', 'DatabaseError', 'Error',
     'FIELD_TYPE', 'IntegrityError', 'InterfaceError', 'InternalError',
-    'MySQLError', 'NULL', 'NUMBER', 'NotSupportedError', 'DBAPISet',
+    'MySQLError', 'NUMBER', 'NotSupportedError', 'DBAPISet',
     'OperationalError', 'ProgrammingError', 'ROWID', 'STRING', 'TIME',
     'TIMESTAMP', 'Warning', 'apilevel', 'connect', 'connections',
     'constants', 'converters', 'cursors', 'debug', 'escape',

@@ -4,12 +4,11 @@ language: python
 # See aws s3 ls s3://travis-python-archives/binaries/ubuntu/16.04/x86_64/
 python:
   - "nightly"
-  - "pypy3.5"
-  - "pypy2.7-5.10.0"
+  - "pypy3"
+  - "3.8"
   - "3.7"
   - "3.6"
   - "3.5"
-  - "2.7"
 
 cache: pip
 
@@ -38,14 +37,17 @@ after_success:
 
 matrix:
   include:
-    - &django_py27
-      python: "2.7"
+    - &django_2_2
+      name: "Django 2.2 test"
+      env:
+        - DJANGO_VERSION=2.2.7
+      python: "3.5"
       install:
         - pip install -U pip
-        - wget https://github.com/django/django/archive/1.11.18.tar.gz
-        - tar xf 1.11.18.tar.gz
-        - pip install django-1.11.18/
-        - cp ci/test_mysql.py django-1.11.18/tests/
+        - wget https://github.com/django/django/archive/${DJANGO_VERSION}.tar.gz
+        - tar xf ${DJANGO_VERSION}.tar.gz
+        - pip install -e django-${DJANGO_VERSION}/
+        - cp ci/test_mysql.py django-${DJANGO_VERSION}/tests/
         - pip install .
 
       before_script:
@@ -54,11 +56,12 @@ matrix:
         - mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql mysql
 
       script:
-        - cd django-1.11.18/tests/
+        - cd django-${DJANGO_VERSION}/tests/
         - ./runtests.py --parallel=1 --settings=test_mysql
 
-    - &django_py3
-      <<: *django_py27
-      python: "3.7"
+    #- &django_3_0
+    #  <<: *django_2_2
+    #  name: "Django 3.0 test (Python 3.8)"
+    #  python: "3.8"
 
 # vim: sw=2 ts=2 sts=2
