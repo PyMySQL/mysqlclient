@@ -38,7 +38,7 @@ after_success:
 matrix:
   include:
     - &django_2_2
-      name: "Django 2.2 test (Python 3.5)"
+      name: "Django 2.2 test"
       env:
         - DJANGO_VERSION=2.2.7
       python: "3.5"
@@ -46,7 +46,7 @@ matrix:
         - pip install -U pip
         - wget https://github.com/django/django/archive/${DJANGO_VERSION}.tar.gz
         - tar xf ${DJANGO_VERSION}.tar.gz
-        - pip install django-${DJANGO_VERSION}/
+        - pip install -e django-${DJANGO_VERSION}/
         - cp ci/test_mysql.py django-${DJANGO_VERSION}/tests/
         - pip install .
 
