@@ -51,9 +51,13 @@ $ pip install mysqlclient
 
 ### Linux
 
+**Note that this is a basic step.  I can not support complete step for build for all
+environment.  If you can see some error, you should fix it by yourself, or ask for
+support in some user forum.  Don't file a issue on the issue tracker.**
+
 You may need to install the Python 3 and MySQL development headers and libraries like so:
 
-* `$ sudo apt-get install python3-dev default-libmysqlclient-dev`  # Debian / Ubuntu
+* `$ sudo apt-get install python3-dev default-libmysqlclient-dev build-essentials`  # Debian / Ubuntu
 * `% sudo yum install python3-devel mysql-devel`  # Red Hat / CentOS
 
 Then you can install mysqlclient via pip now:
