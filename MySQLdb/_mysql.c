@@ -486,6 +486,7 @@ _mysql_ConnectionObject_Initialize(
 (MYSQL_VERSION_ID >= 50711 && MYSQL_VERSION_ID <= 50799) || \
 (MYSQL_VERSION_ID >= 80000)) && \
 !defined(MARIADB_BASE_VERSION) && !defined(MARIADB_VERSION_ID)
+    #define HAVE_ENUM_MYSQL_OPT_SSL_MODE
     if (ssl_mode) {
         mysql_options(&(self->connection), MYSQL_OPT_SSL_MODE, &ssl_mode);
     }
@@ -1524,6 +1525,20 @@ _mysql_get_client_info(
     PyObject *noargs)
 {
     return PyUnicode_FromString(mysql_get_client_info());
+}
+
+static char _mysql_get_have_enum_mysql_opt_ssl_mode__doc__[] =
+"Returns whether enum MYSQL_OPT_SSL_MODE is defined.";
+static PyObject *
+_mysql_get_have_enum_mysql_opt_ssl_mode(
+    PyObject *self,
+    PyObject *noargs)
+{
+#ifdef HAVE_ENUM_MYSQL_OPT_SSL_MODE
+    Py_RETURN_TRUE;
+#else
+    Py_RETURN_FALSE;
+#endif
 }
 
 static char _mysql_ConnectionObject_get_host_info__doc__[] =
@@ -2576,6 +2591,12 @@ _mysql_methods[] = {
         (PyCFunction)_mysql_get_client_info,
         METH_NOARGS,
         _mysql_get_client_info__doc__
+    },
+    {
+        "get_have_enum_mysql_opt_ssl_mode",
+        (PyCFunction)_mysql_get_have_enum_mysql_opt_ssl_mode,
+        METH_NOARGS,
+        _mysql_get_have_enum_mysql_opt_ssl_mode__doc__
     },
     {NULL, NULL} /* sentinel */
 };
