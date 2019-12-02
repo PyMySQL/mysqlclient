@@ -26,7 +26,7 @@ apilevel = "2.0"
 paramstyle = "format"
 
 from ._mysql import *
-from MySQLdb.constants import FIELD_TYPE, SSL_MODE
+from MySQLdb.constants import FIELD_TYPE
 from MySQLdb.times import Date, Time, Timestamp, \
     DateFromTicks, TimeFromTicks, TimestampFromTicks
 

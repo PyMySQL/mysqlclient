@@ -360,11 +360,12 @@ connect(parameters...)
          ssl_mode
             If present, specify the security settings for the
             connection to the server. For more information on ssl_mode,
-            see the MySQL documentation. The constants can be referenced
-            as follows: ``MySQLdb.constants.SSL_MODE.PREFERRED``
+            see the MySQL documentation. Only one of 'DISABLED',
+            'PREFERRED', 'REQUIRED', 'VERIFY_CA', 'VERIFY_IDENTITY'
+            can be specified.
 
             If not present, the session ssl_mode will be unchanged,
-            but it becomes PREFERRED in Version 5.7 or later.
+            but in version 5.7 and later, the default is PREFERRED.
 
             *This must be a keyword parameter.*
 

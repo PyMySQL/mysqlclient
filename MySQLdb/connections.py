@@ -102,6 +102,13 @@ class Connection(_mysql.connection):
         :param int client_flag:
             flags to use or 0 (see MySQL docs or constants/CLIENTS.py)
 
+        :param str ssl_mode
+            specify the security settings for connection to the server;
+            see the MySQL documentation for more details
+            (mysql_option(), MYSQL_OPT_SSL_MODE).
+            Only one of 'DISABLED', 'PREFERRED', 'REQUIRED',
+            'VERIFY_CA', 'VERIFY_IDENTITY' can be specified.
+
         :param dict ssl:
             dictionary or mapping contains SSL connection parameters;
             see the MySQL documentation for more details
@@ -123,7 +130,7 @@ class Connection(_mysql.connection):
         There are a number of undocumented, non-standard methods. See the
         documentation for the MySQL C API for some hints on what they do.
         """
-        from MySQLdb.constants import CLIENT, FIELD_TYPE
+        from MySQLdb.constants import CLIENT, FIELD_TYPE, SSL_MODE
         from MySQLdb.converters import conversions, _bytes_or_str
         from weakref import proxy
 
@@ -161,6 +168,12 @@ class Connection(_mysql.connection):
             client_flag |= CLIENT.MULTI_RESULTS
 
         kwargs2['client_flag'] = client_flag
+
+        if 'ssl_mode' in kwargs:
+            if hasattr(SSL_MODE, kwargs['ssl_mode']):
+                kwargs2['ssl_mode'] = getattr(SSL_MODE, kwargs['ssl_mode'])
+            else:
+                raise NotSupportedError('Unknown MySQL ssl_mode specification: %s' % kwargs['ssl_mode'])
 
         # PEP-249 requires autocommit to be initially off
         autocommit = kwargs2.pop('autocommit', False)
