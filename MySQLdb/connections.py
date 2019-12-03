@@ -170,8 +170,6 @@ class Connection(_mysql.connection):
         kwargs2['client_flag'] = client_flag
 
         if 'ssl_mode' in kwargs:
-            if not _mysql.get_have_enum_mysql_opt_ssl_mode():
-                raise NotSupportedError('Does not support ssl_mode specification: %s' % _mysql.get_client_info())
             if hasattr(SSL_MODE, kwargs['ssl_mode']):
                 kwargs2['ssl_mode'] = getattr(SSL_MODE, kwargs['ssl_mode'])
             else:
