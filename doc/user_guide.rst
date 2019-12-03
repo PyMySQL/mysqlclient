@@ -357,6 +357,18 @@ connect(parameters...)
 
             *This must be a keyword parameter.*
 
+         ssl_mode
+            If present, specify the security settings for the
+            connection to the server. For more information on ssl_mode,
+            see the MySQL documentation. Only one of 'DISABLED',
+            'PREFERRED', 'REQUIRED', 'VERIFY_CA', 'VERIFY_IDENTITY'
+            can be specified.
+
+            If not present, the session ssl_mode will be unchanged,
+            but in version 5.7 and later, the default is PREFERRED.
+
+            *This must be a keyword parameter.*
+
          ssl
             This parameter takes a dictionary or mapping, where the
             keys are parameter names used by the mysql_ssl_set_ MySQL

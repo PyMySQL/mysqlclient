@@ -48,4 +48,3 @@ constants Package
     :members:
     :undoc-members:
     :show-inheritance:
-

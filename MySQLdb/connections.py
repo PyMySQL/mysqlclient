@@ -102,6 +102,13 @@ class Connection(_mysql.connection):
         :param int client_flag:
             flags to use or 0 (see MySQL docs or constants/CLIENTS.py)
 
+        :param str ssl_mode:
+            specify the security settings for connection to the server;
+            see the MySQL documentation for more details
+            (mysql_option(), MYSQL_OPT_SSL_MODE).
+            Only one of 'DISABLED', 'PREFERRED', 'REQUIRED',
+            'VERIFY_CA', 'VERIFY_IDENTITY' can be specified.
+
         :param dict ssl:
             dictionary or mapping contains SSL connection parameters;
             see the MySQL documentation for more details
