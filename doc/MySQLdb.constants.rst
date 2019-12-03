@@ -48,11 +48,3 @@ constants Package
     :members:
     :undoc-members:
     :show-inheritance:
-
-:mod:`SSL_MODE` Module
-------------------
-
-.. automodule:: MySQLdb.constants.SSL_MODE
-    :members:
-    :undoc-members:
-    :show-inheritance:
