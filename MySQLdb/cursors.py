@@ -35,7 +35,7 @@ class BaseCursor(object):
         default number of rows fetchmany() will fetch
     """
 
-    #: Max stetement size which :meth:`executemany` generates.
+    #: Max statement size which :meth:`executemany` generates.
     #:
     #: Max size of allowed statement is max_allowed_packet - packet_header_size.
     #: Default value of max_allowed_packet is 1048576.
