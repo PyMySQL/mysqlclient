@@ -1,1 +1,1 @@
-__all__ = ['CR', 'FIELD_TYPE','CLIENT','ER','FLAG']
+__all__ = ["CR", "FIELD_TYPE", "CLIENT", "ER", "FLAG"]

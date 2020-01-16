@@ -59,7 +59,20 @@ jobs:
       script:
         - cd django-${DJANGO_VERSION}/tests/
         - ./runtests.py --parallel=1 --settings=test_mysql
-
+    - name: flake8
+      python: "3.8"
+      install:
+        - pip install -U pip
+        - pip install flake8
+      script:
+        - flake8 --ignore=E203,E501,W503 --max-line-length=88 .
+    - name: black
+      python: "3.8"
+      install:
+        - pip install -U pip
+        - pip install black
+      script:
+        - black --check --exclude=doc/ .
     #- &django_3_0
     #  <<: *django_2_2
     #  name: "Django 3.0 test (Python 3.8)"

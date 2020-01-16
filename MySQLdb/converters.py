@@ -32,14 +32,23 @@ MySQL.connect().
 """
 from decimal import Decimal
 
-from MySQLdb._mysql import string_literal, escape
+from MySQLdb._mysql import string_literal
 from MySQLdb.constants import FIELD_TYPE, FLAG
-from MySQLdb.times import *
+from MySQLdb.times import (
+    Date,
+    DateTimeType,
+    DateTime2literal,
+    DateTimeDeltaType,
+    DateTimeDelta2literal,
+    DateTime_or_None,
+    TimeDelta_or_None,
+    Date_or_None,
+)
 from MySQLdb._exceptions import ProgrammingError
 
-NoneType = type(None)
-
 import array
+
+NoneType = type(None)
 
 try:
     ArrayType = array.ArrayType
@@ -48,27 +57,32 @@ except AttributeError:
 
 
 def Bool2Str(s, d):
-    return b'1' if s else b'0'
+    return b"1" if s else b"0"
+
 
 def Set2Str(s, d):
     # Only support ascii string.  Not tested.
-    return string_literal(','.join(s))
+    return string_literal(",".join(s))
+
 
 def Thing2Str(s, d):
     """Convert something into a string via str()."""
     return str(s)
 
+
 def Float2Str(o, d):
     s = repr(o)
-    if s in ('inf', 'nan'):
+    if s in ("inf", "nan"):
         raise ProgrammingError("%s can not be used with MySQL" % s)
-    if 'e' not in s:
-        s += 'e0'
+    if "e" not in s:
+        s += "e0"
     return s
+
 
 def None2NULL(o, d):
     """Convert None to NULL."""
     return b"NULL"
+
 
 def Thing2Literal(o, d):
     """Convert something into a SQL string literal.  If using
@@ -77,11 +91,14 @@ def Thing2Literal(o, d):
     that method when the connection is created."""
     return string_literal(o)
 
+
 def Decimal2Literal(o, d):
-    return format(o, 'f')
+    return format(o, "f")
+
 
 def array2Str(o, d):
     return Thing2Literal(o.tostring(), d)
+
 
 # bytes or str regarding to BINARY_FLAG.
 _bytes_or_str = ((FLAG.BINARY, bytes), (None, str))
@@ -97,7 +114,6 @@ conversions = {
     DateTimeDeltaType: DateTimeDelta2literal,
     set: Set2Str,
     Decimal: Decimal2Literal,
-
     FIELD_TYPE.TINY: int,
     FIELD_TYPE.SHORT: int,
     FIELD_TYPE.LONG: int,
@@ -112,7 +128,6 @@ conversions = {
     FIELD_TYPE.DATETIME: DateTime_or_None,
     FIELD_TYPE.TIME: TimeDelta_or_None,
     FIELD_TYPE.DATE: Date_or_None,
-
     FIELD_TYPE.TINY_BLOB: bytes,
     FIELD_TYPE.MEDIUM_BLOB: bytes,
     FIELD_TYPE.LONG_BLOB: bytes,
