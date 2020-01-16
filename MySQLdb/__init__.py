@@ -40,6 +40,9 @@ from ._mysql import (
     DataError,
     escape,
     escape_string,
+    DatabaseError,
+    InternalError,
+    Warning,
 )
 from MySQLdb.constants import FIELD_TYPE
 from MySQLdb.times import (
