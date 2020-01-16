@@ -38,11 +38,8 @@ from ._mysql import (
     string_literal,
     MySQLError,
     DataError,
-    constants,
     escape,
     escape_string,
-    cursors,
-    connections,
 )
 from MySQLdb.constants import FIELD_TYPE
 from MySQLdb.times import (
