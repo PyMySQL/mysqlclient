@@ -33,7 +33,6 @@ from ._mysql import (
     ProgrammingError,
     Error,
     InterfaceError,
-    converters,
     debug,
     IntegrityError,
     string_literal,
