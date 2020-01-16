@@ -117,9 +117,8 @@ class test_MySQLdb(capabilities.DatabaseTest):
 
             c.execute(
                 """
-INSERT INTO test_multipolygon
-            (id,
-             border)
+INSERT INTO test_MULTIPOLYGON
+            (id, border)
 VALUES      (1,
              Geomfromtext(
 'MULTIPOLYGON(((1 1, 1 -1, -1 -1, -1 1, 1 1)),((1 1, 3 1, 3 3, 1 3, 1 1)))'))
