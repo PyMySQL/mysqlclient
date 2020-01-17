@@ -184,7 +184,7 @@ class Connection(_mysql.connection):
 
         super().__init__(*args, **kwargs2)
         self.cursorclass = cursorclass
-        self.encoders = {k: v for k, v in conv.items() if not isinstance(k, int)}
+        self.encoders = {k: v for k, v in conv.items() if type(k) is not int}
 
         # XXX THIS IS GARBAGE: While this is just a garbage and undocumented,
         # Django 1.11 depends on it.  And they don't fix it because
