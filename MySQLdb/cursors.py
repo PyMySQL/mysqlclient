@@ -12,13 +12,18 @@ from ._exceptions import ProgrammingError
 #: executemany only supports simple bulk insert.
 #: You can use it to load large dataset.
 RE_INSERT_VALUES = re.compile(
-    r"\s*((?:INSERT|REPLACE)\b.+\bVALUES?\s*)" +
-    r"(\(\s*(?:%s|%\(.+\)s)\s*(?:,\s*(?:%s|%\(.+\)s)\s*)*\))" +
-    r"(\s*(?:ON DUPLICATE.*)?);?\s*\Z",
-    re.IGNORECASE | re.DOTALL)
+    "".join(
+        [
+            r"\s*((?:INSERT|REPLACE)\b.+\bVALUES?\s*)",
+            r"(\(\s*(?:%s|%\(.+\)s)\s*(?:,\s*(?:%s|%\(.+\)s)\s*)*\))",
+            r"(\s*(?:ON DUPLICATE.*)?);?\s*\Z",
+        ]
+    ),
+    re.IGNORECASE | re.DOTALL,
+)
 
 
-class BaseCursor(object):
+class BaseCursor:
     """A base for Cursor classes. Useful attributes:
 
     description
@@ -39,12 +44,20 @@ class BaseCursor(object):
     #:
     #: Max size of allowed statement is max_allowed_packet - packet_header_size.
     #: Default value of max_allowed_packet is 1048576.
-    max_stmt_length = 64*1024
+    max_stmt_length = 64 * 1024
 
     from ._exceptions import (
-        MySQLError, Warning, Error, InterfaceError,
-        DatabaseError, DataError, OperationalError, IntegrityError,
-        InternalError, ProgrammingError, NotSupportedError,
+        MySQLError,
+        Warning,
+        Error,
+        InterfaceError,
+        DatabaseError,
+        DataError,
+        OperationalError,
+        IntegrityError,
+        InternalError,
+        ProgrammingError,
+        NotSupportedError,
     )
 
     connection = None
@@ -98,8 +111,10 @@ class BaseCursor(object):
         if isinstance(args, (tuple, list)):
             ret = tuple(literal(ensure_bytes(arg)) for arg in args)
         elif isinstance(args, dict):
-            ret = {ensure_bytes(key): literal(ensure_bytes(val))
-                   for (key, val) in args.items()}
+            ret = {
+                ensure_bytes(key): literal(ensure_bytes(val))
+                for (key, val) in args.items()
+            }
         else:
             # If it's not a dictionary let's try escaping it anyways.
             # Worst case it will throw a Value error
@@ -216,16 +231,23 @@ class BaseCursor(object):
         if m:
             q_prefix = m.group(1) % ()
             q_values = m.group(2).rstrip()
-            q_postfix = m.group(3) or ''
-            assert q_values[0] == '(' and q_values[-1] == ')'
-            return self._do_execute_many(q_prefix, q_values, q_postfix, args,
-                                         self.max_stmt_length,
-                                         self._get_db().encoding)
+            q_postfix = m.group(3) or ""
+            assert q_values[0] == "(" and q_values[-1] == ")"
+            return self._do_execute_many(
+                q_prefix,
+                q_values,
+                q_postfix,
+                args,
+                self.max_stmt_length,
+                self._get_db().encoding,
+            )
 
         self.rowcount = sum(self.execute(query, arg) for arg in args)
         return self.rowcount
 
-    def _do_execute_many(self, prefix, values, postfix, args, max_stmt_length, encoding):
+    def _do_execute_many(
+        self, prefix, values, postfix, args, max_stmt_length, encoding
+    ):
         conn = self._get_db()
         escape = self._escape_args
         if isinstance(prefix, str):
@@ -245,7 +267,7 @@ class BaseCursor(object):
                 rows += self.execute(sql + postfix)
                 sql = bytearray(prefix)
             else:
-                sql += b','
+                sql += b","
             sql += v
         rows += self.execute(sql + postfix)
         self.rowcount = rows
@@ -283,15 +305,17 @@ class BaseCursor(object):
         if isinstance(procname, str):
             procname = procname.encode(db.encoding)
         if args:
-            fmt = b'@_' + procname + b'_%d=%s'
-            q = b'SET %s' % b','.join(fmt % (index, db.literal(arg))
-                                      for index, arg in enumerate(args))
+            fmt = b"@_" + procname + b"_%d=%s"
+            q = b"SET %s" % b",".join(
+                fmt % (index, db.literal(arg)) for index, arg in enumerate(args)
+            )
             self._query(q)
             self.nextset()
 
-        q = b"CALL %s(%s)" % (procname,
-                              b','.join([b'@_%s_%d' % (procname, i)
-                                         for i in range(len(args))]))
+        q = b"CALL %s(%s)" % (
+            procname,
+            b",".join([b"@_%s_%d" % (procname, i) for i in range(len(args))]),
+        )
         self._query(q)
         return args
 
@@ -325,7 +349,7 @@ class BaseCursor(object):
     NotSupportedError = NotSupportedError
 
 
-class CursorStoreResultMixIn(object):
+class CursorStoreResultMixIn:
     """This is a MixIn class which causes the entire result set to be
     stored on the client side, i.e. it uses mysql_store_result(). If the
     result set can be very large, consider adding a LIMIT clause to your
@@ -353,7 +377,7 @@ class CursorStoreResultMixIn(object):
         than size. If size is not defined, cursor.arraysize is used."""
         self._check_executed()
         end = self.rownumber + (size or self.arraysize)
-        result = self._rows[self.rownumber:end]
+        result = self._rows[self.rownumber : end]
         self.rownumber = min(end, len(self._rows))
         return result
 
@@ -361,13 +385,13 @@ class CursorStoreResultMixIn(object):
         """Fetchs all available rows from the cursor."""
         self._check_executed()
         if self.rownumber:
-            result = self._rows[self.rownumber:]
+            result = self._rows[self.rownumber :]
         else:
             result = self._rows
         self.rownumber = len(self._rows)
         return result
 
-    def scroll(self, value, mode='relative'):
+    def scroll(self, value, mode="relative"):
         """Scroll the cursor in the result set to a new position according
         to mode.
 
@@ -375,9 +399,9 @@ class CursorStoreResultMixIn(object):
         the current position in the result set, if set to 'absolute',
         value states an absolute target position."""
         self._check_executed()
-        if mode == 'relative':
+        if mode == "relative":
             r = self.rownumber + value
-        elif mode == 'absolute':
+        elif mode == "absolute":
             r = value
         else:
             raise ProgrammingError("unknown scroll mode %s" % repr(mode))
@@ -387,11 +411,11 @@ class CursorStoreResultMixIn(object):
 
     def __iter__(self):
         self._check_executed()
-        result = self.rownumber and self._rows[self.rownumber:] or self._rows
+        result = self.rownumber and self._rows[self.rownumber :] or self._rows
         return iter(result)
 
 
-class CursorUseResultMixIn(object):
+class CursorUseResultMixIn:
 
     """This is a MixIn class which causes the result set to be stored
     in the server and sent row-by-row to client side, i.e. it uses
@@ -438,39 +462,35 @@ class CursorUseResultMixIn(object):
     __next__ = next
 
 
-class CursorTupleRowsMixIn(object):
+class CursorTupleRowsMixIn:
     """This is a MixIn class that causes all rows to be returned as tuples,
     which is the standard form required by DB API."""
 
     _fetch_type = 0
 
 
-class CursorDictRowsMixIn(object):
+class CursorDictRowsMixIn:
     """This is a MixIn class that causes all rows to be returned as
     dictionaries. This is a non-standard feature."""
 
     _fetch_type = 1
 
 
-class Cursor(CursorStoreResultMixIn, CursorTupleRowsMixIn,
-             BaseCursor):
+class Cursor(CursorStoreResultMixIn, CursorTupleRowsMixIn, BaseCursor):
     """This is the standard Cursor class that returns rows as tuples
     and stores the result set in the client."""
 
 
-class DictCursor(CursorStoreResultMixIn, CursorDictRowsMixIn,
-                 BaseCursor):
+class DictCursor(CursorStoreResultMixIn, CursorDictRowsMixIn, BaseCursor):
     """This is a Cursor class that returns rows as dictionaries and
     stores the result set in the client."""
 
 
-class SSCursor(CursorUseResultMixIn, CursorTupleRowsMixIn,
-               BaseCursor):
+class SSCursor(CursorUseResultMixIn, CursorTupleRowsMixIn, BaseCursor):
     """This is a Cursor class that returns rows as tuples and stores
     the result set in the server."""
 
 
-class SSDictCursor(CursorUseResultMixIn, CursorDictRowsMixIn,
-                   BaseCursor):
+class SSDictCursor(CursorUseResultMixIn, CursorDictRowsMixIn, BaseCursor):
     """This is a Cursor class that returns rows as dictionaries and
     stores the result set in the server."""

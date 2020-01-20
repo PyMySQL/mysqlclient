@@ -5,6 +5,7 @@ These classes are dictated by the DB API v2.0:
     https://www.python.org/dev/peps/pep-0249/
 """
 
+
 class MySQLError(Exception):
     """Exception related to operation with MySQL."""
 

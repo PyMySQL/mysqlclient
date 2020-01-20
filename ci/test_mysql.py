@@ -13,33 +13,27 @@
 # file for each of the backends you test against.
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'django_default',
-        'USER': 'django',
-        'HOST': '127.0.0.1',
-        'PASSWORD': 'secret',
-        'TEST': {
-            'CHARSET': 'utf8mb4',
-            'COLLATION': 'utf8mb4_general_ci',
-        },
+    "default": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": "django_default",
+        "USER": "django",
+        "HOST": "127.0.0.1",
+        "PASSWORD": "secret",
+        "TEST": {"CHARSET": "utf8mb4", "COLLATION": "utf8mb4_general_ci"},
     },
-    'other': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'django_other',
-        'USER': 'django',
-        'HOST': '127.0.0.1',
-        'PASSWORD': 'secret',
-        'TEST': {
-            'CHARSET': 'utf8mb4',
-            'COLLATION': 'utf8mb4_general_ci',
-        },
-    }
+    "other": {
+        "ENGINE": "django.db.backends.mysql",
+        "NAME": "django_other",
+        "USER": "django",
+        "HOST": "127.0.0.1",
+        "PASSWORD": "secret",
+        "TEST": {"CHARSET": "utf8mb4", "COLLATION": "utf8mb4_general_ci"},
+    },
 }
 
 SECRET_KEY = "django_tests_secret_key"
 
 # Use a fast hasher to speed up tests.
 PASSWORD_HASHERS = [
-    'django.contrib.auth.hashers.MD5PasswordHasher',
+    "django.contrib.auth.hashers.MD5PasswordHasher",
 ]

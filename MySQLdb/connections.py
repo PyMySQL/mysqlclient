@@ -8,9 +8,16 @@ import re
 
 from . import cursors, _mysql
 from ._exceptions import (
-    Warning, Error, InterfaceError, DataError,
-    DatabaseError, OperationalError, IntegrityError, InternalError,
-    NotSupportedError, ProgrammingError,
+    Warning,
+    Error,
+    InterfaceError,
+    DataError,
+    DatabaseError,
+    OperationalError,
+    IntegrityError,
+    InternalError,
+    NotSupportedError,
+    ProgrammingError,
 )
 
 # Mapping from MySQL charset name to Python codec name
@@ -23,6 +30,7 @@ _charset_to_encoding = {
 }
 
 re_numeric_part = re.compile(r"^(\d+)")
+
 
 def numeric_part(s):
     """Returns the leading numeric part of a string.
@@ -136,13 +144,13 @@ class Connection(_mysql.connection):
 
         kwargs2 = kwargs.copy()
 
-        if 'database' in kwargs2:
-            kwargs2['db'] = kwargs2.pop('database')
-        if 'password' in kwargs2:
-            kwargs2['passwd'] = kwargs2.pop('password')
+        if "database" in kwargs2:
+            kwargs2["db"] = kwargs2.pop("database")
+        if "password" in kwargs2:
+            kwargs2["passwd"] = kwargs2.pop("password")
 
-        if 'conv' in kwargs:
-            conv = kwargs['conv']
+        if "conv" in kwargs:
+            conv = kwargs["conv"]
         else:
             conv = conversions
 
@@ -152,30 +160,31 @@ class Connection(_mysql.connection):
                 conv2[k] = v[:]
             else:
                 conv2[k] = v
-        kwargs2['conv'] = conv2
+        kwargs2["conv"] = conv2
 
-        cursorclass = kwargs2.pop('cursorclass', self.default_cursor)
-        charset = kwargs2.get('charset', '')
-        use_unicode = kwargs2.pop('use_unicode', True)
-        sql_mode = kwargs2.pop('sql_mode', '')
-        self._binary_prefix = kwargs2.pop('binary_prefix', False)
+        cursorclass = kwargs2.pop("cursorclass", self.default_cursor)
+        charset = kwargs2.get("charset", "")
+        use_unicode = kwargs2.pop("use_unicode", True)
+        sql_mode = kwargs2.pop("sql_mode", "")
+        self._binary_prefix = kwargs2.pop("binary_prefix", False)
 
-        client_flag = kwargs.get('client_flag', 0)
-        client_version = tuple([ numeric_part(n) for n in _mysql.get_client_info().split('.')[:2] ])
+        client_flag = kwargs.get("client_flag", 0)
+        client_version = tuple(
+            [numeric_part(n) for n in _mysql.get_client_info().split(".")[:2]]
+        )
         if client_version >= (4, 1):
             client_flag |= CLIENT.MULTI_STATEMENTS
         if client_version >= (5, 0):
             client_flag |= CLIENT.MULTI_RESULTS
 
-        kwargs2['client_flag'] = client_flag
+        kwargs2["client_flag"] = client_flag
 
         # PEP-249 requires autocommit to be initially off
-        autocommit = kwargs2.pop('autocommit', False)
+        autocommit = kwargs2.pop("autocommit", False)
 
-        super(Connection, self).__init__(*args, **kwargs2)
+        super().__init__(*args, **kwargs2)
         self.cursorclass = cursorclass
-        self.encoders = dict([ (k, v) for k, v in conv.items()
-                               if type(k) is not int ])
+        self.encoders = {k: v for k, v in conv.items() if type(k) is not int}
 
         # XXX THIS IS GARBAGE: While this is just a garbage and undocumented,
         # Django 1.11 depends on it.  And they don't fix it because
@@ -184,9 +193,11 @@ class Connection(_mysql.connection):
         # See PyMySQL/mysqlclient-python#306
         self.encoders[bytes] = bytes
 
-        self._server_version = tuple([ numeric_part(n) for n in self.get_server_info().split('.')[:2] ])
+        self._server_version = tuple(
+            [numeric_part(n) for n in self.get_server_info().split(".")[:2]]
+        )
 
-        self.encoding = 'ascii'  # overridden in set_character_set()
+        self.encoding = "ascii"  # overridden in set_character_set()
         db = proxy(self)
 
         def unicode_literal(u, dummy=None):
@@ -200,8 +211,15 @@ class Connection(_mysql.connection):
             self.set_sql_mode(sql_mode)
 
         if use_unicode:
-            for t in (FIELD_TYPE.STRING, FIELD_TYPE.VAR_STRING, FIELD_TYPE.VARCHAR, FIELD_TYPE.TINY_BLOB,
-                      FIELD_TYPE.MEDIUM_BLOB, FIELD_TYPE.LONG_BLOB, FIELD_TYPE.BLOB):
+            for t in (
+                FIELD_TYPE.STRING,
+                FIELD_TYPE.VAR_STRING,
+                FIELD_TYPE.VARCHAR,
+                FIELD_TYPE.TINY_BLOB,
+                FIELD_TYPE.MEDIUM_BLOB,
+                FIELD_TYPE.LONG_BLOB,
+                FIELD_TYPE.BLOB,
+            ):
                 self.converter[t] = _bytes_or_str
             # Unlike other string/blob types, JSON is always text.
             # MySQL may return JSON with charset==binary.
@@ -244,11 +262,11 @@ class Connection(_mysql.connection):
         assert isinstance(bs, (bytes, bytearray))
         x = self.string_literal(bs)  # x is escaped and quoted bytes
         if self._binary_prefix:
-            return b'_binary' + x
+            return b"_binary" + x
         return x
 
     def _tuple_literal(self, t):
-        return b"(%s)" % (b','.join(map(self.literal, t)))
+        return b"(%s)" % (b",".join(map(self.literal, t)))
 
     def literal(self, o):
         """If o is a single object, returns an SQL literal as a string.
@@ -280,7 +298,7 @@ class Connection(_mysql.connection):
         """
         self.query(b"BEGIN")
 
-    if not hasattr(_mysql.connection, 'warning_count'):
+    if not hasattr(_mysql.connection, "warning_count"):
 
         def warning_count(self):
             """Return the number of warnings generated from the
@@ -299,11 +317,11 @@ class Connection(_mysql.connection):
         py_charset = _charset_to_encoding.get(charset, charset)
         if self.character_set_name() != charset:
             try:
-                super(Connection, self).set_character_set(charset)
+                super().set_character_set(charset)
             except AttributeError:
                 if self._server_version < (4, 1):
                     raise NotSupportedError("server is too old to set charset")
-                self.query('SET NAMES %s' % charset)
+                self.query("SET NAMES %s" % charset)
                 self.store_result()
         self.encoding = py_charset
 
@@ -320,7 +338,8 @@ class Connection(_mysql.connection):
         sequence of tuples of (Level, Code, Message). This
         is only supported in MySQL-4.1 and up. If your server
         is an earlier version, an empty sequence is returned."""
-        if self._server_version < (4,1): return ()
+        if self._server_version < (4, 1):
+            return ()
         self.query("SHOW WARNINGS")
         r = self.store_result()
         warnings = r.fetch_row(0)
@@ -336,5 +355,6 @@ class Connection(_mysql.connection):
     InternalError = InternalError
     ProgrammingError = ProgrammingError
     NotSupportedError = NotSupportedError
+
 
 # vim: colorcolumn=100

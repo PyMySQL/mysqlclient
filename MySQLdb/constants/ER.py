@@ -8,18 +8,20 @@ if __name__ == "__main__":
     """
     Usage: python ER.py [/path/to/mysql/mysqld_error.h ...] >> ER.py
     """
-    import fileinput, re
+    import fileinput
+    import re
+
     data = {}
     error_last = None
     for line in fileinput.input():
-        line = re.sub(r'/\*.*?\*/', '', line)
-        m = re.match(r'^\s*#define\s+((ER|WARN)_[A-Z0-9_]+)\s+(\d+)\s*', line)
+        line = re.sub(r"/\*.*?\*/", "", line)
+        m = re.match(r"^\s*#define\s+((ER|WARN)_[A-Z0-9_]+)\s+(\d+)\s*", line)
         if m:
             name = m.group(1)
-            if name.startswith('ER_'):
+            if name.startswith("ER_"):
                 name = name[3:]
             value = int(m.group(3))
-            if name == 'ERROR_LAST':
+            if name == "ERROR_LAST":
                 if error_last is None or error_last < value:
                     error_last = value
                 continue
@@ -28,9 +30,9 @@ if __name__ == "__main__":
             data[value].add(name)
     for value, names in sorted(data.items()):
         for name in sorted(names):
-            print('%s = %s' % (name, value))
+            print("{} = {}".format(name, value))
     if error_last is not None:
-        print('ERROR_LAST = %s' % error_last)
+        print("ERROR_LAST = %s" % error_last)
 
 
 ERROR_FIRST = 1000
