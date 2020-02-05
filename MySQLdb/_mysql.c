@@ -1284,15 +1284,9 @@ _mysql__fetch_row(
         if (!self->use)
             row = mysql_fetch_row(self->result);
         else {
-            // see: https://docs.python.org/3/library/gc.html#gc.get_referrers
-            // This function can get a reference to the tuple r, and if that
-            // code is preempted while holding a ref to r, the _PyTuple_Resize
-            // will raise a SystemError because the ref count is 2.
-            PyObject_GC_UnTrack(*r);
             Py_BEGIN_ALLOW_THREADS;
             row = mysql_fetch_row(self->result);
             Py_END_ALLOW_THREADS;
-            PyObject_GC_Track(*r);
         }
         if (!row && mysql_errno(&(((_mysql_ConnectionObject *)(self->conn))->connection))) {
             _mysql_Exception((_mysql_ConnectionObject *)self->conn);
@@ -1349,9 +1343,15 @@ _mysql_ResultObject_fetch_row(
     convert_row = row_converters[how];
     if (maxrows) {
         if (!(r = PyTuple_New(maxrows))) goto error;
-        rowsadded = _mysql__fetch_row(self, &r, skiprows, maxrows,
-                convert_row);
+
+        // see: https://docs.python.org/3/library/gc.html#gc.get_referrers
+        // This function can get a reference to the tuple r, and if that
+        // code is preempted while holding a ref to r, the _PyTuple_Resize
+        // will raise a SystemError because the ref count is 2.
+        PyObject_GC_UnTrack(r);
+        rowsadded = _mysql__fetch_row(self, &r, skiprows, maxrows, convert_row);
         if (rowsadded == -1) goto error;
+        PyObject_GC_Track(r);
     } else {
         if (self->use) {
             maxrows = 1000;
