@@ -17,7 +17,7 @@ def get_metadata_and_options():
         'local_scheme': 'dirty-tag',
         'write_to': 'tiledb/sql/version.py'
     }
-    metadata['setup_requires'] = ['setuptools_scm>=1.5.4']
+    metadata['setup_requires'] = ['setuptools_scm>=1.5.4', 'setuptools_scm_git_archive']
     return metadata, options
 
 
