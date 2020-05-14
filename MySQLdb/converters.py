@@ -29,17 +29,26 @@ Conversion function:
 Don't modify conversions if you can avoid it. Instead, make copies
 (with the copy() method), modify the copies, and then pass them to
 MySQL.connect().
-
 """
+from decimal import Decimal
 
-from _mysql import string_literal, escape_sequence, escape_dict, escape, NULL
+from MySQLdb._mysql import string_literal
 from MySQLdb.constants import FIELD_TYPE, FLAG
-from MySQLdb.times import *
-from MySQLdb.compat import PY2, long
-
-NoneType = type(None)
+from MySQLdb.times import (
+    Date,
+    DateTimeType,
+    DateTime2literal,
+    DateTimeDeltaType,
+    DateTimeDelta2literal,
+    DateTime_or_None,
+    TimeDelta_or_None,
+    Date_or_None,
+)
+from MySQLdb._exceptions import ProgrammingError
 
 import array
+
+NoneType = type(None)
 
 try:
     ArrayType = array.ArrayType
@@ -47,99 +56,84 @@ except AttributeError:
     ArrayType = array.array
 
 
-def Bool2Str(s, d): return str(int(s))
+def Bool2Str(s, d):
+    return b"1" if s else b"0"
 
-def Str2Set(s):
-    return set([ i for i in s.split(',') if i ])
 
 def Set2Str(s, d):
-    return string_literal(','.join(s), d)
+    # Only support ascii string.  Not tested.
+    return string_literal(",".join(s))
+
 
 def Thing2Str(s, d):
     """Convert something into a string via str()."""
     return str(s)
 
-def Unicode2Str(s, d):
-    """Convert a unicode object to a string using the default encoding.
-    This is only used as a placeholder for the real function, which
-    is connection-dependent."""
-    return s.encode()
 
 def Float2Str(o, d):
-    return '%.15g' % o
+    s = repr(o)
+    if s in ("inf", "nan"):
+        raise ProgrammingError("%s can not be used with MySQL" % s)
+    if "e" not in s:
+        s += "e0"
+    return s
+
 
 def None2NULL(o, d):
     """Convert None to NULL."""
-    return NULL  # duh
+    return b"NULL"
+
 
 def Thing2Literal(o, d):
     """Convert something into a SQL string literal.  If using
     MySQL-3.23 or newer, string_literal() is a method of the
     _mysql.MYSQL object, and this function will be overridden with
     that method when the connection is created."""
-    return string_literal(o, d)
+    return string_literal(o)
 
 
-def char_array(s):
-    return array.array('c', s)
+def Decimal2Literal(o, d):
+    return format(o, "f")
+
 
 def array2Str(o, d):
     return Thing2Literal(o.tostring(), d)
 
-def quote_tuple(t, d):
-    return "(%s)" % (','.join(escape_sequence(t, d)))
 
 # bytes or str regarding to BINARY_FLAG.
-_bytes_or_str = [(FLAG.BINARY, bytes)]
+_bytes_or_str = ((FLAG.BINARY, bytes), (None, str))
 
 conversions = {
     int: Thing2Str,
-    long: Thing2Str,
     float: Float2Str,
     NoneType: None2NULL,
-    tuple: quote_tuple,
-    list: quote_tuple,
-    dict: escape_dict,
     ArrayType: array2Str,
     bool: Bool2Str,
     Date: Thing2Literal,
     DateTimeType: DateTime2literal,
     DateTimeDeltaType: DateTimeDelta2literal,
-    str: Thing2Literal,  # default
     set: Set2Str,
+    Decimal: Decimal2Literal,
     FIELD_TYPE.TINY: int,
     FIELD_TYPE.SHORT: int,
-    FIELD_TYPE.LONG: long,
+    FIELD_TYPE.LONG: int,
     FIELD_TYPE.FLOAT: float,
     FIELD_TYPE.DOUBLE: float,
-    FIELD_TYPE.DECIMAL: float,
-    FIELD_TYPE.NEWDECIMAL: float,
-    FIELD_TYPE.LONGLONG: long,
+    FIELD_TYPE.DECIMAL: Decimal,
+    FIELD_TYPE.NEWDECIMAL: Decimal,
+    FIELD_TYPE.LONGLONG: int,
     FIELD_TYPE.INT24: int,
     FIELD_TYPE.YEAR: int,
-    FIELD_TYPE.SET: Str2Set,
-    FIELD_TYPE.TIMESTAMP: mysql_timestamp_converter,
+    FIELD_TYPE.TIMESTAMP: DateTime_or_None,
     FIELD_TYPE.DATETIME: DateTime_or_None,
     FIELD_TYPE.TIME: TimeDelta_or_None,
     FIELD_TYPE.DATE: Date_or_None,
-
-    FIELD_TYPE.TINY_BLOB: _bytes_or_str,
-    FIELD_TYPE.MEDIUM_BLOB: _bytes_or_str,
-    FIELD_TYPE.LONG_BLOB: _bytes_or_str,
-    FIELD_TYPE.BLOB: _bytes_or_str,
-    FIELD_TYPE.STRING: _bytes_or_str,
-    FIELD_TYPE.VAR_STRING: _bytes_or_str,
-    FIELD_TYPE.VARCHAR: _bytes_or_str,
+    FIELD_TYPE.TINY_BLOB: bytes,
+    FIELD_TYPE.MEDIUM_BLOB: bytes,
+    FIELD_TYPE.LONG_BLOB: bytes,
+    FIELD_TYPE.BLOB: bytes,
+    FIELD_TYPE.STRING: bytes,
+    FIELD_TYPE.VAR_STRING: bytes,
+    FIELD_TYPE.VARCHAR: bytes,
+    FIELD_TYPE.JSON: bytes,
 }
-
-if PY2:
-    conversions[unicode] = Unicode2Str
-else:
-    conversions[bytes] = Thing2Literal
-
-try:
-    from decimal import Decimal
-    conversions[FIELD_TYPE.DECIMAL] = Decimal
-    conversions[FIELD_TYPE.NEWDECIMAL] = Decimal
-except ImportError:
-    pass

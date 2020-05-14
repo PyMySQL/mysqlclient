@@ -8,40 +8,17 @@ MySQLdb Installation
 Prerequisites
 -------------
 
-+ Python 2.6, 2.7, 3.3 or higher
-
-  * http://www.python.org/
++ Python 3.5 or higher
 
 + setuptools
 
-  * http://pypi.python.org/pypi/setuptools
+  * https://pypi.org/project/setuptools/
 
-+ MySQL 5.0 or higher
++ MySQL 5.5 or higher
 
-  * http://www.mysql.com/downloads/
+  * https://www.mysql.com/downloads/
 
-  * MySQL-4.0 and MySQL-4.1 may work, but not supported.
-
-  * MySQL-5.0 is supported and tested, including stored procedures.
-
-  * MySQL-5.1 is supported (currently a release candidate) but untested.
-    It should work.
-
-  * Red Hat Linux packages:
-
-    - mysql-devel to compile
-
-    - mysql and/or mysql-devel to run
-
-  * MySQL.com RPM packages:
-
-    - MySQL-devel to compile
-
-    - MySQL-shared if you want to use their shared
-      library. Otherwise you'll get a statically-linked module,
-      which may or may not be what you want.
-
-    - MySQL-shared to run if you compiled with MySQL-shared installed
+  * MySQL 5.1 may work, but not supported.
 
 + C compiler
 
@@ -65,20 +42,9 @@ Depending on which version of MySQL you have, you may have the option
 of using three different client libraries. To select the client library,
 edit the [options] section of site.cfg:
 
-    embedded
-        use embedded server library (libmysqld) if True; otherwise use
-	one of the client libraries (default).
-
-    threadsafe
-        thread-safe client library (libmysqlclient_r) if True (default);
-	otherwise use non-thread-safe (libmysqlclient). You should
-	always use the thread-safe library if you have the option;
-	otherwise you *may* have problems.
-
     static
         if True, try to link against a static library; otherwise link
-	against dynamic libraries (default). You may need static linking
-	to use the embedded server.
+        against dynamic libraries (default).
         This option doesn't work for MySQL>5.6 since libmysqlclient
         requires libstdc++. If you want to use, add `-lstdc++` to
         mysql_config manually.
@@ -127,25 +93,11 @@ contributes one, I will make it available. Several OS vendors have
 their own packages available.
 
 
-RPMs
-....
-
-If you prefer to install RPMs, you can use the bdist_rpm command with
-setup.py. This only builds the RPM; it does not install it. You may
-want to use the --python=XXX option, where XXX is the name of the
-Python executable, i.e. python, python2, python2.4; the default is
-python. Using this will incorporate the Python executable name into
-the package name for the RPM so you have install the package multiple
-times if you need to support more than one version of Python. You can
-also set this in setup.cfg.
-
-
 Red Hat Linux
 .............
 
 MySQL-python is pre-packaged in Red Hat Linux 7.x and newer. This
-includes Fedora Core and Red Hat Enterprise Linux. You can also
-build your own RPM packages as described above.
+includes Fedora Core and Red Hat Enterprise Linux.
 
 
 Debian GNU/Linux
@@ -153,7 +105,7 @@ Debian GNU/Linux
 
 Packaged as `python-mysqldb`_::
 
-	# apt-get install python-mysqldb
+    # apt-get install python-mysqldb
 
 Or use Synaptic.
 
@@ -171,9 +123,9 @@ Gentoo Linux
 
 Packaged as `mysql-python`_. ::
 
-      # emerge sync
-      # emerge mysql-python
-      # emerge zmysqlda # if you use Zope
+    # emerge sync
+    # emerge mysql-python
+    # emerge zmysqlda # if you use Zope
 
 .. _`mysql-python`: https://packages.gentoo.org/packages/search?q=mysql-python
 
@@ -192,4 +144,3 @@ GPL or the original license based on Python 1.5.2's license.
 
 
 :Author: Andy Dustman <andy@dustman.net>
-:Revision: $Id$

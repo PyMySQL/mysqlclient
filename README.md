@@ -7,38 +7,64 @@ This is a fork of [MySQLdb1](https://github.com/farcepest/MySQLdb1).
 This project adds Python 3 support and bug fixes.
 I hope this fork is merged back to MySQLdb1 like distribute was merged back to setuptools.
 
+
+## Support
+
+**Do Not use Github Issue Tracker to ask help.  OSS Maintainer is not free tech support**
+
+When your question looks relating to Python rather than MySQL:
+
+* Python mailing list [python-list](https://mail.python.org/mailman/listinfo/python-list)
+* Slack [pythondev.slack.com](https://pyslackers.com/web/slack)
+
+Or when you have question about MySQL:
+
+* [MySQL Community on Slack](https://lefred.be/mysql-community-on-slack/)
+
+
 ## Install
 
-### Prerequisites
+### Windows
 
-You may need to install the Python and MySQL development headers and libraries like so:
+Building mysqlclient on Windows is very hard.
+But there are some binary wheels you can install easily.
 
-`sudo apt-get install python-dev libmysqlclient-dev`  # Debian / Ubuntu
+### macOS (Homebrew)
 
-`sudo yum install python-devel mysql-devel`  # Red Hat / CentOS
+Install MySQL and mysqlclient:
 
-On Windows, there are binary wheel you can install without MySQLConnector/C or MSVC. 
+```
+# Assume you are activating Python 3 venv
+$ brew install mysql
+$ pip install mysqlclient
+```
 
-#### Note on Python 3 : if you are using python3 then you need to install python3-dev using the following command :
+If you don't want to install MySQL server, you can use mysql-client instead:
 
-`sudo apt-get install python3-dev` # debian / Ubuntu
+```
+# Assume you are activating Python 3 venv
+$ brew install mysql-client
+$ echo 'export PATH="/usr/local/opt/mysql-client/bin:$PATH"' >> ~/.bash_profile
+$ export PATH="/usr/local/opt/mysql-client/bin:$PATH"
+$ pip install mysqlclient
+```
 
-`sudo yum install python3-devel `  # Red Hat / CentOS
+### Linux
 
+**Note that this is a basic step.  I can not support complete step for build for all
+environment.  If you can see some error, you should fix it by yourself, or ask for
+support in some user forum.  Don't file a issue on the issue tracker.**
 
-### Install from PyPI
+You may need to install the Python 3 and MySQL development headers and libraries like so:
 
-`pip install mysqlclient`
+* `$ sudo apt-get install python3-dev default-libmysqlclient-dev build-essential`  # Debian / Ubuntu
+* `% sudo yum install python3-devel mysql-devel`  # Red Hat / CentOS
 
-NOTE: Wheels for Windows may be not released with source package. You should pin version
-in your `requirements.txt` to avoid trying to install newest source package.
+Then you can install mysqlclient via pip now:
 
-
-### Install from source
-
-1. Download source by `git clone` or [zipfile](https://github.com/PyMySQL/mysqlclient-python/archive/master.zip).
-2. Customize `site.cfg`
-3. `python setup.py install`
+```
+$ pip install mysqlclient
+```
 
 ### Documentation
 

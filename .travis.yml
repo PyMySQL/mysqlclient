@@ -1,35 +1,81 @@
-sudo: false
+dist: bionic
 language: python
-python: "3.5"
+
+# See aws s3 ls s3://travis-python-archives/binaries/ubuntu/18.04/x86_64/
+python:
+  - "nightly"
+  - "pypy3"
+  - "3.8"
+  - "3.7"
+  - "3.6"
+  - "3.5"
 
 cache: pip
+
+services:
+  - mysql
+
 install:
-  - pip install tox
-
-matrix:
-  include:
-    - python: "3.6-dev"
-      env:
-        - TOX_ENV=py36
-        - TESTDB=travis.cnf
-
+  - pip install -U pip
+  - pip install -U mock coverage pytest pytest-cov codecov
 
 env:
-  matrix:
-    - TOX_ENV=py26
-    - TOX_ENV=py27
-    - TOX_ENV=pypy
-    - TOX_ENV=py33
-    - TOX_ENV=py34
-    - TOX_ENV=py35
   global:
     - TESTDB=travis.cnf
+
 before_script:
   - "mysql --help"
   - "mysql --print-defaults"
   - "mysql -e 'create database mysqldb_test charset utf8mb4;'"
 
-script: tox -e $TOX_ENV
+script:
+  - pip install -e .
+  - pytest --cov ./MySQLdb
 
+after_success:
+  - codecov
+
+jobs:
+  fast_finish: true
+  include:
+    - &django_2_2
+      name: "Django 2.2 test"
+      env:
+        - DJANGO_VERSION=2.2.7
+      python: "3.5"
+      install:
+        - pip install -U pip
+        - wget https://github.com/django/django/archive/${DJANGO_VERSION}.tar.gz
+        - tar xf ${DJANGO_VERSION}.tar.gz
+        - pip install -e django-${DJANGO_VERSION}/
+        - cp ci/test_mysql.py django-${DJANGO_VERSION}/tests/
+        - pip install .
+
+      before_script:
+        - mysql -e 'create user django identified by "secret"'
+        - mysql -e 'grant all on *.* to django'
+        - mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql mysql
+
+      script:
+        - cd django-${DJANGO_VERSION}/tests/
+        - ./runtests.py --parallel=1 --settings=test_mysql
+    - name: flake8
+      python: "3.8"
+      install:
+        - pip install -U pip
+        - pip install flake8
+      script:
+        - flake8 --ignore=E203,E501,W503 --max-line-length=88 .
+    - name: black
+      python: "3.8"
+      install:
+        - pip install -U pip
+        - pip install black
+      script:
+        - black --check --exclude=doc/ .
+    #- &django_3_0
+    #  <<: *django_2_2
+    #  name: "Django 3.0 test (Python 3.8)"
+    #  python: "3.8"
 
 # vim: sw=2 ts=2 sts=2

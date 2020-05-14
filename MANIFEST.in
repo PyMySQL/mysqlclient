@@ -2,10 +2,10 @@ recursive-include doc *.rst
 recursive-include tests *.py
 include doc/conf.py
 include MANIFEST.in
-include HISTORY
-include INSTALL
+include HISTORY.rst
+include INSTALL.rst
 include README.md
-include GPL-2.0
+include LICENSE
 include metadata.cfg
 include site.cfg
 include setup_common.py

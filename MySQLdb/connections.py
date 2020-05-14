@@ -4,50 +4,34 @@ only one class: Connection. Others are unlikely. However, you might
 want to make your own subclasses. In most cases, you will probably
 override Connection.default_cursor with a non-standard Cursor class.
 """
-from MySQLdb import cursors
-from MySQLdb.compat import unicode, PY2
-from _mysql_exceptions import Warning, Error, InterfaceError, DataError, \
-     DatabaseError, OperationalError, IntegrityError, InternalError, \
-     NotSupportedError, ProgrammingError
-import _mysql
 import re
 import os
 
+from . import cursors, _mysql
+from ._exceptions import (
+    Warning,
+    Error,
+    InterfaceError,
+    DataError,
+    DatabaseError,
+    OperationalError,
+    IntegrityError,
+    InternalError,
+    NotSupportedError,
+    ProgrammingError,
+)
 
-if not PY2:
-    # See http://bugs.python.org/issue24870
-    _surrogateescape_table = [chr(i) if i < 0x80 else chr(i + 0xdc00) for i in range(256)]
-
-    def _fast_surroundescape(s):
-        return s.decode('latin1').translate(_surrogateescape_table)
-
-
-def defaulterrorhandler(connection, cursor, errorclass, errorvalue):
-    """
-    If cursor is not None, (errorclass, errorvalue) is appended to
-    cursor.messages; otherwise it is appended to
-    connection.messages. Then errorclass is raised with errorvalue as
-    the value.
-
-    You can override this with your own error handler by assigning it
-    to the instance.
-    """
-    error = errorclass, errorvalue
-    if cursor:
-        cursor.messages.append(error)
-    else:
-        connection.messages.append(error)
-    del cursor
-    del connection
-    if isinstance(errorvalue, BaseException):
-        raise errorvalue
-    if errorclass is not None:
-        raise errorclass(errorvalue)
-    else:
-        raise Exception(errorvalue)
-
+# Mapping from MySQL charset name to Python codec name
+_charset_to_encoding = {
+    "utf8mb4": "utf8",
+    "utf8mb3": "utf8",
+    "latin1": "cp1252",
+    "koi8r": "koi8_r",
+    "koi8u": "koi8_u",
+}
 
 re_numeric_part = re.compile(r"^(\d+)")
+
 
 def numeric_part(s):
     """Returns the leading numeric part of a string.
@@ -69,7 +53,6 @@ class Connection(_mysql.connection):
     """MySQL Database Connection Object"""
 
     default_cursor = cursors.Cursor
-    waiter = None
 
     def __init__(self, *args, **kwargs):
         """
@@ -103,26 +86,37 @@ class Connection(_mysql.connection):
         :param type cursorclass:
             class object, used to create cursors (keyword only)
 
-        :param str use_unicode:
+        :param bool use_unicode:
             If True, text-like columns are returned as unicode objects
-            using the connection's character set.  Otherwise, text-like
-            columns are returned as strings.  columns are returned as
-            normal strings. Unicode objects will always be encoded to
-            the connection's character set regardless of this setting.
-            Default to False on Python 2 and True on Python 3.
+            using the connection's character set. Otherwise, text-like
+            columns are returned as bytes. Unicode objects will always
+            be encoded to the connection's character set regardless of
+            this setting.
+            Default to True.
 
         :param str charset:
             If supplied, the connection character set will be changed
-            to this character set (MySQL-4.1 and newer). This implies
-            use_unicode=True.
+            to this character set.
+
+        :param str auth_plugin:
+            If supplied, the connection default authentication plugin will be
+            changed to this value. Example values:
+            `mysql_native_password` or `caching_sha2_password`
 
         :param str sql_mode:
             If supplied, the session SQL mode will be changed to this
-            setting (MySQL-4.1 and newer). For more details and legal
-            values, see the MySQL documentation.
+            setting.
+            For more details and legal values, see the MySQL documentation.
 
         :param int client_flag:
             flags to use or 0 (see MySQL docs or constants/CLIENTS.py)
+
+        :param str ssl_mode:
+            specify the security settings for connection to the server;
+            see the MySQL documentation for more details
+            (mysql_option(), MYSQL_OPT_SSL_MODE).
+            Only one of 'DISABLED', 'PREFERRED', 'REQUIRED',
+            'VERIFY_CA', 'VERIFY_IDENTITY' can be specified.
 
         :param dict ssl:
             dictionary or mapping contains SSL connection parameters;
@@ -138,11 +132,15 @@ class Connection(_mysql.connection):
             If True, autocommit is enabled.
             If None, autocommit isn't set and server default is used.
 
+        :param bool binary_prefix:
+            If set, the '_binary' prefix will be used for raw byte query
+            arguments (e.g. Binary). This is disabled by default.
+
         There are a number of undocumented, non-standard methods. See the
         documentation for the MySQL C API for some hints on what they do.
         """
         from MySQLdb.constants import CLIENT, FIELD_TYPE
-        from MySQLdb.converters import conversions
+        from MySQLdb.converters import conversions, _bytes_or_str
         from weakref import proxy
 
         kwargs2 = kwargs.copy()
@@ -178,8 +176,8 @@ class Connection(_mysql.connection):
         if 'password' in kwargs2:
             kwargs2['passwd'] = kwargs2.pop('password')
 
-        if 'conv' in kwargs:
-            conv = kwargs['conv']
+        if "conv" in kwargs:
+            conv = kwargs["conv"]
         else:
             conv = conversions
 
@@ -189,65 +187,49 @@ class Connection(_mysql.connection):
                 conv2[k] = v[:]
             else:
                 conv2[k] = v
-        kwargs2['conv'] = conv2
+        kwargs2["conv"] = conv2
 
-        cursorclass = kwargs2.pop('cursorclass', self.default_cursor)
-        charset = kwargs2.pop('charset', '')
+        cursorclass = kwargs2.pop("cursorclass", self.default_cursor)
+        charset = kwargs2.get("charset", "")
+        use_unicode = kwargs2.pop("use_unicode", True)
+        sql_mode = kwargs2.pop("sql_mode", "")
+        self._binary_prefix = kwargs2.pop("binary_prefix", False)
 
-        if charset or not PY2:
-            use_unicode = True
-        else:
-            use_unicode = False
-
-        use_unicode = kwargs2.pop('use_unicode', use_unicode)
-        sql_mode = kwargs2.pop('sql_mode', '')
-
-        client_flag = kwargs.get('client_flag', 0)
-        client_version = tuple([ numeric_part(n) for n in _mysql.get_client_info().split('.')[:2] ])
+        client_flag = kwargs.get("client_flag", 0)
+        client_version = tuple(
+            [numeric_part(n) for n in _mysql.get_client_info().split(".")[:2]]
+        )
         if client_version >= (4, 1):
             client_flag |= CLIENT.MULTI_STATEMENTS
         if client_version >= (5, 0):
             client_flag |= CLIENT.MULTI_RESULTS
 
-        kwargs2['client_flag'] = client_flag
+        kwargs2["client_flag"] = client_flag
 
         # PEP-249 requires autocommit to be initially off
-        autocommit = kwargs2.pop('autocommit', False)
-        self.waiter = kwargs2.pop('waiter', None)
+        autocommit = kwargs2.pop("autocommit", False)
 
-        super(Connection, self).__init__(*args, **kwargs2)
+        super().__init__(*args, **kwargs2)
         self.cursorclass = cursorclass
-        self.encoders = dict([ (k, v) for k, v in conv.items()
-                               if type(k) is not int ])
+        self.encoders = {k: v for k, v in conv.items() if type(k) is not int}
 
-        self._server_version = tuple([ numeric_part(n) for n in self.get_server_info().split('.')[:2] ])
+        # XXX THIS IS GARBAGE: While this is just a garbage and undocumented,
+        # Django 1.11 depends on it.  And they don't fix it because
+        # they are in security-only fix mode.
+        # So keep this garbage for now.  This will be removed in 1.5.
+        # See PyMySQL/mysqlclient-python#306
+        self.encoders[bytes] = bytes
 
+        self._server_version = tuple(
+            [numeric_part(n) for n in self.get_server_info().split(".")[:2]]
+        )
+
+        self.encoding = "ascii"  # overridden in set_character_set()
         db = proxy(self)
-        def _get_string_literal():
-            # Note: string_literal() is called for bytes object on Python 3.
-            def string_literal(obj, dummy=None):
-                return db.string_literal(obj)
-            return string_literal
 
-        def _get_unicode_literal():
-            if PY2:
-                # unicode_literal is called for only unicode object.
-                def unicode_literal(u, dummy=None):
-                    return db.literal(u.encode(unicode_literal.charset))
-            else:
-                # unicode_literal() is called for arbitrary object.
-                def unicode_literal(u, dummy=None):
-                    return db.literal(str(u).encode(unicode_literal.charset))
-            return unicode_literal
+        def unicode_literal(u, dummy=None):
+            return db.string_literal(u.encode(db.encoding))
 
-        def _get_string_decoder():
-            def string_decoder(s):
-                return s.decode(string_decoder.charset)
-            return string_decoder
-
-        string_literal = _get_string_literal()
-        self.unicode_literal = unicode_literal = _get_unicode_literal()
-        self.string_decoder = string_decoder = _get_string_decoder()
         if not charset:
             charset = self.character_set_name()
         self.set_character_set(charset)
@@ -256,18 +238,32 @@ class Connection(_mysql.connection):
             self.set_sql_mode(sql_mode)
 
         if use_unicode:
-            self.converter[FIELD_TYPE.STRING].append((None, string_decoder))
-            self.converter[FIELD_TYPE.VAR_STRING].append((None, string_decoder))
-            self.converter[FIELD_TYPE.VARCHAR].append((None, string_decoder))
-            self.converter[FIELD_TYPE.BLOB].append((None, string_decoder))
+            for t in (
+                FIELD_TYPE.STRING,
+                FIELD_TYPE.VAR_STRING,
+                FIELD_TYPE.VARCHAR,
+                FIELD_TYPE.TINY_BLOB,
+                FIELD_TYPE.MEDIUM_BLOB,
+                FIELD_TYPE.LONG_BLOB,
+                FIELD_TYPE.BLOB,
+            ):
+                self.converter[t] = _bytes_or_str
+            # Unlike other string/blob types, JSON is always text.
+            # MySQL may return JSON with charset==binary.
+            self.converter[FIELD_TYPE.JSON] = str
 
-        self.encoders[bytes] = string_literal
-        self.encoders[unicode] = unicode_literal
+        self.encoders[str] = unicode_literal
         self._transactional = self.server_capabilities & CLIENT.TRANSACTIONS
         if self._transactional:
             if autocommit is not None:
                 self.autocommit(autocommit)
         self.messages = []
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.close()
 
     def autocommit(self, on):
         on = bool(on)
@@ -276,12 +272,10 @@ class Connection(_mysql.connection):
 
     def cursor(self, cursorclass=None):
         """
-
         Create a cursor on which queries may be performed. The
         optional cursorclass parameter is used to create the
         Cursor. By default, self.cursorclass=cursors.Cursor is
         used.
-
         """
         return (cursorclass or self.cursorclass)(self)
 
@@ -289,23 +283,17 @@ class Connection(_mysql.connection):
         # Since _mysql releases GIL while querying, we need immutable buffer.
         if isinstance(query, bytearray):
             query = bytes(query)
-        if self.waiter is not None:
-            self.send_query(query)
-            self.waiter(self.fileno())
-            self.read_query_result()
-        else:
-            _mysql.connection.query(self, query)
+        _mysql.connection.query(self, query)
 
-    def __enter__(self):
-        if self.get_autocommit():
-            self.query("BEGIN")
-        return self.cursor()
+    def _bytes_literal(self, bs):
+        assert isinstance(bs, (bytes, bytearray))
+        x = self.string_literal(bs)  # x is escaped and quoted bytes
+        if self._binary_prefix:
+            return b"_binary" + x
+        return x
 
-    def __exit__(self, exc, value, tb):
-        if exc:
-            self.rollback()
-        else:
-            self.commit()
+    def _tuple_literal(self, t):
+        return b"(%s)" % (b",".join(map(self.literal, t)))
 
     def literal(self, o):
         """If o is a single object, returns an SQL literal as a string.
@@ -315,26 +303,29 @@ class Connection(_mysql.connection):
         Non-standard. For internal use; do not use this in your
         applications.
         """
-        s = self.escape(o, self.encoders)
-        # Python 3(~3.4) doesn't support % operation for bytes object.
-        # We should decode it before using %.
-        # Decoding with ascii and surrogateescape allows convert arbitrary
-        # bytes to unicode and back again.
-        # See http://python.org/dev/peps/pep-0383/
-        if not PY2 and isinstance(s, (bytes, bytearray)):
-            return _fast_surroundescape(s)
+        if isinstance(o, str):
+            s = self.string_literal(o.encode(self.encoding))
+        elif isinstance(o, bytearray):
+            s = self._bytes_literal(o)
+        elif isinstance(o, bytes):
+            s = self._bytes_literal(o)
+        elif isinstance(o, (tuple, list)):
+            s = self._tuple_literal(o)
+        else:
+            s = self.escape(o, self.encoders)
+            if isinstance(s, str):
+                s = s.encode(self.encoding)
+        assert isinstance(s, bytes)
         return s
 
     def begin(self):
-        """Explicitly begin a connection. Non-standard.
-        DEPRECATED: Will be removed in 1.3.
-        Use an SQL BEGIN statement instead."""
-        from warnings import warn
-        warn("begin() is non-standard and will be removed in 1.3",
-             DeprecationWarning, 2)
-        self.query("BEGIN")
+        """Explicitly begin a connection.
 
-    if not hasattr(_mysql.connection, 'warning_count'):
+        This method is not used when autocommit=False (default).
+        """
+        self.query(b"BEGIN")
+
+    if not hasattr(_mysql.connection, "warning_count"):
 
         def warning_count(self):
             """Return the number of warnings generated from the
@@ -350,20 +341,15 @@ class Connection(_mysql.connection):
         set can only be changed in MySQL-4.1 and newer. If you try
         to change the character set from the current value in an
         older version, NotSupportedError will be raised."""
-        if charset == "utf8mb4":
-            py_charset = "utf8"
-        else:
-            py_charset = charset
+        py_charset = _charset_to_encoding.get(charset, charset)
         if self.character_set_name() != charset:
             try:
-                super(Connection, self).set_character_set(charset)
+                super().set_character_set(charset)
             except AttributeError:
                 if self._server_version < (4, 1):
                     raise NotSupportedError("server is too old to set charset")
-                self.query('SET NAMES %s' % charset)
+                self.query("SET NAMES %s" % charset)
                 self.store_result()
-        self.string_decoder.charset = py_charset
-        self.unicode_literal.charset = py_charset
         self.encoding = py_charset
 
     def set_sql_mode(self, sql_mode):
@@ -379,7 +365,8 @@ class Connection(_mysql.connection):
         sequence of tuples of (Level, Code, Message). This
         is only supported in MySQL-4.1 and up. If your server
         is an earlier version, an empty sequence is returned."""
-        if self._server_version < (4,1): return ()
+        if self._server_version < (4, 1):
+            return ()
         self.query("SHOW WARNINGS")
         r = self.store_result()
         warnings = r.fetch_row(0)
@@ -396,4 +383,5 @@ class Connection(_mysql.connection):
     ProgrammingError = ProgrammingError
     NotSupportedError = NotSupportedError
 
-    errorhandler = defaulterrorhandler
+
+# vim: colorcolumn=100

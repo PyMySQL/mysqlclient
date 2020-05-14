@@ -9,16 +9,18 @@ if __name__ == "__main__":
     """
     Usage: python CR.py [/path/to/mysql/errmsg.h ...] >> CR.py
     """
-    import fileinput, re
+    import fileinput
+    import re
+
     data = {}
     error_last = None
     for line in fileinput.input():
-        line = re.sub(r'/\*.*?\*/', '', line)
-        m = re.match(r'^\s*#define\s+CR_([A-Z0-9_]+)\s+(\d+)(\s.*|$)', line)
+        line = re.sub(r"/\*.*?\*/", "", line)
+        m = re.match(r"^\s*#define\s+CR_([A-Z0-9_]+)\s+(\d+)(\s.*|$)", line)
         if m:
             name = m.group(1)
             value = int(m.group(2))
-            if name == 'ERROR_LAST':
+            if name == "ERROR_LAST":
                 if error_last is None or error_last < value:
                     error_last = value
                 continue
@@ -27,9 +29,9 @@ if __name__ == "__main__":
             data[value].add(name)
     for value, names in sorted(data.items()):
         for name in sorted(names):
-            print('%s = %s' % (name, value))
+            print("{} = {}".format(name, value))
     if error_last is not None:
-        print('ERROR_LAST = %s' % error_last)
+        print("ERROR_LAST = %s" % error_last)
 
 
 ERROR_FIRST = 2000
@@ -83,7 +85,6 @@ SHARED_MEMORY_CONNECT_ABANDONED_ERROR = 2045
 SHARED_MEMORY_CONNECT_SET_ERROR = 2046
 CONN_UNKNOW_PROTOCOL = 2047
 INVALID_CONN_HANDLE = 2048
-SECURE_AUTH = 2049
 UNUSED_1 = 2049
 FETCH_CANCELED = 2050
 NO_DATA = 2051
@@ -94,11 +95,11 @@ SERVER_LOST_EXTENDED = 2055
 STMT_CLOSED = 2056
 NEW_STMT_METADATA = 2057
 ALREADY_CONNECTED = 2058
-AUTH_PLUGIN_CANNOT_LOAD = 2058
-ALREADY_CONNECTED = 2059
 AUTH_PLUGIN_CANNOT_LOAD = 2059
 DUPLICATE_CONNECTION_ATTR = 2060
-PLUGIN_FUNCTION_NOT_SUPPORTED = 2060
 AUTH_PLUGIN_ERR = 2061
+INSECURE_API_ERR = 2062
+FILE_NAME_TOO_LONG = 2063
+SSL_FIPS_MODE_ERR = 2064
 MAX_ERROR = 2999
-ERROR_LAST = 2061
+ERROR_LAST = 2064

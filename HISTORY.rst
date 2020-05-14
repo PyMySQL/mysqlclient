@@ -1,8 +1,208 @@
+======================
+ What's new in 2.0.0
+======================
+
+Release: TBD
+
+* Dropped Python 2 support
+* Dropped Django 1.11 support
+* Add context manager interface to Connection which closes the connection on ``__exit__``.
+
+
+======================
+ What's new in 1.4.6
+======================
+
+Release: 2019-11-21
+
+* The ``cp1252`` encoding is used when charset is "latin1". (#390)
+
+======================
+ What's new in 1.4.5
+======================
+
+Release: 2019-11-06
+
+* The ``auth_plugin`` option is added. (#389)
+
+
+======================
+ What's new in 1.4.4
+======================
+
+Release: 2019-08-12
+
+* ``charset`` option is passed to ``mysql_options(mysql, MYSQL_SET_CHARSET_NAME, charset)``
+  before ``mysql_real_connect`` is called.
+  This avoid extra ``SET NAMES <charset>`` query when creating connection.
+
+
+======================
+ What's new in 1.4.3
+======================
+
+Release: 2019-08-09
+
+* ``--static`` build supports ``libmariadbclient.a``
+* Try ``mariadb_config`` when ``mysql_config`` is not found
+* Fixed warning happend in Python 3.8 (#359)
+* Fixed ``from MySQLdb import *``, while I don't recommend it. (#369)
+* Fixed SEGV ``MySQLdb.escape_string("1")`` when libmariadb is used and
+  no connection is created. (#367)
+* Fixed many circular references are created in ``Cursor.executemany()``. (#375)
+
+
+======================
+ What's new in 1.4.2
+======================
+
+Release: 2019-02-08
+
+* Fix Django 1.11 compatibility. (#327)
+  mysqlclient 1.5 will not support Django 1.11.  It is not because
+  mysqlclient will break backward compatibility, but Django used
+  unsupported APIs and Django 1.11 don't fix bugs including
+  compatibility issues.
+
+======================
+ What's new in 1.4.1
+======================
+
+Release: 2019-01-19
+
+* Fix dict parameter support (#323, regression of 1.4.0)
+
+======================
+ What's new in 1.4.0
+======================
+
+Release: 2019-01-18
+
+* Dropped Python 3.4 support.
+
+* Removed ``threadsafe`` and ``embedded`` build options.
+
+* Remove some deprecated cursor classes and methods.
+
+* ``_mysql`` and ``_mysql_exceptions`` modules are moved under
+  ``MySQLdb`` package. (#293)
+
+* Remove ``errorhandler`` from Connection and Cursor classes.
+
+* Remove context manager API from Connection.  It was for transaction.
+  New context manager API for closing connection will be added in future version.
+
+* Remove ``waiter`` option from Connection.
+
+* Remove ``escape_sequence``, and ``escape_dict`` methods from Connection class.
+
+* Remove automatic MySQL warning checking.
+
+* Drop support for MySQL Connector/C with MySQL<5.1.12.
+
+* Remove ``_mysql.NULL`` constant.
+
+* Remove ``_mysql.thread_safe()`` function.
+
+* Support non-ASCII field name with non-UTF-8 connection encoding. (#210)
+
+* Optimize decoding speed of string and integer types.
+
+* Remove ``MySQLdb.constants.REFRESH`` module.
+
+* Remove support for old datetime format for MySQL < 4.1.
+
+* Fix wrong errno is raised when ``mysql_real_connect`` is failed. (#316)
+
+
+======================
+ What's new in 1.3.14
+======================
+
+Release: 2018-12-04
+
+* Support static linking of MariaDB Connector/C (#265)
+
+* Better converter for Decimal and Float (#267, #268, #273, #286)
+
+* Add ``Connection._get_native_connection`` for XTA project (#269)
+
+* Fix SEGV on MariaDB Connector/C when some methods of ``Connection``
+  objects are called after ``Connection.close()`` is called. (#270, #272, #276)
+  See https://jira.mariadb.org/browse/CONC-289
+
+* Fix ``Connection.client_flag`` (#266)
+
+* Fix SSCursor may raise same exception twice (#282)
+
+  * This removed ``Cursor._last_executed`` which was duplicate of ``Cursor._executed``.
+    Both members are private.  So this type of changes are not documented in changelog
+    generally.  But Django used the private member for ``last_executed_query`` implementation.
+    If you use the method the method directly or indirectly, this version will break
+    your application.  See https://code.djangoproject.com/ticket/30013
+
+* ``waiter`` option is now deprecated. (#285)
+
+* Fixed SSL support is not detected when built with MySQL < 5.1 (#291)
+
+
+======================
+ What's new in 1.3.13
+======================
+
+Support build with MySQL 8
+
+Fix decoding tiny/medium/long blobs (#215)
+
+Remove broken row_seek() and row_tell() APIs (#220)
+
+Reduce callproc roundtrip time (#223)
+
+
+======================
+ What's new in 1.3.12
+======================
+
+Fix tuple argument again (#201)
+
+InterfaceError is raised when Connection.query() is called for closed connection (#202)
+
+======================
+ What's new in 1.3.11
+======================
+
+Support MariaDB 10.2 client library (#197, #177, #200)
+
+Add NEWDECIMAL to the NUMBER DBAPISet (#167)
+
+Allow bulk insert which no space around `VALUES` (#179)
+
+Fix leak of `connection->converter`. (#182)
+
+Support error `numbers > CR_MAX_ERROR` (#188)
+
+Fix tuple argument support (#145)
+
+
+======================
+ What's new in 1.3.10
+======================
+
+Added `binary_prefix` option (disabled by default) to support
+`_binary` prefix again. (#134)
+
+Fix SEGV of `_mysql.result()` when argument's type is unexpected. (#138)
+
+Deprecate context interface of Connection object. (#149)
+
+Don't use workaround of `bytes.decode('ascii', 'surrogateescape')` on Python 3.6+. (#150)
+
+
 =====================
  What's new in 1.3.9
 =====================
 
-Revert adding _binary prefix for bytes/bytearray parameter. It broke backward compatibility.
+Revert adding `_binary` prefix for bytes/bytearray parameter. It broke backward compatibility.
 
 Fix Windows compile error on MSVC.
 
@@ -13,7 +213,7 @@ Fix Windows compile error on MSVC.
 
 Update error constants (#113)
 
-Use _binary prefix for bytes/bytearray parameters (#106)
+Use `_binary` prefix for bytes/bytearray parameters (#106)
 
 Use mysql_real_escape_string_quote() if exists (#109)
 
@@ -135,7 +335,7 @@ beta 5
 
 Another internal fix for handling remapped character sets.
 
-_mysql.c was broken for the case where read_timeout was *not* available. (Issue #6)
+`_mysql.c` was broken for the case where read_timeout was *not* available. (Issue #6)
 
 Documentation was converted to sphinx but there is a lot of cleanup left to do.
 

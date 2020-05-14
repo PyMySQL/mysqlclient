@@ -41,6 +41,23 @@ MySQLdb Package
     :undoc-members:
     :show-inheritance:
 
+:mod:`_mysql` Module
+--------------------
+
+.. automodule:: MySQLdb._mysql
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+:mod:`_exceptions` Module
+-------------------------
+
+.. automodule:: MySQLdb._exceptions
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+
 Subpackages
 -----------
 

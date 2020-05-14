@@ -2,7 +2,6 @@
 
 These constants represent the various column (field) types that are
 supported by MySQL.
-
 """
 
 DECIMAL = 0
@@ -19,9 +18,13 @@ DATE = 10
 TIME = 11
 DATETIME = 12
 YEAR = 13
-NEWDATE = 14
+# NEWDATE = 14  # Internal to MySQL.
 VARCHAR = 15
 BIT = 16
+# TIMESTAMP2 = 17
+# DATETIME2 = 18
+# TIME2 = 19
+JSON = 245
 NEWDECIMAL = 246
 ENUM = 247
 SET = 248
@@ -34,4 +37,4 @@ STRING = 254
 GEOMETRY = 255
 
 CHAR = TINY
-INTERVAL = ENUM	
+INTERVAL = ENUM
