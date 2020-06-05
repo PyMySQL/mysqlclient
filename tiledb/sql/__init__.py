@@ -15,8 +15,6 @@ tiledb.sql.converters module.
 
 from tiledb.sql.version import version
 
-from . import _mysql
-
 threadsafety = 1
 apilevel = "2.0"
 paramstyle = "format"
