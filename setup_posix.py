@@ -34,6 +34,7 @@ def mysql_config(what):
 
 def get_config():
     from setup_common import get_metadata_and_options, enabled
+
     global _mysql_config_path
 
     metadata, options = get_metadata_and_options()
@@ -61,14 +62,14 @@ def get_config():
         static = True
         sys.argv.remove("--static")
 
-    if enabled(options, 'embedded'):
+    if enabled(options, "embedded"):
         libs = mysql_config("libmysqld-libs")
     else:
         libs = mysql_config("libs")
 
-    library_dirs = [dequote(i[2:]) for i in libs if i.startswith('-L')]
-    libraries = [dequote(i[2:]) for i in libs if i.startswith('-l')]
-    extra_link_args = [x for x in libs if not x.startswith(('-l', '-L'))]
+    library_dirs = [dequote(i[2:]) for i in libs if i.startswith("-L")]
+    libraries = [dequote(i[2:]) for i in libs if i.startswith("-l")]
+    extra_link_args = [x for x in libs if not x.startswith(("-l", "-L"))]
 
     removable_compile_args = ("-I", "-L", "-l")
     extra_compile_args = [
@@ -120,15 +121,15 @@ def get_config():
                 libraries.remove(L)
 
     name = "tiledb-sql"
-    metadata['name'] = name
+    metadata["name"] = name
 
     ext_options = dict(
-        library_dirs = library_dirs,
-        libraries = libraries,
-        extra_compile_args = extra_compile_args,
-        extra_link_args = extra_link_args,
-        include_dirs = include_dirs,
-        extra_objects = extra_objects,
+        library_dirs=library_dirs,
+        libraries=libraries,
+        extra_compile_args=extra_compile_args,
+        extra_link_args=extra_link_args,
+        include_dirs=include_dirs,
+        extra_objects=extra_objects,
     )
 
     # newer versions of gcc require libstdc++ if doing a static build

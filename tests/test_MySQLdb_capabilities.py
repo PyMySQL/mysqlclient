@@ -146,12 +146,8 @@ VALUES      (1,
             c.execute("drop table if exists test_MULTIPOLYGON")
 
     def test_bug_2671682(self):
-<<<<<<< HEAD
-        from MySQLdb.constants import ER
-
-=======
         from tiledb.sql.constants import ER
->>>>>>> f91b1d6... Rename package and update README
+
         try:
             self.cursor.execute("describe some_non_existent_table")
         except self.connection.ProgrammingError as msg:
@@ -192,27 +188,17 @@ VALUES      (1,
 
             with closing(connection_factory(**kwargs)) as conn:
                 with closing(conn.cursor()) as c:
-<<<<<<< HEAD
-                    c.execute("SELECT CHARSET(%s)", (MySQLdb.Binary(b"raw bytes"),))
+                    c.execute("SELECT CHARSET(%s)", (tiledb.sql.Binary(b"raw bytes"),))
                     self.assertEqual(
                         c.fetchall()[0][0], "binary" if binary_prefix else "utf8"
                     )
-=======
-                    c.execute('SELECT CHARSET(%s)', (tiledb.sql.Binary(b'raw bytes'),))
-                    self.assertEqual(c.fetchall()[0][0], 'binary' if binary_prefix else 'utf8')
->>>>>>> f91b1d6... Rename package and update README
                     # normal strings should not get prefix
                     c.execute("SELECT CHARSET(%s)", ("str",))
                     self.assertEqual(c.fetchall()[0][0], "utf8")
 
 
-<<<<<<< HEAD
 if __name__ == "__main__":
-    if test_MySQLdb.leak_test:
-=======
-if __name__ == '__main__':
     if test_tiledb_sql.leak_test:
->>>>>>> f91b1d6... Rename package and update README
         import gc
 
         gc.enable()

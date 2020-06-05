@@ -12,7 +12,7 @@ def get_config():
 
     extra_objects = []
 
-    if enabled(options, 'embedded'):
+    if enabled(options, "embedded"):
         client = "mariadbd"
     else:
         client = "mariadbclient"
@@ -34,15 +34,15 @@ def get_config():
     extra_link_args = ["/MANIFEST"]
 
     name = "tiledb-sql"
-    metadata['name'] = name
+    metadata["name"] = name
 
     ext_options = dict(
-        library_dirs = library_dirs,
-        libraries = libraries,
-        extra_compile_args = extra_compile_args,
-        extra_link_args = extra_link_args,
-        include_dirs = include_dirs,
-        extra_objects = extra_objects,
+        library_dirs=library_dirs,
+        libraries=libraries,
+        extra_compile_args=extra_compile_args,
+        extra_link_args=extra_link_args,
+        include_dirs=include_dirs,
+        extra_objects=extra_objects,
     )
     return metadata, ext_options
 

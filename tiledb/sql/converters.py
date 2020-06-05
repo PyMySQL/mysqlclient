@@ -32,7 +32,7 @@ MySQL.connect().
 """
 from decimal import Decimal
 
-from tiledb.sql._mysql import string_literal 
+from tiledb.sql._mysql import string_literal
 from tiledb.sql.constants import FIELD_TYPE, FLAG
 from tiledb.sql.times import (
     Date,
