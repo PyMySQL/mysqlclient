@@ -38,6 +38,7 @@ from ._mysql import (
     DatabaseError,
     InternalError,
     Warning,
+    server_init,
 )
 from tiledb.sql.constants import FIELD_TYPE
 from tiledb.sql.times import (
