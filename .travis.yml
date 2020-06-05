@@ -27,6 +27,7 @@ before_script:
   - "mysql --help"
   - "mysql --print-defaults"
   - "mysql -e 'create database mysqldb_test charset utf8mb4;'"
+  - "mysql -e 'create database test charset utf8mb4;'"
 
 script:
   # Disable embedded for travis CI
