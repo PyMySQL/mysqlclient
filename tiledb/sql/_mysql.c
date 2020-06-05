@@ -109,6 +109,8 @@ _mysql_Exception(_mysql_ConnectionObject *c)
     PyObject *t, *e;
     int merr;
 
+    if (c == NULL) return NULL;
+
     if (!(t = PyTuple_New(2))) return NULL;
     if (!(c->open)) {
         /* GH-270: When connection is closed, accessing the c->connection
