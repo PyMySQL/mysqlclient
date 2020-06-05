@@ -110,14 +110,6 @@ _mysql_Exception(_mysql_ConnectionObject *c)
     int merr;
 
     if (!(t = PyTuple_New(2))) return NULL;
-	if (!_mysql_server_init_done) {
-		e = _mysql_InternalError;
-		PyTuple_SET_ITEM(t, 0, PyInt_FromLong(-1L));
-		PyTuple_SET_ITEM(t, 1, PyString_FromString("server not initialized"));
-		PyErr_SetObject(e, t);
-		Py_DECREF(t);
-		return NULL;
-	}
     if (!(c->open)) {
         /* GH-270: When connection is closed, accessing the c->connection
          * object may cause SEGV.
