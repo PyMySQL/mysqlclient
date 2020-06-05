@@ -256,11 +256,7 @@ static PyObject *_mysql_server_init(
 		cmd_args_c = (char **) PyMem_Malloc(cmd_argc*sizeof(char *));
 		for (i=0; i< cmd_argc; i++) {
 			item = PySequence_GetItem(cmd_args, i);
-#ifdef IS_PY3K
 			s = PyUnicode_AsUTF8(item);
-#else
-			s = PyString_AsString(item);
-#endif
 
 			Py_DECREF(item);
 			if (!s) {
@@ -286,11 +282,7 @@ static PyObject *_mysql_server_init(
 		groups_c = (char **) PyMem_Malloc((1+groupc)*sizeof(char *));
 		for (i=0; i< groupc; i++) {
 			item = PySequence_GetItem(groups, i);
-#ifdef IS_PY3K
 			s = PyUnicode_AsUTF8(item);
-#else
-			s = PyString_AsString(item);
-#endif
 			Py_DECREF(item);
 			if (!s) {
 				PyErr_SetString(PyExc_TypeError,
