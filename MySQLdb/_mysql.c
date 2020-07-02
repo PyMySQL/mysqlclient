@@ -1370,21 +1370,18 @@ _mysql_ResultObject_fetch_row(
         return NULL;
     }
     convert_row = row_converters[how];
-    if (maxrows) {
-        if (!(r = PyList_New(0))) goto error;
-        rowsadded = _mysql__fetch_row(self, r, maxrows, convert_row);
-        if (rowsadded == -1) goto error;
-    } else {
+    if (!maxrows) {
         if (self->use) {
-            maxrows = PY_SSIZE_T_MAX;
+            maxrows = INT_MAX;
         } else {
             // todo: preallocate.
             maxrows = (Py_ssize_t) mysql_num_rows(self->result);
         }
-        if (!(r = PyList_New(0))) goto error;
-        rowsadded = _mysql__fetch_row(self, r, maxrows, convert_row);
-        if (rowsadded == -1) goto error;
     }
+    if (!(r = PyList_New(0))) goto error;
+    rowsadded = _mysql__fetch_row(self, r, maxrows, convert_row);
+    if (rowsadded == -1) goto error;
+
     /* DB-API allows return rows as list.
      * But since Django tests return value with (), we need to return empty
      * tuple instead of empty list.
