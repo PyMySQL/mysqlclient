@@ -18,7 +18,17 @@ def get_config():
     vcversion = int(get_build_version())
     if client == "mariadbclient":
         library_dirs = [os.path.join(connector, "lib", "mariadb")]
-        libraries = ["kernel32", "advapi32", "wsock32", "shlwapi", "Ws2_32", "crypt32", "secur32", "bcrypt", client]
+        libraries = [
+            "kernel32",
+            "advapi32",
+            "wsock32",
+            "shlwapi",
+            "Ws2_32",
+            "crypt32",
+            "secur32",
+            "bcrypt",
+            client,
+        ]
         include_dirs = [os.path.join(connector, "include", "mariadb")]
     else:
         library_dirs = [
