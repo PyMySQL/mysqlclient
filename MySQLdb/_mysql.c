@@ -1324,7 +1324,7 @@ _mysql__fetch_row(
         }
         PyObject *v = convert_row(self, row);
         if (!v) return -1;
-        if (!PyList_Append(r, v)) {
+        if (PyList_Append(r, v)) {
             Py_DECREF(v);
             return -1;
         }
@@ -1389,7 +1389,7 @@ _mysql_ResultObject_fetch_row(
      * But since Django tests return value with (), we need to return empty
      * tuple instead of empty list.
      */
-    if (PyList_Size(r) > 0) {
+    if (rowsadded > 0) {
         return r;
     }
     Py_DECREF(r);
