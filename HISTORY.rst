@@ -2,7 +2,7 @@
  What's new in 2.0.0
 ======================
 
-Release: TBD
+Release: 2020-07-02
 
 * Dropped Python 2 support
 * Dropped Django 1.11 support
