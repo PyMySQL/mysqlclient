@@ -58,7 +58,9 @@ jobs:
 
       script:
         - cd django-${DJANGO_VERSION}/tests/
-        - ./runtests.py --parallel=1 --settings=test_mysql
+        - free -m
+        - PYTHONMALLOCSTATS=1 ./runtests.py --parallel=1 --settings=test_mysql
+        - free -m
     - name: flake8
       python: "3.8"
       install:
