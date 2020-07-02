@@ -1301,7 +1301,7 @@ typedef PyObject *_PYFUNC(_mysql_ResultObject *, MYSQL_ROW);
 Py_ssize_t
 _mysql__fetch_row(
     _mysql_ResultObject *self,
-    PyObject *r,
+    PyObject *r, /* list object */
     Py_ssize_t maxrows,
     _PYFUNC *convert_row)
 {
@@ -1317,22 +1317,20 @@ _mysql__fetch_row(
         }
         if (!row && mysql_errno(&(((_mysql_ConnectionObject *)(self->conn))->connection))) {
             _mysql_Exception((_mysql_ConnectionObject *)self->conn);
-            goto error;
+            return -1;
         }
         if (!row) {
             break;
         }
         PyObject *v = convert_row(self, row);
-        if (!v) goto error;
+        if (!v) return -1;
         if (!PyList_Append(r, v)) {
             Py_DECREF(v);
-            goto error;
+            return -1;
         }
         Py_DECREF(v);
     }
     return i;
-  error:
-    return -1;
 }
 
 static char _mysql_ResultObject_fetch_row__doc__[] =
@@ -1380,15 +1378,22 @@ _mysql_ResultObject_fetch_row(
         if (self->use) {
             maxrows = PY_SSIZE_T_MAX;
         } else {
+            // todo: preallocate.
             maxrows = (Py_ssize_t) mysql_num_rows(self->result);
         }
         if (!(r = PyList_New(0))) goto error;
         rowsadded = _mysql__fetch_row(self, r, maxrows, convert_row);
         if (rowsadded == -1) goto error;
     }
-    PyObject *t = PyList_AsTuple(r);
+    /* DB-API allows return rows as list.
+     * But since Django tests return value with (), we need to return empty
+     * tuple instead of empty list.
+     */
+    if (PyList_Size(r) > 0) {
+        return r;
+    }
     Py_DECREF(r);
-    return t;
+    return PyTuple_New(0);
   error:
     Py_XDECREF(r);
     return NULL;
