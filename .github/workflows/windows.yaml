@@ -82,9 +82,9 @@ jobs:
         run: |
           ls -la
           py -3.8 -m pip install --no-index --find-links . mysqlclient
-          py -3.8 -c "import MySQLdb"
+          py -3.8 -c "import MySQLdb; print(MySQLdb.version_info)"
           py -3.7 -m pip install --no-index --find-links . mysqlclient
-          py -3.7 -c "import MySQLdb"
+          py -3.7 -c "import MySQLdb; print(MySQLdb.version_info)"
           py -3.6 -m pip install --no-index --find-links . mysqlclient
-          py -3.6 -c "import MySQLdb"
+          py -3.6 -c "import MySQLdb; print(MySQLdb.version_info)"
 
