@@ -81,10 +81,10 @@ jobs:
         working-directory: ../mysqlclient/dist
         run: |
           ls -la
-          py -3.8 -m pip install mysqlclient-2.0.0.rc1-cp38-cp38-win_amd64.whl
+          py -3.8 -m pip install --no-index --find-links . mysqlclient
           py -3.8 -c "import MySQLdb"
-          py -3.7 -m pip install mysqlclient-2.0.0.rc1-cp37-cp37m-win_amd64.whl
+          py -3.7 -m pip install --no-index --find-links . mysqlclient
           py -3.7 -c "import MySQLdb"
-          py -3.6 -m pip install mysqlclient-2.0.0.rc1-cp36-cp36m-win_amd64.whl
+          py -3.6 -m pip install --no-index --find-links . mysqlclient
           py -3.6 -c "import MySQLdb"
 
