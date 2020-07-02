@@ -1,0 +1,90 @@
+name: Build windows wheels
+
+on:
+  push:
+    branches:
+      - master
+  create:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    env:
+      CONNECTOR_VERSION: "3.1.9"
+    steps:
+
+      - name: Cache Connector
+        id: cache-connector
+        uses: actions/cache@v1
+        with:
+          path: c:/mariadb-connector
+          key: mariadb-connector-${CONNECTOR_VERSION}-win
+
+      - name: Download and Unzip Connector
+        if: steps.cache-connector.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          curl -LO "https://downloads.mariadb.com/Connectors/c/connector-c-${CONNECTOR_VERSION}/mariadb-connector-c-${CONNECTOR_VERSION}-src.zip"
+          unzip "mariadb-connector-c-${CONNECTOR_VERSION}-src.zip" -d c:/
+          mv "c:/mariadb-connector-c-${CONNECTOR_VERSION}-src" c:/mariadb-connector-src
+
+      - name: Build Connector
+        if: steps.cache-connector.outputs.cache-hit != 'true'
+        shell: cmd
+        working-directory: c:/mariadb-connector-src
+        run: |
+          mkdir build
+          cd build
+          cmake -A x64 .. -DCMAKE_BUILD_TYPE=Release -DCLIENT_PLUGIN_DIALOG=static -DCLIENT_PLUGIN_SHA256_PASSWORD=static -DCLIENT_PLUGIN_CACHING_SHA2_PASSWORD=static
+          cmake --build . -j 8 --config Release
+          cmake -DCMAKE_INSTALL_PREFIX=c:/mariadb-connector -DCMAKE_INSTALL_COMPONENT=Development -DCMAKE_BUILD_TYPE=Release -P cmake_install.cmake
+
+      - name: Checkout mysqlclient
+        uses: actions/checkout@v1
+        with:
+          ref: master
+          fetch-depth: 10
+          path: mysqlclient
+
+      - name: Site Config
+        shell: bash
+        working-directory: ../mysqlclient
+        run: |
+          pwd
+          find .
+          cat <<EOF >site.cfg
+          [options]
+          static = True
+          connector = C:/mariadb-connector
+          EOF
+          cat site.cfg
+
+      - name: Build wheels
+        shell: cmd
+        working-directory: ../mysqlclient
+        run: |
+          py -3.8 -m pip install -U setuptools wheel pip
+          py -3.8 setup.py bdist_wheel
+          py -3.7 -m pip install -U setuptools wheel pip
+          py -3.7 setup.py bdist_wheel
+          py -3.6 -m pip install -U setuptools wheel pip
+          py -3.6 setup.py bdist_wheel
+
+      - name: Upload Wheel
+        uses: actions/upload-artifact@v1
+        with:
+          name: win-wheels
+          path: ../mysqlclient/dist
+
+      - name: Check wheels
+        shell: bash
+        working-directory: ../mysqlclient/dist
+        run: |
+          ls -la
+          py -3.8 -m pip install mysqlclient-1.4.6-cp38-cp38-win_amd64.whl
+          py -3.8 -c "import MySQLdb"
+          py -3.7 -m pip install mysqlclient-1.4.6-cp37-cp37m-win_amd64.whl
+          py -3.7 -c "import MySQLdb"
+          py -3.6 -m pip install mysqlclient-1.4.6-cp36-cp36m-win_amd64.whl
+          py -3.6 -c "import MySQLdb"
+
