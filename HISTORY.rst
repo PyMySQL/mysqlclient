@@ -7,6 +7,7 @@ Release: TBD
 * Dropped Python 2 support
 * Dropped Django 1.11 support
 * Add context manager interface to Connection which closes the connection on ``__exit__``.
+* Add ``ssl_mode`` option.
 
 
 ======================
