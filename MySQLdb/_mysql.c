@@ -1358,7 +1358,6 @@ _mysql_ResultObject_fetch_row(
     };
     _PYFUNC *convert_row;
     int maxrows=1, how=0;
-    Py_ssize_t rowsadded;
     PyObject *r=NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|ii:fetch_row", kwlist,
@@ -1379,18 +1378,15 @@ _mysql_ResultObject_fetch_row(
         }
     }
     if (!(r = PyList_New(0))) goto error;
-    rowsadded = _mysql__fetch_row(self, r, maxrows, convert_row);
+    Py_ssize_t rowsadded = _mysql__fetch_row(self, r, maxrows, convert_row);
     if (rowsadded == -1) goto error;
 
     /* DB-API allows return rows as list.
-     * But since Django tests return value with (), we need to return empty
-     * tuple instead of empty list.
+     * But we need to return list because Django expecting tuple.
      */
-    if (rowsadded > 0) {
-        return r;
-    }
+    PyObject *t = PyList_AsTuple(r);
     Py_DECREF(r);
-    return PyTuple_New(0);
+    return t;
   error:
     Py_XDECREF(r);
     return NULL;

@@ -5,6 +5,7 @@ language: python
 python:
   - "nightly"
   - "pypy3"
+  - "3.9-dev"
   - "3.8"
   - "3.7"
   - "3.6"
@@ -41,7 +42,7 @@ jobs:
     - &django_2_2
       name: "Django 2.2 test"
       env:
-        - DJANGO_VERSION=2.2.7
+        - DJANGO_VERSION=2.2.14
       python: "3.8"
       install:
         - pip install -U pip
@@ -58,9 +59,7 @@ jobs:
 
       script:
         - cd django-${DJANGO_VERSION}/tests/
-        - free -m
-        - /usr/bin/time ./runtests.py --parallel=1 --settings=test_mysql
-        - free -m
+        - ./runtests.py --parallel=1 --settings=test_mysql
     - name: flake8
       python: "3.8"
       install:
