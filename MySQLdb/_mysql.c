@@ -1298,19 +1298,16 @@ _mysql_row_to_dict_old(
 
 typedef PyObject *_PYFUNC(_mysql_ResultObject *, MYSQL_ROW);
 
-int
+Py_ssize_t
 _mysql__fetch_row(
     _mysql_ResultObject *self,
-    PyObject **r,
-    int skiprows,
-    int maxrows,
+    PyObject *r, /* list object */
+    Py_ssize_t maxrows,
     _PYFUNC *convert_row)
 {
-    int i;
-    MYSQL_ROW row;
-
-    for (i = skiprows; i<(skiprows+maxrows); i++) {
-        PyObject *v;
+    Py_ssize_t i;
+    for (i = 0; i < maxrows; i++) {
+        MYSQL_ROW row;
         if (!self->use)
             row = mysql_fetch_row(self->result);
         else {
@@ -1320,19 +1317,20 @@ _mysql__fetch_row(
         }
         if (!row && mysql_errno(&(((_mysql_ConnectionObject *)(self->conn))->connection))) {
             _mysql_Exception((_mysql_ConnectionObject *)self->conn);
-            goto error;
+            return -1;
         }
         if (!row) {
-            if (_PyTuple_Resize(r, i) == -1) goto error;
             break;
         }
-        v = convert_row(self, row);
-        if (!v) goto error;
-        PyTuple_SET_ITEM(*r, i, v);
+        PyObject *v = convert_row(self, row);
+        if (!v) return -1;
+        if (PyList_Append(r, v)) {
+            Py_DECREF(v);
+            return -1;
+        }
+        Py_DECREF(v);
     }
-    return i-skiprows;
-  error:
-    return -1;
+    return i;
 }
 
 static char _mysql_ResultObject_fetch_row__doc__[] =
@@ -1359,7 +1357,7 @@ _mysql_ResultObject_fetch_row(
         _mysql_row_to_dict_old
     };
     _PYFUNC *convert_row;
-    int maxrows=1, how=0, skiprows=0, rowsadded;
+    int maxrows=1, how=0;
     PyObject *r=NULL;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|ii:fetch_row", kwlist,
@@ -1371,40 +1369,24 @@ _mysql_ResultObject_fetch_row(
         return NULL;
     }
     convert_row = row_converters[how];
-    if (maxrows) {
-        if (!(r = PyTuple_New(maxrows))) goto error;
-
-        // see: https://docs.python.org/3/library/gc.html#gc.get_referrers
-        // This function can get a reference to the tuple r, and if that
-        // code is preempted while holding a ref to r, the _PyTuple_Resize
-        // will raise a SystemError because the ref count is 2.
-        PyObject_GC_UnTrack(r);
-        rowsadded = _mysql__fetch_row(self, &r, skiprows, maxrows, convert_row);
-        if (rowsadded == -1) goto error;
-        PyObject_GC_Track(r);
-    } else {
+    if (!maxrows) {
         if (self->use) {
-            maxrows = 1000;
-            if (!(r = PyTuple_New(maxrows))) goto error;
-            while (1) {
-                rowsadded = _mysql__fetch_row(self, &r, skiprows,
-                        maxrows, convert_row);
-                if (rowsadded == -1) goto error;
-                skiprows += rowsadded;
-                if (rowsadded < maxrows) break;
-                if (_PyTuple_Resize(&r, skiprows+maxrows) == -1)
-                        goto error;
-            }
+            maxrows = INT_MAX;
         } else {
-            /* XXX if overflow, maxrows<0? */
-            maxrows = (int) mysql_num_rows(self->result);
-            if (!(r = PyTuple_New(maxrows))) goto error;
-            rowsadded = _mysql__fetch_row(self, &r, 0,
-                    maxrows, convert_row);
-            if (rowsadded == -1) goto error;
+            // todo: preallocate.
+            maxrows = (Py_ssize_t) mysql_num_rows(self->result);
         }
     }
-    return r;
+    if (!(r = PyList_New(0))) goto error;
+    Py_ssize_t rowsadded = _mysql__fetch_row(self, r, maxrows, convert_row);
+    if (rowsadded == -1) goto error;
+
+    /* DB-API allows return rows as list.
+     * But we need to return list because Django expecting tuple.
+     */
+    PyObject *t = PyList_AsTuple(r);
+    Py_DECREF(r);
+    return t;
   error:
     Py_XDECREF(r);
     return NULL;
