@@ -42,7 +42,7 @@ jobs:
     - &django_2_2
       name: "Django 2.2 test"
       env:
-        - DJANGO_VERSION=2.2.14
+        - DJANGO_VERSION=2.2.7
       python: "3.8"
       install:
         - pip install -U pip
@@ -59,7 +59,7 @@ jobs:
 
       script:
         - cd django-${DJANGO_VERSION}/tests/
-        - ./runtests.py --parallel=1 --settings=test_mysql
+        - ./runtests.py --parallel=2 --settings=test_mysql
     - name: flake8
       python: "3.8"
       install:
