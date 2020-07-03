@@ -5,7 +5,7 @@
 Release: 2020-07-03
 
 * Fixed multithread safety issue in fetching row.
-
+* Removed obsolete members from Cursor. (e.g. `messages`, `_warnings`, `_last_executed`)
 
 ======================
  What's new in 2.0.0
