@@ -1,4 +1,13 @@
 ======================
+ What's new in 2.0.1
+======================
+
+Release: 2020-07-03
+
+* Fixed multithread safety issue in fetching row.
+
+
+======================
  What's new in 2.0.0
 ======================
 
