@@ -71,9 +71,7 @@ class BaseCursor:
         self._executed = None
 
         self.lastrowid = None
-        self.messages = []
         self._result = None
-        self._warnings = None
         self.rownumber = None
         self._rows = None
 
@@ -134,7 +132,6 @@ class BaseCursor:
         """
         if self._executed:
             self.fetchall()
-        del self.messages[:]
 
         db = self._get_db()
         nr = db.next_result()
@@ -155,7 +152,6 @@ class BaseCursor:
         self.rowcount = db.affected_rows()
         self.rownumber = 0
         self.lastrowid = db.insert_id()
-        self._warnings = None
 
     def _post_get_result(self):
         pass
@@ -222,8 +218,6 @@ class BaseCursor:
         REPLACE. Otherwise it is equivalent to looping over args with
         execute().
         """
-        del self.messages[:]
-
         if not args:
             return
 
@@ -326,7 +320,6 @@ class BaseCursor:
         self._do_get_result(db)
         self._post_get_result()
         self._executed = q
-        self._last_executed = q  # XXX THIS IS GARBAGE: See above.
         return self.rowcount
 
     def _fetch_row(self, size=1):
