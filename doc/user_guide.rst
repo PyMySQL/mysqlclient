@@ -674,10 +674,9 @@ CursorDictRowsMixIn
 
 Cursor
     The default cursor class. This class is composed of
-    ``CursorWarningMixIn``, ``CursorStoreResultMixIn``,
-    ``CursorTupleRowsMixIn,`` and ``BaseCursor``, i.e. it raises
-    ``Warning``, uses ``mysql_store_result()``, and returns rows as
-    tuples.
+    ``CursorStoreResultMixIn``, ``CursorTupleRowsMixIn``, and
+    ``BaseCursor``, i.e. uses ``mysql_store_result()`` and returns
+    rows as tuples.
 
 DictCursor
     Like ``Cursor`` except it returns rows as dictionaries.
