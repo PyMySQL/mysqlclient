@@ -12,8 +12,8 @@ def get_config():
 
     extra_objects = []
 
-    # client = "mysqlclient"
-    client = "mariadbclient"
+    client = "mysqlclient"
+    # client = "mariadbclient"
 
     vcversion = int(get_build_version())
     if client == "mariadbclient":
