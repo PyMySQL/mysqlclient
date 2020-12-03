@@ -63,6 +63,8 @@ jobs:
         shell: cmd
         working-directory: ../mysqlclient
         run: |
+          py -3.9 -m pip install -U setuptools wheel pip
+          py -3.9 setup.py bdist_wheel
           py -3.8 -m pip install -U setuptools wheel pip
           py -3.8 setup.py bdist_wheel
           py -3.7 -m pip install -U setuptools wheel pip
@@ -81,6 +83,8 @@ jobs:
         working-directory: ../mysqlclient/dist
         run: |
           ls -la
+          py -3.9 -m pip install --no-index --find-links . mysqlclient
+          py -3.9 -c "import MySQLdb; print(MySQLdb.version_info)"
           py -3.8 -m pip install --no-index --find-links . mysqlclient
           py -3.8 -c "import MySQLdb; print(MySQLdb.version_info)"
           py -3.7 -m pip install --no-index --find-links . mysqlclient
