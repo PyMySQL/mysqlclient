@@ -36,7 +36,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -A x64 .. -DCMAKE_C_FLAGS_RELEASE="/MD /O2 /Ob2 /DNDEBUG" -DCMAKE_BUILD_TYPE=Release -DCLIENT_PLUGIN_DIALOG=static -DCLIENT_PLUGIN_SHA256_PASSWORD=static -DCLIENT_PLUGIN_CACHING_SHA2_PASSWORD=static
+          cmake -A x64 .. -DCMAKE_BUILD_TYPE=Release -DCLIENT_PLUGIN_DIALOG=static -DCLIENT_PLUGIN_SHA256_PASSWORD=static -DCLIENT_PLUGIN_CACHING_SHA2_PASSWORD=static
           cmake --build . -j 8 --config Release
           cmake -DCMAKE_INSTALL_PREFIX=c:/mariadb-connector -DCMAKE_INSTALL_COMPONENT=Development -DCMAKE_BUILD_TYPE=Release -P cmake_install.cmake
 
