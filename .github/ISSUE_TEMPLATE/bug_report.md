@@ -9,7 +9,7 @@ assignees: ''
 
 ### Read this first
 
-We don't use this issue tracker to help users.  If you had trouble, please ask it on some user community.
+We don't use this issue tracker to help users.  If you had trouble, please ask it on some user community. See [here](https://github.com/PyMySQL/mysqlclient-python#support).
 Please use this tracker only when you are sure about it is an issue of this software.
 
 And please provide full information from first.  I don't want to ask questions like "What is your Python version?", "Do you confirm MySQL error log?".  If the issue report looks incomplete, I will just close it.
