@@ -66,25 +66,25 @@ import time
 
 
 class DatabaseAPI20Test(unittest.TestCase):
-    """ Test a database self.driver for DB API 2.0 compatibility.
-        This implementation tests Gadfly, but the TestCase
-        is structured so that other self.drivers can subclass this
-        test case to ensure compiliance with the DB-API. It is
-        expected that this TestCase may be expanded in the future
-        if ambiguities or edge conditions are discovered.
+    """Test a database self.driver for DB API 2.0 compatibility.
+    This implementation tests Gadfly, but the TestCase
+    is structured so that other self.drivers can subclass this
+    test case to ensure compiliance with the DB-API. It is
+    expected that this TestCase may be expanded in the future
+    if ambiguities or edge conditions are discovered.
 
-        The 'Optional Extensions' are not yet being tested.
+    The 'Optional Extensions' are not yet being tested.
 
-        self.drivers should subclass this test, overriding setUp, tearDown,
-        self.driver, connect_args and connect_kw_args. Class specification
-        should be as follows:
+    self.drivers should subclass this test, overriding setUp, tearDown,
+    self.driver, connect_args and connect_kw_args. Class specification
+    should be as follows:
 
-        import dbapi20
-        class mytest(dbapi20.DatabaseAPI20Test):
-           [...]
+    import dbapi20
+    class mytest(dbapi20.DatabaseAPI20Test):
+       [...]
 
-        Don't 'import DatabaseAPI20Test from dbapi20', or you will
-        confuse the unit tester - just 'import dbapi20'.
+    Don't 'import DatabaseAPI20Test from dbapi20', or you will
+    confuse the unit tester - just 'import dbapi20'.
     """
 
     # The self.driver module. This should be the module where the 'connect'
@@ -110,15 +110,15 @@ class DatabaseAPI20Test(unittest.TestCase):
         cursor.execute(self.ddl2)
 
     def setUp(self):
-        """ self.drivers should override this method to perform required setup
-            if any is necessary, such as creating the database.
+        """self.drivers should override this method to perform required setup
+        if any is necessary, such as creating the database.
         """
         pass
 
     def tearDown(self):
-        """ self.drivers should override this method to perform required cleanup
-            if any is necessary, such as deleting the test database.
-            The default drops the tables that may be created.
+        """self.drivers should override this method to perform required cleanup
+        if any is necessary, such as deleting the test database.
+        The default drops the tables that may be created.
         """
         con = self._connect()
         try:
@@ -521,8 +521,8 @@ class DatabaseAPI20Test(unittest.TestCase):
     ]
 
     def _populate(self):
-        """ Return a list of sql commands to setup the DB for the fetch
-            tests.
+        """Return a list of sql commands to setup the DB for the fetch
+        tests.
         """
         populate = [
             "insert into {}booze values ('{}')".format(self.table_prefix, s)
@@ -710,9 +710,9 @@ class DatabaseAPI20Test(unittest.TestCase):
             con.close()
 
     def help_nextset_setUp(self, cur):
-        """ Should create a procedure called deleteme
-            that returns two result sets, first the
-            number of rows in booze then "name from booze"
+        """Should create a procedure called deleteme
+        that returns two result sets, first the
+        number of rows in booze then "name from booze"
         """
         raise NotImplementedError("Helper not implemented")
         # sql="""
