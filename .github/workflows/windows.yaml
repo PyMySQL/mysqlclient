@@ -17,7 +17,7 @@ jobs:
         uses: actions/cache@v1
         with:
           path: c:/mariadb-connector
-          key: mariadb-connector-${CONNECTOR_VERSION}-win
+          key: mariadb-connector-c-${{ env.CONNECTOR_VERSION }}-win
 
       - name: Download and Unzip Connector
         if: steps.cache-connector.outputs.cache-hit != 'true'
