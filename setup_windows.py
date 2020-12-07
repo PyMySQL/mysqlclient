@@ -38,7 +38,6 @@ def get_config():
         libraries = ["kernel32", "advapi32", "wsock32", client]
         include_dirs = [os.path.join(connector, r"include")]
 
-    extra_compile_args = ["/Zl", "/D_CRT_SECURE_NO_WARNINGS"]
     extra_link_args = ["/MANIFEST"]
 
     name = "mysqlclient"
@@ -53,7 +52,6 @@ def get_config():
     ext_options = dict(
         library_dirs=library_dirs,
         libraries=libraries,
-        extra_compile_args=extra_compile_args,
         extra_link_args=extra_link_args,
         include_dirs=include_dirs,
         extra_objects=extra_objects,
