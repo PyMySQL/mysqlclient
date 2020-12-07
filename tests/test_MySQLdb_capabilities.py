@@ -125,7 +125,7 @@ VALUES      (1,
 """
             )
 
-            c.execute("SELECT id, AsText(border) FROM test_MULTIPOLYGON")
+            c.execute("SELECT id, ST_AsText(border) FROM test_MULTIPOLYGON")
             row = c.fetchone()
             self.assertEqual(row[0], 1)
             self.assertEqual(
