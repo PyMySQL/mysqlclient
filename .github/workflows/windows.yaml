@@ -2,8 +2,6 @@ name: Build windows wheels
 
 on:
   push:
-    branches:
-      - master
   create:
   workflow_dispatch:
 
@@ -11,7 +9,7 @@ jobs:
   build:
     runs-on: windows-latest
     env:
-      CONNECTOR_VERSION: "3.1.11"
+      CONNECTOR_VERSION: "3.1.9"
     steps:
 
       - name: Cache Connector
@@ -19,7 +17,7 @@ jobs:
         uses: actions/cache@v1
         with:
           path: c:/mariadb-connector
-          key: mariadb-connector-${CONNECTOR_VERSION}-win
+          key: mariadb-connector-c-${{ env.CONNECTOR_VERSION }}-win
 
       - name: Download and Unzip Connector
         if: steps.cache-connector.outputs.cache-hit != 'true'
@@ -41,15 +39,13 @@ jobs:
           cmake -DCMAKE_INSTALL_PREFIX=c:/mariadb-connector -DCMAKE_INSTALL_COMPONENT=Development -DCMAKE_BUILD_TYPE=Release -P cmake_install.cmake
 
       - name: Checkout mysqlclient
-        uses: actions/checkout@v1
+        uses: actions/checkout@v2
         with:
-          ref: master
-          fetch-depth: 10
           path: mysqlclient
 
       - name: Site Config
         shell: bash
-        working-directory: ../mysqlclient
+        working-directory: mysqlclient
         run: |
           pwd
           find .
@@ -62,7 +58,7 @@ jobs:
 
       - name: Build wheels
         shell: cmd
-        working-directory: ../mysqlclient
+        working-directory: mysqlclient
         run: |
           py -3.9 -m pip install -U setuptools wheel pip
           py -3.9 setup.py bdist_wheel
@@ -74,14 +70,14 @@ jobs:
           py -3.6 setup.py bdist_wheel
 
       - name: Upload Wheel
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
           name: win-wheels
-          path: ../mysqlclient/dist
+          path: mysqlclient/dist/*.whl
 
       - name: Check wheels
         shell: bash
-        working-directory: ../mysqlclient/dist
+        working-directory: mysqlclient/dist
         run: |
           ls -la
           py -3.9 -m pip install --no-index --find-links . mysqlclient
