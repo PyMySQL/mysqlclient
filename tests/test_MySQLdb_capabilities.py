@@ -120,7 +120,7 @@ class test_MySQLdb(capabilities.DatabaseTest):
 INSERT INTO test_MULTIPOLYGON
             (id, border)
 VALUES      (1,
-             Geomfromtext(
+             ST_Geomfromtext(
 'MULTIPOLYGON(((1 1, 1 -1, -1 -1, -1 1, 1 1)),((1 1, 3 1, 3 3, 1 3, 1 1)))'))
 """
             )
