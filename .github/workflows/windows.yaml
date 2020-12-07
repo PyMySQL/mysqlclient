@@ -8,7 +8,7 @@ jobs:
   build:
     runs-on: windows-latest
     env:
-      CONNECTOR_VERSION: "3.1.10"
+      CONNECTOR_VERSION: "3.1.11"
     steps:
 
       - name: Cache Connector
