@@ -120,12 +120,12 @@ class test_MySQLdb(capabilities.DatabaseTest):
 INSERT INTO test_MULTIPOLYGON
             (id, border)
 VALUES      (1,
-             Geomfromtext(
+             ST_Geomfromtext(
 'MULTIPOLYGON(((1 1, 1 -1, -1 -1, -1 1, 1 1)),((1 1, 3 1, 3 3, 1 3, 1 1)))'))
 """
             )
 
-            c.execute("SELECT id, AsText(border) FROM test_MULTIPOLYGON")
+            c.execute("SELECT id, ST_AsText(border) FROM test_MULTIPOLYGON")
             row = c.fetchone()
             self.assertEqual(row[0], 1)
             self.assertEqual(
@@ -133,7 +133,7 @@ VALUES      (1,
                 "MULTIPOLYGON(((1 1,1 -1,-1 -1,-1 1,1 1)),((1 1,3 1,3 3,1 3,1 1)))",
             )
 
-            c.execute("SELECT id, AsWKB(border) FROM test_MULTIPOLYGON")
+            c.execute("SELECT id, ST_AsWKB(border) FROM test_MULTIPOLYGON")
             row = c.fetchone()
             self.assertEqual(row[0], 1)
             self.assertNotEqual(len(row[1]), 0)
