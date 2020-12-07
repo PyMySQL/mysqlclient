@@ -2,7 +2,6 @@ name: Build windows wheels
 
 on:
   push:
-  create:
   workflow_dispatch:
 
 jobs:
