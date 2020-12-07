@@ -1237,19 +1237,35 @@ _mysql_row_to_dict(
         c = PyTuple_GET_ITEM(self->converter, i);
         v = _mysql_field_to_python(c, row[i], length[i], &fields[i], self->encoding);
         if (!v) goto error;
-        if (!PyMapping_HasKeyString(r, fields[i].name)) {
-            PyMapping_SetItemString(r, fields[i].name, v);
-        } else {
-            int len;
-            char buf[256];
-            strncpy(buf, fields[i].table, 256);
-            len = strlen(buf);
-            strncat(buf, ".", 256-len);
-            len = strlen(buf);
-            strncat(buf, fields[i].name, 256-len);
-            PyMapping_SetItemString(r, buf, v);
+
+        PyObject *pyname = PyUnicode_FromString(fields[i].name);
+        if (pyname == NULL) {
+            Py_DECREF(v);
+            goto error;
         }
+
+        PyObject *tmp = PyDict_SetDefault(r, pyname, v);
+        Py_DECREF(pyname);
+        if (!tmp) {
+            Py_DECREF(v);
+            goto error;
+        }
+        if (tmp == v) {
+            Py_DECREF(v);
+            continue;
+        }
+
+        pyname = PyUnicode_FromFormat("%s.%s", fields[i].table, fields[i].name);
+        if (!pyname) {
+            Py_DECREF(v);
+            goto error;
+        }
+        int err = PyDict_SetItem(r, pyname, v);
+        Py_DECREF(pyname);
         Py_DECREF(v);
+        if (err) {
+            goto error;
+        }
     }
     return r;
   error:
@@ -1275,20 +1291,22 @@ _mysql_row_to_dict_old(
         PyObject *v;
         c = PyTuple_GET_ITEM(self->converter, i);
         v = _mysql_field_to_python(c, row[i], length[i], &fields[i], self->encoding);
-        if (!v) goto error;
-        {
-            int len=0;
-            char buf[256]="";
-            if (strlen(fields[i].table)) {
-                strncpy(buf, fields[i].table, 256);
-                len = strlen(buf);
-                strncat(buf, ".", 256-len);
-                len = strlen(buf);
-            }
-            strncat(buf, fields[i].name, 256-len);
-            PyMapping_SetItemString(r, buf, v);
+        if (!v) {
+            goto error;
         }
+
+        PyObject *pyname;
+        if (strlen(fields[i].table)) {
+            pyname = PyUnicode_FromFormat("%s.%s", fields[i].table, fields[i].name);
+        } else {
+            pyname = PyUnicode_FromString(fields[i].name);
+        }
+        int err = PyDict_SetItem(r, pyname, v);
+        Py_DECREF(pyname);
         Py_DECREF(v);
+        if (err) {
+            goto error;
+        }
     }
     return r;
   error:
