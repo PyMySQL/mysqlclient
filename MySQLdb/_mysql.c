@@ -1402,23 +1402,29 @@ _mysql__fetch_row(
         }
         if (!row && mysql_errno(&(((_mysql_ConnectionObject *)(self->conn))->connection))) {
             _mysql_Exception((_mysql_ConnectionObject *)self->conn);
-            return -1;
+            goto error;
         }
         if (!row) {
             break;
         }
         PyObject *v = convert_row(self, row, cache);
-        if (!v) return -1;
+        if (!v) {
+            goto error;
+        }
         if (cache) {
             convert_row = _mysql_row_to_dict_cached;
         }
         if (PyList_Append(r, v)) {
             Py_DECREF(v);
-            return -1;
+            goto error;
         }
         Py_DECREF(v);
     }
+    Py_XDECREF(cache);
     return i;
+error:
+    Py_XDECREF(cache);
+    return -1;
 }
 
 static char _mysql_ResultObject_fetch_row__doc__[] =
