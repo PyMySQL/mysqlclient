@@ -125,7 +125,7 @@ def test_dictcursor():
     _tables.append("t2")
     cursor.execute("INSERT INTO t2 (b,c) VALUES (1,1), (2,2)")
 
-    cursor.execute("SELECT * FROM t1, t2 ON t1.b=t2.b")
+    cursor.execute("SELECT * FROM t1 JOIN t2 ON t1.b=t2.b")
     rows = cursor.fetchall()
 
     assert len(rows) == 2
@@ -133,7 +133,7 @@ def test_dictcursor():
     assert rows[1] == {"a": 2, "t1.b": 2, "t2.b": 2, "c": 2}
 
     # Old fetchtype
-    cursor.execute("SELECT * FROM t1, t2 ON t1.b=t2.b")
+    cursor.execute("SELECT * FROM t1 JOIN t2 ON t1.b=t2.b")
     rows = cursor._result.fetch_row(0, 2)
 
     assert len(rows) == 2

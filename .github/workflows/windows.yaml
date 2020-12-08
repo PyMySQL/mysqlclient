@@ -2,6 +2,8 @@ name: Build windows wheels
 
 on:
   push:
+    branches:
+      - master
   workflow_dispatch:
 
 jobs:
