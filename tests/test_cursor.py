@@ -138,8 +138,9 @@ def test_dictcursor():
         assert a is b
 
     # Old fetchtype
+    cursor._fetch_type = 2
     cursor.execute("SELECT * FROM t1 JOIN t2 ON t1.b=t2.b")
-    rows = cursor._result.fetch_row(0, 2)
+    rows = cursor.fetchall()
 
     assert len(rows) == 2
     assert rows[0] == {"t1.a": 1, "t1.b": 1, "t1.c": 47, "t2.b": 1, "t2.c": 1}
