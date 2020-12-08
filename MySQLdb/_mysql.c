@@ -1375,7 +1375,7 @@ _mysql__fetch_row(
     _convertfunc *convert_row = row_converters[how];
 
     PyObject *cache = NULL;
-    if (maxrows > 0 && how > 1) {
+    if (maxrows > 0 && how > 0) {
         cache = PyTuple_New(mysql_num_fields(self->result));
         if (!cache) {
             return -1;
