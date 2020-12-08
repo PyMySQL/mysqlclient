@@ -111,3 +111,31 @@ def test_pyparam():
     assert cursor._executed == b"SELECT 1, 2"
     cursor.execute(b"SELECT %(a)s, %(b)s", {b"a": 3, b"b": 4})
     assert cursor._executed == b"SELECT 3, 4"
+
+
+def test_dictcursor():
+    conn = connect()
+    cursor = conn.cursor(MySQLdb.cursors.DictCursor)
+
+    cursor.execute("CREATE TABLE t1 (a int, b int)")
+    _tables.append("t1")
+    cursor.execute("INSERT INTO t1 (a,b) VALUES (1,1), (2,2)")
+
+    cursor.execute("CREATE TABLE t2 (b int, c int)")
+    _tables.append("t2")
+    cursor.execute("INSERT INTO t2 (b,c) VALUES (1,1), (2,2)")
+
+    cursor.execute("SELECT * FROM t1, t2 ON t1.b=t2.b")
+    rows = cursor.fetchall()
+
+    assert len(rows) == 2
+    assert rows[0] == {"a": 1, "t1.b": 1, "t2.b": 1, "c": 1}
+    assert rows[1] == {"a": 2, "t1.b": 2, "t2.b": 2, "c": 2}
+
+    # Old fetchtype
+    cursor.execute("SELECT * FROM t1, t2 ON t1.b=t2.b")
+    rows = cursor._result.fetch_row(0, 2)
+
+    assert len(rows) == 2
+    assert rows[0] == {"t1.a": 1, "t1.b": 1, "t2.b": 1, "t2.c": 1}
+    assert rows[1] == {"t1.a": 2, "t1.b": 2, "t2.b": 2, "t2.c": 2}
