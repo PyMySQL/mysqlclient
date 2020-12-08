@@ -1246,11 +1246,11 @@ _mysql_row_to_dict(
             goto error;
         }
         int err = PyDict_Contains(r, pyname);
-        if (res < 0) {
+        if (err < 0) { // error
             Py_DECREF(v);
             goto error;
         }
-        if (res) {
+        if (err) { // duplicate
             Py_DECREF(pyname);
             pyname = PyUnicode_FromFormat("%s.%s", fields[i].table, fields[i].name);
             if (pyname == NULL) {
