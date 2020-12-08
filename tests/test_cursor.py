@@ -117,9 +117,9 @@ def test_dictcursor():
     conn = connect()
     cursor = conn.cursor(MySQLdb.cursors.DictCursor)
 
-    cursor.execute("CREATE TABLE t1 (a int, b int)")
+    cursor.execute("CREATE TABLE t1 (a int, b int, c int)")
     _tables.append("t1")
-    cursor.execute("INSERT INTO t1 (a,b) VALUES (1,1), (2,2)")
+    cursor.execute("INSERT INTO t1 (a,b,c) VALUES (1,1,47), (2,2,47)")
 
     cursor.execute("CREATE TABLE t2 (b int, c int)")
     _tables.append("t2")
@@ -129,8 +129,8 @@ def test_dictcursor():
     rows = cursor.fetchall()
 
     assert len(rows) == 2
-    assert rows[0] == {"a": 1, "t1.b": 1, "t2.b": 1, "c": 1}
-    assert rows[1] == {"a": 2, "t1.b": 2, "t2.b": 2, "c": 2}
+    assert rows[0] == {"a": 1, "b": 1, "c": 47, "t2.c": 1}
+    assert rows[1] == {"a": 2, "b": 2, "c": 47, "t2.c": 2}
 
     # Old fetchtype
     cursor.execute("SELECT * FROM t1 JOIN t2 ON t1.b=t2.b")

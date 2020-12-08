@@ -1245,29 +1245,21 @@ _mysql_row_to_dict(
             Py_DECREF(v);
             goto error;
         }
-
-        PyObject *tmp = PyDict_SetDefault(r, pyname, v);
-        if (tmp == v) {
-            if (cache) {
-                PyTuple_SET_ITEM(cache, i, pyname);
-            } else {
-                Py_DECREF(pyname);
+        int err = PyDict_Contains(r, pyname);
+        if (res < 0) {
+            Py_DECREF(v);
+            goto error;
+        }
+        if (res) {
+            Py_DECREF(pyname);
+            pyname = PyUnicode_FromFormat("%s.%s", fields[i].table, fields[i].name);
+            if (pyname == NULL) {
+                Py_DECREF(v);
+                goto error;
             }
-            Py_DECREF(v);
-            continue;
-        }
-        Py_DECREF(pyname);
-        if (!tmp) {
-            Py_DECREF(v);
-            goto error;
         }
 
-        pyname = PyUnicode_FromFormat("%s.%s", fields[i].table, fields[i].name);
-        if (!pyname) {
-            Py_DECREF(v);
-            goto error;
-        }
-        int err = PyDict_SetItem(r, pyname, v);
+        err = PyDict_SetItem(r, pyname, v);
         if (cache) {
             PyTuple_SET_ITEM(cache, i, pyname);
         } else {
@@ -1279,8 +1271,8 @@ _mysql_row_to_dict(
         }
     }
     return r;
-  error:
-    Py_XDECREF(r);
+error:
+    Py_DECREF(r);
     return NULL;
 }
 
