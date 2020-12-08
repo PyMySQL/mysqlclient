@@ -1194,7 +1194,8 @@ _mysql_field_to_python(
 static PyObject *
 _mysql_row_to_tuple(
     _mysql_ResultObject *self,
-    MYSQL_ROW row)
+    MYSQL_ROW row,
+    PyObject *unused)
 {
     unsigned int n, i;
     unsigned long *length;
@@ -1221,7 +1222,8 @@ _mysql_row_to_tuple(
 static PyObject *
 _mysql_row_to_dict(
     _mysql_ResultObject *self,
-    MYSQL_ROW row)
+    MYSQL_ROW row,
+    PyObject *cache)
 {
     unsigned int n, i;
     unsigned long *length;
@@ -1243,40 +1245,42 @@ _mysql_row_to_dict(
             Py_DECREF(v);
             goto error;
         }
-
-        PyObject *tmp = PyDict_SetDefault(r, pyname, v);
-        Py_DECREF(pyname);
-        if (!tmp) {
+        int err = PyDict_Contains(r, pyname);
+        if (err < 0) { // error
             Py_DECREF(v);
             goto error;
         }
-        if (tmp == v) {
-            Py_DECREF(v);
-            continue;
+        if (err) { // duplicate
+            Py_DECREF(pyname);
+            pyname = PyUnicode_FromFormat("%s.%s", fields[i].table, fields[i].name);
+            if (pyname == NULL) {
+                Py_DECREF(v);
+                goto error;
+            }
         }
 
-        pyname = PyUnicode_FromFormat("%s.%s", fields[i].table, fields[i].name);
-        if (!pyname) {
-            Py_DECREF(v);
-            goto error;
+        err = PyDict_SetItem(r, pyname, v);
+        if (cache) {
+            PyTuple_SET_ITEM(cache, i, pyname);
+        } else {
+            Py_DECREF(pyname);
         }
-        int err = PyDict_SetItem(r, pyname, v);
-        Py_DECREF(pyname);
         Py_DECREF(v);
         if (err) {
             goto error;
         }
     }
     return r;
-  error:
-    Py_XDECREF(r);
+error:
+    Py_DECREF(r);
     return NULL;
 }
 
 static PyObject *
 _mysql_row_to_dict_old(
     _mysql_ResultObject *self,
-    MYSQL_ROW row)
+    MYSQL_ROW row,
+    PyObject *cache)
 {
     unsigned int n, i;
     unsigned long *length;
@@ -1302,7 +1306,46 @@ _mysql_row_to_dict_old(
             pyname = PyUnicode_FromString(fields[i].name);
         }
         int err = PyDict_SetItem(r, pyname, v);
-        Py_DECREF(pyname);
+        Py_DECREF(v);
+        if (cache) {
+            PyTuple_SET_ITEM(cache, i, pyname);
+        } else {
+            Py_DECREF(pyname);
+        }
+        if (err) {
+            goto error;
+        }
+    }
+    return r;
+  error:
+    Py_XDECREF(r);
+    return NULL;
+}
+
+static PyObject *
+_mysql_row_to_dict_cached(
+    _mysql_ResultObject *self,
+    MYSQL_ROW row,
+    PyObject *cache)
+{
+    PyObject *r = PyDict_New();
+    if (!r) {
+        return NULL;
+    }
+
+    unsigned int n = mysql_num_fields(self->result);
+    unsigned long *length = mysql_fetch_lengths(self->result);
+    MYSQL_FIELD *fields = mysql_fetch_fields(self->result);
+
+    for (unsigned int i=0; i<n; i++) {
+        PyObject *c = PyTuple_GET_ITEM(self->converter, i);
+        PyObject *v = _mysql_field_to_python(c, row[i], length[i], &fields[i], self->encoding);
+        if (!v) {
+            goto error;
+        }
+
+        PyObject *pyname = PyTuple_GET_ITEM(cache, i); // borrowed
+        int err = PyDict_SetItem(r, pyname, v);
         Py_DECREF(v);
         if (err) {
             goto error;
@@ -1314,15 +1357,31 @@ _mysql_row_to_dict_old(
     return NULL;
 }
 
-typedef PyObject *_PYFUNC(_mysql_ResultObject *, MYSQL_ROW);
+
+typedef PyObject *_convertfunc(_mysql_ResultObject *, MYSQL_ROW, PyObject *);
+static _convertfunc * const row_converters[] = {
+    _mysql_row_to_tuple,
+    _mysql_row_to_dict,
+    _mysql_row_to_dict_old
+};
 
 Py_ssize_t
 _mysql__fetch_row(
     _mysql_ResultObject *self,
     PyObject *r, /* list object */
     Py_ssize_t maxrows,
-    _PYFUNC *convert_row)
+    int how)
 {
+    _convertfunc *convert_row = row_converters[how];
+
+    PyObject *cache = NULL;
+    if (maxrows > 0 && how > 0) {
+        cache = PyTuple_New(mysql_num_fields(self->result));
+        if (!cache) {
+            return -1;
+        }
+    }
+
     Py_ssize_t i;
     for (i = 0; i < maxrows; i++) {
         MYSQL_ROW row;
@@ -1335,20 +1394,29 @@ _mysql__fetch_row(
         }
         if (!row && mysql_errno(&(((_mysql_ConnectionObject *)(self->conn))->connection))) {
             _mysql_Exception((_mysql_ConnectionObject *)self->conn);
-            return -1;
+            goto error;
         }
         if (!row) {
             break;
         }
-        PyObject *v = convert_row(self, row);
-        if (!v) return -1;
+        PyObject *v = convert_row(self, row, cache);
+        if (!v) {
+            goto error;
+        }
+        if (cache) {
+            convert_row = _mysql_row_to_dict_cached;
+        }
         if (PyList_Append(r, v)) {
             Py_DECREF(v);
-            return -1;
+            goto error;
         }
         Py_DECREF(v);
     }
+    Py_XDECREF(cache);
     return i;
+error:
+    Py_XDECREF(cache);
+    return -1;
 }
 
 static char _mysql_ResultObject_fetch_row__doc__[] =
@@ -1366,15 +1434,7 @@ _mysql_ResultObject_fetch_row(
     PyObject *args,
     PyObject *kwargs)
 {
-    typedef PyObject *_PYFUNC(_mysql_ResultObject *, MYSQL_ROW);
-    static char *kwlist[] = { "maxrows", "how", NULL };
-    static _PYFUNC *row_converters[] =
-    {
-        _mysql_row_to_tuple,
-        _mysql_row_to_dict,
-        _mysql_row_to_dict_old
-    };
-    _PYFUNC *convert_row;
+    static char *kwlist[] = {"maxrows", "how", NULL };
     int maxrows=1, how=0;
     PyObject *r=NULL;
 
@@ -1386,7 +1446,6 @@ _mysql_ResultObject_fetch_row(
         PyErr_SetString(PyExc_ValueError, "how out of range");
         return NULL;
     }
-    convert_row = row_converters[how];
     if (!maxrows) {
         if (self->use) {
             maxrows = INT_MAX;
@@ -1396,7 +1455,7 @@ _mysql_ResultObject_fetch_row(
         }
     }
     if (!(r = PyList_New(0))) goto error;
-    Py_ssize_t rowsadded = _mysql__fetch_row(self, r, maxrows, convert_row);
+    Py_ssize_t rowsadded = _mysql__fetch_row(self, r, maxrows, how);
     if (rowsadded == -1) goto error;
 
     /* DB-API allows return rows as list.
