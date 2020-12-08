@@ -129,13 +129,23 @@ def test_dictcursor():
     rows = cursor.fetchall()
 
     assert len(rows) == 2
-    assert rows[0] == {"a": 1, "b": 1, "c": 47, "t2.c": 1}
-    assert rows[1] == {"a": 2, "b": 2, "c": 47, "t2.c": 2}
+    assert rows[0] == {"a": 1, "b": 1, "c": 47, "t2.b": 1, "t2.c": 1}
+    assert rows[1] == {"a": 2, "b": 2, "c": 47, "t2.b": 2, "t2.c": 2}
+
+    names1 = sorted(rows[0])
+    names2 = sorted(rows[1])
+    for a, b in zip(names1, names2):
+        assert a is b
 
     # Old fetchtype
     cursor.execute("SELECT * FROM t1 JOIN t2 ON t1.b=t2.b")
     rows = cursor._result.fetch_row(0, 2)
 
     assert len(rows) == 2
-    assert rows[0] == {"t1.a": 1, "t1.b": 1, "t2.b": 1, "t2.c": 1}
-    assert rows[1] == {"t1.a": 2, "t1.b": 2, "t2.b": 2, "t2.c": 2}
+    assert rows[0] == {"t1.a": 1, "t1.b": 1, "t1.c": 47, "t2.b": 1, "t2.c": 1}
+    assert rows[1] == {"t1.a": 2, "t1.b": 2, "t1.c": 47, "t2.b": 2, "t2.c": 2}
+
+    names1 = sorted(rows[0])
+    names2 = sorted(rows[1])
+    for a, b in zip(names1, names2):
+        assert a is b
