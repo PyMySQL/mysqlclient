@@ -1,4 +1,13 @@
 ======================
+ What's new in 2.0.2
+======================
+
+Release: 2020-12-10
+
+* Windows: Update MariaDB Connector/C to 3.1.11.
+* Optimize fetching many rows with DictCursor.
+
+======================
  What's new in 2.0.1
 ======================
 
