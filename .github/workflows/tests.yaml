@@ -10,16 +10,11 @@ jobs:
     strategy:
       matrix:
         python-version: [3.5, 3.6, 3.7, 3.8, 3.9]
-    services:
-      mysql:
-        image: mysql:8.0
-        ports:
-          - 3306:3306
-        env:
-          MYSQL_DATABASE: mysqldb_test
-          MYSQL_ROOT_PASSWORD: secretsecret
-        options: --health-cmd "mysqladmin ping -h localhost" --health-interval 20s --health-timeout 10s --health-retries 10
     steps:
+      - name: Start MySQL
+        run: |
+          sudo systemctl start mysql.service
+          sudo mysql -uroot -proot -e "CREATE DATABASE mysqldb_test"
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
