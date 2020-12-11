@@ -14,7 +14,7 @@ jobs:
       - name: Start MySQL
         run: |
           sudo systemctl start mysql.service
-          sudo mysql -uroot -proot -e "CREATE DATABASE mysqldb_test"
+          sudo mysql -e "CREATE DATABASE mysqldb_test"
       - uses: actions/checkout@v2
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
