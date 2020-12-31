@@ -86,7 +86,7 @@ def get_config():
     for a in cflags:
         if a.startswith("-I"):
             include_dirs.append(dequote(a[2:]))
-        elif a.startswith(("-L", "-l")): # This should be LIBS.
+        elif a.startswith(("-L", "-l")):  # This should be LIBS.
             pass
         else:
             extra_compile_args = [a.replace("%", "%%")]
