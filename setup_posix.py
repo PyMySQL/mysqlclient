@@ -87,8 +87,9 @@ def get_config():
         if a.startswith("-I"):
             include_dirs.append(dequote(a[2:]))
         elif a.startswith(("-L", "-l")): # This should be LIBS.
-            continue
-        extra_compile_args = [a.replace("%", "%%")]
+            pass
+        else:
+            extra_compile_args = [a.replace("%", "%%")]
 
     # Copy the arch flags for linking as well
     for i in range(len(extra_compile_args)):
@@ -151,7 +152,10 @@ def get_config():
     if static:
         ext_options["language"] = "c++"
 
-    print("options: ", ext_options)
+    print("ext_options:")
+    for k, v in ext_options.items():
+        print("  {}: {}".format(k, v))
+
     return metadata, ext_options
 
 
