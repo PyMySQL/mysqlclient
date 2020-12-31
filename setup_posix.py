@@ -81,7 +81,7 @@ def get_config():
         cflags = mysql_config("cflags")
 
     include_dirs = []
-    extra_compile_args = []
+    extra_compile_args = ["-std=c99"]
 
     for a in cflags:
         if a.startswith("-I"):
@@ -89,12 +89,15 @@ def get_config():
         elif a.startswith(("-L", "-l")):  # This should be LIBS.
             pass
         else:
-            extra_compile_args = [a.replace("%", "%%")]
+            extra_compile_args.append(a.replace("%", "%%"))
 
     # Copy the arch flags for linking as well
-    for i in range(len(extra_compile_args)):
-        if extra_compile_args[i] == "-arch":
+    try:
+        i = extra_compile_args.index("-arch")
+        if "-arch" not in extra_link_args:
             extra_link_args += ["-arch", extra_compile_args[i + 1]]
+    except ValueError:
+        pass
 
     if static:
         # properly handle mysql client libraries that are not called libmysqlclient
