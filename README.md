@@ -66,6 +66,20 @@ Then you can install mysqlclient via pip now:
 $ pip install mysqlclient
 ```
 
+### Customize build (POSIX)
+
+mysqlclient uses `mysql_config` or `mariadb_config` by default for finding
+compiler/linker flags.
+
+You can use `MYSQLCLIENT_CFLAGS` and `MYSQLCLIENT_LDFLAGS` environment
+variables to customize compiler/linker options.
+
+```
+$ export MYSQLCLIENT_CFLAGS=`pkg-config mysqlclient --cflags`
+$ export MYSQLCLIENT_LDFLAGS=`pkg-config mysqlclient --libs`
+$ pip install mysqlclient
+```
+
 ### Documentation
 
 Documentation is hosted on [Read The Docs](https://mysqlclient.readthedocs.io/)
