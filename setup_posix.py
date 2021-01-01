@@ -19,9 +19,9 @@ _mysql_config_path = "mysql_config"
 
 
 def mysql_config(what):
-    from os import popen
-
-    f = popen("{} --{}".format(_mysql_config_path, what))
+    cmd = "{} --{}".format(_mysql_config_path, what)
+    print(cmd)
+    f = os.popen(cmd)
     data = f.read().strip().split()
     ret = f.close()
     if ret:
@@ -29,6 +29,7 @@ def mysql_config(what):
             data = []
         if ret / 256 > 1:
             raise OSError("{} not found".format(_mysql_config_path))
+    print(data)
     return data
 
 
@@ -62,26 +63,41 @@ def get_config():
         static = True
         sys.argv.remove("--static")
 
-    libs = mysql_config("libs")
+    libs = os.environ.get("MYSQLCLIENT_LDFLAGS")
+    if libs:
+        libs = libs.strip().split()
+    else:
+        libs = mysql_config("libs")
     library_dirs = [dequote(i[2:]) for i in libs if i.startswith("-L")]
     libraries = [dequote(i[2:]) for i in libs if i.startswith("-l")]
     extra_link_args = [x for x in libs if not x.startswith(("-l", "-L"))]
 
-    removable_compile_args = ("-I", "-L", "-l")
-    extra_compile_args = [
-        i.replace("%", "%%")
-        for i in mysql_config("cflags")
-        if i[:2] not in removable_compile_args
-    ]
+    cflags = os.environ.get("MYSQLCLIENT_CFLAGS")
+    if cflags:
+        use_mysqlconfig_cflags = False
+        cflags = cflags.strip().split()
+    else:
+        use_mysqlconfig_cflags = True
+        cflags = mysql_config("cflags")
+
+    include_dirs = []
+    extra_compile_args = ["-std=c99"]
+
+    for a in cflags:
+        if a.startswith("-I"):
+            include_dirs.append(dequote(a[2:]))
+        elif a.startswith(("-L", "-l")):  # This should be LIBS.
+            pass
+        else:
+            extra_compile_args.append(a.replace("%", "%%"))
 
     # Copy the arch flags for linking as well
-    for i in range(len(extra_compile_args)):
-        if extra_compile_args[i] == "-arch":
+    try:
+        i = extra_compile_args.index("-arch")
+        if "-arch" not in extra_link_args:
             extra_link_args += ["-arch", extra_compile_args[i + 1]]
-
-    include_dirs = [
-        dequote(i[2:]) for i in mysql_config("include") if i.startswith("-I")
-    ]
+    except ValueError:
+        pass
 
     if static:
         # properly handle mysql client libraries that are not called libmysqlclient
@@ -109,11 +125,12 @@ def get_config():
         if client in libraries:
             libraries.remove(client)
     else:
-        # mysql_config may have "-lmysqlclient -lz -lssl -lcrypto", but zlib and
-        # ssl is not used by _mysql.  They are needed only for static build.
-        for L in ("crypto", "ssl", "z"):
-            if L in libraries:
-                libraries.remove(L)
+        if use_mysqlconfig_cflags:
+            # mysql_config may have "-lmysqlclient -lz -lssl -lcrypto", but zlib and
+            # ssl is not used by _mysql.  They are needed only for static build.
+            for L in ("crypto", "ssl", "z"):
+                if L in libraries:
+                    libraries.remove(L)
 
     name = "mysqlclient"
     metadata["name"] = name
@@ -137,6 +154,10 @@ def get_config():
     # newer versions of gcc require libstdc++ if doing a static build
     if static:
         ext_options["language"] = "c++"
+
+    print("ext_options:")
+    for k, v in ext_options.items():
+        print("  {}: {}".format(k, v))
 
     return metadata, ext_options
 
