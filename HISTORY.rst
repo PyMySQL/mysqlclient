@@ -1,4 +1,15 @@
 ======================
+ What's new in 2.0.3
+======================
+
+Release: 2021-01-01
+
+* Add ``-std=c99`` option to cflags by default for ancient compilers that doesn't
+  accept C99 by default.
+* You can customize cflags and ldflags by setting ``MYSQLCLIENT_CFLAGS`` and
+  ``MYSQLCLIENT_LDFLAGS``. It overrides ``mysql_config``.
+
+======================
  What's new in 2.0.2
 ======================
 
