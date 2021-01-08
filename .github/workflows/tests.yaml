@@ -26,8 +26,7 @@ jobs:
         env:
           TESTDB: actions.cnf
         run: |
-          pip install -U pip
           pip install -U coverage pytest pytest-cov
           pip install .
-          pytest --cov ./MySQLdb
+          pytest --cov=MySQLdb tests
       - uses: codecov/codecov-action@v1
