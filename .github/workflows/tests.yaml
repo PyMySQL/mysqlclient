@@ -15,13 +15,23 @@ jobs:
         run: |
           sudo systemctl start mysql.service
           mysql -uroot -proot -e "CREATE DATABASE mysqldb_test"
+
+      - uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-1
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
       - uses: actions/checkout@v2
         with:
           fetch-depth: 2
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
+
       - name: Run tests
         env:
           TESTDB: actions.cnf
@@ -29,4 +39,5 @@ jobs:
           pip install -U coverage pytest pytest-cov
           pip install .
           pytest --cov=MySQLdb tests
+
       - uses: codecov/codecov-action@v1
