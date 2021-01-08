@@ -35,9 +35,11 @@ jobs:
       - name: Run tests
         env:
           TESTDB: actions.cnf
+          PIP_NO_PYTHON_VERSION_WARNING: 1
+          PIP_DISABLE_PIP_VERSION_CHECK: 1
         run: |
           pip install -U coverage pytest pytest-cov
-          pip install .
+          python setup.py develop
           pytest --cov=MySQLdb tests
 
       - uses: codecov/codecov-action@v1
