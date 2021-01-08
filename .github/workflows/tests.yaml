@@ -32,12 +32,18 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
+      - name: Install dependencies
+        env:
+          PIP_NO_PYTHON_VERSION_WARNING: 1
+          PIP_DISABLE_PIP_VERSION_CHECK: 1
+        run: |
+          pip install -U coverage pytest pytest-cov
+          python setup.py develop
+
       - name: Run tests
         env:
           TESTDB: actions.cnf
         run: |
-          pip install -U coverage pytest pytest-cov
-          pip install .
           pytest --cov=MySQLdb tests
 
       - uses: codecov/codecov-action@v1
