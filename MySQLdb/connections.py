@@ -62,9 +62,9 @@ class Connection(_mysql.connection):
         :param str host:        host to connect
         :param str user:        user to connect as
         :param str password:    password to use
-        :param str passwd:      alias of password, for backward compatibility
+        :param str passwd:      alias of password (deprecated)
         :param str database:    database to use
-        :param str db:          alias of database, for backward compatibility
+        :param str db:          alias of database (deprecated)
         :param int port:        TCP/IP port to connect to
         :param str unix_socket: location of unix_socket to use
         :param dict conv:       conversion dictionary, see MySQLdb.converters

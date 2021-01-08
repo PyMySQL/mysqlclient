@@ -277,10 +277,10 @@ connect(parameters...)
          user
             user to authenticate as. Default: current effective user.
 
-         passwd
+         password
             password to authenticate with. Default: no password.
 
-         db
+         database
             database to use. Default: no default database.
 
          port
