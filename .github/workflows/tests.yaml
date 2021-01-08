@@ -16,6 +16,8 @@ jobs:
           sudo systemctl start mysql.service
           mysql -uroot -proot -e "CREATE DATABASE mysqldb_test"
       - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
