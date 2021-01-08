@@ -1,11 +1,10 @@
 # mysqlclient
 
-[![Build Status](https://secure.travis-ci.org/PyMySQL/mysqlclient-python.png)](http://travis-ci.org/PyMySQL/mysqlclient-python)
+This project is a fork of [MySQLdb1](https://github.com/farcepest/MySQLdb1).
+This project adds Python 3 support and fixed many bugs.
 
-This is a fork of [MySQLdb1](https://github.com/farcepest/MySQLdb1).
-
-This project adds Python 3 support and bug fixes.
-I hope this fork is merged back to MySQLdb1 like distribute was merged back to setuptools.
+* PyPI: https://pypi.org/project/mysqlclient/
+* GitHub: https://github.com/PyMySQL/mysqlclient
 
 
 ## Support
@@ -83,4 +82,3 @@ $ pip install mysqlclient
 ### Documentation
 
 Documentation is hosted on [Read The Docs](https://mysqlclient.readthedocs.io/)
-
