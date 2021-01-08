@@ -54,11 +54,6 @@ from MySQLdb.times import (
     TimestampFromTicks,
 )
 
-try:
-    frozenset
-except NameError:
-    from sets import ImmutableSet as frozenset
-
 threadsafety = 1
 apilevel = "2.0"
 paramstyle = "format"
