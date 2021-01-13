@@ -474,8 +474,10 @@ _mysql_ConnectionObject_Initialize(
             return -1;
         }
 #else
+    #ifndef MARIADB_BASE_VERSION
         PyErr_SetString(_mysql_NotSupportedError, "MySQL client library does not support ssl_mode specification");
         return -1;
+    #endif
 #endif
     }
 
@@ -486,6 +488,21 @@ _mysql_ConnectionObject_Initialize(
     }
     Py_BEGIN_ALLOW_THREADS ;
     self->open = 1;
+
+    #ifdef MARIADB_BASE_VERSION
+    if (ssl_mode) {
+        if (strcmp(ssl_mode, "PREFERRED") != 0)
+        {
+            int enforce_tls= 0;
+            if (strcmp(ssl_mode, "REQUIRED") == 0)
+                enforce_tls = 1;
+            #ifdef MYSQL_OPT_SSL_ENFORCE
+            mysql_optionsv(&(self->connection), MYSQL_OPT_SSL_ENFORCE, (void *)&enforce_tls);
+            mysql_optionsv(&(self->connection), MYSQL_OPT_SSL_VERIFY_SERVER_CERT, (void *)&enforce_tls);
+            #endif
+        }
+    }
+    #endif
     if (connect_timeout) {
         unsigned int timeout = connect_timeout;
         mysql_options(&(self->connection), MYSQL_OPT_CONNECT_TIMEOUT,
@@ -522,7 +539,12 @@ _mysql_ConnectionObject_Initialize(
     }
 #ifdef HAVE_ENUM_MYSQL_OPT_SSL_MODE
     if (ssl_mode) {
-        int ssl_mode_num = _get_ssl_mode_num(ssl_mode);
+        char *corrected_ssl_mode = NULL;
+        if (strcmp(ssl_mode, "REQUIRED") == 0 || strcmp(ssl_mode, "VERIFY_CA"))
+            corrected_ssl_mode = "VERIFY_IDENTITY";
+        else
+            corrected_ssl_mode = ssl_mode;
+        int ssl_mode_num = _get_ssl_mode_num(corrected_ssl_mode);
         mysql_options(&(self->connection), MYSQL_OPT_SSL_MODE, &ssl_mode_num);
     }
 #endif
