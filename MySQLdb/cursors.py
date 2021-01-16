@@ -182,6 +182,27 @@ class BaseCursor:
         """
         while self.nextset():
             pass
+
+        mogrified_query = self._mogrify(query, args)
+
+        assert isinstance(mogrified_query, (bytes, bytearray))
+        res = self._query(mogrified_query)
+        return res
+
+    def _mogrify(self, query, args=None):
+        """Generates the query to be sent to the server with argument
+        interpolation and proper encoding. This is for internal use, see
+        mogrify() for the external API that returns a string.
+
+        query -- string, query to execute on server
+        args -- optional sequence or mapping, parameters to use with query.
+
+        Note: If args is a sequence, then %s must be used as the
+        parameter placeholder in the query. If a mapping is used,
+        %(key)s must be used as the placeholder.
+
+        Returns bytes or bytearray representing the query
+        """
         db = self._get_db()
 
         if isinstance(query, str):
@@ -202,9 +223,22 @@ class BaseCursor:
             except TypeError as m:
                 raise ProgrammingError(str(m))
 
-        assert isinstance(query, (bytes, bytearray))
-        res = self._query(query)
-        return res
+        return query
+
+    def mogrify(self, query, args=None):
+        """Get the query exactly as it would be sent to the database running the
+        execute() method.
+
+        query -- string, query to execute on server
+        args -- optional sequence or mapping, parameters to use with query.
+
+        Note: If args is a sequence, then %s must be used as the
+        parameter placeholder in the query. If a mapping is used,
+        %(key)s must be used as the placeholder.
+
+        Returns string representing query that would be executed by the server
+        """
+        return self._mogrify(query, args).decode()
 
     def executemany(self, query, args):
         # type: (str, list) -> int
