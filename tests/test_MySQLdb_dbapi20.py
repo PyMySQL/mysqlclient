@@ -161,9 +161,9 @@ class test_tiledb_sql(dbapi20.DatabaseAPI20Test):
         pass  # performed in test_MySQL_capabilities
 
     def help_nextset_setUp(self, cur):
-        """ Should create a procedure called deleteme
-            that returns two result sets, first the
-            number of rows in booze then "name from booze"
+        """Should create a procedure called deleteme
+        that returns two result sets, first the
+        number of rows in booze then "name from booze"
         """
         sql = """
            create procedure deleteme()

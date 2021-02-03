@@ -68,12 +68,12 @@ class DatabaseTest(unittest.TestCase):
 
     def create_table(self, columndefs):
 
-        """ Create a table using a list of column definitions given in
-            columndefs.
+        """Create a table using a list of column definitions given in
+        columndefs.
 
-            generator must be a function taking arguments (row_number,
-            col_number) returning a suitable data object for insertion
-            into the table.
+        generator must be a function taking arguments (row_number,
+        col_number) returning a suitable data object for insertion
+        into the table.
 
         """
         self.table = self.new_table_name()
