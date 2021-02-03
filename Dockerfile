@@ -52,9 +52,9 @@ ENV MTR_MEM /tmp
 
 WORKDIR /tmp
 
-ENV TILEDB_VERSION="1.7.5"
+ENV TILEDB_VERSION="2.2.3"
 
-# Install tiledb using 1.7 release
+# Install tiledb using 2.2 release
 RUN mkdir build_deps && cd build_deps \
  && git clone https://github.com/TileDB-Inc/TileDB.git -b ${TILEDB_VERSION} && cd TileDB \
  && mkdir -p build && cd build \
@@ -63,9 +63,9 @@ RUN mkdir build_deps && cd build_deps \
  && make -C tiledb install \
  && cd /tmp && rm -r build_deps
 
-ENV MARIADB_VERSION="mariadb-10.4.12"
+ENV MARIADB_VERSION="mariadb-10.4.17"
 
-ARG MYTILE_VERSION="0.4.1"
+ARG MYTILE_VERSION="0.7.0"
 
 # Download mytile release
 RUN wget https://github.com/TileDB-Inc/TileDB-MariaDB/archive/${MYTILE_VERSION}.tar.gz -O /tmp/${MYTILE_VERSION}.tar.gz \

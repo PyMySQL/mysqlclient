@@ -131,7 +131,11 @@ def Time_or_None(s):
 
 def Date_or_None(s):
     try:
-        return date(int(s[:4]), int(s[5:7]), int(s[8:10]),)  # year  # month  # day
+        return date(
+            int(s[:4]),
+            int(s[5:7]),
+            int(s[8:10]),
+        )  # year  # month  # day
     except ValueError:
         return None
 

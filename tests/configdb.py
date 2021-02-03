@@ -6,7 +6,8 @@ tests_path = path.dirname(__file__)
 conf_file = environ.get("TESTDB", "default.cnf")
 conf_path = path.join(tests_path, conf_file)
 connect_kwargs = dict(
-    read_default_file=conf_path, read_default_group="tiledb-sql-tests",
+    read_default_file=conf_path,
+    read_default_group="tiledb-sql-tests",
 )
 
 
