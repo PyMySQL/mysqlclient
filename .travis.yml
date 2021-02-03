@@ -69,7 +69,7 @@ jobs:
         - pip install -U pip
         - pip install flake8
       script:
-        - flake8 --ignore=E203,E501,W503 --max-line-length=88 .
+        - flake8 --ignore=E203,E501,W503,E402 --max-line-length=88 .
     - name: black
       python: "3.8"
       install:
