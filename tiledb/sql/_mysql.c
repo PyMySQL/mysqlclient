@@ -2803,13 +2803,6 @@ PyInit__mysql(void)
 {
     PyObject *dict, *module, *emod, *edict;
 
-    // This is added in rebase, from https://github.com/PyMySQL/mysqlclient-python/commit/62c8c8c62bd0c7e943c5dc68678d9fb2a0fd1610
-    // might need to remove it
-    if (mysql_library_init(0, NULL, NULL)) {
-        PyErr_SetString(PyExc_ImportError, "_mysql: mysql_library_init failed");
-        return NULL;
-    }
-
     if (PyType_Ready(&_mysql_ConnectionObject_Type) < 0)
         return NULL;
     if (PyType_Ready(&_mysql_ResultObject_Type) < 0)
