@@ -791,7 +791,6 @@ _mysql_ConnectionObject_close(
     check_connection(self);
     Py_BEGIN_ALLOW_THREADS
     mysql_close(&(self->connection));
-    _mysql_server_end(self, NULL);
     Py_END_ALLOW_THREADS
     self->open = 0;
     _mysql_ConnectionObject_clear(self);
@@ -2140,7 +2139,6 @@ _mysql_ConnectionObject_dealloc(
     if (self->open) {
         mysql_close(&(self->connection));
         self->open = 0;
-        _mysql_server_end(self, NULL);
     }
     Py_CLEAR(self->converter);
     MyFree(self);
