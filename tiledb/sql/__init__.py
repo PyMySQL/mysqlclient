@@ -37,6 +37,7 @@ from ._mysql import (
     InternalError,
     Warning,
     server_init,
+    server_end,
 )
 from tiledb.sql.constants import FIELD_TYPE
 from tiledb.sql.times import (
@@ -47,6 +48,11 @@ from tiledb.sql.times import (
     TimeFromTicks,
     TimestampFromTicks,
 )
+
+# Shutdown the server only on module exit
+import atexit
+
+atexit.register(server_end)
 
 import os
 
