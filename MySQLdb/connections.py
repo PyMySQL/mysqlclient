@@ -228,7 +228,12 @@ class Connection(_mysql.connection):
             return b'_binary' + db.string_literal(obj)
 
         def string_decoder(s):
-            return s.decode(db.encoding)
+            if PY2:
+                return s.decode(db.encoding)
+            return s.decode(
+                db.encoding,
+                errors='backslashreplace'
+            )
 
         if not charset:
             charset = self.character_set_name()
