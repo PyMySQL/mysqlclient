@@ -232,7 +232,7 @@ class Connection(_mysql.connection):
                 return s.decode(db.encoding)
             return s.decode(
                 db.encoding,
-                errors='backslashreplace'
+                errors='ignore'
             )
 
         if not charset:
