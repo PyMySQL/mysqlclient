@@ -1,6 +1,5 @@
 import os
 import sys
-from distutils.msvccompiler import get_build_version
 
 
 def get_config():
@@ -8,35 +7,34 @@ def get_config():
 
     metadata, options = get_metadata_and_options()
 
-    connector = options["connector"]
+    client = "mariadbclient"
+    connector = os.environ.get("MYSQLCLIENT_CONNECTOR", options.get("connector"))
+    if not connector:
+        connector = os.path.join(
+            os.environ["ProgramFiles"], "MariaDB", "MariaDB Connector C"
+        )
 
     extra_objects = []
 
-    # client = "mysqlclient"
-    client = "mariadbclient"
-
-    vcversion = int(get_build_version())
-    if client == "mariadbclient":
-        library_dirs = [os.path.join(connector, "lib", "mariadb")]
-        libraries = [
-            "kernel32",
-            "advapi32",
-            "wsock32",
-            "shlwapi",
-            "Ws2_32",
-            "crypt32",
-            "secur32",
-            "bcrypt",
-            client,
-        ]
-        include_dirs = [os.path.join(connector, "include", "mariadb")]
-    else:
-        library_dirs = [
-            os.path.join(connector, r"lib\vs%d" % vcversion),
-            os.path.join(connector, "lib"),
-        ]
-        libraries = ["kernel32", "advapi32", "wsock32", client]
-        include_dirs = [os.path.join(connector, r"include")]
+    library_dirs = [
+        os.path.join(connector, "lib", "mariadb"),
+        os.path.join(connector, "lib"),
+    ]
+    libraries = [
+        "kernel32",
+        "advapi32",
+        "wsock32",
+        "shlwapi",
+        "Ws2_32",
+        "crypt32",
+        "secur32",
+        "bcrypt",
+        client,
+    ]
+    include_dirs = [
+        os.path.join(connector, "include", "mariadb"),
+        os.path.join(connector, "include"),
+    ]
 
     extra_link_args = ["/MANIFEST"]
 
