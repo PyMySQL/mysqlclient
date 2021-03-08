@@ -3,21 +3,63 @@ import sys
 from distutils.msvccompiler import get_build_version
 
 
+def get_default_connector(client):
+    if client == "mariadbclient":
+        return os.path.join(
+            os.environ["ProgramFiles"], "MariaDB", "MariaDB Connector C"
+        )
+    elif client == "mysqlclient":
+        return os.path.join(
+            os.environ["ProgramFiles"], "MySQL", "MySQL Connector C 6.1"
+        )
+    else:
+        raise ValueError("Unknown client library")
+
+
+def find_library(client, connector=None):
+    if not connector:
+        connector = get_default_connector(client)
+    paths = []
+    if client == "mariadbclient":
+        paths.append(os.path.join(connector, "lib", "mariadb", client + ".lib"))
+        paths.append(os.path.join(connector, "lib", client + ".lib"))
+    elif client == "mysqlclient":
+        vcversion = int(get_build_version())
+        paths.append(os.path.join(connector, "lib", "vs%d" % vcversion))
+    else:
+        raise ValueError("Unknown client library")
+    for path in paths:
+        if os.path.exists(path):
+            return path
+    return None
+
+
 def get_config():
     from setup_common import get_metadata_and_options, create_release_file
 
     metadata, options = get_metadata_and_options()
 
-    connector = options["connector"]
+    client = os.environ.get("MYSQLCLIENT_CLIENT", options.get("client"))
+    connector = os.environ.get("MYSQLCLIENT_CONNECTOR", options.get("connector"))
+
+    if not client:
+        for client in ("mariadbclient", "mysqlclient"):
+            if find_library(client, connector):
+                break
+        else:
+            raise RuntimeError("Couldn't find MySQL or MariaDB Connector")
+
+    if not connector:
+        connector = get_default_connector(client)
 
     extra_objects = []
 
-    # client = "mysqlclient"
-    client = "mariadbclient"
-
     vcversion = int(get_build_version())
     if client == "mariadbclient":
-        library_dirs = [os.path.join(connector, "lib", "mariadb")]
+        library_dirs = [
+            os.path.join(connector, "lib", "mariadb"),
+            os.path.join(connector, "lib"),
+        ]
         libraries = [
             "kernel32",
             "advapi32",
@@ -29,14 +71,19 @@ def get_config():
             "bcrypt",
             client,
         ]
-        include_dirs = [os.path.join(connector, "include", "mariadb")]
-    else:
+        include_dirs = [
+            os.path.join(connector, "include", "mariadb"),
+            os.path.join(connector, "include"),
+        ]
+    elif client == "mysqlclient":
         library_dirs = [
             os.path.join(connector, r"lib\vs%d" % vcversion),
             os.path.join(connector, "lib"),
         ]
         libraries = ["kernel32", "advapi32", "wsock32", client]
         include_dirs = [os.path.join(connector, r"include")]
+    else:
+        raise ValueError("Unknown client library")
 
     extra_link_args = ["/MANIFEST"]
 
