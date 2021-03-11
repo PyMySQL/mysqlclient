@@ -229,7 +229,7 @@ class Connection(_mysql.connection):
             return b'_binary' + db.string_literal(obj)
 
         def string_decoder(s):
-            return self.parent_string_decoder(s, db.encoding)
+            return self.decode_string_with_encoding(s, db.encoding)
 
         if not charset:
             charset = self.character_set_name()
@@ -252,7 +252,7 @@ class Connection(_mysql.connection):
                 self.autocommit(autocommit)
         self.messages = []
 
-    def parent_string_decoder(self, s, encoding):
+    def decode_string_with_encoding(self, s, encoding):
         raise NotImplementedError("Override this method.")
 
     def autocommit(self, on):
