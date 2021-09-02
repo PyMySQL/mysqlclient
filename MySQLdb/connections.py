@@ -111,9 +111,8 @@ class Connection(_mysql.connection):
             flags to use or 0 (see MySQL docs or constants/CLIENTS.py)
 
         :param bool multi_statements:
-            If True, enable multi statements for clients >= 4.1 and multi
-            results for clients >= 5.0. Set to False to disable it, which gives
-            some protection against injection attacks. Defaults to True.
+            If True, enable multi statements for clients >= 4.1.
+            Defaults to True.
 
         :param str ssl_mode:
             specify the security settings for connection to the server;
@@ -175,15 +174,17 @@ class Connection(_mysql.connection):
 
         client_flag = kwargs.get("client_flag", 0)
 
+        client_version = tuple(
+            [numeric_part(n) for n in _mysql.get_client_info().split(".")[:2]]
+        )
+
         multi_statements = kwargs2.pop("multi_statements", True)
         if multi_statements:
-            client_version = tuple(
-                [numeric_part(n) for n in _mysql.get_client_info().split(".")[:2]]
-            )
             if client_version >= (4, 1):
                 client_flag |= CLIENT.MULTI_STATEMENTS
-            if client_version >= (5, 0):
-                client_flag |= CLIENT.MULTI_RESULTS
+
+        if client_version >= (5, 0):
+            client_flag |= CLIENT.MULTI_RESULTS
 
         kwargs2["client_flag"] = client_flag
 
