@@ -128,7 +128,7 @@ def get_config():
         if use_mysqlconfig_cflags:
             # mysql_config may have "-lmysqlclient -lz -lssl -lcrypto", but zlib and
             # ssl is not used by _mysql.  They are needed only for static build.
-            for L in ("crypto", "ssl", "z"):
+            for L in ("crypto", "ssl", "z", "zstd"):
                 if L in libraries:
                     libraries.remove(L)
 
