@@ -24,7 +24,7 @@ from ._exceptions import (
 _charset_to_encoding = {
     "utf8mb4": "utf8",
     "utf8mb3": "utf8",
-    "latin1": "cp1252",
+    "latin1": "latin1",
     "koi8r": "koi8_r",
     "koi8u": "koi8_u",
 }
