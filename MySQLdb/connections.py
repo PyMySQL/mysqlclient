@@ -148,10 +148,10 @@ class Connection(_mysql.connection):
 
         kwargs2 = kwargs.copy()
 
-        if "database" in kwargs2:
-            kwargs2["db"] = kwargs2.pop("database")
-        if "password" in kwargs2:
-            kwargs2["passwd"] = kwargs2.pop("password")
+        if "db" in kwargs2:
+            kwargs2["database"] = kwargs2.pop("db")
+        if "passwd" in kwargs2:
+            kwargs2["password"] = kwargs2.pop("passwd")
 
         if "conv" in kwargs:
             conv = kwargs["conv"]

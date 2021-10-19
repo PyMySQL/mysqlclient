@@ -414,7 +414,7 @@ _mysql_ConnectionObject_Initialize(
          *db = NULL, *unix_socket = NULL;
     unsigned int port = 0;
     unsigned int client_flag = 0;
-    static char *kwlist[] = { "host", "user", "passwd", "db", "port",
+    static char *kwlist[] = { "host", "user", "password", "database", "port",
                   "unix_socket", "conv",
                   "connect_timeout", "compress",
                   "named_pipe", "init_command",
