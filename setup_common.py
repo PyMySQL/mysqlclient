@@ -32,5 +32,6 @@ def create_release_file(metadata):
 __author__ = "%(author)s <%(author_email)s>"
 version_info = %(version_info)s
 __version__ = "%(version)s"
-""" % metadata
+"""
+            % metadata
         )
