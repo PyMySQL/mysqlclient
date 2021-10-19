@@ -173,19 +173,10 @@ class Connection(_mysql.connection):
         self._binary_prefix = kwargs2.pop("binary_prefix", False)
 
         client_flag = kwargs.get("client_flag", 0)
-
-        client_version = tuple(
-            [numeric_part(n) for n in _mysql.get_client_info().split(".")[:2]]
-        )
-
+        client_flag |= CLIENT.MULTI_RESULTS
         multi_statements = kwargs2.pop("multi_statements", True)
         if multi_statements:
-            if client_version >= (4, 1):
-                client_flag |= CLIENT.MULTI_STATEMENTS
-
-        if client_version >= (5, 0):
-            client_flag |= CLIENT.MULTI_RESULTS
-
+            client_flag |= CLIENT.MULTI_STATEMENTS
         kwargs2["client_flag"] = client_flag
 
         # PEP-249 requires autocommit to be initially off
