@@ -42,4 +42,4 @@ jobs:
           tar xf SQLAlchemy-1.4.25.tar.gz
           cd SQLAlchemy-1.4.25
           pip install .
-          pytest --dburi=mysql://scott:tiger@127.0.0.1:3306/test?charset=utf8mb4 test/
+          pytest --dburi=mysql://scott:tiger@127.0.0.1:3306/test_schema?charset=utf8mb4 test/
