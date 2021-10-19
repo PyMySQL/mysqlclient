@@ -8,10 +8,21 @@ jobs:
   build:
     runs-on: ubuntu-20.04
     steps:
-      - name: Start MySQL
+      - uses: shogo82148/actions-setup-mysql@v1
+        with:
+          mysql-version: "5.7"
+          user: scott
+          password: tiger
+          my-cnf: |
+            innodb_log_file_size=256MB
+            innodb_buffer_pool_size=512MB
+            max_allowed_packet=16MB
+            max_connections=50
+            local_infile=1
+
+      - name: Create database
         run: |
-          sudo systemctl start mysql.service
-          mysql -uroot -proot -e "CREATE USER 'scott'@'%' IDENTIFIED BY 'tiger'; CREATE DATABASE test_schema CHARSET utf8mb4; GRANT ALL ON test_schema.* TO scott;"
+          mysql -uscott -ptiger -e "CREATE DATABASE test_schema CHARSET utf8mb4;"
 
       - uses: actions/cache@v2
         with:
