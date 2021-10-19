@@ -302,11 +302,7 @@ class Connection(_mysql.connection):
 
     def set_character_set(self, charset):
         """Set the connection character set to charset."""
-        try:
-            super().set_character_set(charset)
-        except AttributeError:
-            self.query("SET NAMES %s" % charset)
-            self.store_result()
+        super().set_character_set(charset)
         self.encoding = _charset_to_encoding.get(charset, charset)
 
     def set_sql_mode(self, sql_mode):
