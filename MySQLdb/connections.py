@@ -200,10 +200,6 @@ class Connection(_mysql.connection):
         )
 
         self.encoding = "ascii"  # overridden in set_character_set()
-        db = proxy(self)
-
-        def unicode_literal(u, dummy=None):
-            return db.string_literal(u.encode(db.encoding))
 
         if not charset:
             charset = self.character_set_name()
@@ -227,7 +223,11 @@ class Connection(_mysql.connection):
             # MySQL may return JSON with charset==binary.
             self.converter[FIELD_TYPE.JSON] = str
 
+        db = proxy(self)
+        def unicode_literal(u, dummy=None):
+            return db.string_literal(u.encode(db.encoding))
         self.encoders[str] = unicode_literal
+
         self._transactional = self.server_capabilities & CLIENT.TRANSACTIONS
         if self._transactional:
             if autocommit is not None:
@@ -300,32 +300,14 @@ class Connection(_mysql.connection):
         """
         self.query(b"BEGIN")
 
-    if not hasattr(_mysql.connection, "warning_count"):
-
-        def warning_count(self):
-            """Return the number of warnings generated from the
-            last query. This is derived from the info() method."""
-            info = self.info()
-            if info:
-                return int(info.split()[-1])
-            else:
-                return 0
-
     def set_character_set(self, charset):
-        """Set the connection character set to charset. The character
-        set can only be changed in MySQL-4.1 and newer. If you try
-        to change the character set from the current value in an
-        older version, NotSupportedError will be raised."""
-        py_charset = _charset_to_encoding.get(charset, charset)
-        if self.character_set_name() != charset:
-            try:
-                super().set_character_set(charset)
-            except AttributeError:
-                if self._server_version < (4, 1):
-                    raise NotSupportedError("server is too old to set charset")
-                self.query("SET NAMES %s" % charset)
-                self.store_result()
-        self.encoding = py_charset
+        """Set the connection character set to charset."""
+        try:
+            super().set_character_set(charset)
+        except AttributeError:
+            self.query("SET NAMES %s" % charset)
+            self.store_result()
+        self.encoding = _charset_to_encoding.get(charset, charset)
 
     def set_sql_mode(self, sql_mode):
         """Set the connection sql_mode. See MySQL documentation for
