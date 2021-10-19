@@ -224,8 +224,10 @@ class Connection(_mysql.connection):
             self.converter[FIELD_TYPE.JSON] = str
 
         db = proxy(self)
+
         def unicode_literal(u, dummy=None):
             return db.string_literal(u.encode(db.encoding))
+
         self.encoders[str] = unicode_literal
 
         self._transactional = self.server_capabilities & CLIENT.TRANSACTIONS
