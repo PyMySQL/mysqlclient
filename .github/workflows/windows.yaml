@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: windows-latest
     env:
-      CONNECTOR_VERSION: "3.1.11"
+      CONNECTOR_VERSION: "3.2.4"
     steps:
 
       - name: Cache Connector
@@ -61,14 +61,14 @@ jobs:
         shell: cmd
         working-directory: mysqlclient
         run: |
+          py -3.10 -m pip install -U setuptools wheel pip
+          py -3.10 setup.py bdist_wheel
           py -3.9 -m pip install -U setuptools wheel pip
           py -3.9 setup.py bdist_wheel
           py -3.8 -m pip install -U setuptools wheel pip
           py -3.8 setup.py bdist_wheel
           py -3.7 -m pip install -U setuptools wheel pip
           py -3.7 setup.py bdist_wheel
-          py -3.6 -m pip install -U setuptools wheel pip
-          py -3.6 setup.py bdist_wheel
 
       - name: Upload Wheel
         uses: actions/upload-artifact@v2
@@ -81,12 +81,12 @@ jobs:
         working-directory: mysqlclient/dist
         run: |
           ls -la
+          py -3.10 -m pip install --no-index --find-links . mysqlclient
+          py -3.10 -c "import MySQLdb; print(MySQLdb.version_info)"
           py -3.9 -m pip install --no-index --find-links . mysqlclient
           py -3.9 -c "import MySQLdb; print(MySQLdb.version_info)"
           py -3.8 -m pip install --no-index --find-links . mysqlclient
           py -3.8 -c "import MySQLdb; print(MySQLdb.version_info)"
           py -3.7 -m pip install --no-index --find-links . mysqlclient
           py -3.7 -c "import MySQLdb; print(MySQLdb.version_info)"
-          py -3.6 -m pip install --no-index --find-links . mysqlclient
-          py -3.6 -c "import MySQLdb; print(MySQLdb.version_info)"
 
