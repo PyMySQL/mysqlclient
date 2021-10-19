@@ -22,7 +22,7 @@ jobs:
 
       - name: Create database
         run: |
-          mysql -uscott -ptiger -e "CREATE DATABASE test_schema CHARSET utf8mb4;"
+          mysql -h127.0.0.1 -uscott -ptiger -e "CREATE DATABASE test_schema CHARSET utf8mb4;"
 
       - uses: actions/cache@v2
         with:
