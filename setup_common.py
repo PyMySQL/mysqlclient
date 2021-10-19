@@ -26,12 +26,11 @@ def enabled(options, option):
 
 
 def create_release_file(metadata):
-    with open("MySQLdb/release.py", "w") as rel:
+    with open("MySQLdb/release.py", "w", encoding="utf-8") as rel:
         rel.write(
             """
 __author__ = "%(author)s <%(author_email)s>"
 version_info = %(version_info)s
 __version__ = "%(version)s"
-"""
-            % metadata
+""" % metadata
         )
