@@ -2,6 +2,7 @@ name: SQLAlchemy compat test
 
 on:
   push:
+  pull_request:
 
 jobs:
   build:
@@ -34,7 +35,8 @@ jobs:
           PIP_DISABLE_PIP_VERSION_CHECK: 1
         run: |
           pip install -U pytest pytest-cov
-          python setup.py develop
+          #python setup.py develop
+          pip install mysqlclient  # Use stable version
 
       - name: Run SQLAlchemy test
         run: |
