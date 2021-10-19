@@ -16,17 +16,17 @@ DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "django_default",
-        "USER": "django",
         "HOST": "127.0.0.1",
-        "PASSWORD": "secret",
+        "USER": "scott",
+        "PASSWORD": "tiger",
         "TEST": {"CHARSET": "utf8mb4", "COLLATION": "utf8mb4_general_ci"},
     },
     "other": {
         "ENGINE": "django.db.backends.mysql",
         "NAME": "django_other",
-        "USER": "django",
         "HOST": "127.0.0.1",
-        "PASSWORD": "secret",
+        "USER": "scott",
+        "PASSWORD": "tiger",
         "TEST": {"CHARSET": "utf8mb4", "COLLATION": "utf8mb4_general_ci"},
     },
 }
