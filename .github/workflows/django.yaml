@@ -43,6 +43,7 @@ jobs:
         env:
           DJANGO_VERSION: "2.2.24"
         run: |
+          sudo apt-get install libmemcached-dev
           wget https://github.com/django/django/archive/${DJANGO_VERSION}.tar.gz
           tar xf ${DJANGO_VERSION}.tar.gz
           cp ci/test_mysql.py django-${DJANGO_VERSION}/tests/
