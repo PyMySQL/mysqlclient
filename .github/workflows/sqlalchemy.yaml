@@ -2,6 +2,8 @@ name: SQLAlchemy compat test
 
 on:
   push:
+    branches:
+      - main
   pull_request:
 
 jobs:
@@ -31,10 +33,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-sqla-pip-
 
-      - name: Set up Python 3.10
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: "3.10"
+          python-version: "3.9"
 
       - uses: actions/checkout@v2
         with:
@@ -45,6 +47,8 @@ jobs:
           PIP_NO_PYTHON_VERSION_WARNING: 1
           PIP_DISABLE_PIP_VERSION_CHECK: 1
         run: |
+          sudo apt-get update
+          sudo apt-get install libmysqlclient-dev
           pip install -U pytest pytest-cov
           #python setup.py develop
           pip install mysqlclient  # Use stable version
