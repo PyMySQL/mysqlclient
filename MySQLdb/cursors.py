@@ -375,7 +375,7 @@ class CursorStoreResultMixIn:
         return result
 
     def fetchall(self):
-        """Fetchs all available rows from the cursor."""
+        """Fetches all available rows from the cursor."""
         self._check_executed()
         if self.rownumber:
             result = self._rows[self.rownumber :]
@@ -437,7 +437,7 @@ class CursorUseResultMixIn:
         return r
 
     def fetchall(self):
-        """Fetchs all available rows from the cursor."""
+        """Fetches all available rows from the cursor."""
         self._check_executed()
         r = self._fetch_row(0)
         self.rownumber = self.rownumber + len(r)
