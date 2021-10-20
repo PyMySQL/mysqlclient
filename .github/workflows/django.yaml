@@ -49,4 +49,4 @@ jobs:
           cd django-${DJANGO_VERSION}/tests/
           pip install ..
           pip install -r requirements/py3.txt
-          ./runtests.py --settings=test_mysql
+          PYTHONPATH=.. python3 ./runtests.py --settings=test_mysql
