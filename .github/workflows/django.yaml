@@ -48,5 +48,5 @@ jobs:
           cp ci/test_mysql.py django-${DJANGO_VERSION}/tests/
           cd django-${DJANGO_VERSION}/tests/
           pip install ..
-          pip install requirements/py3.txt
+          pip install -r requirements/py3.txt
           ./runtests.py --settings=test_mysql
