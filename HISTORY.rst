@@ -2,7 +2,7 @@
  What's new in 2.1.0
 ======================
 
-Release: 2021-10-19 (rc1)
+Release: 2021-11-17
 
 * Add ``multistatement=True`` option. You can disable multi statement. (#500).
 * Remove unnecessary bytes encoder which is remained for Django 1.11
