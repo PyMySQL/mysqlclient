@@ -310,7 +310,7 @@ _mysql_ResultObject_Initialize(
             PyObject *fun2=NULL;
             int j, n2=PySequence_Size(fun);
             // BINARY_FLAG means ***_bin collation is used.
-            // To distinguish text and binary, we shoud use charsetnr==63 (binary).
+            // To distinguish text and binary, we should use charsetnr==63 (binary).
             // But we abuse BINARY_FLAG for historical reason.
             if (fields[i].charsetnr == 63) {
                 flags |= BINARY_FLAG;

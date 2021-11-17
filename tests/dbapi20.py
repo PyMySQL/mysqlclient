@@ -793,7 +793,7 @@ class DatabaseAPI20Test(unittest.TestCase):
             con.close()
 
     def test_setoutputsize(self):
-        # Real test for setoutputsize is driver dependant
+        # Real test for setoutputsize is driver dependent
         raise NotImplementedError("Driver need to override this test")
 
     def test_None(self):

@@ -511,7 +511,7 @@ callproc(procname, args)
       can only be returned with a SELECT statement. Since a stored
       procedure may return zero or more result sets, it is impossible
       for MySQLdb to determine if there are result sets to fetch
-      before the modified parmeters are accessible.
+      before the modified parameters are accessible.
 
       The parameters are stored in the server as @_*procname*_*n*,
       where *n* is the position of the parameter. I.e., if you

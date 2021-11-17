@@ -94,7 +94,7 @@ Release: 2019-08-09
 
 * ``--static`` build supports ``libmariadbclient.a``
 * Try ``mariadb_config`` when ``mysql_config`` is not found
-* Fixed warning happend in Python 3.8 (#359)
+* Fixed warning happened in Python 3.8 (#359)
 * Fixed ``from MySQLdb import *``, while I don't recommend it. (#369)
 * Fixed SEGV ``MySQLdb.escape_string("1")`` when libmariadb is used and
   no connection is created. (#367)
@@ -294,7 +294,7 @@ More tests for date and time columns. (#41)
 
 Fix calling .execute() method for closed cursor cause TypeError. (#37)
 
-Improve peformance to parse date. (#43)
+Improve performance to parse date. (#43)
 
 Support geometry types (#49)
 
