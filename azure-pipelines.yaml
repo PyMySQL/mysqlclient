@@ -6,7 +6,7 @@ trigger:
     include:
     - master
 pool:
-  vmImage: 'Ubuntu-16.04'
+  vmImage: 'Ubuntu-latest'
 
 variables:
   imageName: 'tiledb/tiledb-sql-py'
