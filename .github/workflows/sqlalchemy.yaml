@@ -10,30 +10,16 @@ jobs:
   build:
     runs-on: ubuntu-20.04
     steps:
-      - uses: shogo82148/actions-setup-mysql@v1
-        with:
-          mysql-version: "5.7"
-          user: scott
-          password: tiger
-          my-cnf: |
-            innodb_log_file_size=256MB
-            innodb_buffer_pool_size=512MB
-            max_allowed_packet=16MB
-            max_connections=50
-            local_infile=1
-
-      - name: Create database
+      - name: Start MySQL
         run: |
-          mysql -h127.0.0.1 -uscott -ptiger -e "CREATE DATABASE test_schema CHARSET utf8mb4;"
+          sudo systemctl start mysql.service
+          mysql -uroot -proot -e "CREATE DATABASE test_schema CHARSET utf8mb4"
+          mysql -uroot -proot -e "CREATE USER 'scott' IDENTIFIED BY 'tiger'"
 
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: "3.9"
-
-            # - uses: actions/checkout@v2
-            #   with:
-            #     fetch-depth: 2
 
       - name: Install mysqlclient
         env:
