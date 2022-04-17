@@ -55,8 +55,8 @@ jobs:
 
       - name: Run SQLAlchemy test
         run: |
-          wget https://files.pythonhosted.org/packages/69/2b/f0ee898c3270d965300ec30b0bf06e062c4cc92f35d17ae6046f429c5067/SQLAlchemy-1.4.25.tar.gz
-          tar xf SQLAlchemy-1.4.25.tar.gz
-          cd SQLAlchemy-1.4.25
+          wget https://files.pythonhosted.org/packages/f6/d6/fcf14b752daba13a02a6669eccb025bf3ba3f814741cd23253c180a12fff/SQLAlchemy-1.4.35.tar.gz
+          tar xf SQLAlchemy-1.4.35.tar.gz
+          cd SQLAlchemy-1.4.35
           pip install .
           pytest --dburi=mysql://scott:tiger@127.0.0.1:3306/test_schema?charset=utf8mb4 test/
