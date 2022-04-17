@@ -31,15 +31,16 @@ jobs:
         with:
           python-version: "3.9"
 
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 2
+            # - uses: actions/checkout@v2
+            #   with:
+            #     fetch-depth: 2
 
       - name: Install mysqlclient
         env:
           PIP_NO_PYTHON_VERSION_WARNING: 1
           PIP_DISABLE_PIP_VERSION_CHECK: 1
         run: |
+          pwd
           sudo apt-get update
           sudo apt-get install libmysqlclient-dev
           pip install -U pytest pytest-cov
@@ -54,4 +55,6 @@ jobs:
           tar xf SQLAlchemy-1.4.35.tar.gz
           cd SQLAlchemy-1.4.35
           pip install .
+          pwd
+          python -c 'import MySQLdb'
           pytest --dburi=mysql://scott:tiger@127.0.0.1:3306/test_schema?charset=utf8mb4 test/
