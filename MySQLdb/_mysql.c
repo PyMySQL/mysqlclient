@@ -1442,7 +1442,7 @@ _mysql_ResultObject_fetch_row(
                      &maxrows, &how))
         return NULL;
     check_result_connection(self);
-    if (how >= (int)sizeof(row_converters)) {
+    if (how >= (int)(sizeof(row_converters) / sizeof(row_converters[0]))) {
         PyErr_SetString(PyExc_ValueError, "how out of range");
         return NULL;
     }
