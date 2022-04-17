@@ -26,13 +26,6 @@ jobs:
         run: |
           mysql -h127.0.0.1 -uscott -ptiger -e "CREATE DATABASE test_schema CHARSET utf8mb4;"
 
-      - uses: actions/cache@v2
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-sqla-pip-1
-          restore-keys: |
-            ${{ runner.os }}-sqla-pip-
-
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
@@ -51,7 +44,9 @@ jobs:
           sudo apt-get install libmysqlclient-dev
           pip install -U pytest pytest-cov
           #python setup.py develop
-          pip install mysqlclient  # Use stable version
+          pip install -v mysqlclient  # Use stable version
+          python -VV
+          python -c 'import MySQLdb'
 
       - name: Run SQLAlchemy test
         run: |
