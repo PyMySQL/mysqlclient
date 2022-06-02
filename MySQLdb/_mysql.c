@@ -498,7 +498,6 @@ _mysql_ConnectionObject_Initialize(
                 enforce_tls = 1;
             #ifdef MYSQL_OPT_SSL_ENFORCE
             mysql_optionsv(&(self->connection), MYSQL_OPT_SSL_ENFORCE, (void *)&enforce_tls);
-            mysql_optionsv(&(self->connection), MYSQL_OPT_SSL_VERIFY_SERVER_CERT, (void *)&enforce_tls);
             #endif
         }
     }
