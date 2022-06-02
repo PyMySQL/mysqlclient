@@ -581,10 +581,10 @@ host\n\
 user\n\
   string, user to connect as\n\
 \n\
-passwd\n\
+password\n\
   string, password to use\n\
 \n\
-db\n\
+database\n\
   string, database to use\n\
 \n\
 port\n\
