@@ -496,8 +496,16 @@ _mysql_ConnectionObject_Initialize(
             int enforce_tls= 0;
             if (strcasecmp(ssl_mode, "REQUIRED") == 0)
                 enforce_tls = 1;
+
             #ifdef MYSQL_OPT_SSL_ENFORCE
             mysql_optionsv(&(self->connection), MYSQL_OPT_SSL_ENFORCE, (void *)&enforce_tls);
+            #endif
+
+            int verify_cert = 0;
+            if (strcasecmp(ssl_mode, "VERIFY_CA") == 0 || strcasecmp(ssl_mode, "VERIFY_IDENTITY") == 0 )
+                enforce_tls = 1;
+            #ifdef MYSQL_OPT_SSL_VERIFY_SERVER_CERT
+            mysql_optionsv(&(self->connection), MYSQL_OPT_SSL_VERIFY_SERVER_CERT, (void *)&enforce_tls);
             #endif
         }
     }
@@ -538,12 +546,7 @@ _mysql_ConnectionObject_Initialize(
     }
 #ifdef HAVE_ENUM_MYSQL_OPT_SSL_MODE
     if (ssl_mode) {
-        char *corrected_ssl_mode = NULL;
-        if (strcasecmp(ssl_mode, "REQUIRED") == 0 || strcasecmp(ssl_mode, "VERIFY_CA") == 0)
-            corrected_ssl_mode = "VERIFY_IDENTITY";
-        else
-            corrected_ssl_mode = ssl_mode;
-        int ssl_mode_num = _get_ssl_mode_num(corrected_ssl_mode);
+        int ssl_mode_num = _get_ssl_mode_num(ssl_mode);
         mysql_options(&(self->connection), MYSQL_OPT_SSL_MODE, &ssl_mode_num);
     }
 #endif
