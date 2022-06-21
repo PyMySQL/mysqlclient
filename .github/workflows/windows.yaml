@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: windows-latest
     env:
-      CONNECTOR_VERSION: "3.2.4"
+      CONNECTOR_VERSION: "3.3.1"
     steps:
 
       - name: Cache Connector
@@ -57,18 +57,25 @@ jobs:
           EOF
           cat site.cfg
 
+      - uses: actions/setup-python@v2
+      - name: Install cibuildwheel
+        run: python -m pip install cibuildwheel==2.7.0
       - name: Build wheels
-        shell: cmd
         working-directory: mysqlclient
-        run: |
-          py -3.10 -m pip install -U setuptools wheel pip
-          py -3.10 setup.py bdist_wheel
-          py -3.9 -m pip install -U setuptools wheel pip
-          py -3.9 setup.py bdist_wheel
-          py -3.8 -m pip install -U setuptools wheel pip
-          py -3.8 setup.py bdist_wheel
-          py -3.7 -m pip install -U setuptools wheel pip
-          py -3.7 setup.py bdist_wheel
+        run: python -m cibuildwheel --output-dir dist
+
+        #- name: Build wheels
+        #  shell: cmd
+        #  working-directory: mysqlclient
+        #  run: |
+        #    py -3.10 -m pip install -U setuptools wheel pip
+        #    py -3.10 setup.py bdist_wheel
+        #    py -3.9 -m pip install -U setuptools wheel pip
+        #    py -3.9 setup.py bdist_wheel
+        #    py -3.8 -m pip install -U setuptools wheel pip
+        #    py -3.8 setup.py bdist_wheel
+        #    py -3.7 -m pip install -U setuptools wheel pip
+        #    py -3.7 setup.py bdist_wheel
 
       - name: Upload Wheel
         uses: actions/upload-artifact@v2
@@ -81,6 +88,8 @@ jobs:
         working-directory: mysqlclient/dist
         run: |
           ls -la
+          py -3.11 -m pip install --no-index --find-links . mysqlclient
+          py -3.11 -c "import MySQLdb; print(MySQLdb.version_info)"
           py -3.10 -m pip install --no-index --find-links . mysqlclient
           py -3.10 -c "import MySQLdb; print(MySQLdb.version_info)"
           py -3.9 -m pip install --no-index --find-links . mysqlclient
