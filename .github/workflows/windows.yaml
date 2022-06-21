@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - ci
   workflow_dispatch:
 
 jobs:
@@ -64,41 +65,12 @@ jobs:
         working-directory: mysqlclient
         env:
           CIBW_PROJECT_REQUIRES_PYTHON: ">=3.8"
-          CIBW_ARCHS_WINDOWS: "AMD64"
-        run: python -m cibuildwheel --prerelease-pythons --output-dir dist
-
-        #- name: Build wheels
-        #  shell: cmd
-        #  working-directory: mysqlclient
-        #  run: |
-        #    py -3.10 -m pip install -U setuptools wheel pip
-        #    py -3.10 setup.py bdist_wheel
-        #    py -3.9 -m pip install -U setuptools wheel pip
-        #    py -3.9 setup.py bdist_wheel
-        #    py -3.8 -m pip install -U setuptools wheel pip
-        #    py -3.8 setup.py bdist_wheel
-        #    py -3.7 -m pip install -U setuptools wheel pip
-        #    py -3.7 setup.py bdist_wheel
+          CIBW_ARCHS: "AMD64"
+          CIBW_TEST_COMMAND: "python -c \"import MySQLdb; print(MySQLdb.version_info)\" "
+        run: "python -m cibuildwheel --prerelease-pythons --output-dir dist"
 
       - name: Upload Wheel
         uses: actions/upload-artifact@v2
         with:
           name: win-wheels
           path: mysqlclient/dist/*.whl
-
-      - name: Check wheels
-        shell: bash
-        working-directory: mysqlclient/dist
-        run: |
-          ls -la
-          py -3.11 -m pip install --no-index --find-links . mysqlclient
-          py -3.11 -c "import MySQLdb; print(MySQLdb.version_info)"
-          py -3.10 -m pip install --no-index --find-links . mysqlclient
-          py -3.10 -c "import MySQLdb; print(MySQLdb.version_info)"
-          py -3.9 -m pip install --no-index --find-links . mysqlclient
-          py -3.9 -c "import MySQLdb; print(MySQLdb.version_info)"
-          py -3.8 -m pip install --no-index --find-links . mysqlclient
-          py -3.8 -c "import MySQLdb; print(MySQLdb.version_info)"
-          py -3.7 -m pip install --no-index --find-links . mysqlclient
-          py -3.7 -c "import MySQLdb; print(MySQLdb.version_info)"
-
