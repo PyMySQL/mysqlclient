@@ -1,4 +1,18 @@
 ======================
+ What's new in 2.1.1
+======================
+
+Release: 2022-06-22
+
+* Fix qualname of exception classes. (#522)
+* Fix range check in ``MySQLdb._mysql.result.fetch_row()``. Invalid ``how`` argument caused SEGV. (#538)
+* Fix docstring of ``_mysql.connect``. (#540)
+* Windows: Binary wheels are updated. (#541)
+   * Use MariaDB Connector/C 3.3.1.
+   * Use cibuildwheel to build wheels.
+   * Python 3.8-3.11
+
+======================
  What's new in 2.1.0
 ======================
 
