@@ -1155,10 +1155,10 @@ _mysql_field_to_python(
     if (converter == (PyObject*)&PyUnicode_Type) {
         if (encoding == utf8) {
             //fprintf(stderr, "decoding with utf8!\n");
-            return PyUnicode_DecodeUTF8(rowitem, length, NULL);
+            return PyUnicode_DecodeUTF8(rowitem, length, "replace");
         } else {
             //fprintf(stderr, "decoding with %s\n", encoding);
-            return PyUnicode_Decode(rowitem, length, encoding, NULL);
+            return PyUnicode_Decode(rowitem, length, encoding, "replace");
         }
     }
     if (converter == (PyObject*)&PyBytes_Type || converter == Py_None) {
