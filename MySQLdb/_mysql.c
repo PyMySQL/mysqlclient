@@ -1153,12 +1153,19 @@ _mysql_field_to_python(
 
     // Fast paths for int, string and binary.
     if (converter == (PyObject*)&PyUnicode_Type) {
+        const char* use_decode_err_rep_mode = getenv("MYC_USE_DECODE_ERR_REP_MODE");
+        const char* decode_err_mode = NULL;
+        fprintf(stderr, "use_decode_err_rep_mode is %s\n", use_decode_err_rep_mode);
+        if (NULL != use_decode_err_rep_mode && strncmp(use_decode_err_rep_mode, "1", 1) == 0)
+        {
+            decode_err_mode = "replace";
+        }
         if (encoding == utf8) {
             //fprintf(stderr, "decoding with utf8!\n");
-            return PyUnicode_DecodeUTF8(rowitem, length, NULL);
+            return PyUnicode_DecodeUTF8(rowitem, length, decode_err_mode);
         } else {
             //fprintf(stderr, "decoding with %s\n", encoding);
-            return PyUnicode_Decode(rowitem, length, encoding, NULL);
+            return PyUnicode_Decode(rowitem, length, encoding, decode_err_mode);
         }
     }
     if (converter == (PyObject*)&PyBytes_Type || converter == Py_None) {
