@@ -18,5 +18,5 @@ metadata["ext_modules"] = [
 ]
 metadata["long_description"] = readme
 metadata["long_description_content_type"] = "text/markdown"
-metadata["python_requires"] = ">=3.5"
+metadata["python_requires"] = ">=3.7"
 setuptools.setup(**metadata)
