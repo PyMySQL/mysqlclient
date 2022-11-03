@@ -336,15 +336,28 @@ connect(parameters...)
             *This must be a keyword parameter.*
 
          charset
-            If present, the connection character set will be changed
-            to this character set, if they are not equal. Support for
-            changing the character set requires MySQL-4.1 and later
-            server; if the server is too old, UnsupportedError will be
-            raised. This option implies use_unicode=True, but you can
-            override this with use_unicode=False, though you probably
-            shouldn't.
+            If supplied, the connection character set will be changed
+            to this character set.
 
-            If not present, the default character set is used.
+            If omitted, empty string, or None, the default character
+            set from the server will be used.
+
+            *This must be a keyword parameter.*
+
+         collate
+
+            If ``charset`` and ``collation`` are both supplied, the
+            character set and collation for the current conneciton
+            will be set.
+
+            If omitted, empty string, or None, the default collation
+            for the ``charset`` is implied by the database server.
+
+            To learn more about the quiddities of character sets and
+            collations, consult the `MySQL docs
+            <https://dev.mysql.com/doc/refman/8.0/en/charset.html>`_
+            and `MariaDB docs
+            <https://mariadb.com/kb/en/character-sets/>`_
 
             *This must be a keyword parameter.*
 

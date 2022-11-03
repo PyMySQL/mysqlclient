@@ -97,6 +97,17 @@ class Connection(_mysql.connection):
             If supplied, the connection character set will be changed
             to this character set.
 
+            If omitted, empty string, or None, the default character set
+            from the server will be used.
+
+        :param str collate:
+            If ``charset`` and ``collation`` are both supplied, the
+            character set and collation for the current conneciton
+            will be set.
+
+            If omitted, empty string, or None, the default collation
+            for the ``charset`` is implied.
+
         :param str auth_plugin:
             If supplied, the connection default authentication plugin will be
             changed to this value. Example values:
@@ -168,6 +179,7 @@ class Connection(_mysql.connection):
 
         cursorclass = kwargs2.pop("cursorclass", self.default_cursor)
         charset = kwargs2.get("charset", "")
+        collate = kwargs2.pop("collate", "")
         use_unicode = kwargs2.pop("use_unicode", True)
         sql_mode = kwargs2.pop("sql_mode", "")
         self._binary_prefix = kwargs2.pop("binary_prefix", False)
@@ -192,9 +204,12 @@ class Connection(_mysql.connection):
 
         self.encoding = "ascii"  # overridden in set_character_set()
 
-        if not charset:
-            charset = self.character_set_name()
-        self.set_character_set(charset)
+        if charset and collate:
+            self.set_character_set_collation(charset, collate)
+        else:
+            if not charset:
+                charset = self.character_set_name()
+            self.set_character_set(charset)
 
         if sql_mode:
             self.set_sql_mode(sql_mode)
@@ -296,6 +311,14 @@ class Connection(_mysql.connection):
     def set_character_set(self, charset):
         """Set the connection character set to charset."""
         super().set_character_set(charset)
+        self.encoding = _charset_to_encoding.get(charset, charset)
+
+    def set_character_set_collation(self, charset, collate):
+        """Set the connection character set and collation. Use this as
+        an alternative to ``set_character_set``.
+        """
+        self.query("SET NAMES %s COLLATE %s" % (charset, collate))
+        self.store_result()
         self.encoding = _charset_to_encoding.get(charset, charset)
 
     def set_sql_mode(self, sql_mode):
