@@ -114,3 +114,33 @@ class CoreAPI(unittest.TestCase):
         with connection_factory() as conn:
             self.assertFalse(conn.closed)
         self.assertTrue(conn.closed)
+
+
+class TestCollation(unittest.TestCase):
+    """Test charset and collation connection options."""
+
+    def setUp(self):
+        # Initialize a connection with a non-default character set and
+        # collation.
+        self.conn = connection_factory(
+            charset="utf8mb4",
+            collate="utf8mb4_esperanto_ci",
+        )
+
+    def tearDown(self):
+        self.conn.close()
+
+    def test_charset_collate(self):
+        c = self.conn.cursor()
+        c.execute(
+            """
+            SHOW VARIABLES WHERE
+            Variable_Name="character_set_connection" OR
+            Variable_Name="collation_connection";
+            """
+        )
+        row = c.fetchall()
+        charset = row[0][1]
+        collate = row[1][1]
+        self.assertEqual(charset, "utf8mb4")
+        self.assertEqual(collate, "utf8mb4_esperanto_ci")
