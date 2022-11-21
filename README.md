@@ -75,6 +75,14 @@ You may need to install the Python 3 and MySQL development headers and libraries
 * `$ sudo apt-get install python3-dev default-libmysqlclient-dev build-essential`  # Debian / Ubuntu
 * `% sudo yum install python3-devel mysql-devel`  # Red Hat / CentOS
 
+If you still experience errors from pip regarding 'legacy-install-failure' or 'Python.h: No such file or directory', you have to specify the correct python3-dev library for your python interpreter like so:
+
+* `$ sudo apt-get install python3.10-dev`   # Debian / Ubuntu
+
+instead of: 
+
+* `$ sudo apt-get install python3-dev`   # Debian / Ubuntu 
+
 Then you can install mysqlclient via pip now:
 
 ```
