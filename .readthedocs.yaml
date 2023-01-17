@@ -4,8 +4,6 @@ build:
   os: ubuntu-22.04
   tools:
     python: "3.11"
-
-build:
   apt_packages:
     - default-libmysqlclient-dev
     - build-essential
