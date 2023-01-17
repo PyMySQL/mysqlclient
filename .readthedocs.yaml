@@ -1,0 +1,9 @@
+version: 2
+
+python:
+  version: 3.9
+
+build:
+  apt_packages:
+    - default-libmysqlclient-dev
+    - build-essential
