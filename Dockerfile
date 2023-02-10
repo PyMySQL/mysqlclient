@@ -132,7 +132,7 @@ RUN pip3 install -r requirements.txt
 
 RUN pip3 install .
 
-RUN pip3 install pandas numpy tiledb
+RUN pip3 install pandas numpy tiledb sqlalchemy
 
 WORKDIR /opt/
 
