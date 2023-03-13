@@ -11,7 +11,6 @@ from configdb import connection_factory
 
 
 class DatabaseTest(unittest.TestCase):
-
     db_module = None
     connect_args = ()
     connect_kwargs = dict()
@@ -20,7 +19,6 @@ class DatabaseTest(unittest.TestCase):
     debug = False
 
     def setUp(self):
-
         db = connection_factory(**self.connect_kwargs)
         self.connection = db
         self.cursor = db.cursor()
@@ -67,7 +65,6 @@ class DatabaseTest(unittest.TestCase):
             i = i + 1
 
     def create_table(self, columndefs):
-
         """Create a table using a list of column definitions given in
         columndefs.
 
