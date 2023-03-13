@@ -180,6 +180,7 @@ _mysql_Exception(_mysql_ConnectionObject *c)
 #ifdef ER_NO_DEFAULT_FOR_FIELD
     case ER_NO_DEFAULT_FOR_FIELD:
 #endif
+    case ER_BAD_NULL_ERROR:
         e = _mysql_IntegrityError;
         break;
 #ifdef ER_WARNING_NOT_COMPLETE_ROLLBACK
