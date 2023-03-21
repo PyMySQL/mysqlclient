@@ -124,13 +124,13 @@ class TestCollation(unittest.TestCase):
         # collation.
         self.conn = connection_factory(
             charset="utf8mb4",
-            collate="utf8mb4_esperanto_ci",
+            collation="utf8mb4_esperanto_ci",
         )
 
     def tearDown(self):
         self.conn.close()
 
-    def test_charset_collate(self):
+    def test_charset_collation(self):
         c = self.conn.cursor()
         c.execute(
             """
@@ -141,6 +141,6 @@ class TestCollation(unittest.TestCase):
         )
         row = c.fetchall()
         charset = row[0][1]
-        collate = row[1][1]
+        collation = row[1][1]
         self.assertEqual(charset, "utf8mb4")
-        self.assertEqual(collate, "utf8mb4_esperanto_ci")
+        self.assertEqual(collation, "utf8mb4_esperanto_ci")

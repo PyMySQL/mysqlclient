@@ -100,7 +100,7 @@ class Connection(_mysql.connection):
             If omitted, empty string, or None, the default character set
             from the server will be used.
 
-        :param str collate:
+        :param str collation:
             If ``charset`` and ``collation`` are both supplied, the
             character set and collation for the current conneciton
             will be set.
@@ -179,7 +179,7 @@ class Connection(_mysql.connection):
 
         cursorclass = kwargs2.pop("cursorclass", self.default_cursor)
         charset = kwargs2.get("charset", "")
-        collate = kwargs2.pop("collate", "")
+        collation = kwargs2.pop("collation", "")
         use_unicode = kwargs2.pop("use_unicode", True)
         sql_mode = kwargs2.pop("sql_mode", "")
         self._binary_prefix = kwargs2.pop("binary_prefix", False)
@@ -204,8 +204,8 @@ class Connection(_mysql.connection):
 
         self.encoding = "ascii"  # overridden in set_character_set()
 
-        if charset and collate:
-            self.set_character_set_collation(charset, collate)
+        if charset and collation:
+            self.set_character_set_collation(charset, collation)
         else:
             if not charset:
                 charset = self.character_set_name()
@@ -313,11 +313,11 @@ class Connection(_mysql.connection):
         super().set_character_set(charset)
         self.encoding = _charset_to_encoding.get(charset, charset)
 
-    def set_character_set_collation(self, charset, collate):
+    def set_character_set_collation(self, charset, collation):
         """Set the connection character set and collation. Use this as
         an alternative to ``set_character_set``.
         """
-        self.query("SET NAMES %s COLLATE %s" % (charset, collate))
+        self.query("SET NAMES %s COLLATE %s" % (charset, collation))
         self.store_result()
         self.encoding = _charset_to_encoding.get(charset, charset)
 

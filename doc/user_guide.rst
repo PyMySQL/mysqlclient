@@ -344,9 +344,9 @@ connect(parameters...)
 
             *This must be a keyword parameter.*
 
-         collate
+         collation
 
-            If ``charset`` and ``collate`` are both supplied, the
+            If ``charset`` and ``collation`` are both supplied, the
             character set and collation for the current conneciton
             will be set.
 
