@@ -302,7 +302,7 @@ class Connection(_mysql.connection):
         """
         self.query(b"BEGIN")
 
-    def set_character_set(self, charset, collation = None):
+    def set_character_set(self, charset, collation=None):
         """Set the connection character set to charset."""
         super().set_character_set(charset)
         self.encoding = _charset_to_encoding.get(charset, charset)
