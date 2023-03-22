@@ -97,12 +97,9 @@ class Connection(_mysql.connection):
             If supplied, the connection character set will be changed
             to this character set.
 
-            If omitted, empty string, or None, the default character set
-            from the server will be used.
-
         :param str collation:
             If ``charset`` and ``collation`` are both supplied, the
-            character set and collation for the current conneciton
+            character set and collation for the current connection
             will be set.
 
             If omitted, empty string, or None, the default collation
@@ -204,12 +201,9 @@ class Connection(_mysql.connection):
 
         self.encoding = "ascii"  # overridden in set_character_set()
 
-        if charset and collation:
-            self.set_character_set_collation(charset, collation)
-        else:
-            if not charset:
-                charset = self.character_set_name()
-            self.set_character_set(charset)
+        if not charset:
+            charset = self.character_set_name()
+        self.set_character_set(charset, collation)
 
         if sql_mode:
             self.set_sql_mode(sql_mode)
@@ -308,18 +302,13 @@ class Connection(_mysql.connection):
         """
         self.query(b"BEGIN")
 
-    def set_character_set(self, charset):
+    def set_character_set(self, charset, collation = None):
         """Set the connection character set to charset."""
         super().set_character_set(charset)
         self.encoding = _charset_to_encoding.get(charset, charset)
-
-    def set_character_set_collation(self, charset, collation):
-        """Set the connection character set and collation. Use this as
-        an alternative to ``set_character_set``.
-        """
-        self.query("SET NAMES %s COLLATE %s" % (charset, collation))
-        self.store_result()
-        self.encoding = _charset_to_encoding.get(charset, charset)
+        if collation:
+            self.query("SET NAMES %s COLLATE %s" % (charset, collation))
+            self.store_result()
 
     def set_sql_mode(self, sql_mode):
         """Set the connection sql_mode. See MySQL documentation for
