@@ -1,9 +1,5 @@
-# Security Policy
+## Security contact information
 
-## Supported Versions
-
-2.1.x
-
-## Reporting a Vulnerability
-
-email: songofacandy@gmail.com
+To report a security vulnerability, please use the
+[Tidelift security contact](https://tidelift.com/security).
+Tidelift will coordinate the fix and disclosure.
