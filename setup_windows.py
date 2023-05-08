@@ -57,6 +57,7 @@ def get_config():
 
 if __name__ == "__main__":
     from pprint import pprint
+
     metadata, config = get_config()
     print("# Metadata")
     pprint(metadata)

@@ -20,6 +20,7 @@ def find_package_name():
 
 def get_config():
     from setup_common import get_metadata_and_options, enabled, create_release_file
+
     metadata, options = get_metadata_and_options()
 
     static = enabled(options, "static")
@@ -38,9 +39,13 @@ def get_config():
     if not (cflags and ldflags):
         pkg_name = find_package_name()
     if not cflags:
-        cflags = subprocess.check_output(f"pkg-config{static_opt} --cflags {pkg_name}", encoding="utf-8", shell=True)
+        cflags = subprocess.check_output(
+            f"pkg-config{static_opt} --cflags {pkg_name}", encoding="utf-8", shell=True
+        )
     if not ldflags:
-        ldflags = subprocess.check_output(f"pkg-config{static_opt} --libs {pkg_name}", encoding="utf-8", shell=True)
+        ldflags = subprocess.check_output(
+            f"pkg-config{static_opt} --libs {pkg_name}", encoding="utf-8", shell=True
+        )
 
     cflags = cflags.split()
     for f in cflags:
@@ -81,6 +86,7 @@ def get_config():
 
 if __name__ == "__main__":
     from pprint import pprint
+
     metadata, config = get_config()
     print("# Metadata")
     pprint(metadata, sort_dicts=False, compact=True)
