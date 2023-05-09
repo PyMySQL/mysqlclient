@@ -1,4 +1,14 @@
 ======================
+ What's new in 2.2.0
+======================
+
+Release: TBD
+
+* Use ``pkg-config`` instead of ``mysql_config`` (#586)
+
+
+
+======================
  What's new in 2.1.1
 ======================
 
