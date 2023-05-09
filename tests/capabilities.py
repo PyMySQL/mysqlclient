@@ -131,11 +131,11 @@ class DatabaseTest(unittest.TestCase):
                 self.assertEqual(res[i][j], generator(i, j))
         delete_statement = "delete from %s where col1=%%s" % self.table
         self.cursor.execute(delete_statement, (0,))
-        self.cursor.execute("select col1 from {} where col1={}".format(self.table, 0))
+        self.cursor.execute(f"select col1 from {self.table} where col1=%s", (0,))
         res = self.cursor.fetchall()
         self.assertFalse(res, "DELETE didn't work")
         self.connection.rollback()
-        self.cursor.execute("select col1 from {} where col1={}".format(self.table, 0))
+        self.cursor.execute(f"select col1 from {self.table} where col1=%s", (0,))
         res = self.cursor.fetchall()
         self.assertTrue(len(res) == 1, "ROLLBACK didn't work")
         self.cursor.execute("drop table %s" % (self.table))
