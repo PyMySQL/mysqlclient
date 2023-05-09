@@ -97,6 +97,14 @@ class Connection(_mysql.connection):
             If supplied, the connection character set will be changed
             to this character set.
 
+        :param str collation:
+            If ``charset`` and ``collation`` are both supplied, the
+            character set and collation for the current connection
+            will be set.
+
+            If omitted, empty string, or None, the default collation
+            for the ``charset`` is implied.
+
         :param str auth_plugin:
             If supplied, the connection default authentication plugin will be
             changed to this value. Example values:
@@ -167,6 +175,7 @@ class Connection(_mysql.connection):
 
         cursorclass = kwargs2.pop("cursorclass", self.default_cursor)
         charset = kwargs2.get("charset", "")
+        collation = kwargs2.pop("collation", "")
         use_unicode = kwargs2.pop("use_unicode", True)
         sql_mode = kwargs2.pop("sql_mode", "")
         self._binary_prefix = kwargs2.pop("binary_prefix", False)
@@ -193,7 +202,7 @@ class Connection(_mysql.connection):
 
         if not charset:
             charset = self.character_set_name()
-        self.set_character_set(charset)
+        self.set_character_set(charset, collation)
 
         if sql_mode:
             self.set_sql_mode(sql_mode)
@@ -285,10 +294,13 @@ class Connection(_mysql.connection):
         """
         self.query(b"BEGIN")
 
-    def set_character_set(self, charset):
+    def set_character_set(self, charset, collation=None):
         """Set the connection character set to charset."""
         super().set_character_set(charset)
         self.encoding = _charset_to_encoding.get(charset, charset)
+        if collation:
+            self.query("SET NAMES %s COLLATE %s" % (charset, collation))
+            self.store_result()
 
     def set_sql_mode(self, sql_mode):
         """Set the connection sql_mode. See MySQL documentation for

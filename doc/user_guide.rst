@@ -348,6 +348,22 @@ connect(parameters...)
 
             *This must be a keyword parameter.*
 
+         collation
+            If ``charset`` and ``collation`` are both supplied, the
+            character set and collation for the current connection
+            will be set.
+
+            If omitted, empty string, or None, the default collation
+            for the ``charset`` is implied by the database server.
+
+            To learn more about the quiddities of character sets and
+            collations, consult the `MySQL docs
+            <https://dev.mysql.com/doc/refman/8.0/en/charset.html>`_
+            and `MariaDB docs
+            <https://mariadb.com/kb/en/character-sets/>`_
+
+            *This must be a keyword parameter.*
+
          sql_mode
             If present, the session SQL mode will be set to the given
             string. For more information on sql_mode, see the MySQL
