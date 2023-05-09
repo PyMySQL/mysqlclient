@@ -1,5 +1,4 @@
 import os
-import sys
 
 
 def get_config():
@@ -38,9 +37,6 @@ def get_config():
 
     extra_link_args = ["/MANIFEST"]
 
-    name = "mysqlclient"
-    metadata["name"] = name
-
     define_macros = [
         ("version_info", metadata["version_info"]),
         ("__version__", metadata["version"]),
@@ -59,6 +55,10 @@ def get_config():
 
 
 if __name__ == "__main__":
-    sys.stderr.write(
-        """You shouldn't be running this directly; it is used by setup.py."""
-    )
+    from pprint import pprint
+
+    metadata, config = get_config()
+    print("# Metadata")
+    pprint(metadata)
+    print("\n# Extention options")
+    pprint(config)

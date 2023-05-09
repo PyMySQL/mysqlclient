@@ -1,8 +1,8 @@
-from configparser import ConfigParser as SafeConfigParser
+from configparser import ConfigParser
 
 
 def get_metadata_and_options():
-    config = SafeConfigParser()
+    config = ConfigParser()
     config.read(["metadata.cfg", "site.cfg"])
 
     metadata = dict(config.items("metadata"))
