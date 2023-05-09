@@ -32,7 +32,7 @@ jobs:
 
       - name: Build
         run: |
-          python setup.py develop
+          python setup.py build_ext -if
 
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v2
