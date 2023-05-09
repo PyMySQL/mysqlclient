@@ -5,7 +5,7 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     steps:
       - name: Start MySQL
         run: |
@@ -13,29 +13,20 @@ jobs:
           mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -uroot -proot mysql
           mysql -uroot -proot -e "CREATE USER 'scott'@'%' IDENTIFIED BY 'tiger'; GRANT ALL ON *.* TO scott;"
 
-      - uses: actions/cache@v2
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-django-pip-1
-          restore-keys: |
-            ${{ runner.os }}-pip-
+      - uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           # https://www.mail-archive.com/django-updates@googlegroups.com/msg209056.html
           python-version: "3.8"
-
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 2
 
       - name: Install mysqlclient
         env:
           PIP_NO_PYTHON_VERSION_WARNING: 1
           PIP_DISABLE_PIP_VERSION_CHECK: 1
         run: |
-          pip install -U pytest pytest-cov tblib
+          pip install -r requirements.txt
           pip install .
           # pip install mysqlclient  # Use stable version
 
