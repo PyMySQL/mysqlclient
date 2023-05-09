@@ -299,7 +299,7 @@ class Connection(_mysql.connection):
         super().set_character_set(charset)
         self.encoding = _charset_to_encoding.get(charset, charset)
         if collation:
-            self.query("SET NAMES %s COLLATE %s" % (charset, collation))
+            self.query(f"SET NAMES {charset} COLLATE {collation}")
             self.store_result()
 
     def set_sql_mode(self, sql_mode):
