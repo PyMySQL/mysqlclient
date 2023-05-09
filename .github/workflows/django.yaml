@@ -19,7 +19,7 @@ jobs:
         uses: actions/setup-python@v4
         with:
           # https://www.mail-archive.com/django-updates@googlegroups.com/msg209056.html
-          python-version: "3.8"
+          python-version: "3.11"
 
       - name: Install mysqlclient
         env:
@@ -32,7 +32,7 @@ jobs:
 
       - name: Run Django test
         env:
-          DJANGO_VERSION: "2.2.24"
+          DJANGO_VERSION: "4.2.1"
         run: |
           sudo apt-get install libmemcached-dev
           wget https://github.com/django/django/archive/${DJANGO_VERSION}.tar.gz
