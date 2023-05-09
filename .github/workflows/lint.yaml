@@ -8,4 +8,4 @@ jobs:
     steps:
       - uses: actions/checkout@v3
       - uses: psf/black@stable
-      - uses: jpetrucciani/ruff-check@main
+      - uses: chartboost/ruff-action@v1
