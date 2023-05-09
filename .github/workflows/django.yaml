@@ -26,7 +26,7 @@ jobs:
           PIP_NO_PYTHON_VERSION_WARNING: 1
           PIP_DISABLE_PIP_VERSION_CHECK: 1
         run: |
-          pip install -r requiremnts.txt
+          pip install -r requirements.txt
           pip install .
           # pip install mysqlclient  # Use stable version
 
