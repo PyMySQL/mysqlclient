@@ -144,7 +144,6 @@ class Connection(_mysql.connection):
         """
         from MySQLdb.constants import CLIENT, FIELD_TYPE
         from MySQLdb.converters import conversions, _bytes_or_str
-        from weakref import proxy
 
         kwargs2 = kwargs.copy()
 
@@ -213,13 +212,6 @@ class Connection(_mysql.connection):
             # Unlike other string/blob types, JSON is always text.
             # MySQL may return JSON with charset==binary.
             self.converter[FIELD_TYPE.JSON] = str
-
-        db = proxy(self)
-
-        def unicode_literal(u, dummy=None):
-            return db.string_literal(u.encode(db.encoding))
-
-        self.encoders[str] = unicode_literal
 
         self._transactional = self.server_capabilities & CLIENT.TRANSACTIONS
         if self._transactional:
