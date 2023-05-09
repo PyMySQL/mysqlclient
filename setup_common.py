@@ -22,7 +22,7 @@ def enabled(options, option):
     elif s in ("no", "false", "0", "n"):
         return False
     else:
-        raise ValueError("Unknown value {} for option {}".format(value, option))
+        raise ValueError(f"Unknown value {value} for option {option}")
 
 
 def create_release_file(metadata):
