@@ -32,7 +32,7 @@ jobs:
 
       - name: Run Django test
         env:
-          DJANGO_VERSION: "4.2.1"
+          DJANGO_VERSION: "3.2.19"
         run: |
           sudo apt-get install libmemcached-dev
           wget https://github.com/django/django/archive/${DJANGO_VERSION}.tar.gz
