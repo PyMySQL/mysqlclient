@@ -14,3 +14,8 @@ clean:
 	find . -name '*.pyc' -delete
 	find . -name '__pycache__' -delete
 	rm -rf build
+
+.PHONY: check
+check:
+	ruff .
+	black *.py MySQLdb
