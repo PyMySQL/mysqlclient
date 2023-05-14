@@ -8,7 +8,7 @@ from configparser import ConfigParser
 
 
 release_info = {}
-with open('MySQLdb/release.py', encoding="utf-8") as f:
+with open("MySQLdb/release.py", encoding="utf-8") as f:
     exec(f.read(), None, release_info)
 
 
@@ -24,13 +24,15 @@ def find_package_name():
             print(err)
         else:
             return pkg
-    raise Exception("Can not find valid pkg-config name.\nSpecify MYSQLCLIENT_CFLAGS and MYSQLCLIENT_LDFLAGS env vars manually")
+    raise Exception(
+        "Can not find valid pkg-config name.\nSpecify MYSQLCLIENT_CFLAGS and MYSQLCLIENT_LDFLAGS env vars manually"
+    )
 
 
 def get_config_posix(options=None):
     # allow a command-line option to override the base config file to permit
     # a static build to be created via requirements.txt
-    # TODO: find a better way for 
+    # TODO: find a better way for
     static = False
     if "--static" in sys.argv:
         static = True

@@ -15,6 +15,7 @@ MySQLdb.converters module.
 
 from .release import version_info
 from . import _mysql
+
 if version_info == _mysql.version_info:
     raise ImportError(
         "this is MySQLdb version {}, but _mysql is version {!r}\n_mysql: {!r}".format(
