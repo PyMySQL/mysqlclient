@@ -25,7 +25,8 @@ def find_package_name():
         else:
             return pkg
     raise Exception(
-        "Can not find valid pkg-config name.\nSpecify MYSQLCLIENT_CFLAGS and MYSQLCLIENT_LDFLAGS env vars manually"
+        "Can not find valid pkg-config name.\n"
+        "Specify MYSQLCLIENT_CFLAGS and MYSQLCLIENT_LDFLAGS env vars manually"
     )
 
 
