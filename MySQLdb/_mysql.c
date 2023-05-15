@@ -380,7 +380,14 @@ static int _mysql_ResultObject_clear(_mysql_ResultObject *self)
     return 0;
 }
 
-#ifdef HAVE_ENUM_MYSQL_OPT_SSL_MODE
+enum {
+    SSLMODE_DISABLED = 1,
+    SSLMODE_PREFERRED = 2,
+    SSLMODE_REQUIRED = 3,
+    SSLMODE_VERIFY_CA = 4,
+    SSLMODE_VERIFY_IDENTITY = 5
+};
+
 static int
 _get_ssl_mode_num(char *ssl_mode)
 {
@@ -395,7 +402,6 @@ _get_ssl_mode_num(char *ssl_mode)
     }
     return -1;
 }
-#endif
 
 static int
 _mysql_ConnectionObject_Initialize(
@@ -429,6 +435,7 @@ _mysql_ConnectionObject_Initialize(
     int read_timeout = 0;
     int write_timeout = 0;
     int compress = -1, named_pipe = -1, local_infile = -1;
+    int ssl_mode_num = SSLMODE_DISABLED;
     char *init_command=NULL,
          *read_default_file=NULL,
          *read_default_group=NULL,
@@ -469,15 +476,10 @@ _mysql_ConnectionObject_Initialize(
         _stringsuck(cipher, value, ssl);
     }
     if (ssl_mode) {
-#ifdef HAVE_ENUM_MYSQL_OPT_SSL_MODE
-        if (_get_ssl_mode_num(ssl_mode) <= 0) {
+        if ((ssl_mode_num = _get_ssl_mode_num(ssl_mode)) <= 0) {
             PyErr_SetString(_mysql_NotSupportedError, "Unknown ssl_mode specification");
             return -1;
         }
-#else
-        PyErr_SetString(_mysql_NotSupportedError, "MySQL client library does not support ssl_mode specification");
-        return -1;
-#endif
     }
 
     conn = mysql_init(&(self->connection));
@@ -487,6 +489,7 @@ _mysql_ConnectionObject_Initialize(
     }
     Py_BEGIN_ALLOW_THREADS ;
     self->open = 1;
+
     if (connect_timeout) {
         unsigned int timeout = connect_timeout;
         mysql_options(&(self->connection), MYSQL_OPT_CONNECT_TIMEOUT,
@@ -521,12 +524,23 @@ _mysql_ConnectionObject_Initialize(
     if (ssl) {
         mysql_ssl_set(&(self->connection), key, cert, ca, capath, cipher);
     }
-#ifdef HAVE_ENUM_MYSQL_OPT_SSL_MODE
     if (ssl_mode) {
-        int ssl_mode_num = _get_ssl_mode_num(ssl_mode);
+#ifdef HAVE_ENUM_MYSQL_OPT_SSL_MODE
         mysql_options(&(self->connection), MYSQL_OPT_SSL_MODE, &ssl_mode_num);
-    }
+#else
+        // MariaDB doesn't support MYSQL_OPT_SSL_MODE.
+        // See https://github.com/PyMySQL/mysqlclient/issues/474
+        // TODO: Does MariaDB supports PREFERRED and VERIFY_CA?
+        // We support only two levels for now.
+        if (sslmode_num >= SSLMODE_REQUIRED) {
+            mysql_optionsv(&(self->connection), MYSQL_OPT_SSL_ENFORCE, (void *)&enforce_tls);
+        }
+        if (sslmode_num >= SSLMODE_VERIFY_CA) {
+            mysql_optionsv(&(self->connection), MYSQL_OPT_SSL_VERIFY_SERVER_CERT, (void *)&enforce_tls);
+        }
 #endif
+    }
+
     if (charset) {
         mysql_options(&(self->connection), MYSQL_SET_CHARSET_NAME, charset);
     }
