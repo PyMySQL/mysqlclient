@@ -1,6 +1,6 @@
 .PHONY: build
 build:
-	python3 setup.py build_ext -if
+	python setup.py build_ext -if
 
 .PHONY: doc
 doc:
@@ -10,7 +10,7 @@ doc:
 
 .PHONY: clean
 clean:
-	python3 setup.py clean
+	python setup.py clean
 	find . -name '*.pyc' -delete
 	find . -name '__pycache__' -delete
 	rm -rf build
@@ -18,4 +18,4 @@ clean:
 .PHONY: check
 check:
 	ruff .
-	black *.py MySQLdb
+	black *.py src

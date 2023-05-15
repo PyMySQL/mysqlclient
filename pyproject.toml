@@ -39,10 +39,13 @@ Documentation = "https://mysqlclient.readthedocs.io/"
 requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
+[tool.setuptools]
+package-dir = {"" = "src"}
+
 [tool.setuptools.packages.find]
 namespaces = false
+where = ["src"]
 include = ["MySQLdb*"]
-exclude = ["tests*", "pymysql.tests*"]
 
 [tool.setuptools.dynamic]
 version = {attr = "MySQLdb.release.__version__"}

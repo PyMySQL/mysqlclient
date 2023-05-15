@@ -29,7 +29,7 @@ jobs:
           PIP_DISABLE_PIP_VERSION_CHECK: 1
         run: |
           pip install -r requirements.txt
-          python setup.py develop
+          pip install .
 
       - name: Run tests
         env:
