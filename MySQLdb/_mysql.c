@@ -180,6 +180,7 @@ _mysql_Exception(_mysql_ConnectionObject *c)
 #ifdef ER_NO_DEFAULT_FOR_FIELD
     case ER_NO_DEFAULT_FOR_FIELD:
 #endif
+    case ER_BAD_NULL_ERROR:
         e = _mysql_IntegrityError;
         break;
 #ifdef ER_WARNING_NOT_COMPLETE_ROLLBACK
@@ -310,7 +311,7 @@ _mysql_ResultObject_Initialize(
             PyObject *fun2=NULL;
             int j, n2=PySequence_Size(fun);
             // BINARY_FLAG means ***_bin collation is used.
-            // To distinguish text and binary, we shoud use charsetnr==63 (binary).
+            // To distinguish text and binary, we should use charsetnr==63 (binary).
             // But we abuse BINARY_FLAG for historical reason.
             if (fields[i].charsetnr == 63) {
                 flags |= BINARY_FLAG;
@@ -414,7 +415,7 @@ _mysql_ConnectionObject_Initialize(
          *db = NULL, *unix_socket = NULL;
     unsigned int port = 0;
     unsigned int client_flag = 0;
-    static char *kwlist[] = { "host", "user", "passwd", "db", "port",
+    static char *kwlist[] = { "host", "user", "password", "database", "port",
                   "unix_socket", "conv",
                   "connect_timeout", "compress",
                   "named_pipe", "init_command",
@@ -605,10 +606,10 @@ host\n\
 user\n\
   string, user to connect as\n\
 \n\
-passwd\n\
+password\n\
   string, password to use\n\
 \n\
-db\n\
+database\n\
   string, database to use\n\
 \n\
 port\n\
@@ -1466,7 +1467,7 @@ _mysql_ResultObject_fetch_row(
                      &maxrows, &how))
         return NULL;
     check_result_connection(self);
-    if (how >= (int)sizeof(row_converters)) {
+    if (how >= (int)(sizeof(row_converters) / sizeof(row_converters[0]))) {
         PyErr_SetString(PyExc_ValueError, "how out of range");
         return NULL;
     }

@@ -1,4 +1,47 @@
 ======================
+ What's new in 2.2.0
+======================
+
+Release: TBD
+
+* Use ``pkg-config`` instead of ``mysql_config`` (#586)
+
+
+
+======================
+ What's new in 2.1.1
+======================
+
+Release: 2022-06-22
+
+* Fix qualname of exception classes. (#522)
+* Fix range check in ``MySQLdb._mysql.result.fetch_row()``. Invalid ``how`` argument caused SEGV. (#538)
+* Fix docstring of ``_mysql.connect``. (#540)
+* Windows: Binary wheels are updated. (#541)
+   * Use MariaDB Connector/C 3.3.1.
+   * Use cibuildwheel to build wheels.
+   * Python 3.8-3.11
+
+======================
+ What's new in 2.1.0
+======================
+
+Release: 2021-11-17
+
+* Add ``multistatement=True`` option. You can disable multi statement. (#500).
+* Remove unnecessary bytes encoder which is remained for Django 1.11
+  compatibility (#490).
+* Deprecate ``passwd`` and ``db`` keyword. Use ``password`` and ``database``
+  instead. (#488).
+* Windows: Binary wheels are built with MariaDB Connector/C 3.2.4. (#508)
+* ``set_character_set()`` sends ``SET NAMES`` query always. This means
+  all new connections send it too. This solves compatibility issues
+  when server and client library are different version. (#509)
+* Remove ``escape()`` and ``escape_string()`` from ``MySQLdb`` package.
+  (#511)
+* Add Python 3.10 support and drop Python 3.5 support.
+
+======================
  What's new in 2.0.3
 ======================
 
@@ -75,7 +118,7 @@ Release: 2019-08-09
 
 * ``--static`` build supports ``libmariadbclient.a``
 * Try ``mariadb_config`` when ``mysql_config`` is not found
-* Fixed warning happend in Python 3.8 (#359)
+* Fixed warning happened in Python 3.8 (#359)
 * Fixed ``from MySQLdb import *``, while I don't recommend it. (#369)
 * Fixed SEGV ``MySQLdb.escape_string("1")`` when libmariadb is used and
   no connection is created. (#367)
@@ -275,7 +318,7 @@ More tests for date and time columns. (#41)
 
 Fix calling .execute() method for closed cursor cause TypeError. (#37)
 
-Improve peformance to parse date. (#43)
+Improve performance to parse date. (#43)
 
 Support geometry types (#49)
 

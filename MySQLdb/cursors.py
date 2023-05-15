@@ -182,6 +182,15 @@ class BaseCursor:
         """
         while self.nextset():
             pass
+
+        mogrified_query = self._mogrify(query, args)
+
+        assert isinstance(mogrified_query, (bytes, bytearray))
+        res = self._query(mogrified_query)
+        return res
+
+    def _mogrify(self, query, args=None):
+        """Return query after binding args."""
         db = self._get_db()
 
         if isinstance(query, str):
@@ -202,9 +211,21 @@ class BaseCursor:
             except TypeError as m:
                 raise ProgrammingError(str(m))
 
-        assert isinstance(query, (bytes, bytearray))
-        res = self._query(query)
-        return res
+        return query
+
+    def mogrify(self, query, args=None):
+        """Return query after binding args.
+
+        query -- string, query to mogrify
+        args -- optional sequence or mapping, parameters to use with query.
+
+        Note: If args is a sequence, then %s must be used as the
+        parameter placeholder in the query. If a mapping is used,
+        %(key)s must be used as the placeholder.
+
+        Returns string representing query that would be executed by the server
+        """
+        return self._mogrify(query, args).decode(self._get_db().encoding)
 
     def executemany(self, query, args):
         # type: (str, list) -> int
@@ -375,7 +396,7 @@ class CursorStoreResultMixIn:
         return result
 
     def fetchall(self):
-        """Fetchs all available rows from the cursor."""
+        """Fetches all available rows from the cursor."""
         self._check_executed()
         if self.rownumber:
             result = self._rows[self.rownumber :]
@@ -437,7 +458,7 @@ class CursorUseResultMixIn:
         return r
 
     def fetchall(self):
-        """Fetchs all available rows from the cursor."""
+        """Fetches all available rows from the cursor."""
         self._check_executed()
         r = self._fetch_row(0)
         self.rownumber = self.rownumber + len(r)

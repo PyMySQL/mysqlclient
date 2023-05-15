@@ -18,7 +18,7 @@ def teardown_function(function):
         c = _conns[0]
         cur = c.cursor()
         for t in _tables:
-            cur.execute("DROP TABLE {}".format(t))
+            cur.execute(f"DROP TABLE {t}")
         cur.close()
         del _tables[:]
 
@@ -150,3 +150,39 @@ def test_dictcursor():
     names2 = sorted(rows[1])
     for a, b in zip(names1, names2):
         assert a is b
+
+
+def test_mogrify_without_args():
+    conn = connect()
+    cursor = conn.cursor()
+
+    query = "SELECT VERSION()"
+    mogrified_query = cursor.mogrify(query)
+    cursor.execute(query)
+
+    assert mogrified_query == query
+    assert mogrified_query == cursor._executed.decode()
+
+
+def test_mogrify_with_tuple_args():
+    conn = connect()
+    cursor = conn.cursor()
+
+    query_with_args = "SELECT %s, %s", (1, 2)
+    mogrified_query = cursor.mogrify(*query_with_args)
+    cursor.execute(*query_with_args)
+
+    assert mogrified_query == "SELECT 1, 2"
+    assert mogrified_query == cursor._executed.decode()
+
+
+def test_mogrify_with_dict_args():
+    conn = connect()
+    cursor = conn.cursor()
+
+    query_with_args = "SELECT %(a)s, %(b)s", {"a": 1, "b": 2}
+    mogrified_query = cursor.mogrify(*query_with_args)
+    cursor.execute(*query_with_args)
+
+    assert mogrified_query == "SELECT 1, 2"
+    assert mogrified_query == cursor._executed.decode()

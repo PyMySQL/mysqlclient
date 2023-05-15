@@ -1,12 +1,7 @@
 recursive-include doc *.rst
 recursive-include tests *.py
 include doc/conf.py
-include MANIFEST.in
 include HISTORY.rst
 include README.md
 include LICENSE
-include metadata.cfg
 include site.cfg
-include setup_common.py
-include setup_posix.py
-include setup_windows.py

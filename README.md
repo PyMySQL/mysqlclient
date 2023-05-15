@@ -28,6 +28,22 @@ Or when you have question about MySQL:
 Building mysqlclient on Windows is very hard.
 But there are some binary wheels you can install easily.
 
+If binary wheels do not exist for your version of Python, it may be possible to
+build from source, but if this does not work, **do not come asking for support.**
+To build from source, download the
+[MariaDB C Connector](https://mariadb.com/downloads/#connectors) and install
+it. It must be installed in the default location
+(usually "C:\Program Files\MariaDB\MariaDB Connector C" or
+"C:\Program Files (x86)\MariaDB\MariaDB Connector C" for 32-bit). If you
+build the connector yourself or install it in a different location, set the
+environment variable `MYSQLCLIENT_CONNECTOR` before installing. Once you have
+the connector installed and an appropriate version of Visual Studio for your
+version of Python:
+
+```
+$ pip install mysqlclient
+```
+
 ### macOS (Homebrew)
 
 Install MySQL and mysqlclient:
@@ -67,7 +83,7 @@ $ pip install mysqlclient
 
 ### Customize build (POSIX)
 
-mysqlclient uses `mysql_config` or `mariadb_config` by default for finding
+mysqlclient uses `pkg-config --clfags --ldflags mysqlclient` by default for finding
 compiler/linker flags.
 
 You can use `MYSQLCLIENT_CFLAGS` and `MYSQLCLIENT_LDFLAGS` environment

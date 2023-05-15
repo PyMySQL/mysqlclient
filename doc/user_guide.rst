@@ -125,19 +125,19 @@ We haven't even begun to touch upon all the parameters ``connect()``
 can take.  For this reason, I prefer to use keyword parameters::
 
     db=_mysql.connect(host="localhost",user="joebob",
-                      passwd="moonpie",db="thangs")
+                      password="moonpie",database="thangs")
 
 This does exactly what the last example did, but is arguably easier to
 read. But since the default host is "localhost", and if your login
 name really was "joebob", you could shorten it to this::
 
-    db=_mysql.connect(passwd="moonpie",db="thangs")
+    db=_mysql.connect(password="moonpie",database="thangs")
 
 UNIX sockets and named pipes don't work over a network, so if you
 specify a host other than localhost, TCP will be used, and you can
 specify an odd port if you need to (the default port is 3306)::
 
-    db=_mysql.connect(host="outhouse",port=3307,passwd="moonpie",db="thangs")
+    db=_mysql.connect(host="outhouse",port=3307,password="moonpie",database="thangs")
 
 If you really had to, you could connect to the local host with TCP by
 specifying the full host name, or 127.0.0.1.
@@ -145,7 +145,7 @@ specifying the full host name, or 127.0.0.1.
 Generally speaking, putting passwords in your code is not such a good
 idea::
 
-    db=_mysql.connect(host="outhouse",db="thangs",read_default_file="~/.my.cnf")
+    db=_mysql.connect(host="outhouse",database="thangs",read_default_file="~/.my.cnf")
 
 This does what the previous example does, but gets the username and
 password and other parameters from ~/.my.cnf (UNIX-like systems). Read
@@ -348,6 +348,22 @@ connect(parameters...)
 
             *This must be a keyword parameter.*
 
+         collation
+            If ``charset`` and ``collation`` are both supplied, the
+            character set and collation for the current connection
+            will be set.
+
+            If omitted, empty string, or None, the default collation
+            for the ``charset`` is implied by the database server.
+
+            To learn more about the quiddities of character sets and
+            collations, consult the `MySQL docs
+            <https://dev.mysql.com/doc/refman/8.0/en/charset.html>`_
+            and `MariaDB docs
+            <https://mariadb.com/kb/en/character-sets/>`_
+
+            *This must be a keyword parameter.*
+
          sql_mode
             If present, the session SQL mode will be set to the given
             string. For more information on sql_mode, see the MySQL
@@ -511,7 +527,7 @@ callproc(procname, args)
       can only be returned with a SELECT statement. Since a stored
       procedure may return zero or more result sets, it is impossible
       for MySQLdb to determine if there are result sets to fetch
-      before the modified parmeters are accessible.
+      before the modified parameters are accessible.
 
       The parameters are stored in the server as @_*procname*_*n*,
       where *n* is the position of the parameter. I.e., if you
@@ -561,7 +577,7 @@ Some examples
 The ``connect()`` method works nearly the same as with `MySQLDB._mysql`_::
 
     import MySQLdb
-    db=MySQLdb.connect(passwd="moonpie",db="thangs")
+    db=MySQLdb.connect(password="moonpie",database="thangs")
 
 To perform a query, you first need a cursor, and then you can execute
 queries on it::

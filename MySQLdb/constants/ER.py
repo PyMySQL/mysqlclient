@@ -30,7 +30,7 @@ if __name__ == "__main__":
             data[value].add(name)
     for value, names in sorted(data.items()):
         for name in sorted(names):
-            print("{} = {}".format(name, value))
+            print(f"{name} = {value}")
     if error_last is not None:
         print("ERROR_LAST = %s" % error_last)
 

@@ -72,7 +72,7 @@ def Thing2Str(s, d):
 
 def Float2Str(o, d):
     s = repr(o)
-    if s in ("inf", "nan"):
+    if s in ("inf", "-inf", "nan"):
         raise ProgrammingError("%s can not be used with MySQL" % s)
     if "e" not in s:
         s += "e0"

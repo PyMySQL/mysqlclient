@@ -97,6 +97,14 @@ class Connection(_mysql.connection):
             If supplied, the connection character set will be changed
             to this character set.
 
+        :param str collation:
+            If ``charset`` and ``collation`` are both supplied, the
+            character set and collation for the current connection
+            will be set.
+
+            If omitted, empty string, or None, the default collation
+            for the ``charset`` is implied.
+
         :param str auth_plugin:
             If supplied, the connection default authentication plugin will be
             changed to this value. Example values:
@@ -109,6 +117,10 @@ class Connection(_mysql.connection):
 
         :param int client_flag:
             flags to use or 0 (see MySQL docs or constants/CLIENTS.py)
+
+        :param bool multi_statements:
+            If True, enable multi statements for clients >= 4.1.
+            Defaults to True.
 
         :param str ssl_mode:
             specify the security settings for connection to the server;
@@ -140,14 +152,13 @@ class Connection(_mysql.connection):
         """
         from MySQLdb.constants import CLIENT, FIELD_TYPE
         from MySQLdb.converters import conversions, _bytes_or_str
-        from weakref import proxy
 
         kwargs2 = kwargs.copy()
 
-        if "database" in kwargs2:
-            kwargs2["db"] = kwargs2.pop("database")
-        if "password" in kwargs2:
-            kwargs2["passwd"] = kwargs2.pop("password")
+        if "db" in kwargs2:
+            kwargs2["database"] = kwargs2.pop("db")
+        if "passwd" in kwargs2:
+            kwargs2["password"] = kwargs2.pop("passwd")
 
         if "conv" in kwargs:
             conv = kwargs["conv"]
@@ -164,19 +175,16 @@ class Connection(_mysql.connection):
 
         cursorclass = kwargs2.pop("cursorclass", self.default_cursor)
         charset = kwargs2.get("charset", "")
+        collation = kwargs2.pop("collation", "")
         use_unicode = kwargs2.pop("use_unicode", True)
         sql_mode = kwargs2.pop("sql_mode", "")
         self._binary_prefix = kwargs2.pop("binary_prefix", False)
 
         client_flag = kwargs.get("client_flag", 0)
-        client_version = tuple(
-            [numeric_part(n) for n in _mysql.get_client_info().split(".")[:2]]
-        )
-        if client_version >= (4, 1):
+        client_flag |= CLIENT.MULTI_RESULTS
+        multi_statements = kwargs2.pop("multi_statements", True)
+        if multi_statements:
             client_flag |= CLIENT.MULTI_STATEMENTS
-        if client_version >= (5, 0):
-            client_flag |= CLIENT.MULTI_RESULTS
-
         kwargs2["client_flag"] = client_flag
 
         # PEP-249 requires autocommit to be initially off
@@ -186,26 +194,15 @@ class Connection(_mysql.connection):
         self.cursorclass = cursorclass
         self.encoders = {k: v for k, v in conv.items() if type(k) is not int}
 
-        # XXX THIS IS GARBAGE: While this is just a garbage and undocumented,
-        # Django 1.11 depends on it.  And they don't fix it because
-        # they are in security-only fix mode.
-        # So keep this garbage for now.  This will be removed in 1.5.
-        # See PyMySQL/mysqlclient-python#306
-        self.encoders[bytes] = bytes
-
         self._server_version = tuple(
             [numeric_part(n) for n in self.get_server_info().split(".")[:2]]
         )
 
         self.encoding = "ascii"  # overridden in set_character_set()
-        db = proxy(self)
-
-        def unicode_literal(u, dummy=None):
-            return db.string_literal(u.encode(db.encoding))
 
         if not charset:
             charset = self.character_set_name()
-        self.set_character_set(charset)
+        self.set_character_set(charset, collation)
 
         if sql_mode:
             self.set_sql_mode(sql_mode)
@@ -225,7 +222,6 @@ class Connection(_mysql.connection):
             # MySQL may return JSON with charset==binary.
             self.converter[FIELD_TYPE.JSON] = str
 
-        self.encoders[str] = unicode_literal
         self._transactional = self.server_capabilities & CLIENT.TRANSACTIONS
         if self._transactional:
             if autocommit is not None:
@@ -298,32 +294,13 @@ class Connection(_mysql.connection):
         """
         self.query(b"BEGIN")
 
-    if not hasattr(_mysql.connection, "warning_count"):
-
-        def warning_count(self):
-            """Return the number of warnings generated from the
-            last query. This is derived from the info() method."""
-            info = self.info()
-            if info:
-                return int(info.split()[-1])
-            else:
-                return 0
-
-    def set_character_set(self, charset):
-        """Set the connection character set to charset. The character
-        set can only be changed in MySQL-4.1 and newer. If you try
-        to change the character set from the current value in an
-        older version, NotSupportedError will be raised."""
-        py_charset = _charset_to_encoding.get(charset, charset)
-        if self.character_set_name() != charset:
-            try:
-                super().set_character_set(charset)
-            except AttributeError:
-                if self._server_version < (4, 1):
-                    raise NotSupportedError("server is too old to set charset")
-                self.query("SET NAMES %s" % charset)
-                self.store_result()
-        self.encoding = py_charset
+    def set_character_set(self, charset, collation=None):
+        """Set the connection character set to charset."""
+        super().set_character_set(charset)
+        self.encoding = _charset_to_encoding.get(charset, charset)
+        if collation:
+            self.query(f"SET NAMES {charset} COLLATE {collation}")
+            self.store_result()
 
     def set_sql_mode(self, sql_mode):
         """Set the connection sql_mode. See MySQL documentation for
