@@ -190,8 +190,7 @@ class BaseCursor:
         return res
 
     def _mogrify(self, query, args=None):
-        """Returns bytes or bytearray representing the query. See mogrify() for the
-        external API that returns a string."""
+        """Return query after binding args."""
         db = self._get_db()
 
         if isinstance(query, str):
@@ -215,8 +214,7 @@ class BaseCursor:
         return query
 
     def mogrify(self, query, args=None):
-        """Get the query exactly as it would be sent to the database running the
-        execute() method.
+        """Return query after binding args.
 
         query -- string, query to mogrify
         args -- optional sequence or mapping, parameters to use with query.
