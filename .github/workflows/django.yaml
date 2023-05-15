@@ -1,0 +1,45 @@
+name: Django compat test
+
+on:
+  push:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Start MySQL
+        run: |
+          sudo systemctl start mysql.service
+          mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -uroot -proot mysql
+          mysql -uroot -proot -e "CREATE USER 'scott'@'%' IDENTIFIED BY 'tiger'; GRANT ALL ON *.* TO scott;"
+          mysql -uroot -proot -e "CREATE DATABASE django_test; CREATE DATABASE django_other;"
+
+      - uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          # https://www.mail-archive.com/django-updates@googlegroups.com/msg209056.html
+          python-version: "3.11"
+
+      - name: Install mysqlclient
+        env:
+          PIP_NO_PYTHON_VERSION_WARNING: 1
+          PIP_DISABLE_PIP_VERSION_CHECK: 1
+        run: |
+          pip install -r requirements.txt
+          pip install .
+          # pip install mysqlclient  # Use stable version
+
+      - name: Run Django test
+        env:
+          DJANGO_VERSION: "3.2.19"
+        run: |
+          sudo apt-get install libmemcached-dev
+          wget https://github.com/django/django/archive/${DJANGO_VERSION}.tar.gz
+          tar xf ${DJANGO_VERSION}.tar.gz
+          cp ci/test_mysql.py django-${DJANGO_VERSION}/tests/
+          cd django-${DJANGO_VERSION}/tests/
+          pip install ..
+          pip install -r requirements/py3.txt
+          PYTHONPATH=.. python3 ./runtests.py --settings=test_mysql

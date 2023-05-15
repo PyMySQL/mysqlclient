@@ -6,29 +6,20 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.5, 3.6, 3.7, 3.8, 3.9]
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
     steps:
       - name: Start MySQL
         run: |
           sudo systemctl start mysql.service
           mysql -uroot -proot -e "CREATE DATABASE mysqldb_test"
 
-      - uses: actions/cache@v2
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-1
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 2
+      - uses: actions/checkout@v3
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
@@ -37,7 +28,7 @@ jobs:
           PIP_NO_PYTHON_VERSION_WARNING: 1
           PIP_DISABLE_PIP_VERSION_CHECK: 1
         run: |
-          pip install -U coverage pytest pytest-cov
+          pip install -r requirements.txt
           python setup.py develop
 
       - name: Run tests
@@ -46,4 +37,4 @@ jobs:
         run: |
           pytest --cov=MySQLdb tests
 
-      - uses: codecov/codecov-action@v1
+      - uses: codecov/codecov-action@v3

@@ -12,7 +12,6 @@ warnings.filterwarnings("ignore")
 
 
 class test_MySQLdb(capabilities.DatabaseTest):
-
     db_module = MySQLdb
     connect_args = ()
     connect_kwargs = dict(
@@ -182,7 +181,7 @@ VALUES      (1,
         for binary_prefix in (True, False, None):
             kwargs = self.connect_kwargs.copy()
             # needs to be set to can guarantee CHARSET response for normal strings
-            kwargs["charset"] = "utf8"
+            kwargs["charset"] = "utf8mb4"
             if binary_prefix is not None:
                 kwargs["binary_prefix"] = binary_prefix
 
@@ -190,11 +189,11 @@ VALUES      (1,
                 with closing(conn.cursor()) as c:
                     c.execute("SELECT CHARSET(%s)", (MySQLdb.Binary(b"raw bytes"),))
                     self.assertEqual(
-                        c.fetchall()[0][0], "binary" if binary_prefix else "utf8"
+                        c.fetchall()[0][0], "binary" if binary_prefix else "utf8mb4"
                     )
                     # normal strings should not get prefix
                     c.execute("SELECT CHARSET(%s)", ("str",))
-                    self.assertEqual(c.fetchall()[0][0], "utf8")
+                    self.assertEqual(c.fetchall()[0][0], "utf8mb4")
 
 
 if __name__ == "__main__":

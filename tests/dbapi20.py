@@ -56,7 +56,7 @@ import time
 # - self.populate is now self._populate(), so if a driver stub
 #   overrides self.ddl1 this change propagates
 # - VARCHAR columns now have a width, which will hopefully make the
-#   DDL even more portible (this will be reversed if it causes more problems)
+#   DDL even more portable (this will be reversed if it causes more problems)
 # - cursor.rowcount being checked after various execute and fetchXXX methods
 # - Check for fetchall and fetchmany returning empty lists after results
 #   are exhausted (already checking for empty lists if select retrieved
@@ -525,8 +525,7 @@ class DatabaseAPI20Test(unittest.TestCase):
         tests.
         """
         populate = [
-            "insert into {}booze values ('{}')".format(self.table_prefix, s)
-            for s in self.samples
+            f"insert into {self.table_prefix}booze values ('{s}')" for s in self.samples
         ]
         return populate
 
@@ -793,7 +792,7 @@ class DatabaseAPI20Test(unittest.TestCase):
             con.close()
 
     def test_setoutputsize(self):
-        # Real test for setoutputsize is driver dependant
+        # Real test for setoutputsize is driver dependent
         raise NotImplementedError("Driver need to override this test")
 
     def test_None(self):

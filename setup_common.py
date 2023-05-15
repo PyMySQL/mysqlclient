@@ -1,8 +1,8 @@
-from configparser import ConfigParser as SafeConfigParser
+from configparser import ConfigParser
 
 
 def get_metadata_and_options():
-    config = SafeConfigParser()
+    config = ConfigParser()
     config.read(["metadata.cfg", "site.cfg"])
 
     metadata = dict(config.items("metadata"))
@@ -22,11 +22,11 @@ def enabled(options, option):
     elif s in ("no", "false", "0", "n"):
         return False
     else:
-        raise ValueError("Unknown value {} for option {}".format(value, option))
+        raise ValueError(f"Unknown value {value} for option {option}")
 
 
 def create_release_file(metadata):
-    with open("MySQLdb/release.py", "w") as rel:
+    with open("MySQLdb/release.py", "w", encoding="utf-8") as rel:
         rel.write(
             """
 __author__ = "%(author)s <%(author_email)s>"

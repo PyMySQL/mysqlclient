@@ -13,12 +13,11 @@ For information on how MySQLdb handles type conversion, see the
 MySQLdb.converters module.
 """
 
-try:
-    from MySQLdb.release import version_info
-    from . import _mysql
+# Check if the version of _mysql matches the version of MySQLdb.
+from MySQLdb.release import version_info
+from . import _mysql
 
-    assert version_info == _mysql.version_info
-except Exception:
+if version_info != _mysql.version_info:
     raise ImportError(
         "this is MySQLdb version {}, but _mysql is version {!r}\n_mysql: {!r}".format(
             version_info, _mysql.version_info, _mysql.__file__
@@ -38,8 +37,6 @@ from ._mysql import (
     string_literal,
     MySQLError,
     DataError,
-    escape,
-    escape_string,
     DatabaseError,
     InternalError,
     Warning,
@@ -164,8 +161,6 @@ __all__ = [
     "converters",
     "cursors",
     "debug",
-    "escape",
-    "escape_string",
     "get_client_info",
     "paramstyle",
     "string_literal",

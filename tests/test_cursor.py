@@ -18,7 +18,7 @@ def teardown_function(function):
         c = _conns[0]
         cur = c.cursor()
         for t in _tables:
-            cur.execute("DROP TABLE {}".format(t))
+            cur.execute(f"DROP TABLE {t}")
         cur.close()
         del _tables[:]
 
