@@ -8,7 +8,7 @@ from configparser import ConfigParser
 
 
 release_info = {}
-with open("MySQLdb/release.py", encoding="utf-8") as f:
+with open("src/MySQLdb/release.py", encoding="utf-8") as f:
     exec(f.read(), None, release_info)
 
 
@@ -164,7 +164,7 @@ for k, v in ext_options.items():
 ext_modules = [
     setuptools.Extension(
         "MySQLdb._mysql",
-        sources=["MySQLdb/_mysql.c"],
+        sources=["src/MySQLdb/_mysql.c"],
         **ext_options,
     )
 ]
