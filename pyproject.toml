@@ -39,25 +39,10 @@ Documentation = "https://mysqlclient.readthedocs.io/"
 requires = ["setuptools>=61"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-py-modules = [
-    "MySQLdb._exceptions",
-    "MySQLdb.connections",
-    "MySQLdb.converters",
-    "MySQLdb.cursors",
-    "MySQLdb.release",
-    "MySQLdb.times",
-    "MySQLdb.constants.CLIENT",
-    "MySQLdb.constants.CR",
-    "MySQLdb.constants.ER",
-    "MySQLdb.constants.FIELD_TYPE",
-    "MySQLdb.constants.FLAG",
-]
-
-# [tool.setuptools.packages.find]
-# namespaces = false
-# include = ["pymysql*"]
-# exclude = ["tests*", "pymysql.tests*"]
+[tool.setuptools.packages.find]
+namespaces = false
+include = ["MySQLdb*"]
+exclude = ["tests*", "pymysql.tests*"]
 
 [tool.setuptools.dynamic]
 version = {attr = "MySQLdb.release.__version__"}
