@@ -386,7 +386,7 @@ enum {
     SSLMODE_REQUIRED = 3,
     SSLMODE_VERIFY_CA = 4,
     SSLMODE_VERIFY_IDENTITY = 5
-}
+};
 
 static int
 _get_ssl_mode_num(char *ssl_mode)
