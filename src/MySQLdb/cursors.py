@@ -76,6 +76,13 @@ class BaseCursor:
         self._rows = None
 
     def _discard(self):
+        self.description = None
+        self.description_flags = None
+        self.rowcount = -1
+        self.lastrowid = None
+        self._rows = None
+        self.rownumber = None
+
         if self._result:
             self._result.discard()
             self._result = None
