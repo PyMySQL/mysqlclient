@@ -2114,11 +2114,17 @@ _mysql_ConnectionObject_discard_result(
     MYSQL *conn = &(self->connection);
 
     Py_BEGIN_ALLOW_THREADS;
+
     MYSQL_RES *res = mysql_use_result(conn);
     if (res == NULL) {
         Py_BLOCK_THREADS;
-        return _mysql_Exception(self);
+        if (mysql_errno(conn) != 0) {
+            // fprintf(stderr, "mysql_use_result failed: %s\n", mysql_error(conn));
+            return _mysql_Exception(self);
+        }
+        Py_RETURN_NONE;
     }
+
     MYSQL_ROW row;
     while (NULL != (row = mysql_fetch_row(res))) {
         // do nothing.
@@ -2126,6 +2132,7 @@ _mysql_ConnectionObject_discard_result(
     mysql_free_result(res);
     Py_END_ALLOW_THREADS;
     if (mysql_errno(conn)) {
+        // fprintf(stderr, "mysql_free_result failed: %s\n", mysql_error(conn));
         return _mysql_Exception(self);
     }
     Py_RETURN_NONE;

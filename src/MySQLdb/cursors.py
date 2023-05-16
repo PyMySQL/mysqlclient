@@ -90,7 +90,7 @@ class BaseCursor:
         con = self.connection
         if con is None:
             return
-        while con.next_result():
+        while con.next_result() == 0:  # -1 means no more data.
             con.discard_result()
 
     def close(self):
