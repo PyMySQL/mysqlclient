@@ -75,13 +75,30 @@ class BaseCursor:
         self.rownumber = None
         self._rows = None
 
+    def _discard(self):
+        self.description = None
+        self.description_flags = None
+        self.rowcount = -1
+        self.lastrowid = None
+        self._rows = None
+        self.rownumber = None
+
+        if self._result:
+            self._result.discard()
+            self._result = None
+
+        con = self.connection
+        if con is None:
+            return
+        while con.next_result() == 0:  # -1 means no more data.
+            con.discard_result()
+
     def close(self):
         """Close the cursor. No further queries will be possible."""
         try:
             if self.connection is None:
                 return
-            while self.nextset():
-                pass
+            self._discard()
         finally:
             self.connection = None
             self._result = None
@@ -180,8 +197,7 @@ class BaseCursor:
 
         Returns integer represents rows affected, if any
         """
-        while self.nextset():
-            pass
+        self._discard()
 
         mogrified_query = self._mogrify(query, args)
 

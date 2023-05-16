@@ -1,4 +1,4 @@
-# import pytest
+import pytest
 import MySQLdb.cursors
 from configdb import connection_factory
 
@@ -186,3 +186,39 @@ def test_mogrify_with_dict_args():
 
     assert mogrified_query == "SELECT 1, 2"
     assert mogrified_query == cursor._executed.decode()
+
+
+# Test that cursor can be used without reading whole resultset.
+@pytest.mark.parametrize("Cursor", [MySQLdb.cursors.Cursor, MySQLdb.cursors.SSCursor])
+def test_cursor_discard_result(Cursor):
+    conn = connect()
+    cursor = conn.cursor(Cursor)
+
+    cursor.execute(
+        """\
+CREATE TABLE test_cursor_discard_result (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    data VARCHAR(100)
+)"""
+    )
+    _tables.append("test_cursor_discard_result")
+
+    cursor.executemany(
+        "INSERT INTO test_cursor_discard_result (id, data) VALUES (%s, %s)",
+        [(i, f"row {i}") for i in range(1, 101)],
+    )
+
+    cursor.execute(
+        """\
+SELECT * FROM test_cursor_discard_result WHERE id <= 10;
+SELECT * FROM test_cursor_discard_result WHERE id BETWEEN 11 AND 20;
+SELECT * FROM test_cursor_discard_result WHERE id BETWEEN 21 AND 30;
+"""
+    )
+    cursor.nextset()
+    assert cursor.fetchone() == (11, "row 11")
+
+    cursor.execute(
+        "SELECT * FROM test_cursor_discard_result WHERE id BETWEEN 31 AND 40"
+    )
+    assert cursor.fetchone() == (31, "row 31")

@@ -1484,6 +1484,26 @@ _mysql_ResultObject_fetch_row(
     return NULL;
 }
 
+static const char _mysql_ResultObject_discard__doc__[] =
+"discard() -- Discard remaining rows in the resultset.";
+
+static PyObject *
+_mysql_ResultObject_discard(
+    _mysql_ResultObject *self,
+    PyObject *noargs)
+{
+    check_result_connection(self);
+
+    MYSQL_ROW row;
+    while (NULL != (row = mysql_fetch_row(self->result))) {
+        // do nothing
+    }
+    if (mysql_errno(self->conn)) {
+        return _mysql_Exception(self->conn);
+    }
+    Py_RETURN_NONE;
+}
+
 static char _mysql_ConnectionObject_change_user__doc__[] =
 "Changes the user and causes the database specified by db to\n\
 become the default (current) database on the connection\n\
@@ -2081,6 +2101,43 @@ _mysql_ConnectionObject_use_result(
     return result;
 }
 
+static const char _mysql_ConnectionObject_discard_result__doc__[] =
+"Discard current result set.\n\n"
+"This function can be called instead of use_result() or store_result(). Non-standard.";
+
+static PyObject *
+_mysql_ConnectionObject_discard_result(
+    _mysql_ConnectionObject *self,
+    PyObject *noargs)
+{
+    check_connection(self);
+    MYSQL *conn = &(self->connection);
+
+    Py_BEGIN_ALLOW_THREADS;
+
+    MYSQL_RES *res = mysql_use_result(conn);
+    if (res == NULL) {
+        Py_BLOCK_THREADS;
+        if (mysql_errno(conn) != 0) {
+            // fprintf(stderr, "mysql_use_result failed: %s\n", mysql_error(conn));
+            return _mysql_Exception(self);
+        }
+        Py_RETURN_NONE;
+    }
+
+    MYSQL_ROW row;
+    while (NULL != (row = mysql_fetch_row(res))) {
+        // do nothing.
+    }
+    mysql_free_result(res);
+    Py_END_ALLOW_THREADS;
+    if (mysql_errno(conn)) {
+        // fprintf(stderr, "mysql_free_result failed: %s\n", mysql_error(conn));
+        return _mysql_Exception(self);
+    }
+    Py_RETURN_NONE;
+}
+
 static void
 _mysql_ConnectionObject_dealloc(
     _mysql_ConnectionObject *self)
@@ -2376,6 +2433,12 @@ static PyMethodDef _mysql_ConnectionObject_methods[] = {
         METH_NOARGS,
         _mysql_ConnectionObject_use_result__doc__
     },
+    {
+        "discard_result",
+        (PyCFunction)_mysql_ConnectionObject_discard_result,
+        METH_NOARGS,
+        _mysql_ConnectionObject_discard_result__doc__
+    },
     {NULL,              NULL} /* sentinel */
 };
 
@@ -2436,6 +2499,12 @@ static PyMethodDef _mysql_ResultObject_methods[] = {
         (PyCFunction)_mysql_ResultObject_fetch_row,
         METH_VARARGS | METH_KEYWORDS,
         _mysql_ResultObject_fetch_row__doc__
+    },
+    {
+        "discard",
+        (PyCFunction)_mysql_ResultObject_discard,
+        METH_NOARGS,
+        _mysql_ResultObject_discard__doc__
     },
     {
         "field_flags",
