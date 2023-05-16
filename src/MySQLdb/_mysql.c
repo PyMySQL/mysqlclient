@@ -2081,6 +2081,36 @@ _mysql_ConnectionObject_use_result(
     return result;
 }
 
+static const char _mysql_ConnectionObject_discard_result__doc__[] =
+"Discard current result set.\n\n"
+"This function can be called instead of use_result() or store_result(). Non-standard.";
+
+static PyObject *
+_mysql_ConnectionObject_discard_result(
+    _mysql_ConnectionObject *self,
+    PyObject *noargs)
+{
+    check_connection(self);
+    MYSQL *conn = &(self->connection);
+
+    Py_BEGIN_ALLOW_THREADS;
+    MYSQL_RES *res = mysql_use_result(conn);
+    if (res == NULL) {
+        Py_BLOCK_THREADS;
+        return _mysql_Exception(self);
+    }
+    MYSQL_ROW row;
+    while (NULL != (row = mysql_fetch_row(res))) {
+        // do nothing.
+    }
+    mysql_free_result(res);
+    Py_END_ALLOW_THREADS;
+    if (mysql_errno(conn)) {
+        return _mysql_Exception(self);
+    }
+    Py_RETURN_NONE;
+}
+
 static void
 _mysql_ConnectionObject_dealloc(
     _mysql_ConnectionObject *self)
@@ -2375,6 +2405,12 @@ static PyMethodDef _mysql_ConnectionObject_methods[] = {
         (PyCFunction)_mysql_ConnectionObject_use_result,
         METH_NOARGS,
         _mysql_ConnectionObject_use_result__doc__
+    },
+    {
+        "discard_result",
+        (PyCFunction)_mysql_ConnectionObject_discard_result,
+        METH_NOARGS,
+        _mysql_ConnectionObject_discard_result__doc__
     },
     {NULL,              NULL} /* sentinel */
 };
