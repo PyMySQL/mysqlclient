@@ -22,6 +22,13 @@ import os
 
 # -- General configuration -----------------------------------------------------
 
+nitpick_ignore = [
+    ('py:class', 'datetime.date'),
+    ('py:class', 'datetime.time'),
+    ('py:class', 'datetime.datetime'),
+]
+
+
 # If your documentation needs a minimal Sphinx version, state it here.
 # needs_sphinx = "1.0"
 
