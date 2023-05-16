@@ -23,9 +23,9 @@ import os
 # -- General configuration -----------------------------------------------------
 
 nitpick_ignore = [
-    ('py:class', 'datetime.date'),
-    ('py:class', 'datetime.time'),
-    ('py:class', 'datetime.datetime'),
+    ("py:class", "datetime.date"),
+    ("py:class", "datetime.time"),
+    ("py:class", "datetime.datetime"),
 ]
 
 
