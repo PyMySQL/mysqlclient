@@ -222,3 +222,16 @@ SELECT * FROM test_cursor_discard_result WHERE id BETWEEN 21 AND 30;
         "SELECT * FROM test_cursor_discard_result WHERE id BETWEEN 31 AND 40"
     )
     assert cursor.fetchone() == (31, "row 31")
+
+
+def test_negative_id():
+    conn = connect()
+    cursor = conn.cursor()
+
+    cursor.execute("DROP TABLE IF EXISTS test_negative_id")
+    cursor.execute(
+        "CREATE TABLE test_negative_id ("
+        "id INTEGER PRIMARY KEY AUTO_INCREMENT, data VARCHAR(100))"
+    )
+    cursor.execute("INSERT INTO test_negative_id (id, data) VALUES (-1, 'row -1')")
+    assert cursor.lastrowid == -1
