@@ -9,53 +9,48 @@ MySQLdb Package
     :undoc-members:
     :show-inheritance:
 
-:mod:`connections` Module
--------------------------
+:mod:`MySQLdb.connections` Module
+---------------------------------
 
 .. automodule:: MySQLdb.connections
     :members: Connection
     :undoc-members:
-    :show-inheritance:
 
-:mod:`converters` Module
-------------------------
+:mod:`MySQLdb.converters` Module
+--------------------------------
 
 .. automodule:: MySQLdb.converters
     :members:
     :undoc-members:
-    :show-inheritance:
 
-:mod:`cursors` Module
----------------------
+:mod:`MySQLdb.cursors` Module
+-----------------------------
 
 .. automodule:: MySQLdb.cursors
-    :members: Cursor
+    :members:
     :undoc-members:
     :show-inheritance:
 
-:mod:`times` Module
--------------------
+:mod:`MySQLdb.times` Module
+---------------------------
 
 .. automodule:: MySQLdb.times
     :members:
     :undoc-members:
-    :show-inheritance:
 
-:mod:`_mysql` Module
---------------------
+:mod:`MySQLdb._mysql` Module
+----------------------------
 
 .. automodule:: MySQLdb._mysql
     :members:
     :undoc-members:
-    :show-inheritance:
 
-:mod:`_exceptions` Module
--------------------------
+:mod:`MySQLdb._exceptions` Module
+---------------------------------
 
 .. automodule:: MySQLdb._exceptions
     :members:
     :undoc-members:
-    :show-inheritance:
 
 
 Subpackages

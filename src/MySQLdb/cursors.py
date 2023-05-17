@@ -8,7 +8,7 @@ import re
 from ._exceptions import ProgrammingError
 
 
-#: Regular expression for :meth:`Cursor.executemany`.
+#: Regular expression for ``Cursor.executemany```.
 #: executemany only supports simple bulk insert.
 #: You can use it to load large dataset.
 RE_INSERT_VALUES = re.compile(
