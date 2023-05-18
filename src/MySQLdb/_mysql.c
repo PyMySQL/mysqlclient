@@ -487,7 +487,6 @@ _mysql_ConnectionObject_Initialize(
         PyErr_SetNone(PyExc_MemoryError);
         return -1;
     }
-    Py_BEGIN_ALLOW_THREADS ;
     self->open = 1;
 
     if (connect_timeout) {
@@ -548,10 +547,10 @@ _mysql_ConnectionObject_Initialize(
         mysql_options(&(self->connection), MYSQL_DEFAULT_AUTH, auth_plugin);
     }
 
+    Py_BEGIN_ALLOW_THREADS
     conn = mysql_real_connect(&(self->connection), host, user, passwd, db,
                   port, unix_socket, client_flag);
-
-    Py_END_ALLOW_THREADS ;
+    Py_END_ALLOW_THREADS
 
     if (ssl) {
         int i;
@@ -1403,9 +1402,9 @@ _mysql__fetch_row(
         if (!self->use)
             row = mysql_fetch_row(self->result);
         else {
-            Py_BEGIN_ALLOW_THREADS;
+            Py_BEGIN_ALLOW_THREADS
             row = mysql_fetch_row(self->result);
-            Py_END_ALLOW_THREADS;
+            Py_END_ALLOW_THREADS
         }
         if (!row && mysql_errno(&(((_mysql_ConnectionObject *)(self->conn))->connection))) {
             _mysql_Exception((_mysql_ConnectionObject *)self->conn);
@@ -1495,9 +1494,11 @@ _mysql_ResultObject_discard(
     check_result_connection(self);
 
     MYSQL_ROW row;
+    Py_BEGIN_ALLOW_THREADS
     while (NULL != (row = mysql_fetch_row(self->result))) {
         // do nothing
     }
+    Py_END_ALLOW_THREADS
     if (mysql_errno(self->conn)) {
         return _mysql_Exception(self->conn);
     }
@@ -1747,9 +1748,7 @@ _mysql_ConnectionObject_insert_id(
 {
     my_ulonglong r;
     check_connection(self);
-    Py_BEGIN_ALLOW_THREADS
     r = mysql_insert_id(&(self->connection));
-    Py_END_ALLOW_THREADS
     return PyLong_FromUnsignedLongLong(r);
 }
 
@@ -2058,9 +2057,7 @@ _mysql_ConnectionObject_thread_id(
 {
     unsigned long pid;
     check_connection(self);
-    Py_BEGIN_ALLOW_THREADS
     pid = mysql_thread_id(&(self->connection));
-    Py_END_ALLOW_THREADS
     return PyLong_FromLong((long)pid);
 }
 
