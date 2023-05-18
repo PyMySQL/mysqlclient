@@ -80,8 +80,8 @@ class BaseCursor:
         self.description_flags = None
         # Django uses some member after __exit__.
         # So we keep rowcount and lastrowid here. They are cleared in Cursor._query().
-        #self.rowcount = 0
-        #self.lastrowid = None
+        # self.rowcount = 0
+        # self.lastrowid = None
         self._rows = None
         self.rownumber = None
 
