@@ -110,34 +110,6 @@ class BaseCursor:
         del exc_info
         self.close()
 
-    def _escape_args(self, args, conn):
-        encoding = conn.encoding
-        literal = conn.literal
-
-        def ensure_bytes(x):
-            if isinstance(x, str):
-                return x.encode(encoding)
-            elif isinstance(x, tuple):
-                return tuple(map(ensure_bytes, x))
-            elif isinstance(x, list):
-                return list(map(ensure_bytes, x))
-            return x
-
-        if isinstance(args, (tuple, list)):
-            ret = tuple(literal(ensure_bytes(arg)) for arg in args)
-        elif isinstance(args, dict):
-            ret = {
-                ensure_bytes(key): literal(ensure_bytes(val))
-                for (key, val) in args.items()
-            }
-        else:
-            # If it's not a dictionary let's try escaping it anyways.
-            # Worst case it will throw a Value error
-            ret = literal(ensure_bytes(args))
-
-        ensure_bytes = None  # break circular reference
-        return ret
-
     def _check_executed(self):
         if not self._executed:
             raise ProgrammingError("execute() first")
@@ -279,8 +251,6 @@ class BaseCursor:
     def _do_execute_many(
         self, prefix, values, postfix, args, max_stmt_length, encoding
     ):
-        conn = self._get_db()
-        escape = self._escape_args
         if isinstance(prefix, str):
             prefix = prefix.encode(encoding)
         if isinstance(values, str):
