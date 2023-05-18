@@ -222,3 +222,24 @@ SELECT * FROM test_cursor_discard_result WHERE id BETWEEN 21 AND 30;
         "SELECT * FROM test_cursor_discard_result WHERE id BETWEEN 31 AND 40"
     )
     assert cursor.fetchone() == (31, "row 31")
+
+
+def test_binary_prefix():
+    # https://github.com/PyMySQL/mysqlclient/issues/494
+    conn = connect(binary_prefix=True)
+    cursor = conn.cursor()
+
+    cursor.execute("DROP TABLE IF EXISTS test_binary_prefix")
+    cursor.execute(
+        """\
+CREATE TABLE test_binary_prefix (
+	id INTEGER NOT NULL AUTO_INCREMENT,
+	json JSON NOT NULL,
+	PRIMARY KEY (id)
+) CHARSET=utf8mb4"""
+    )
+
+    cursor.executemany(
+        "INSERT INTO test_binary_prefix (id, json) VALUES (%(id)s, %(json)s)",
+        ({"id": 1, "json": "{}"}, {"id": 2, "json": "{}"}),
+    )
