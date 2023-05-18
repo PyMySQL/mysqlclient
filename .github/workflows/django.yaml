@@ -17,6 +17,7 @@ jobs:
         run: |
           sudo systemctl start mysql.service
           mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -uroot -proot mysql
+          mysql -uroot -proot -e "set global innodb_flush_log_at_trx_commit=0;"
           mysql -uroot -proot -e "CREATE USER 'scott'@'%' IDENTIFIED BY 'tiger'; GRANT ALL ON *.* TO scott;"
           mysql -uroot -proot -e "CREATE DATABASE django_default; CREATE DATABASE django_other;"
 
