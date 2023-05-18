@@ -78,8 +78,10 @@ class BaseCursor:
     def _discard(self):
         self.description = None
         self.description_flags = None
-        self.rowcount = 0
-        self.lastrowid = None
+        # Django uses some member after __exit__.
+        # So we keep rowcount and lastrowid here. They are cleared in Cursor._query().
+        #self.rowcount = 0
+        #self.lastrowid = None
         self._rows = None
         self.rownumber = None
 
@@ -323,6 +325,8 @@ class BaseCursor:
     def _query(self, q):
         db = self._get_db()
         self._result = None
+        self.rowcount = None
+        self.lastrowid = None
         db.query(q)
         self._do_get_result(db)
         self._post_get_result()
