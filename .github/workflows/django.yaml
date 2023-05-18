@@ -41,7 +41,7 @@ jobs:
           tar xf ${DJANGO_VERSION}.tar.gz
           cp ci/test_mysql.py django-${DJANGO_VERSION}/tests/
           cd django-${DJANGO_VERSION}
-          pip install .  -r requirements/py3.txt
+          pip install . -r tests/requirements/py3.txt
 
       - name: Run Django test
         run: |
