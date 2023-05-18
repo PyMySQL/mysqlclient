@@ -50,7 +50,7 @@ Install MySQL and mysqlclient:
 
 ```
 # Assume you are activating Python 3 venv
-$ brew install mysql
+$ brew install mysql pkg-config
 $ pip install mysqlclient
 ```
 
@@ -58,9 +58,8 @@ If you don't want to install MySQL server, you can use mysql-client instead:
 
 ```
 # Assume you are activating Python 3 venv
-$ brew install mysql-client
-$ echo 'export PATH="/usr/local/opt/mysql-client/bin:$PATH"' >> ~/.bash_profile
-$ export PATH="/usr/local/opt/mysql-client/bin:$PATH"
+$ brew install mysql-client pkg-config
+$ export PKG_CONFIG_PATH="/opt/homebrew/opt/mysql-client/lib/pkgconfig"
 $ pip install mysqlclient
 ```
 
