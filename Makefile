@@ -17,5 +17,5 @@ clean:
 
 .PHONY: check
 check:
-	ruff .
-	black *.py src
+	ruff *.py src ci
+	black *.py src ci
