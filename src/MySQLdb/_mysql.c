@@ -531,10 +531,11 @@ _mysql_ConnectionObject_Initialize(
         // See https://github.com/PyMySQL/mysqlclient/issues/474
         // TODO: Does MariaDB supports PREFERRED and VERIFY_CA?
         // We support only two levels for now.
-        if (sslmode_num >= SSLMODE_REQUIRED) {
+        my_bool enforce_tls = 1;
+        if (ssl_mode_num >= SSLMODE_REQUIRED) {
             mysql_optionsv(&(self->connection), MYSQL_OPT_SSL_ENFORCE, (void *)&enforce_tls);
         }
-        if (sslmode_num >= SSLMODE_VERIFY_CA) {
+        if (ssl_mode_num >= SSLMODE_VERIFY_CA) {
             mysql_optionsv(&(self->connection), MYSQL_OPT_SSL_VERIFY_SERVER_CERT, (void *)&enforce_tls);
         }
 #endif
