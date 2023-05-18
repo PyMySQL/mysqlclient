@@ -66,7 +66,7 @@ class BaseCursor:
         self.connection = connection
         self.description = None
         self.description_flags = None
-        self.rowcount = -1
+        self.rowcount = 0
         self.arraysize = 1
         self._executed = None
 
@@ -78,7 +78,7 @@ class BaseCursor:
     def _discard(self):
         self.description = None
         self.description_flags = None
-        self.rowcount = -1
+        self.rowcount = 0
         self.lastrowid = None
         self._rows = None
         self.rownumber = None
