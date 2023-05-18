@@ -5,10 +5,12 @@ on:
 
 jobs:
   build:
+    name: "Run Django LTS test suite"
     runs-on: ubuntu-latest
-      env:
-        PIP_NO_PYTHON_VERSION_WARNING: 1
-        PIP_DISABLE_PIP_VERSION_CHECK: 1
+    env:
+      PIP_NO_PYTHON_VERSION_WARNING: 1
+      PIP_DISABLE_PIP_VERSION_CHECK: 1
+      DJANGO_VERSION: "3.2.19"
     steps:
       - name: Start MySQL
         run: |
@@ -32,15 +34,16 @@ jobs:
           pip install mysqlclient  # Use stable version
           pip install .
 
-      - name: Run Django test
-        env:
-          DJANGO_VERSION: "3.2.19"
+      - name: Setup Django
         run: |
           sudo apt-get install libmemcached-dev
           wget https://github.com/django/django/archive/${DJANGO_VERSION}.tar.gz
           tar xf ${DJANGO_VERSION}.tar.gz
           cp ci/test_mysql.py django-${DJANGO_VERSION}/tests/
+          cd django-${DJANGO_VERSION}
+          pip install .  -r requirements/py3.txt
+
+      - name: Run Django test
+        run: |
           cd django-${DJANGO_VERSION}/tests/
-          pip install ..
-          pip install -r requirements/py3.txt
           PYTHONPATH=.. python3 ./runtests.py --settings=test_mysql
