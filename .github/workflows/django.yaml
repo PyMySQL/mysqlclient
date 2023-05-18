@@ -31,7 +31,7 @@ jobs:
       - name: Install mysqlclient
         run: |
           #pip install -r requirements.txt
-          pip install mysqlclient  # Use stable version
+          #pip install mysqlclient  # Use stable version
           pip install .
 
       - name: Setup Django
