@@ -1495,9 +1495,11 @@ _mysql_ResultObject_discard(
     check_result_connection(self);
 
     MYSQL_ROW row;
+    PY_BEGIN_ALLOW_THREADS;
     while (NULL != (row = mysql_fetch_row(self->result))) {
         // do nothing
     }
+    PY_END_ALLOW_THREADS;
     if (mysql_errno(self->conn)) {
         return _mysql_Exception(self->conn);
     }
