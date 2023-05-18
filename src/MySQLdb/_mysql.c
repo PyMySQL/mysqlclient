@@ -547,10 +547,10 @@ _mysql_ConnectionObject_Initialize(
         mysql_options(&(self->connection), MYSQL_DEFAULT_AUTH, auth_plugin);
     }
 
-    Py_BEGIN_ALLOW_THREADS;
+    Py_BEGIN_ALLOW_THREADS
     conn = mysql_real_connect(&(self->connection), host, user, passwd, db,
                   port, unix_socket, client_flag);
-    Py_END_ALLOW_THREADS;
+    Py_END_ALLOW_THREADS
 
     if (ssl) {
         int i;
@@ -1402,9 +1402,9 @@ _mysql__fetch_row(
         if (!self->use)
             row = mysql_fetch_row(self->result);
         else {
-            Py_BEGIN_ALLOW_THREADS;
+            Py_BEGIN_ALLOW_THREADS
             row = mysql_fetch_row(self->result);
-            Py_END_ALLOW_THREADS;
+            Py_END_ALLOW_THREADS
         }
         if (!row && mysql_errno(&(((_mysql_ConnectionObject *)(self->conn))->connection))) {
             _mysql_Exception((_mysql_ConnectionObject *)self->conn);
