@@ -12,7 +12,7 @@ jobs:
           sudo systemctl start mysql.service
           mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -uroot -proot mysql
           mysql -uroot -proot -e "CREATE USER 'scott'@'%' IDENTIFIED BY 'tiger'; GRANT ALL ON *.* TO scott;"
-          mysql -uroot -proot -e "CREATE DATABASE django_test; CREATE DATABASE django_other;"
+          mysql -uroot -proot -e "CREATE DATABASE django_default; CREATE DATABASE django_other;"
 
       - uses: actions/checkout@v3
 
