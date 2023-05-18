@@ -289,11 +289,11 @@ class BaseCursor:
             postfix = postfix.encode(encoding)
         sql = bytearray(prefix)
         args = iter(args)
-        v = values % escape(next(args), conn)
+        v = self._mogrify(values, next(args))
         sql += v
         rows = 0
         for arg in args:
-            v = values % escape(arg, conn)
+            v = self._mogrify(values, arg)
             if len(sql) + len(v) + len(postfix) + 1 > max_stmt_length:
                 rows += self.execute(sql + postfix)
                 sql = bytearray(prefix)

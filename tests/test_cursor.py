@@ -72,7 +72,7 @@ def test_executemany():
     # values (0),(1),(2),(3),(4),(5),(6),(7),(8),(9)
     # """
     # list args
-    data = range(10)
+    data = [(i,) for i in range(10)]
     cursor.executemany("insert into test (data) values (%s)", data)
     assert cursor._executed.endswith(
         b",(7),(8),(9)"
