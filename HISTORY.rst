@@ -5,8 +5,17 @@
 Release: TBD
 
 * Use ``pkg-config`` instead of ``mysql_config`` (#586)
-
-
+* Raise ProgrammingError on -inf (#557)
+* Raise IntegrityError for ER_BAD_NULL. (#579)
+* Windows: Use MariaDB Connector/C 3.3.4 (#585)
+* Use pkg-config instead of mysql_config (#586)
+* Add collation option (#564)
+* Drop Python 3.7 support (#593)
+* Use pyproject.toml for build (#598)
+* Add Cursor.mogrify (#477)
+* Partial support of ssl_mode option with mariadbclient (#475)
+* Discard remaining results without creating Python objects (#601)
+* Fix executemany with binary prefix (#605)
 
 ======================
  What's new in 2.1.1
