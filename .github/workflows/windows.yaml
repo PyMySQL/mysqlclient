@@ -2,9 +2,7 @@ name: Build windows wheels
 
 on:
   push:
-    branches:
-      - master
-      - ci
+    branches: ["main", "ci"]
   workflow_dispatch:
 
 jobs:
