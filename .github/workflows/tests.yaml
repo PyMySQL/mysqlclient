@@ -19,14 +19,10 @@ jobs:
         name: Start MariaDB
         # https://github.com/actions/runner-images/blob/9d9b3a110dfc98100cdd09cb2c957b9a768e2979/images/linux/scripts/installers/mysql.sh#L10-L13
         run: |
-          export DEBIAN_FRONTEND=noninteractive
-          echo mariadb-server mariadb-server/root_password password root | sudo debconf-set-selections
-          echo mariadb-server mariadb-server/root_password_again password root | sudo debconf-set-selections
-          sudo apt-get -y install mariadb-server libmariadb-dev
-          sudo systemctl start mariadb.service
+          docker run -d -e MARIADB_ROOT_PASSWORD=root -p 3306:3306 --rm --name mariadb mariadb:11.0
+          sudo apt-get -y install libmariadb-dev
           mysql --version
-          mysql -uroot -proot -e "CREATE DATABASE mysqldb_test"
-
+          mysql -uroot -proot -h127.0.0.1 -e "CREATE DATABASE mysqldb_test"
 
       - if: ${{ !matrix.mariadb }}
         name: Start MySQL
