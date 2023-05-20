@@ -78,10 +78,6 @@ def get_config_posix(options=None):
     if static:
         ext_options["language"] = "c++"
 
-    print("Options for building extention module:")
-    for k, v in ext_options.items():
-        print(f"  {k}: {v}")
-
     return ext_options
 
 
@@ -157,7 +153,7 @@ if sys.platform == "win32":
 else:
     ext_options = get_config_posix(get_options())
 
-print("# Extention options")
+print("# Options for building extention module:")
 for k, v in ext_options.items():
     print(f"  {k}: {v}")
 
