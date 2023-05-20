@@ -19,6 +19,7 @@ jobs:
         name: Start MariaDB
         # https://github.com/actions/runner-images/blob/9d9b3a110dfc98100cdd09cb2c957b9a768e2979/images/linux/scripts/installers/mysql.sh#L10-L13
         run: |
+          docker pull mariadb:11.0
           docker run -d -e MARIADB_ROOT_PASSWORD=root -p 3306:3306 --rm --name mariadb mariadb:11.0
           sudo apt-get -y install libmariadb-dev
           mysql --version
