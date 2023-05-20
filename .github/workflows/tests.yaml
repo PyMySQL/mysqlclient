@@ -1,7 +1,7 @@
 name: Test
 
 on:
-  push:
+  push: ["main"]
   pull_request:
 
 jobs:
@@ -12,15 +12,26 @@ jobs:
         python-version: ["3.8", "3.9", "3.10", "3.11"]
         include:
           - python-version: "3.11"
-            mariadbclient: 1
+            mariadb: 1
     steps:
-      - if: ${{ matrix.mariadbclient }}
+      - if: ${{ matrix.mariadb }}
+        name: Start MariaDB
+        # https://github.com/actions/runner-images/blob/9d9b3a110dfc98100cdd09cb2c957b9a768e2979/images/linux/scripts/installers/mysql.sh#L10-L13
         run: |
-          sudo apt-get install libmariadb-dev
+          export DEBIAN_FRONTEND=noninteractive
+          echo mariadb-server mariadb-server/root_password password root | sudo debconf-set-selections
+          echo mariadb-server mariadb-server/root_password_again password root | sudo debconf-set-selections
+          sudo apt-get -y install mariadb-server libmariadb-dev
+          sudo systemctl start mariadb.service
+          mysql --version
+          mysql -uroot -proot -e "CREATE DATABASE mysqldb_test"
 
-      - name: Start MySQL
+
+      - if: ${{ !matrix.mariadb }}
+        name: Start MySQL
         run: |
           sudo systemctl start mysql.service
+          mysql --version
           mysql -uroot -proot -e "CREATE DATABASE mysqldb_test"
 
       - uses: actions/checkout@v3
