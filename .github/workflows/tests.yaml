@@ -10,7 +10,14 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11"]
+        include:
+          - python-version: "3.11"
+            mariadbclient: 1
     steps:
+      - if: ${{ matrix.mariadbclient }}
+        run: |
+          sudo apt-get install libmariadb-dev
+
       - name: Start MySQL
         run: |
           sudo systemctl start mysql.service
