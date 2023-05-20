@@ -2,6 +2,7 @@ name: Test
 
 on:
   push:
+    branches: ["main"]
   pull_request:
 
 jobs:
@@ -10,10 +11,25 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11"]
+        include:
+          - python-version: "3.11"
+            mariadb: 1
     steps:
-      - name: Start MySQL
+      - if: ${{ matrix.mariadb }}
+        name: Start MariaDB
+        # https://github.com/actions/runner-images/blob/9d9b3a110dfc98100cdd09cb2c957b9a768e2979/images/linux/scripts/installers/mysql.sh#L10-L13
+        run: |
+          docker pull mariadb:10.11
+          docker run -d -e MARIADB_ROOT_PASSWORD=root -p 3306:3306 --rm --name mariadb mariadb:10.11
+          sudo apt-get -y install libmariadb-dev
+          mysql --version
+          mysql -uroot -proot -h127.0.0.1 -e "CREATE DATABASE mysqldb_test"
+
+      - if: ${{ !matrix.mariadb }}
+        name: Start MySQL
         run: |
           sudo systemctl start mysql.service
+          mysql --version
           mysql -uroot -proot -e "CREATE DATABASE mysqldb_test"
 
       - uses: actions/checkout@v3
