@@ -1,0 +1,4 @@
+contact_links:
+  - name: Failed to build
+    url: "https://github.com/PyMySQL/mysqlclient/discussions/new?category=build"
+    about: Ask help in this forum.
