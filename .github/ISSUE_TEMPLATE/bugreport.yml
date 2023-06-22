@@ -1,0 +1,93 @@
+name: Bug Report
+description: File a bug report
+body:
+  - type: markdown
+    attributes:
+      value: |
+        We don't use this issue tracker to help users.
+        Please use this tracker only when you are sure about it is an issue of this software.
+
+        If you had trouble, please ask it on some user community.
+
+        - [Python Discord](https://www.pythondiscord.com/)
+          For general Python questions, including developing application using MySQL.
+
+        - [MySQL Community Slack](https://lefred.be/mysql-community-on-slack/)
+          For general MySQL questions.
+
+        - [mysqlclient Discuss](https://github.com/PyMySQL/mysqlclient/discussions)
+          For mysqlclient specific topics.
+
+  - type: textarea
+    id: describe
+    attributes:
+      label: Describe the bug
+      description: "A **clear and concise** description of what the bug is."
+
+  - type: textarea
+    id: environments
+    attributes:
+      label: Environment
+      description: |
+        - Server and version (e.g. MySQL 8.0.33, MariaDB 10.11.4)
+        - OS (e.g. Windows 11, Ubuntu 22.04, macOS 13.4.1)
+        - Python version
+
+  - type: input
+    id: libmysqlclient
+    attributes:
+      label: How did you install libmysqlclient libraries?
+      description: |
+        e.g. brew install mysql-cleint, brew install mariadb, apt-get install libmysqlclient-dev
+
+  - type: input
+    id: mysqlclient-version
+    attributes:
+      label: What version of mysqlclient do you use?
+  
+  - type: markdown
+    attributes:
+      value: |
+        ## Complete step to reproduce.
+        #
+        Do not expect maintainer complement any piece of code, schema, and data need to reproduce.
+        You need to provide **COMPLETE** step to reproduce.
+
+        It is very recommended to use Docker to start MySQL server.
+        Maintainer can not use your Database to reproduce your issue.
+
+        **If you write only little code snippet, maintainer may close your issue
+        without any comment.**
+
+  - type: textarea
+    id: reproduce-docker
+    attributes:
+      label: Docker command to start MySQL server
+      render: bash
+      description: e.g. `docker run -e MYSQL_ALLOW_EMPTY_PASSWORD=yes -p 3306:3306 --rm --name mysql mysql:8.0`
+
+  - type: textarea
+    id: reproduce-code
+    attributes:
+      label: Minimum but complete code to reproduce
+      render: python
+      value: |
+        # Write Python code here.
+        import MySQLdb
+
+        conn = MySQLdb.connect(host='127.0.0.1', port=3306, user='root')
+        ...
+
+  - type: textarea
+    id: reproduce-schema
+    attributes:
+      label: Schema and initial data required to reproduce.
+      render: sql
+      value: |
+        -- Write SQL here.
+        -- e.g. CREATE TABLE ...
+
+  - type: textarea
+    id: reproduce-other
+    attributes:
+      label: Commands, and any other step required to reproduce your issue.
