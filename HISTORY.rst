@@ -2,7 +2,7 @@
  What's new in 2.2.0
 ======================
 
-Release: TBD
+Release: 2023-06-22
 
 * Use ``pkg-config`` instead of ``mysql_config`` (#586)
 * Raise ProgrammingError on -inf (#557)
