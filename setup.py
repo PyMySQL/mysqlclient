@@ -154,7 +154,7 @@ if sys.platform == "win32":
 else:
     ext_options = get_config_posix(get_options())
 
-print("# Options for building extention module:")
+print("# Options for building extension module:")
 for k, v in ext_options.items():
     print(f"  {k}: {v}")
 
