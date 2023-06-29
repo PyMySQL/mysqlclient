@@ -14,7 +14,8 @@ with open("src/MySQLdb/release.py", encoding="utf-8") as f:
 
 def find_package_name():
     """Get available pkg-config package name"""
-    packages = ["mysqlclient", "mariadb"]
+    # Ubuntu uses mariadb.pc, but CentOS uses libmariadb.pc
+    packages = ["mysqlclient", "mariadb", "libmariadb"]
     for pkg in packages:
         try:
             cmd = f"pkg-config --exists {pkg}"
@@ -153,7 +154,7 @@ if sys.platform == "win32":
 else:
     ext_options = get_config_posix(get_options())
 
-print("# Options for building extention module:")
+print("# Options for building extension module:")
 for k, v in ext_options.items():
     print(f"  {k}: {v}")
 
