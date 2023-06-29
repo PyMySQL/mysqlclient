@@ -14,7 +14,8 @@ with open("src/MySQLdb/release.py", encoding="utf-8") as f:
 
 def find_package_name():
     """Get available pkg-config package name"""
-    packages = ["mysqlclient", "mariadb"]
+    # Ubuntu uses mariadb.pc, but CentOS uses libmariadb.pc
+    packages = ["mysqlclient", "mariadb", "libmariadb"]
     for pkg in packages:
         try:
             cmd = f"pkg-config --exists {pkg}"
