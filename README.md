@@ -82,7 +82,7 @@ $ pip install mysqlclient
 
 ### Customize build (POSIX)
 
-mysqlclient uses `pkg-config --clfags --ldflags mysqlclient` by default for finding
+mysqlclient uses `pkg-config --cflags --ldflags mysqlclient` by default for finding
 compiler/linker flags.
 
 You can use `MYSQLCLIENT_CFLAGS` and `MYSQLCLIENT_LDFLAGS` environment
