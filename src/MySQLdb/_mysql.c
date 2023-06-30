@@ -476,10 +476,15 @@ _mysql_ConnectionObject_Initialize(
         _stringsuck(cipher, value, ssl);
     }
     if (ssl_mode) {
+#if defined(MYSQL_OPT_SSL_MODE) || defined(MYSQL_OPT_SSL_ENFORCE)
         if ((ssl_mode_num = _get_ssl_mode_num(ssl_mode)) <= 0) {
             PyErr_SetString(_mysql_NotSupportedError, "Unknown ssl_mode specification");
             return -1;
         }
+#else
+       PyErr_SetString(_mysql_NotSupportedError, "MySQL client library does not support ssl_mode specification");
+       return -1;
+#endif
     }
 
     conn = mysql_init(&(self->connection));
@@ -526,7 +531,7 @@ _mysql_ConnectionObject_Initialize(
     if (ssl_mode) {
 #ifdef HAVE_ENUM_MYSQL_OPT_SSL_MODE
         mysql_options(&(self->connection), MYSQL_OPT_SSL_MODE, &ssl_mode_num);
-#else
+#elif defined(MYSQL_OPT_SSL_ENFORCE)
         // MariaDB doesn't support MYSQL_OPT_SSL_MODE.
         // See https://github.com/PyMySQL/mysqlclient/issues/474
         // TODO: Does MariaDB supports PREFERRED and VERIFY_CA?
