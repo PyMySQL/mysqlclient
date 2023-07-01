@@ -1,9 +1,9 @@
-name: Bug Report
-description: File a bug report
 body:
   - type: markdown
     attributes:
       value: |
+        Failed to buid? [Use this form](https://github.com/PyMySQL/mysqlclient/discussions/new?category=build).
+
         We don't use this issue tracker to help users.
         Please use this tracker only when you are sure about it is an issue of this software.
 
