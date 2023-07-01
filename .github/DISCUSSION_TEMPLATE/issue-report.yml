@@ -2,7 +2,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Failed to buid? [Use this form](https://github.com/PyMySQL/mysqlclient/discussions/new?category=build).
+        Failed to buid? [Use this form](https://github.com/PyMySQL/mysqlclient/discussions/new?category=build-issue).
 
         We don't use this issue tracker to help users.
         Please use this tracker only when you are sure about it is an issue of this software.
