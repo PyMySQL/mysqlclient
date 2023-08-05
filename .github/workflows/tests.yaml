@@ -13,7 +13,7 @@ jobs:
       PIP_DISABLE_PIP_VERSION_CHECK: 1
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
         include:
           - python-version: "3.11"
             mariadb: 1
@@ -43,6 +43,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
           cache-dependency-path: "requirements.txt"
+          allow-prereleases: true
 
       - name: Install mysqlclient
         run: |
