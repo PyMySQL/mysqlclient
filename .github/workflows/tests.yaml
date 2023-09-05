@@ -35,7 +35,7 @@ jobs:
           mysql --version
           mysql -uroot -proot -e "CREATE DATABASE mysqldb_test"
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v4
@@ -78,7 +78,7 @@ jobs:
           mysql -uroot -proot -e "CREATE USER 'scott'@'%' IDENTIFIED BY 'tiger'; GRANT ALL ON *.* TO scott;"
           mysql -uroot -proot -e "CREATE DATABASE django_default; CREATE DATABASE django_other;"
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Set up Python
         uses: actions/setup-python@v4
