@@ -25,13 +25,14 @@ USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
 OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
-
+#include <stdbool.h>
 #include "mysql.h"
 #include "mysqld_error.h"
 
 #if MYSQL_VERSION_ID >= 80000
 // https://github.com/mysql/mysql-server/commit/eb821c023cedc029ca0b06456dfae365106bee84
-#define my_bool _Bool
+// my_bool was typedef of char before MySQL 8.0.0.
+#define my_bool bool
 #endif
 
 #if ((MYSQL_VERSION_ID >= 50555 && MYSQL_VERSION_ID <= 50599) || \
@@ -71,7 +72,8 @@ static PyObject *_mysql_NotSupportedError;
 typedef struct {
     PyObject_HEAD
     MYSQL connection;
-    int open;
+    bool open;
+    bool reconnect;
     PyObject *converter;
 } _mysql_ConnectionObject;
 
@@ -443,7 +445,8 @@ _mysql_ConnectionObject_Initialize(
          *auth_plugin=NULL;
 
     self->converter = NULL;
-    self->open = 0;
+    self->open = false;
+    self->reconnect = false;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs,
                 "|ssssisOiiisssiOsiiiss:connect",
@@ -487,7 +490,7 @@ _mysql_ConnectionObject_Initialize(
         PyErr_SetNone(PyExc_MemoryError);
         return -1;
     }
-    self->open = 1;
+    self->open = true;
 
     if (connect_timeout) {
         unsigned int timeout = connect_timeout;
@@ -686,7 +689,7 @@ _mysql_ConnectionObject_close(
     Py_BEGIN_ALLOW_THREADS
     mysql_close(&(self->connection));
     Py_END_ALLOW_THREADS
-    self->open = 0;
+    self->open = false;
     _mysql_ConnectionObject_clear(self);
     Py_RETURN_NONE;
 }
@@ -1852,18 +1855,18 @@ _mysql_ResultObject_num_rows(
 }
 
 static char _mysql_ConnectionObject_ping__doc__[] =
-"Checks whether or not the connection to the server is\n\
-working. If it has gone down, an automatic reconnection is\n\
-attempted.\n\
+"Checks whether or not the connection to the server is working.\n\
 \n\
 This function can be used by clients that remain idle for a\n\
 long while, to check whether or not the server has closed the\n\
-connection and reconnect if necessary.\n\
+connection.\n\
 \n\
 New in 1.2.2: Accepts an optional reconnect parameter. If True,\n\
 then the client will attempt reconnection. Note that this setting\n\
 is persistent. By default, this is on in MySQL<5.0.3, and off\n\
 thereafter.\n\
+MySQL 8.0.33 deprecated the MYSQL_OPT_RECONNECT option so reconnect\n\
+parameter is also deprecated in mysqlclient 2.2.1.\n\
 \n\
 Non-standard. You should assume that ping() performs an\n\
 implicit rollback; use only when starting a new transaction.\n\
@@ -1875,17 +1878,24 @@ _mysql_ConnectionObject_ping(
     _mysql_ConnectionObject *self,
     PyObject *args)
 {
-    int r, reconnect = -1;
-    if (!PyArg_ParseTuple(args, "|I", &reconnect)) return NULL;
+    int reconnect = 0;
+    if (!PyArg_ParseTuple(args, "|p", &reconnect)) return NULL;
     check_connection(self);
-    if (reconnect != -1) {
+    if (reconnect != (self->reconnect == true)) {
+        // libmysqlclient show warning to stderr when MYSQL_OPT_RECONNECT is used.
+        // so we avoid using it as possible for now.
+        // TODO: Warn when reconnect is true.
+        // MySQL 8.0.33 show warning to stderr already.
+        // We will emit Pytohn warning in future.
         my_bool recon = (my_bool)reconnect;
         mysql_options(&self->connection, MYSQL_OPT_RECONNECT, &recon);
+        self->reconnect = (bool)reconnect;
     }
+    int r;
     Py_BEGIN_ALLOW_THREADS
     r = mysql_ping(&(self->connection));
     Py_END_ALLOW_THREADS
-    if (r)     return _mysql_Exception(self);
+    if (r) return _mysql_Exception(self);
     Py_RETURN_NONE;
 }
 
@@ -2165,7 +2175,7 @@ _mysql_ConnectionObject_dealloc(
     PyObject_GC_UnTrack(self);
     if (self->open) {
         mysql_close(&(self->connection));
-        self->open = 0;
+        self->open = false;
     }
     Py_CLEAR(self->converter);
     MyFree(self);
