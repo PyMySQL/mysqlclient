@@ -59,7 +59,7 @@ If you don't want to install MySQL server, you can use mysql-client instead:
 ```bash
 $ # Assume you are activating Python 3 venv
 $ brew install mysql-client pkg-config
-$ export PKG_CONFIG_PATH="/opt/homebrew/opt/mysql-client/lib/pkgconfig"
+$ export PKG_CONFIG_PATH="$(brew --prefix)/opt/mysql-client/lib/pkgconfig"
 $ pip install mysqlclient
 ```
 
