@@ -1,4 +1,17 @@
 ======================
+ What's new in 2.2.1
+======================
+
+Release: 2023-12-13
+
+* ``Connection.ping()`` avoid using ``MYSQL_OPT_RECONNECT`` option until
+  ``reconnect=True`` is specified. MySQL 8.0.33 start showing warning
+  when the option is used. (#664)
+* Windows: Update MariaDB Connector/C to 3.3.8. (#665)
+* Windows: Build wheels for Python 3.12 (#644)
+
+
+======================
  What's new in 2.2.0
 ======================
 
