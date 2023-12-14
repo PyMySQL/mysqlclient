@@ -75,7 +75,7 @@ jobs:
           python -m build -s -o dist
 
       - name: Upload Wheel
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: win-wheels
           path: mysqlclient/dist/*.*
