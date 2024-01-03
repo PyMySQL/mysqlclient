@@ -160,10 +160,27 @@ class Connection(_mysql.connection):
         if "passwd" in kwargs2:
             kwargs2["password"] = kwargs2.pop("passwd")
 
+        use_unicode = kwargs2.pop("use_unicode", True)
+        default_conversions = conversions.copy()
+        if not use_unicode:
+            for t in (
+                FIELD_TYPE.STRING,
+                FIELD_TYPE.VAR_STRING,
+                FIELD_TYPE.VARCHAR,
+                FIELD_TYPE.TINY_BLOB,
+                FIELD_TYPE.MEDIUM_BLOB,
+                FIELD_TYPE.LONG_BLOB,
+                FIELD_TYPE.BLOB,
+            ):
+                default_conversions[t] = bytes
+            # Unlike other string/blob types, JSON is always text.
+            # MySQL may return JSON with charset==binary.
+            default_conversions[FIELD_TYPE.JSON] = bytes
+
         if "conv" in kwargs:
             conv = kwargs["conv"]
         else:
-            conv = conversions
+            conv = default_conversions
 
         conv2 = {}
         for k, v in conv.items():
@@ -176,7 +193,6 @@ class Connection(_mysql.connection):
         cursorclass = kwargs2.pop("cursorclass", self.default_cursor)
         charset = kwargs2.get("charset", "")
         collation = kwargs2.pop("collation", "")
-        use_unicode = kwargs2.pop("use_unicode", True)
         sql_mode = kwargs2.pop("sql_mode", "")
         self._binary_prefix = kwargs2.pop("binary_prefix", False)
 
@@ -208,21 +224,6 @@ class Connection(_mysql.connection):
 
         if sql_mode:
             self.set_sql_mode(sql_mode)
-
-        if use_unicode:
-            for t in (
-                FIELD_TYPE.STRING,
-                FIELD_TYPE.VAR_STRING,
-                FIELD_TYPE.VARCHAR,
-                FIELD_TYPE.TINY_BLOB,
-                FIELD_TYPE.MEDIUM_BLOB,
-                FIELD_TYPE.LONG_BLOB,
-                FIELD_TYPE.BLOB,
-            ):
-                self.converter[t] = _bytes_or_str
-            # Unlike other string/blob types, JSON is always text.
-            # MySQL may return JSON with charset==binary.
-            self.converter[FIELD_TYPE.JSON] = str
 
         self._transactional = self.server_capabilities & CLIENT.TRANSACTIONS
         if self._transactional:
