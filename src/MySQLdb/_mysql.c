@@ -524,8 +524,13 @@ _mysql_ConnectionObject_Initialize(
         mysql_options(&(self->connection), MYSQL_OPT_LOCAL_INFILE, (char *) &local_infile);
 
     if (ssl) {
-        mysql_ssl_set(&(self->connection), key, cert, ca, capath, cipher);
+        mysql_options(&(self->connection), MYSQL_OPT_SSL_KEY, key);
+        mysql_options(&(self->connection), MYSQL_OPT_SSL_CERT, cert);
+        mysql_options(&(self->connection), MYSQL_OPT_SSL_CA, ca);
+        mysql_options(&(self->connection), MYSQL_OPT_SSL_CAPATH, capath);
+        mysql_options(&(self->connection), MYSQL_OPT_SSL_CIPHER, cipher);
     }
+
     if (ssl_mode) {
 #ifdef HAVE_ENUM_MYSQL_OPT_SSL_MODE
         mysql_options(&(self->connection), MYSQL_OPT_SSL_MODE, &ssl_mode_num);
@@ -1789,10 +1794,11 @@ _mysql_ConnectionObject_kill(
 {
     unsigned long pid;
     int r;
+    char query[50];
     if (!PyArg_ParseTuple(args, "k:kill", &pid)) return NULL;
     check_connection(self);
     Py_BEGIN_ALLOW_THREADS
-    r = mysql_kill(&(self->connection), pid);
+    r = mysql_query(&(self->connection), snprintf(query, 50, "KILL %d", pid));
     Py_END_ALLOW_THREADS
     if (r) return _mysql_Exception(self);
     Py_RETURN_NONE;
@@ -2008,7 +2014,7 @@ _mysql_ConnectionObject_shutdown(
     int r;
     check_connection(self);
     Py_BEGIN_ALLOW_THREADS
-    r = mysql_shutdown(&(self->connection), SHUTDOWN_DEFAULT);
+    r = mysql_query(&(self->connection), "SHUTDOWN");
     Py_END_ALLOW_THREADS
     if (r) return _mysql_Exception(self);
     Py_RETURN_NONE;
