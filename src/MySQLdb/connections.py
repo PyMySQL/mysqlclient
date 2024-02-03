@@ -193,7 +193,9 @@ class Connection(_mysql.connection):
         super().__init__(*args, **kwargs2)
         self.cursorclass = cursorclass
         self.encoders = {
-            k: v for k, v in conv.items() if type(k) is not int  # noqa: E721
+            k: v
+            for k, v in conv.items()
+            if type(k) is not int  # noqa: E721
         }
 
         self._server_version = tuple(
