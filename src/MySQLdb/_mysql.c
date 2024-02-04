@@ -1797,8 +1797,9 @@ _mysql_ConnectionObject_kill(
     char query[50];
     if (!PyArg_ParseTuple(args, "k:kill", &pid)) return NULL;
     check_connection(self);
+    snprintf(query, 50, "KILL %lu", pid);
     Py_BEGIN_ALLOW_THREADS
-    r = mysql_query(&(self->connection), snprintf(query, 50, "KILL %d", pid));
+    r = mysql_query(&(self->connection), query);
     Py_END_ALLOW_THREADS
     if (r) return _mysql_Exception(self);
     Py_RETURN_NONE;
