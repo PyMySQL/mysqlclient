@@ -10,5 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: psf/black@stable
-      - uses: chartboost/ruff-action@v1
+      - run: pipx install ruff
+      - run: ruff check src/
+      - run: ruff format src/
