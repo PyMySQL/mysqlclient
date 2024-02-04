@@ -1785,7 +1785,7 @@ _mysql_ConnectionObject_insert_id(
 
 static char _mysql_ConnectionObject_kill__doc__[] =
 "Asks the server to kill the thread specified by pid.\n\
-Non-standard.";
+Non-standard. Deprecated.";
 
 static PyObject *
 _mysql_ConnectionObject_kill(
@@ -2003,7 +2003,7 @@ _mysql_ConnectionObject_select_db(
 
 static char _mysql_ConnectionObject_shutdown__doc__[] =
 "Asks the database server to shut down. The connected user must\n\
-have shutdown privileges. Non-standard.\n\
+have shutdown privileges. Non-standard. Deprecated.\n\
 ";
 
 static PyObject *
