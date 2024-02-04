@@ -14,7 +14,7 @@ database server that provides the Python database API.
 Installation
 ------------
 
-The ``README`` file has complete installation instructions.
+The `README <https://github.com/PyMySQL/mysqlclient/blob/main/README.md>`_ file has complete installation instructions.
 
 
 MySQLdb._mysql
