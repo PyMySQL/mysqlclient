@@ -1,4 +1,16 @@
 ======================
+ What's new in 2.2.2
+======================
+
+Release: 2024-02-04
+
+* Support building with MySQL 8.3 (#688).
+* Deprecate ``db.shutdown()`` and ``db.kill()`` methods in docstring.
+  This is because ``mysql_shutdown()`` and ``mysql_kill()`` were removed in MySQL 8.3.
+  They will emit DeprecationWarning in the future but not for now.
+
+
+======================
  What's new in 2.2.1
 ======================
 
