@@ -134,6 +134,8 @@ class Connection(_mysql.connection):
             see the MySQL documentation for more details
             (mysql_ssl_set()).  If this is set, and the client does not
             support SSL, NotSupportedError will be raised.
+            Since mysqlclient 2.2.4, ssl=True is alias of ssl_mode=REQUIRED
+            for better compatibility with PyMySQL and MariaDB.
 
         :param bool local_infile:
             enables LOAD LOCAL INFILE; zero disables

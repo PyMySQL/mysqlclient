@@ -391,10 +391,10 @@ enum {
 };
 
 static int
-_get_ssl_mode_num(char *ssl_mode)
+_get_ssl_mode_num(const char *ssl_mode)
 {
-    static char *ssl_mode_list[] = { "DISABLED", "PREFERRED",
-                  "REQUIRED", "VERIFY_CA", "VERIFY_IDENTITY" };
+    static const char *ssl_mode_list[] = {
+        "DISABLED", "PREFERRED", "REQUIRED", "VERIFY_CA", "VERIFY_IDENTITY" };
     unsigned int i;
     for (i=0; i < sizeof(ssl_mode_list)/sizeof(ssl_mode_list[0]); i++) {
         if (strcmp(ssl_mode, ssl_mode_list[i]) == 0) {
@@ -414,7 +414,7 @@ _mysql_ConnectionObject_Initialize(
     MYSQL *conn = NULL;
     PyObject *conv = NULL;
     PyObject *ssl = NULL;
-    char *ssl_mode = NULL;
+    const char *ssl_mode = NULL;
     const char *key = NULL, *cert = NULL, *ca = NULL,
          *capath = NULL, *cipher = NULL;
     PyObject *ssl_keepref[5] = {NULL};
@@ -437,7 +437,7 @@ _mysql_ConnectionObject_Initialize(
     int read_timeout = 0;
     int write_timeout = 0;
     int compress = -1, named_pipe = -1, local_infile = -1;
-    int ssl_mode_num = SSLMODE_DISABLED;
+    int ssl_mode_num = SSLMODE_PREFERRED;
     char *init_command=NULL,
          *read_default_file=NULL,
          *read_default_group=NULL,
@@ -470,19 +470,31 @@ _mysql_ConnectionObject_Initialize(
         if(t){d=PyUnicode_AsUTF8(t);ssl_keepref[n_ssl_keepref++]=t;}\
         PyErr_Clear();}
 
+    char ssl_mode_set = 0;
     if (ssl) {
-        PyObject *value = NULL;
-        _stringsuck(ca, value, ssl);
-        _stringsuck(capath, value, ssl);
-        _stringsuck(cert, value, ssl);
-        _stringsuck(key, value, ssl);
-        _stringsuck(cipher, value, ssl);
+        if (PyMapping_Check(ssl)) {
+            PyObject *value = NULL;
+            _stringsuck(ca, value, ssl);
+            _stringsuck(capath, value, ssl);
+            _stringsuck(cert, value, ssl);
+            _stringsuck(key, value, ssl);
+            _stringsuck(cipher, value, ssl);
+        } else if (PyObject_IsTrue(ssl)) {
+            // Support ssl=True from mysqlclient 2.2.4.
+            // for compatibility with PyMySQL and mysqlclient==2.2.1&libmariadb.
+            ssl_mode_num = SSLMODE_REQUIRED;
+            ssl_mode_set = 1;
+        } else {
+            ssl_mode_num = SSLMODE_DISABLED;
+            ssl_mode_set = 1;
+        }
     }
     if (ssl_mode) {
         if ((ssl_mode_num = _get_ssl_mode_num(ssl_mode)) <= 0) {
             PyErr_SetString(_mysql_NotSupportedError, "Unknown ssl_mode specification");
             return -1;
         }
+        ssl_mode_set = 1;
     }
 
     conn = mysql_init(&(self->connection));
@@ -531,7 +543,7 @@ _mysql_ConnectionObject_Initialize(
         mysql_options(&(self->connection), MYSQL_OPT_SSL_CIPHER, cipher);
     }
 
-    if (ssl_mode) {
+    if (ssl_mode_set) {
 #ifdef HAVE_ENUM_MYSQL_OPT_SSL_MODE
         mysql_options(&(self->connection), MYSQL_OPT_SSL_MODE, &ssl_mode_num);
 #else
