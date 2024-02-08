@@ -391,10 +391,10 @@ enum {
 };
 
 static int
-_get_ssl_mode_num(char *ssl_mode)
+_get_ssl_mode_num(const char *ssl_mode)
 {
-    static char *ssl_mode_list[] = { "DISABLED", "PREFERRED",
-                  "REQUIRED", "VERIFY_CA", "VERIFY_IDENTITY" };
+    static const char *ssl_mode_list[] = {
+        "DISABLED", "PREFERRED", "REQUIRED", "VERIFY_CA", "VERIFY_IDENTITY" };
     unsigned int i;
     for (i=0; i < sizeof(ssl_mode_list)/sizeof(ssl_mode_list[0]); i++) {
         if (strcmp(ssl_mode, ssl_mode_list[i]) == 0) {
