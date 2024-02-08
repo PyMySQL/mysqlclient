@@ -1,4 +1,15 @@
 ======================
+ What's new in 2.2.4
+======================
+
+Release: 2024-02-09
+
+* Support ``ssl=True`` in ``connect()``. (#700)
+  This makes better compatibility with PyMySQL and mysqlclient==2.2.1
+  with libmariadb. See #698 for detail.
+
+
+======================
  What's new in 2.2.3
 ======================
 
