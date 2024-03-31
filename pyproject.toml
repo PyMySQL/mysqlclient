@@ -1,0 +1,52 @@
+[project]
+name = "mysqlclient"
+# version = "2.2.0dev0"
+description = "Python interface to MySQL"
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [
+    {name = "Inada Naoki", email = "songofacandy@gmail.com"}
+]
+license = {text = "GNU General Public License v2 (GPLv2)"}
+keywords = ["MySQL"]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Environment :: Other Environment",
+    "License :: OSI Approved :: GNU General Public License (GPL)",
+    "Operating System :: MacOS :: MacOS X",
+    "Operating System :: Microsoft :: Windows :: Windows NT/2000",
+    "Operating System :: OS Independent",
+    "Operating System :: POSIX",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: Unix",
+    "Programming Language :: C",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Database",
+    "Topic :: Database :: Database Engines/Servers",
+]
+dynamic = ["version"]
+
+[project.urls]
+Project = "https://github.com/PyMySQL/mysqlclient"
+Documentation = "https://mysqlclient.readthedocs.io/"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+namespaces = false
+where = ["src"]
+include = ["MySQLdb*"]
+
+[tool.setuptools.dynamic]
+version = {attr = "MySQLdb.release.__version__"}

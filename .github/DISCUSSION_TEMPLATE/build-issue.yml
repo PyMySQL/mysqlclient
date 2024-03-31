@@ -1,0 +1,49 @@
+title: "[Build] "
+body:
+  - type: input
+    id: os
+    attributes:
+      label: What OS and which version do you use?
+      description: |
+        e.g.
+        - Windows 11
+        - macOS 13.4
+        - Ubuntu 22.04
+
+  - type: textarea
+    id: libmysqlclient
+    attributes:
+      label: How did you installed mysql client library?
+      description: |
+        e.g.
+        - `apt-get install libmysqlclient-dev`
+        - `brew install mysql-client`
+        - `brew install mysql`
+      render: bash
+
+  - type: textarea
+    id: pkgconfig-output
+    attributes:
+      label: Output from `pkg-config --cflags --libs mysqlclient`
+      description: If you are using mariadbclient, run `pkg-config --cflags --libs mariadb` instead.
+      render: bash
+
+  - type: input
+    id: mysqlclient-install
+    attributes:
+      label: How did you tried to install mysqlclient?
+      description: |
+        e.g.
+        - `pip install mysqlclient`
+        - `poetry add mysqlclient`
+
+  - type: textarea
+    id: mysqlclient-error
+    attributes:
+      label: Output of building mysqlclient
+      description: not only error message. full log from start installing mysqlclient.
+      render: bash
+        
+
+
+

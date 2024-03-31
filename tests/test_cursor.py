@@ -1,4 +1,4 @@
-# import pytest
+import pytest
 import MySQLdb.cursors
 from configdb import connection_factory
 
@@ -18,7 +18,7 @@ def teardown_function(function):
         c = _conns[0]
         cur = c.cursor()
         for t in _tables:
-            cur.execute("DROP TABLE {}".format(t))
+            cur.execute(f"DROP TABLE {t}")
         cur.close()
         del _tables[:]
 
@@ -72,7 +72,7 @@ def test_executemany():
     # values (0),(1),(2),(3),(4),(5),(6),(7),(8),(9)
     # """
     # list args
-    data = range(10)
+    data = [(i,) for i in range(10)]
     cursor.executemany("insert into test (data) values (%s)", data)
     assert cursor._executed.endswith(
         b",(7),(8),(9)"
@@ -150,3 +150,96 @@ def test_dictcursor():
     names2 = sorted(rows[1])
     for a, b in zip(names1, names2):
         assert a is b
+
+
+def test_mogrify_without_args():
+    conn = connect()
+    cursor = conn.cursor()
+
+    query = "SELECT VERSION()"
+    mogrified_query = cursor.mogrify(query)
+    cursor.execute(query)
+
+    assert mogrified_query == query
+    assert mogrified_query == cursor._executed.decode()
+
+
+def test_mogrify_with_tuple_args():
+    conn = connect()
+    cursor = conn.cursor()
+
+    query_with_args = "SELECT %s, %s", (1, 2)
+    mogrified_query = cursor.mogrify(*query_with_args)
+    cursor.execute(*query_with_args)
+
+    assert mogrified_query == "SELECT 1, 2"
+    assert mogrified_query == cursor._executed.decode()
+
+
+def test_mogrify_with_dict_args():
+    conn = connect()
+    cursor = conn.cursor()
+
+    query_with_args = "SELECT %(a)s, %(b)s", {"a": 1, "b": 2}
+    mogrified_query = cursor.mogrify(*query_with_args)
+    cursor.execute(*query_with_args)
+
+    assert mogrified_query == "SELECT 1, 2"
+    assert mogrified_query == cursor._executed.decode()
+
+
+# Test that cursor can be used without reading whole resultset.
+@pytest.mark.parametrize("Cursor", [MySQLdb.cursors.Cursor, MySQLdb.cursors.SSCursor])
+def test_cursor_discard_result(Cursor):
+    conn = connect()
+    cursor = conn.cursor(Cursor)
+
+    cursor.execute(
+        """\
+CREATE TABLE test_cursor_discard_result (
+    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+    data VARCHAR(100)
+)"""
+    )
+    _tables.append("test_cursor_discard_result")
+
+    cursor.executemany(
+        "INSERT INTO test_cursor_discard_result (id, data) VALUES (%s, %s)",
+        [(i, f"row {i}") for i in range(1, 101)],
+    )
+
+    cursor.execute(
+        """\
+SELECT * FROM test_cursor_discard_result WHERE id <= 10;
+SELECT * FROM test_cursor_discard_result WHERE id BETWEEN 11 AND 20;
+SELECT * FROM test_cursor_discard_result WHERE id BETWEEN 21 AND 30;
+"""
+    )
+    cursor.nextset()
+    assert cursor.fetchone() == (11, "row 11")
+
+    cursor.execute(
+        "SELECT * FROM test_cursor_discard_result WHERE id BETWEEN 31 AND 40"
+    )
+    assert cursor.fetchone() == (31, "row 31")
+
+
+def test_binary_prefix():
+    # https://github.com/PyMySQL/mysqlclient/issues/494
+    conn = connect(binary_prefix=True)
+    cursor = conn.cursor()
+
+    cursor.execute("DROP TABLE IF EXISTS test_binary_prefix")
+    cursor.execute(
+        """\
+CREATE TABLE test_binary_prefix (
+	id INTEGER NOT NULL AUTO_INCREMENT,
+	json JSON NOT NULL,
+	PRIMARY KEY (id)
+) CHARSET=utf8mb4"""
+    )
+
+    cursor.executemany(
+        "INSERT INTO test_binary_prefix (id, json) VALUES (%(id)s, %(json)s)",
+        ({"id": 1, "json": "{}"}, {"id": 2, "json": "{}"}),
+    )

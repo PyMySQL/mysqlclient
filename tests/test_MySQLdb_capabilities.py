@@ -12,7 +12,6 @@ warnings.filterwarnings("ignore")
 
 
 class test_MySQLdb(capabilities.DatabaseTest):
-
     db_module = MySQLdb
     connect_args = ()
     connect_kwargs = dict(

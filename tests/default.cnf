@@ -2,9 +2,10 @@
 # http://dev.mysql.com/doc/refman/5.1/en/option-files.html
 # and set TESTDB in your environment to the name of the file
 
+# $ docker run -e MYSQL_ALLOW_EMPTY_PASSWORD=yes -p 3306:3306 --rm --name mysqld mysql:latest
 [MySQLdb-tests]
 host = 127.0.0.1
-user = test
+user = root
 database = test
 #password =
-default-character-set = utf8
+default-character-set = utf8mb4

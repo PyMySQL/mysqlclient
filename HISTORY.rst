@@ -1,8 +1,86 @@
 ======================
+ What's new in 2.2.4
+======================
+
+Release: 2024-02-09
+
+* Support ``ssl=True`` in ``connect()``. (#700)
+  This makes better compatibility with PyMySQL and mysqlclient==2.2.1
+  with libmariadb. See #698 for detail.
+
+
+======================
+ What's new in 2.2.3
+======================
+
+Release: 2024-02-04
+
+* Fix ``Connection.kill()`` method that broken in 2.2.2. (#689)
+
+
+======================
+ What's new in 2.2.2
+======================
+
+Release: 2024-02-04
+
+* Support building with MySQL 8.3 (#688).
+* Deprecate ``db.shutdown()`` and ``db.kill()`` methods in docstring.
+  This is because ``mysql_shutdown()`` and ``mysql_kill()`` were removed in MySQL 8.3.
+  They will emit DeprecationWarning in the future but not for now.
+
+
+======================
+ What's new in 2.2.1
+======================
+
+Release: 2023-12-13
+
+* ``Connection.ping()`` avoid using ``MYSQL_OPT_RECONNECT`` option until
+  ``reconnect=True`` is specified. MySQL 8.0.33 start showing warning
+  when the option is used. (#664)
+* Windows: Update MariaDB Connector/C to 3.3.8. (#665)
+* Windows: Build wheels for Python 3.12 (#644)
+
+
+======================
+ What's new in 2.2.0
+======================
+
+Release: 2023-06-22
+
+* Use ``pkg-config`` instead of ``mysql_config`` (#586)
+* Raise ProgrammingError on -inf (#557)
+* Raise IntegrityError for ER_BAD_NULL. (#579)
+* Windows: Use MariaDB Connector/C 3.3.4 (#585)
+* Use pkg-config instead of mysql_config (#586)
+* Add collation option (#564)
+* Drop Python 3.7 support (#593)
+* Use pyproject.toml for build (#598)
+* Add Cursor.mogrify (#477)
+* Partial support of ssl_mode option with mariadbclient (#475)
+* Discard remaining results without creating Python objects (#601)
+* Fix executemany with binary prefix (#605)
+
+======================
+ What's new in 2.1.1
+======================
+
+Release: 2022-06-22
+
+* Fix qualname of exception classes. (#522)
+* Fix range check in ``MySQLdb._mysql.result.fetch_row()``. Invalid ``how`` argument caused SEGV. (#538)
+* Fix docstring of ``_mysql.connect``. (#540)
+* Windows: Binary wheels are updated. (#541)
+   * Use MariaDB Connector/C 3.3.1.
+   * Use cibuildwheel to build wheels.
+   * Python 3.8-3.11
+
+======================
  What's new in 2.1.0
 ======================
 
-Release: 2021-10-19 (rc1)
+Release: 2021-11-17
 
 * Add ``multistatement=True`` option. You can disable multi statement. (#500).
 * Remove unnecessary bytes encoder which is remained for Django 1.11
@@ -94,7 +172,7 @@ Release: 2019-08-09
 
 * ``--static`` build supports ``libmariadbclient.a``
 * Try ``mariadb_config`` when ``mysql_config`` is not found
-* Fixed warning happend in Python 3.8 (#359)
+* Fixed warning happened in Python 3.8 (#359)
 * Fixed ``from MySQLdb import *``, while I don't recommend it. (#369)
 * Fixed SEGV ``MySQLdb.escape_string("1")`` when libmariadb is used and
   no connection is created. (#367)
@@ -294,7 +372,7 @@ More tests for date and time columns. (#41)
 
 Fix calling .execute() method for closed cursor cause TypeError. (#37)
 
-Improve peformance to parse date. (#43)
+Improve performance to parse date. (#43)
 
 Support geometry types (#49)
 

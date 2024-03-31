@@ -25,13 +25,14 @@ USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
 OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 */
-
+#include <stdbool.h>
 #include "mysql.h"
 #include "mysqld_error.h"
 
 #if MYSQL_VERSION_ID >= 80000
 // https://github.com/mysql/mysql-server/commit/eb821c023cedc029ca0b06456dfae365106bee84
-#define my_bool _Bool
+// my_bool was typedef of char before MySQL 8.0.0.
+#define my_bool bool
 #endif
 
 #if ((MYSQL_VERSION_ID >= 50555 && MYSQL_VERSION_ID <= 50599) || \
@@ -71,7 +72,8 @@ static PyObject *_mysql_NotSupportedError;
 typedef struct {
     PyObject_HEAD
     MYSQL connection;
-    int open;
+    bool open;
+    bool reconnect;
     PyObject *converter;
 } _mysql_ConnectionObject;
 
@@ -180,6 +182,7 @@ _mysql_Exception(_mysql_ConnectionObject *c)
 #ifdef ER_NO_DEFAULT_FOR_FIELD
     case ER_NO_DEFAULT_FOR_FIELD:
 #endif
+    case ER_BAD_NULL_ERROR:
         e = _mysql_IntegrityError;
         break;
 #ifdef ER_WARNING_NOT_COMPLETE_ROLLBACK
@@ -310,7 +313,7 @@ _mysql_ResultObject_Initialize(
             PyObject *fun2=NULL;
             int j, n2=PySequence_Size(fun);
             // BINARY_FLAG means ***_bin collation is used.
-            // To distinguish text and binary, we shoud use charsetnr==63 (binary).
+            // To distinguish text and binary, we should use charsetnr==63 (binary).
             // But we abuse BINARY_FLAG for historical reason.
             if (fields[i].charsetnr == 63) {
                 flags |= BINARY_FLAG;
@@ -379,12 +382,19 @@ static int _mysql_ResultObject_clear(_mysql_ResultObject *self)
     return 0;
 }
 
-#ifdef HAVE_ENUM_MYSQL_OPT_SSL_MODE
+enum {
+    SSLMODE_DISABLED = 1,
+    SSLMODE_PREFERRED = 2,
+    SSLMODE_REQUIRED = 3,
+    SSLMODE_VERIFY_CA = 4,
+    SSLMODE_VERIFY_IDENTITY = 5
+};
+
 static int
-_get_ssl_mode_num(char *ssl_mode)
+_get_ssl_mode_num(const char *ssl_mode)
 {
-    static char *ssl_mode_list[] = { "DISABLED", "PREFERRED",
-                  "REQUIRED", "VERIFY_CA", "VERIFY_IDENTITY" };
+    static const char *ssl_mode_list[] = {
+        "DISABLED", "PREFERRED", "REQUIRED", "VERIFY_CA", "VERIFY_IDENTITY" };
     unsigned int i;
     for (i=0; i < sizeof(ssl_mode_list)/sizeof(ssl_mode_list[0]); i++) {
         if (strcmp(ssl_mode, ssl_mode_list[i]) == 0) {
@@ -394,7 +404,6 @@ _get_ssl_mode_num(char *ssl_mode)
     }
     return -1;
 }
-#endif
 
 static int
 _mysql_ConnectionObject_Initialize(
@@ -405,7 +414,7 @@ _mysql_ConnectionObject_Initialize(
     MYSQL *conn = NULL;
     PyObject *conv = NULL;
     PyObject *ssl = NULL;
-    char *ssl_mode = NULL;
+    const char *ssl_mode = NULL;
     const char *key = NULL, *cert = NULL, *ca = NULL,
          *capath = NULL, *cipher = NULL;
     PyObject *ssl_keepref[5] = {NULL};
@@ -428,6 +437,7 @@ _mysql_ConnectionObject_Initialize(
     int read_timeout = 0;
     int write_timeout = 0;
     int compress = -1, named_pipe = -1, local_infile = -1;
+    int ssl_mode_num = SSLMODE_PREFERRED;
     char *init_command=NULL,
          *read_default_file=NULL,
          *read_default_group=NULL,
@@ -435,7 +445,8 @@ _mysql_ConnectionObject_Initialize(
          *auth_plugin=NULL;
 
     self->converter = NULL;
-    self->open = 0;
+    self->open = false;
+    self->reconnect = false;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs,
                 "|ssssisOiiisssiOsiiiss:connect",
@@ -459,24 +470,31 @@ _mysql_ConnectionObject_Initialize(
         if(t){d=PyUnicode_AsUTF8(t);ssl_keepref[n_ssl_keepref++]=t;}\
         PyErr_Clear();}
 
+    char ssl_mode_set = 0;
     if (ssl) {
-        PyObject *value = NULL;
-        _stringsuck(ca, value, ssl);
-        _stringsuck(capath, value, ssl);
-        _stringsuck(cert, value, ssl);
-        _stringsuck(key, value, ssl);
-        _stringsuck(cipher, value, ssl);
+        if (PyMapping_Check(ssl)) {
+            PyObject *value = NULL;
+            _stringsuck(ca, value, ssl);
+            _stringsuck(capath, value, ssl);
+            _stringsuck(cert, value, ssl);
+            _stringsuck(key, value, ssl);
+            _stringsuck(cipher, value, ssl);
+        } else if (PyObject_IsTrue(ssl)) {
+            // Support ssl=True from mysqlclient 2.2.4.
+            // for compatibility with PyMySQL and mysqlclient==2.2.1&libmariadb.
+            ssl_mode_num = SSLMODE_REQUIRED;
+            ssl_mode_set = 1;
+        } else {
+            ssl_mode_num = SSLMODE_DISABLED;
+            ssl_mode_set = 1;
+        }
     }
     if (ssl_mode) {
-#ifdef HAVE_ENUM_MYSQL_OPT_SSL_MODE
-        if (_get_ssl_mode_num(ssl_mode) <= 0) {
+        if ((ssl_mode_num = _get_ssl_mode_num(ssl_mode)) <= 0) {
             PyErr_SetString(_mysql_NotSupportedError, "Unknown ssl_mode specification");
             return -1;
         }
-#else
-        PyErr_SetString(_mysql_NotSupportedError, "MySQL client library does not support ssl_mode specification");
-        return -1;
-#endif
+        ssl_mode_set = 1;
     }
 
     conn = mysql_init(&(self->connection));
@@ -484,8 +502,8 @@ _mysql_ConnectionObject_Initialize(
         PyErr_SetNone(PyExc_MemoryError);
         return -1;
     }
-    Py_BEGIN_ALLOW_THREADS ;
-    self->open = 1;
+    self->open = true;
+
     if (connect_timeout) {
         unsigned int timeout = connect_timeout;
         mysql_options(&(self->connection), MYSQL_OPT_CONNECT_TIMEOUT,
@@ -518,14 +536,31 @@ _mysql_ConnectionObject_Initialize(
         mysql_options(&(self->connection), MYSQL_OPT_LOCAL_INFILE, (char *) &local_infile);
 
     if (ssl) {
-        mysql_ssl_set(&(self->connection), key, cert, ca, capath, cipher);
+        mysql_options(&(self->connection), MYSQL_OPT_SSL_KEY, key);
+        mysql_options(&(self->connection), MYSQL_OPT_SSL_CERT, cert);
+        mysql_options(&(self->connection), MYSQL_OPT_SSL_CA, ca);
+        mysql_options(&(self->connection), MYSQL_OPT_SSL_CAPATH, capath);
+        mysql_options(&(self->connection), MYSQL_OPT_SSL_CIPHER, cipher);
     }
+
+    if (ssl_mode_set) {
 #ifdef HAVE_ENUM_MYSQL_OPT_SSL_MODE
-    if (ssl_mode) {
-        int ssl_mode_num = _get_ssl_mode_num(ssl_mode);
         mysql_options(&(self->connection), MYSQL_OPT_SSL_MODE, &ssl_mode_num);
-    }
+#else
+        // MariaDB doesn't support MYSQL_OPT_SSL_MODE.
+        // See https://github.com/PyMySQL/mysqlclient/issues/474
+        // TODO: Does MariaDB supports PREFERRED and VERIFY_CA?
+        // We support only two levels for now.
+        my_bool enforce_tls = 1;
+        if (ssl_mode_num >= SSLMODE_REQUIRED) {
+            mysql_optionsv(&(self->connection), MYSQL_OPT_SSL_ENFORCE, (void *)&enforce_tls);
+        }
+        if (ssl_mode_num >= SSLMODE_VERIFY_CA) {
+            mysql_optionsv(&(self->connection), MYSQL_OPT_SSL_VERIFY_SERVER_CERT, (void *)&enforce_tls);
+        }
 #endif
+    }
+
     if (charset) {
         mysql_options(&(self->connection), MYSQL_SET_CHARSET_NAME, charset);
     }
@@ -533,10 +568,10 @@ _mysql_ConnectionObject_Initialize(
         mysql_options(&(self->connection), MYSQL_DEFAULT_AUTH, auth_plugin);
     }
 
+    Py_BEGIN_ALLOW_THREADS
     conn = mysql_real_connect(&(self->connection), host, user, passwd, db,
                   port, unix_socket, client_flag);
-
-    Py_END_ALLOW_THREADS ;
+    Py_END_ALLOW_THREADS
 
     if (ssl) {
         int i;
@@ -581,10 +616,10 @@ host\n\
 user\n\
   string, user to connect as\n\
 \n\
-passwd\n\
+password\n\
   string, password to use\n\
 \n\
-db\n\
+database\n\
   string, database to use\n\
 \n\
 port\n\
@@ -671,7 +706,7 @@ _mysql_ConnectionObject_close(
     Py_BEGIN_ALLOW_THREADS
     mysql_close(&(self->connection));
     Py_END_ALLOW_THREADS
-    self->open = 0;
+    self->open = false;
     _mysql_ConnectionObject_clear(self);
     Py_RETURN_NONE;
 }
@@ -929,7 +964,7 @@ _mysql_escape_string(
 {
     PyObject *str;
     char *in, *out;
-    int len;
+    unsigned long len;
     Py_ssize_t size;
     if (!PyArg_ParseTuple(args, "s#:escape_string", &in, &size)) return NULL;
     str = PyBytes_FromStringAndSize((char *) NULL, size*2+1);
@@ -966,10 +1001,7 @@ _mysql_string_literal(
     _mysql_ConnectionObject *self,
     PyObject *o)
 {
-    PyObject *str, *s;
-    char *in, *out;
-    unsigned long len;
-    Py_ssize_t size;
+    PyObject *s; // input string or bytes. need to decref.
 
     if (self && PyModule_Check((PyObject*)self))
         self = NULL;
@@ -977,24 +1009,44 @@ _mysql_string_literal(
     if (PyBytes_Check(o)) {
         s = o;
         Py_INCREF(s);
-    } else {
-        s = PyObject_Str(o);
-        if (!s) return NULL;
-        {
-            PyObject *t = PyUnicode_AsASCIIString(s);
-            Py_DECREF(s);
-            if (!t) return NULL;
+    }
+    else {
+        PyObject *t = PyObject_Str(o);
+        if (!t) return NULL;
+
+        const char *encoding = (self && self->open) ?
+            _get_encoding(&self->connection) : utf8;
+        if (encoding == utf8) {
             s = t;
         }
+        else {
+            s = PyUnicode_AsEncodedString(t, encoding, "strict");
+            Py_DECREF(t);
+            if (!s) return NULL;
+        }
     }
-    in = PyBytes_AsString(s);
-    size = PyBytes_GET_SIZE(s);
-    str = PyBytes_FromStringAndSize((char *) NULL, size*2+3);
+
+    // Prepare input string (in, size)
+    const char *in;
+    Py_ssize_t size;
+    if (PyUnicode_Check(s)) {
+        in = PyUnicode_AsUTF8AndSize(s, &size);
+    } else {
+        assert(PyBytes_Check(s));
+        in = PyBytes_AsString(s);
+        size = PyBytes_GET_SIZE(s);
+    }
+
+    // Prepare output buffer (str, out)
+    PyObject *str = PyBytes_FromStringAndSize((char *) NULL, size*2+3);
     if (!str) {
         Py_DECREF(s);
         return PyErr_NoMemory();
     }
-    out = PyBytes_AS_STRING(str);
+    char *out = PyBytes_AS_STRING(str);
+
+    // escape
+    unsigned long len;
     if (self && self->open) {
 #if MYSQL_VERSION_ID >= 50707 && !defined(MARIADB_BASE_VERSION) && !defined(MARIADB_VERSION_ID)
         len = mysql_real_escape_string_quote(&(self->connection), out+1, in, size, '\'');
@@ -1004,10 +1056,14 @@ _mysql_string_literal(
     } else {
         len = mysql_escape_string(out+1, in, size);
     }
-    *out = *(out+len+1) = '\'';
-    if (_PyBytes_Resize(&str, len+2) < 0) return NULL;
+
     Py_DECREF(s);
-    return (str);
+    *out = *(out+len+1) = '\'';
+    if (_PyBytes_Resize(&str, len+2) < 0) {
+        Py_DECREF(str);
+        return NULL;
+    }
+    return str;
 }
 
 static PyObject *
@@ -1388,9 +1444,9 @@ _mysql__fetch_row(
         if (!self->use)
             row = mysql_fetch_row(self->result);
         else {
-            Py_BEGIN_ALLOW_THREADS;
+            Py_BEGIN_ALLOW_THREADS
             row = mysql_fetch_row(self->result);
-            Py_END_ALLOW_THREADS;
+            Py_END_ALLOW_THREADS
         }
         if (!row && mysql_errno(&(((_mysql_ConnectionObject *)(self->conn))->connection))) {
             _mysql_Exception((_mysql_ConnectionObject *)self->conn);
@@ -1442,7 +1498,7 @@ _mysql_ResultObject_fetch_row(
                      &maxrows, &how))
         return NULL;
     check_result_connection(self);
-    if (how >= (int)sizeof(row_converters)) {
+    if (how >= (int)(sizeof(row_converters) / sizeof(row_converters[0]))) {
         PyErr_SetString(PyExc_ValueError, "how out of range");
         return NULL;
     }
@@ -1467,6 +1523,29 @@ _mysql_ResultObject_fetch_row(
   error:
     Py_XDECREF(r);
     return NULL;
+}
+
+static const char _mysql_ResultObject_discard__doc__[] =
+"discard() -- Discard remaining rows in the resultset.";
+
+static PyObject *
+_mysql_ResultObject_discard(
+    _mysql_ResultObject *self,
+    PyObject *noargs)
+{
+    check_result_connection(self);
+
+    MYSQL_ROW row;
+    Py_BEGIN_ALLOW_THREADS
+    while (NULL != (row = mysql_fetch_row(self->result))) {
+        // do nothing
+    }
+    Py_END_ALLOW_THREADS
+    _mysql_ConnectionObject *conn = (_mysql_ConnectionObject *)self->conn;
+    if (mysql_errno(&conn->connection)) {
+        return _mysql_Exception(conn);
+    }
+    Py_RETURN_NONE;
 }
 
 static char _mysql_ConnectionObject_change_user__doc__[] =
@@ -1712,15 +1791,13 @@ _mysql_ConnectionObject_insert_id(
 {
     my_ulonglong r;
     check_connection(self);
-    Py_BEGIN_ALLOW_THREADS
     r = mysql_insert_id(&(self->connection));
-    Py_END_ALLOW_THREADS
     return PyLong_FromUnsignedLongLong(r);
 }
 
 static char _mysql_ConnectionObject_kill__doc__[] =
 "Asks the server to kill the thread specified by pid.\n\
-Non-standard.";
+Non-standard. Deprecated.";
 
 static PyObject *
 _mysql_ConnectionObject_kill(
@@ -1729,10 +1806,12 @@ _mysql_ConnectionObject_kill(
 {
     unsigned long pid;
     int r;
+    char query[50];
     if (!PyArg_ParseTuple(args, "k:kill", &pid)) return NULL;
     check_connection(self);
+    snprintf(query, 50, "KILL %lu", pid);
     Py_BEGIN_ALLOW_THREADS
-    r = mysql_kill(&(self->connection), pid);
+    r = mysql_query(&(self->connection), query);
     Py_END_ALLOW_THREADS
     if (r) return _mysql_Exception(self);
     Py_RETURN_NONE;
@@ -1795,18 +1874,18 @@ _mysql_ResultObject_num_rows(
 }
 
 static char _mysql_ConnectionObject_ping__doc__[] =
-"Checks whether or not the connection to the server is\n\
-working. If it has gone down, an automatic reconnection is\n\
-attempted.\n\
+"Checks whether or not the connection to the server is working.\n\
 \n\
 This function can be used by clients that remain idle for a\n\
 long while, to check whether or not the server has closed the\n\
-connection and reconnect if necessary.\n\
+connection.\n\
 \n\
 New in 1.2.2: Accepts an optional reconnect parameter. If True,\n\
 then the client will attempt reconnection. Note that this setting\n\
 is persistent. By default, this is on in MySQL<5.0.3, and off\n\
 thereafter.\n\
+MySQL 8.0.33 deprecated the MYSQL_OPT_RECONNECT option so reconnect\n\
+parameter is also deprecated in mysqlclient 2.2.1.\n\
 \n\
 Non-standard. You should assume that ping() performs an\n\
 implicit rollback; use only when starting a new transaction.\n\
@@ -1818,17 +1897,24 @@ _mysql_ConnectionObject_ping(
     _mysql_ConnectionObject *self,
     PyObject *args)
 {
-    int r, reconnect = -1;
-    if (!PyArg_ParseTuple(args, "|I", &reconnect)) return NULL;
+    int reconnect = 0;
+    if (!PyArg_ParseTuple(args, "|p", &reconnect)) return NULL;
     check_connection(self);
-    if (reconnect != -1) {
+    if (reconnect != (self->reconnect == true)) {
+        // libmysqlclient show warning to stderr when MYSQL_OPT_RECONNECT is used.
+        // so we avoid using it as possible for now.
+        // TODO: Warn when reconnect is true.
+        // MySQL 8.0.33 show warning to stderr already.
+        // We will emit Pytohn warning in future.
         my_bool recon = (my_bool)reconnect;
         mysql_options(&self->connection, MYSQL_OPT_RECONNECT, &recon);
+        self->reconnect = (bool)reconnect;
     }
+    int r;
     Py_BEGIN_ALLOW_THREADS
     r = mysql_ping(&(self->connection));
     Py_END_ALLOW_THREADS
-    if (r)     return _mysql_Exception(self);
+    if (r) return _mysql_Exception(self);
     Py_RETURN_NONE;
 }
 
@@ -1930,7 +2016,7 @@ _mysql_ConnectionObject_select_db(
 
 static char _mysql_ConnectionObject_shutdown__doc__[] =
 "Asks the database server to shut down. The connected user must\n\
-have shutdown privileges. Non-standard.\n\
+have shutdown privileges. Non-standard. Deprecated.\n\
 ";
 
 static PyObject *
@@ -1941,7 +2027,7 @@ _mysql_ConnectionObject_shutdown(
     int r;
     check_connection(self);
     Py_BEGIN_ALLOW_THREADS
-    r = mysql_shutdown(&(self->connection), SHUTDOWN_DEFAULT);
+    r = mysql_query(&(self->connection), "SHUTDOWN");
     Py_END_ALLOW_THREADS
     if (r) return _mysql_Exception(self);
     Py_RETURN_NONE;
@@ -2023,9 +2109,7 @@ _mysql_ConnectionObject_thread_id(
 {
     unsigned long pid;
     check_connection(self);
-    Py_BEGIN_ALLOW_THREADS
     pid = mysql_thread_id(&(self->connection));
-    Py_END_ALLOW_THREADS
     return PyLong_FromLong((long)pid);
 }
 
@@ -2066,6 +2150,43 @@ _mysql_ConnectionObject_use_result(
     return result;
 }
 
+static const char _mysql_ConnectionObject_discard_result__doc__[] =
+"Discard current result set.\n\n"
+"This function can be called instead of use_result() or store_result(). Non-standard.";
+
+static PyObject *
+_mysql_ConnectionObject_discard_result(
+    _mysql_ConnectionObject *self,
+    PyObject *noargs)
+{
+    check_connection(self);
+    MYSQL *conn = &(self->connection);
+
+    Py_BEGIN_ALLOW_THREADS;
+
+    MYSQL_RES *res = mysql_use_result(conn);
+    if (res == NULL) {
+        Py_BLOCK_THREADS;
+        if (mysql_errno(conn) != 0) {
+            // fprintf(stderr, "mysql_use_result failed: %s\n", mysql_error(conn));
+            return _mysql_Exception(self);
+        }
+        Py_RETURN_NONE;
+    }
+
+    MYSQL_ROW row;
+    while (NULL != (row = mysql_fetch_row(res))) {
+        // do nothing.
+    }
+    mysql_free_result(res);
+    Py_END_ALLOW_THREADS;
+    if (mysql_errno(conn)) {
+        // fprintf(stderr, "mysql_free_result failed: %s\n", mysql_error(conn));
+        return _mysql_Exception(self);
+    }
+    Py_RETURN_NONE;
+}
+
 static void
 _mysql_ConnectionObject_dealloc(
     _mysql_ConnectionObject *self)
@@ -2073,7 +2194,7 @@ _mysql_ConnectionObject_dealloc(
     PyObject_GC_UnTrack(self);
     if (self->open) {
         mysql_close(&(self->connection));
-        self->open = 0;
+        self->open = false;
     }
     Py_CLEAR(self->converter);
     MyFree(self);
@@ -2361,6 +2482,12 @@ static PyMethodDef _mysql_ConnectionObject_methods[] = {
         METH_NOARGS,
         _mysql_ConnectionObject_use_result__doc__
     },
+    {
+        "discard_result",
+        (PyCFunction)_mysql_ConnectionObject_discard_result,
+        METH_NOARGS,
+        _mysql_ConnectionObject_discard_result__doc__
+    },
     {NULL,              NULL} /* sentinel */
 };
 
@@ -2421,6 +2548,12 @@ static PyMethodDef _mysql_ResultObject_methods[] = {
         (PyCFunction)_mysql_ResultObject_fetch_row,
         METH_VARARGS | METH_KEYWORDS,
         _mysql_ResultObject_fetch_row__doc__
+    },
+    {
+        "discard",
+        (PyCFunction)_mysql_ResultObject_discard,
+        METH_NOARGS,
+        _mysql_ResultObject_discard__doc__
     },
     {
         "field_flags",

@@ -1,0 +1,12 @@
+contact_links:
+  - name: Failed to build
+    about: Ask help for build error.
+    url: "https://github.com/PyMySQL/mysqlclient/discussions/new?category=build-issue"
+
+  - name: Report issue
+    about: Found bug?
+    url: "https://github.com/PyMySQL/mysqlclient/discussions/new?category=issue-report"
+
+  - name: Ask question
+    about: Ask other questions.
+    url: "https://github.com/PyMySQL/mysqlclient/discussions/new?category=q-a"

@@ -97,6 +97,14 @@ class Connection(_mysql.connection):
             If supplied, the connection character set will be changed
             to this character set.
 
+        :param str collation:
+            If ``charset`` and ``collation`` are both supplied, the
+            character set and collation for the current connection
+            will be set.
+
+            If omitted, empty string, or None, the default collation
+            for the ``charset`` is implied.
+
         :param str auth_plugin:
             If supplied, the connection default authentication plugin will be
             changed to this value. Example values:
@@ -126,6 +134,8 @@ class Connection(_mysql.connection):
             see the MySQL documentation for more details
             (mysql_ssl_set()).  If this is set, and the client does not
             support SSL, NotSupportedError will be raised.
+            Since mysqlclient 2.2.4, ssl=True is alias of ssl_mode=REQUIRED
+            for better compatibility with PyMySQL and MariaDB.
 
         :param bool local_infile:
             enables LOAD LOCAL INFILE; zero disables
@@ -144,7 +154,6 @@ class Connection(_mysql.connection):
         """
         from MySQLdb.constants import CLIENT, FIELD_TYPE
         from MySQLdb.converters import conversions, _bytes_or_str
-        from weakref import proxy
 
         kwargs2 = kwargs.copy()
 
@@ -168,6 +177,7 @@ class Connection(_mysql.connection):
 
         cursorclass = kwargs2.pop("cursorclass", self.default_cursor)
         charset = kwargs2.get("charset", "")
+        collation = kwargs2.pop("collation", "")
         use_unicode = kwargs2.pop("use_unicode", True)
         sql_mode = kwargs2.pop("sql_mode", "")
         self._binary_prefix = kwargs2.pop("binary_prefix", False)
@@ -184,7 +194,11 @@ class Connection(_mysql.connection):
 
         super().__init__(*args, **kwargs2)
         self.cursorclass = cursorclass
-        self.encoders = {k: v for k, v in conv.items() if type(k) is not int}
+        self.encoders = {
+            k: v
+            for k, v in conv.items()
+            if type(k) is not int  # noqa: E721
+        }
 
         self._server_version = tuple(
             [numeric_part(n) for n in self.get_server_info().split(".")[:2]]
@@ -194,7 +208,7 @@ class Connection(_mysql.connection):
 
         if not charset:
             charset = self.character_set_name()
-        self.set_character_set(charset)
+        self.set_character_set(charset, collation)
 
         if sql_mode:
             self.set_sql_mode(sql_mode)
@@ -208,18 +222,15 @@ class Connection(_mysql.connection):
                 FIELD_TYPE.MEDIUM_BLOB,
                 FIELD_TYPE.LONG_BLOB,
                 FIELD_TYPE.BLOB,
+                FIELD_TYPE.SET,
+                FIELD_TYPE.ENUMS,
+                FIELD_TYPE.BINARY,
+                FIELD_TYPE.CHAR
             ):
                 self.converter[t] = _bytes_or_str
             # Unlike other string/blob types, JSON is always text.
             # MySQL may return JSON with charset==binary.
             self.converter[FIELD_TYPE.JSON] = str
-
-        db = proxy(self)
-
-        def unicode_literal(u, dummy=None):
-            return db.string_literal(u.encode(db.encoding))
-
-        self.encoders[str] = unicode_literal
 
         self._transactional = self.server_capabilities & CLIENT.TRANSACTIONS
         if self._transactional:
@@ -293,10 +304,13 @@ class Connection(_mysql.connection):
         """
         self.query(b"BEGIN")
 
-    def set_character_set(self, charset):
+    def set_character_set(self, charset, collation=None):
         """Set the connection character set to charset."""
         super().set_character_set(charset)
         self.encoding = _charset_to_encoding.get(charset, charset)
+        if collation:
+            self.query(f"SET NAMES {charset} COLLATE {collation}")
+            self.store_result()
 
     def set_sql_mode(self, sql_mode):
         """Set the connection sql_mode. See MySQL documentation for

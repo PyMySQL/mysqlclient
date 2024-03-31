@@ -1,0 +1,5 @@
+# This file is for GitHub Action
+coverage
+pytest
+pytest-cov
+tblib

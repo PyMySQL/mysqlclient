@@ -14,7 +14,7 @@ database server that provides the Python database API.
 Installation
 ------------
 
-The ``README`` file has complete installation instructions.
+The `README <https://github.com/PyMySQL/mysqlclient/blob/main/README.md>`_ file has complete installation instructions.
 
 
 MySQLdb._mysql
@@ -348,6 +348,22 @@ connect(parameters...)
 
             *This must be a keyword parameter.*
 
+         collation
+            If ``charset`` and ``collation`` are both supplied, the
+            character set and collation for the current connection
+            will be set.
+
+            If omitted, empty string, or None, the default collation
+            for the ``charset`` is implied by the database server.
+
+            To learn more about the quiddities of character sets and
+            collations, consult the `MySQL docs
+            <https://dev.mysql.com/doc/refman/8.0/en/charset.html>`_
+            and `MariaDB docs
+            <https://mariadb.com/kb/en/character-sets/>`_
+
+            *This must be a keyword parameter.*
+
          sql_mode
             If present, the session SQL mode will be set to the given
             string. For more information on sql_mode, see the MySQL
@@ -511,7 +527,7 @@ callproc(procname, args)
       can only be returned with a SELECT statement. Since a stored
       procedure may return zero or more result sets, it is impossible
       for MySQLdb to determine if there are result sets to fetch
-      before the modified parmeters are accessible.
+      before the modified parameters are accessible.
 
       The parameters are stored in the server as @_*procname*_*n*,
       where *n* is the position of the parameter. I.e., if you

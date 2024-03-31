@@ -2,20 +2,20 @@ name: Build windows wheels
 
 on:
   push:
-    branches:
-      - master
+    branches: ["main", "ci"]
+  pull_request:
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: windows-latest
     env:
-      CONNECTOR_VERSION: "3.2.4"
+      CONNECTOR_VERSION: "3.3.8"
     steps:
 
       - name: Cache Connector
         id: cache-connector
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         with:
           path: c:/mariadb-connector
           key: mariadb-connector-c-${{ env.CONNECTOR_VERSION }}-win
@@ -40,7 +40,7 @@ jobs:
           cmake -DCMAKE_INSTALL_PREFIX=c:/mariadb-connector -DCMAKE_INSTALL_COMPONENT=Development -DCMAKE_BUILD_TYPE=Release -P cmake_install.cmake
 
       - name: Checkout mysqlclient
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           path: mysqlclient
 
@@ -57,36 +57,25 @@ jobs:
           EOF
           cat site.cfg
 
+      - uses: actions/setup-python@v5
+      - name: Install cibuildwheel
+        run: python -m pip install cibuildwheel
       - name: Build wheels
-        shell: cmd
+        working-directory: mysqlclient
+        env:
+          CIBW_PROJECT_REQUIRES_PYTHON: ">=3.8"
+          CIBW_ARCHS: "AMD64"
+          CIBW_TEST_COMMAND: "python -c \"import MySQLdb; print(MySQLdb.version_info)\" "
+        run: "python -m cibuildwheel --prerelease-pythons --output-dir dist"
+
+      - name: Build sdist
         working-directory: mysqlclient
         run: |
-          py -3.10 -m pip install -U setuptools wheel pip
-          py -3.10 setup.py bdist_wheel
-          py -3.9 -m pip install -U setuptools wheel pip
-          py -3.9 setup.py bdist_wheel
-          py -3.8 -m pip install -U setuptools wheel pip
-          py -3.8 setup.py bdist_wheel
-          py -3.7 -m pip install -U setuptools wheel pip
-          py -3.7 setup.py bdist_wheel
+          python -m pip install build
+          python -m build -s -o dist
 
       - name: Upload Wheel
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: win-wheels
-          path: mysqlclient/dist/*.whl
-
-      - name: Check wheels
-        shell: bash
-        working-directory: mysqlclient/dist
-        run: |
-          ls -la
-          py -3.10 -m pip install --no-index --find-links . mysqlclient
-          py -3.10 -c "import MySQLdb; print(MySQLdb.version_info)"
-          py -3.9 -m pip install --no-index --find-links . mysqlclient
-          py -3.9 -c "import MySQLdb; print(MySQLdb.version_info)"
-          py -3.8 -m pip install --no-index --find-links . mysqlclient
-          py -3.8 -c "import MySQLdb; print(MySQLdb.version_info)"
-          py -3.7 -m pip install --no-index --find-links . mysqlclient
-          py -3.7 -c "import MySQLdb; print(MySQLdb.version_info)"
-
+          path: mysqlclient/dist/*.*

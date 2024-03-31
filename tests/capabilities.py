@@ -11,7 +11,6 @@ from configdb import connection_factory
 
 
 class DatabaseTest(unittest.TestCase):
-
     db_module = None
     connect_args = ()
     connect_kwargs = dict()
@@ -20,7 +19,6 @@ class DatabaseTest(unittest.TestCase):
     debug = False
 
     def setUp(self):
-
         db = connection_factory(**self.connect_kwargs)
         self.connection = db
         self.cursor = db.cursor()
@@ -37,13 +35,13 @@ class DatabaseTest(unittest.TestCase):
 
             del self.cursor
             orphans = gc.collect()
-            self.failIf(
+            self.assertFalse(
                 orphans, "%d orphaned objects found after deleting cursor" % orphans
             )
 
             del self.connection
             orphans = gc.collect()
-            self.failIf(
+            self.assertFalse(
                 orphans, "%d orphaned objects found after deleting connection" % orphans
             )
 
@@ -67,7 +65,6 @@ class DatabaseTest(unittest.TestCase):
             i = i + 1
 
     def create_table(self, columndefs):
-
         """Create a table using a list of column definitions given in
         columndefs.
 
@@ -85,7 +82,7 @@ class DatabaseTest(unittest.TestCase):
     def check_data_integrity(self, columndefs, generator):
         # insert
         self.create_table(columndefs)
-        insert_statement = "INSERT INTO %s VALUES (%s)" % (
+        insert_statement = "INSERT INTO {} VALUES ({})".format(
             self.table,
             ",".join(["%s"] * len(columndefs)),
         )
@@ -116,7 +113,7 @@ class DatabaseTest(unittest.TestCase):
                 return ("%i" % (row % 10)) * 255
 
         self.create_table(columndefs)
-        insert_statement = "INSERT INTO %s VALUES (%s)" % (
+        insert_statement = "INSERT INTO {} VALUES ({})".format(
             self.table,
             ",".join(["%s"] * len(columndefs)),
         )
@@ -134,11 +131,11 @@ class DatabaseTest(unittest.TestCase):
                 self.assertEqual(res[i][j], generator(i, j))
         delete_statement = "delete from %s where col1=%%s" % self.table
         self.cursor.execute(delete_statement, (0,))
-        self.cursor.execute("select col1 from %s where col1=%s" % (self.table, 0))
+        self.cursor.execute(f"select col1 from {self.table} where col1=%s", (0,))
         res = self.cursor.fetchall()
         self.assertFalse(res, "DELETE didn't work")
         self.connection.rollback()
-        self.cursor.execute("select col1 from %s where col1=%s" % (self.table, 0))
+        self.cursor.execute(f"select col1 from {self.table} where col1=%s", (0,))
         res = self.cursor.fetchall()
         self.assertTrue(len(res) == 1, "ROLLBACK didn't work")
         self.cursor.execute("drop table %s" % (self.table))
@@ -153,7 +150,7 @@ class DatabaseTest(unittest.TestCase):
                 return ("%i" % (row % 10)) * ((255 - self.rows // 2) + row)
 
         self.create_table(columndefs)
-        insert_statement = "INSERT INTO %s VALUES (%s)" % (
+        insert_statement = "INSERT INTO {} VALUES ({})".format(
             self.table,
             ",".join(["%s"] * len(columndefs)),
         )

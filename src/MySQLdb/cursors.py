@@ -8,7 +8,7 @@ import re
 from ._exceptions import ProgrammingError
 
 
-#: Regular expression for :meth:`Cursor.executemany`.
+#: Regular expression for ``Cursor.executemany```.
 #: executemany only supports simple bulk insert.
 #: You can use it to load large dataset.
 RE_INSERT_VALUES = re.compile(
@@ -66,7 +66,7 @@ class BaseCursor:
         self.connection = connection
         self.description = None
         self.description_flags = None
-        self.rowcount = -1
+        self.rowcount = 0
         self.arraysize = 1
         self._executed = None
 
@@ -75,13 +75,32 @@ class BaseCursor:
         self.rownumber = None
         self._rows = None
 
+    def _discard(self):
+        self.description = None
+        self.description_flags = None
+        # Django uses some member after __exit__.
+        # So we keep rowcount and lastrowid here. They are cleared in Cursor._query().
+        # self.rowcount = 0
+        # self.lastrowid = None
+        self._rows = None
+        self.rownumber = None
+
+        if self._result:
+            self._result.discard()
+            self._result = None
+
+        con = self.connection
+        if con is None:
+            return
+        while con.next_result() == 0:  # -1 means no more data.
+            con.discard_result()
+
     def close(self):
         """Close the cursor. No further queries will be possible."""
         try:
             if self.connection is None:
                 return
-            while self.nextset():
-                pass
+            self._discard()
         finally:
             self.connection = None
             self._result = None
@@ -92,34 +111,6 @@ class BaseCursor:
     def __exit__(self, *exc_info):
         del exc_info
         self.close()
-
-    def _escape_args(self, args, conn):
-        encoding = conn.encoding
-        literal = conn.literal
-
-        def ensure_bytes(x):
-            if isinstance(x, str):
-                return x.encode(encoding)
-            elif isinstance(x, tuple):
-                return tuple(map(ensure_bytes, x))
-            elif isinstance(x, list):
-                return list(map(ensure_bytes, x))
-            return x
-
-        if isinstance(args, (tuple, list)):
-            ret = tuple(literal(ensure_bytes(arg)) for arg in args)
-        elif isinstance(args, dict):
-            ret = {
-                ensure_bytes(key): literal(ensure_bytes(val))
-                for (key, val) in args.items()
-            }
-        else:
-            # If it's not a dictionary let's try escaping it anyways.
-            # Worst case it will throw a Value error
-            ret = literal(ensure_bytes(args))
-
-        ensure_bytes = None  # break circular reference
-        return ret
 
     def _check_executed(self):
         if not self._executed:
@@ -180,8 +171,16 @@ class BaseCursor:
 
         Returns integer represents rows affected, if any
         """
-        while self.nextset():
-            pass
+        self._discard()
+
+        mogrified_query = self._mogrify(query, args)
+
+        assert isinstance(mogrified_query, (bytes, bytearray))
+        res = self._query(mogrified_query)
+        return res
+
+    def _mogrify(self, query, args=None):
+        """Return query after binding args."""
         db = self._get_db()
 
         if isinstance(query, str):
@@ -202,9 +201,21 @@ class BaseCursor:
             except TypeError as m:
                 raise ProgrammingError(str(m))
 
-        assert isinstance(query, (bytes, bytearray))
-        res = self._query(query)
-        return res
+        return query
+
+    def mogrify(self, query, args=None):
+        """Return query after binding args.
+
+        query -- string, query to mogrify
+        args -- optional sequence or mapping, parameters to use with query.
+
+        Note: If args is a sequence, then %s must be used as the
+        parameter placeholder in the query. If a mapping is used,
+        %(key)s must be used as the placeholder.
+
+        Returns string representing query that would be executed by the server
+        """
+        return self._mogrify(query, args).decode(self._get_db().encoding)
 
     def executemany(self, query, args):
         # type: (str, list) -> int
@@ -242,8 +253,6 @@ class BaseCursor:
     def _do_execute_many(
         self, prefix, values, postfix, args, max_stmt_length, encoding
     ):
-        conn = self._get_db()
-        escape = self._escape_args
         if isinstance(prefix, str):
             prefix = prefix.encode(encoding)
         if isinstance(values, str):
@@ -252,11 +261,11 @@ class BaseCursor:
             postfix = postfix.encode(encoding)
         sql = bytearray(prefix)
         args = iter(args)
-        v = values % escape(next(args), conn)
+        v = self._mogrify(values, next(args))
         sql += v
         rows = 0
         for arg in args:
-            v = values % escape(arg, conn)
+            v = self._mogrify(values, arg)
             if len(sql) + len(v) + len(postfix) + 1 > max_stmt_length:
                 rows += self.execute(sql + postfix)
                 sql = bytearray(prefix)
@@ -316,6 +325,8 @@ class BaseCursor:
     def _query(self, q):
         db = self._get_db()
         self._result = None
+        self.rowcount = None
+        self.lastrowid = None
         db.query(q)
         self._do_get_result(db)
         self._post_get_result()
@@ -375,7 +386,7 @@ class CursorStoreResultMixIn:
         return result
 
     def fetchall(self):
-        """Fetchs all available rows from the cursor."""
+        """Fetches all available rows from the cursor."""
         self._check_executed()
         if self.rownumber:
             result = self._rows[self.rownumber :]
@@ -437,7 +448,7 @@ class CursorUseResultMixIn:
         return r
 
     def fetchall(self):
-        """Fetchs all available rows from the cursor."""
+        """Fetches all available rows from the cursor."""
         self._check_executed()
         r = self._fetch_row(0)
         self.rownumber = self.rownumber + len(r)
