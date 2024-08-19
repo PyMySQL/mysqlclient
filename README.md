@@ -11,14 +11,15 @@ This project adds Python 3 support and fixed many bugs.
 
 **Do Not use Github Issue Tracker to ask help.  OSS Maintainer is not free tech support**
 
-When your question looks relating to Python rather than MySQL:
+When your question looks relating to Python rather than MySQL/MariaDB:
 
 * Python mailing list [python-list](https://mail.python.org/mailman/listinfo/python-list)
 * Slack [pythondev.slack.com](https://pyslackers.com/web/slack)
 
-Or when you have question about MySQL:
+Or when you have question about MySQL/MariaDB:
 
 * [MySQL Community on Slack](https://lefred.be/mysql-community-on-slack/)
+* [MariaDB's Zulip instance](https://mariadb.zulipchat.com/)
 
 
 ## Install
