@@ -18,8 +18,8 @@ When your question looks relating to Python rather than MySQL/MariaDB:
 
 Or when you have question about MySQL/MariaDB:
 
-* [MySQL Community on Slack](https://lefred.be/mysql-community-on-slack/)
-* [MariaDB's Zulip instance](https://mariadb.zulipchat.com/)
+* [MySQL Support](https://dev.mysql.com/support/)
+* [Getting Help With MariaDB](https://mariadb.com/kb/en/getting-help-with-mariadb/)
 
 
 ## Install
