@@ -222,6 +222,10 @@ class Connection(_mysql.connection):
                 FIELD_TYPE.MEDIUM_BLOB,
                 FIELD_TYPE.LONG_BLOB,
                 FIELD_TYPE.BLOB,
+                FIELD_TYPE.SET,
+                FIELD_TYPE.ENUMS,
+                FIELD_TYPE.BINARY,
+                FIELD_TYPE.CHAR
             ):
                 self.converter[t] = _bytes_or_str
             # Unlike other string/blob types, JSON is always text.
