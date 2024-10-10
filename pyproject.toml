@@ -7,12 +7,12 @@ requires-python = ">=3.8"
 authors = [
     {name = "Inada Naoki", email = "songofacandy@gmail.com"}
 ]
-license = {text = "GNU General Public License v2 (GPLv2)"}
+license = {text = "GNU General Public License v2 or later (GPLv2+)"}
 keywords = ["MySQL"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Environment :: Other Environment",
-    "License :: OSI Approved :: GNU General Public License (GPL)",
+    "License :: OSI Approved :: GNU General Public License v2 or later (GPLv2+)",
     "Operating System :: MacOS :: MacOS X",
     "Operating System :: Microsoft :: Windows :: Windows NT/2000",
     "Operating System :: OS Independent",
