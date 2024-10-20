@@ -13,9 +13,9 @@ jobs:
       PIP_DISABLE_PIP_VERSION_CHECK: 1
     strategy:
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
         include:
-          - python-version: "3.11"
+          - python-version: "3.12"
             mariadb: 1
     steps:
       - if: ${{ matrix.mariadb }}
@@ -68,7 +68,7 @@ jobs:
     env:
       PIP_NO_PYTHON_VERSION_WARNING: 1
       PIP_DISABLE_PIP_VERSION_CHECK: 1
-      DJANGO_VERSION: "3.2.19"
+      DJANGO_VERSION: "4.2.16"
     steps:
       - name: Start MySQL
         run: |
@@ -83,9 +83,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          # Django 3.2.9+ supports Python 3.10
-          # https://docs.djangoproject.com/ja/3.2/releases/3.2/
-          python-version: "3.10"
+          python-version: "3.12"
           cache: "pip"
           cache-dependency-path: "ci/django-requirements.txt"
 
