@@ -10,9 +10,8 @@ jobs:
   build:
     runs-on: windows-latest
     env:
-      CONNECTOR_VERSION: "3.3.8"
+      CONNECTOR_VERSION: "3.4.1"
     steps:
-
       - name: Cache Connector
         id: cache-connector
         uses: actions/cache@v4
@@ -63,9 +62,9 @@ jobs:
       - name: Build wheels
         working-directory: mysqlclient
         env:
-          CIBW_PROJECT_REQUIRES_PYTHON: ">=3.8"
+          CIBW_PROJECT_REQUIRES_PYTHON: ">=3.9"
           CIBW_ARCHS: "AMD64"
-          CIBW_TEST_COMMAND: "python -c \"import MySQLdb; print(MySQLdb.version_info)\" "
+          CIBW_TEST_COMMAND: 'python -c "import MySQLdb; print(MySQLdb.version_info)" '
         run: "python -m cibuildwheel --prerelease-pythons --output-dir dist"
 
       - name: Build sdist
