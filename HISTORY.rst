@@ -1,4 +1,13 @@
 ======================
+ What's new in 2.2.5
+======================
+
+Release: 2024-10-20
+
+* (Windows wheel) Update MariaDB Connector/C to 3.4.1. #726
+* (Windows wheel) Build wheels for Python 3.13. #726
+
+======================
  What's new in 2.2.4
 ======================
 
@@ -633,4 +642,3 @@ ursor.fetchXXXDict() methods raise DeprecationWarning
 cursor.begin() is making a brief reappearence.
 
 cursor.callproc() now works, with some limitations.
-
