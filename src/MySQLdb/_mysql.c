@@ -558,6 +558,13 @@ _mysql_ConnectionObject_Initialize(
         if (ssl_mode_num >= SSLMODE_VERIFY_CA) {
             mysql_optionsv(&(self->connection), MYSQL_OPT_SSL_VERIFY_SERVER_CERT, (void *)&enforce_tls);
         }
+        else {
+            // mariadb-connector-c changed the default value of MYSQL_OPT_SSL_VERIFY_SERVER_CERT to 1.
+            // https://github.com/mariadb-corporation/mariadb-connector-c/commit/8dffd56936df3d03eeccf47904773860a0cdeb57
+            // for users don't want to verify the server certificate, we provide an option to disable it.
+            my_bool my_false = 0;
+            mysql_optionsv(&(self->connection), MYSQL_OPT_SSL_VERIFY_SERVER_CERT, (void *)&my_false);
+        }
 #endif
     }
 
