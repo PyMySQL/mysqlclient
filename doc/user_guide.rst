@@ -393,6 +393,10 @@ connect(parameters...)
             an exception is raised. *This must be a keyword
             parameter.*
 
+        server_public_key_path
+            specifies path to a RSA public key used by caching sha2 password authentication.
+            See https://dev.mysql.com/doc/refman/9.0/en/caching-sha2-pluggable-authentication.html
+
 .. _mysql_ssl_set: http://dev.mysql.com/doc/refman/en/mysql-ssl-set.html
 
 
