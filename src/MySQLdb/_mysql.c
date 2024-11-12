@@ -543,29 +543,28 @@ _mysql_ConnectionObject_Initialize(
         mysql_options(&(self->connection), MYSQL_OPT_SSL_CIPHER, cipher);
     }
 
-    if (ssl_mode_set) {
 #ifdef HAVE_ENUM_MYSQL_OPT_SSL_MODE
+    if (ssl_mode_set) {
         mysql_options(&(self->connection), MYSQL_OPT_SSL_MODE, &ssl_mode_num);
+    }
 #else
-        // MariaDB doesn't support MYSQL_OPT_SSL_MODE.
-        // See https://github.com/PyMySQL/mysqlclient/issues/474
-        // TODO: Does MariaDB supports PREFERRED and VERIFY_CA?
-        // We support only two levels for now.
-        my_bool enforce_tls = 1;
-        if (ssl_mode_num >= SSLMODE_REQUIRED) {
-            mysql_optionsv(&(self->connection), MYSQL_OPT_SSL_ENFORCE, (void *)&enforce_tls);
-        }
-        if (ssl_mode_num >= SSLMODE_VERIFY_CA) {
-            mysql_optionsv(&(self->connection), MYSQL_OPT_SSL_VERIFY_SERVER_CERT, (void *)&enforce_tls);
-        }
-        else {
-            // mariadb-connector-c changed the default value of MYSQL_OPT_SSL_VERIFY_SERVER_CERT to 1.
-            // https://github.com/mariadb-corporation/mariadb-connector-c/commit/8dffd56936df3d03eeccf47904773860a0cdeb57
-            // for users don't want to verify the server certificate, we provide an option to disable it.
-            my_bool my_false = 0;
-            mysql_optionsv(&(self->connection), MYSQL_OPT_SSL_VERIFY_SERVER_CERT, (void *)&my_false);
-        }
-#endif
+    // MariaDB doesn't support MYSQL_OPT_SSL_MODE.
+    // See https://github.com/PyMySQL/mysqlclient/issues/474
+    // And MariDB 11.4 changed the default value of MYSQL_OPT_SSL_ENFORCE and
+    // MYSQL_OPT_SSL_VERIFY_SERVER_CERT to 1.
+    // https://github.com/mariadb-corporation/mariadb-connector-c/commit/8dffd56936df3d03eeccf47904773860a0cdeb57
+    // We emulate the ssl_mode and old behavior.
+    my_bool my_true = 1;
+    my_bool my_false = 0;
+    if (ssl_mode_num >= SSLMODE_REQUIRED) {
+        mysql_optionsv(&(self->connection), MYSQL_OPT_SSL_ENFORCE, (void *)&my_true);
+    } else {
+        mysql_optionsv(&(self->connection), MYSQL_OPT_SSL_ENFORCE, (void *)&my_false);
+    }
+    if (ssl_mode_num >= SSLMODE_VERIFY_CA) {
+        mysql_optionsv(&(self->connection), MYSQL_OPT_SSL_VERIFY_SERVER_CERT, (void *)&my_true);
+    } else {
+        mysql_optionsv(&(self->connection), MYSQL_OPT_SSL_VERIFY_SERVER_CERT, (void *)&my_false);
     }
 
     if (charset) {
@@ -580,12 +579,9 @@ _mysql_ConnectionObject_Initialize(
                   port, unix_socket, client_flag);
     Py_END_ALLOW_THREADS
 
-    if (ssl) {
-        int i;
-        for (i=0; i<n_ssl_keepref; i++) {
-            Py_DECREF(ssl_keepref[i]);
-            ssl_keepref[i] = NULL;
-        }
+    for (int i=0; i<n_ssl_keepref; i++) {
+        Py_DECREF(ssl_keepref[i]);
+        ssl_keepref[i] = NULL;
     }
 
     if (!conn) {
