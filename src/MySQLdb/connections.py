@@ -137,6 +137,10 @@ class Connection(_mysql.connection):
             Since mysqlclient 2.2.4, ssl=True is alias of ssl_mode=REQUIRED
             for better compatibility with PyMySQL and MariaDB.
 
+        :param str server_public_key_path:
+            specify the path to a file RSA public key file for caching_sha2_password.
+            See https://dev.mysql.com/doc/refman/9.0/en/caching-sha2-pluggable-authentication.html
+
         :param bool local_infile:
             enables LOAD LOCAL INFILE; zero disables
 
