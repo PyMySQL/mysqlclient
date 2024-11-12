@@ -1,6 +1,5 @@
 [project]
 name = "mysqlclient"
-# version = "2.2.0dev0"
 description = "Python interface to MySQL"
 readme = "README.md"
 requires-python = ">=3.8"
