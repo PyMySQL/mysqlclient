@@ -17,7 +17,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: c:/mariadb-connector
-          key: mariadb-connector-c-${{ env.CONNECTOR_VERSION }}-win
+          key: mariadb-connector-c-${{ env.CONNECTOR_VERSION }}-win-2
 
       - name: Download and Unzip Connector
         if: steps.cache-connector.outputs.cache-hit != 'true'
@@ -27,15 +27,32 @@ jobs:
           unzip "mariadb-connector-c-${CONNECTOR_VERSION}-src.zip" -d c:/
           mv "c:/mariadb-connector-c-${CONNECTOR_VERSION}-src" c:/mariadb-connector-src
 
-      - name: Build Connector
+      - name: make build directory
         if: steps.cache-connector.outputs.cache-hit != 'true'
         shell: cmd
         working-directory: c:/mariadb-connector-src
         run: |
           mkdir build
-          cd build
-          cmake -A x64 .. -DCMAKE_BUILD_TYPE=Release -DCLIENT_PLUGIN_DIALOG=static -DCLIENT_PLUGIN_SHA256_PASSWORD=static -DCLIENT_PLUGIN_CACHING_SHA2_PASSWORD=static
+
+      - name: cmake
+        if: steps.cache-connector.outputs.cache-hit != 'true'
+        shell: cmd
+        working-directory: c:/mariadb-connector-src/build
+        run: |
+          cmake -A x64 .. -DCMAKE_BUILD_TYPE=Release -DCLIENT_PLUGIN_DIALOG=static -DCLIENT_PLUGIN_SHA256_PASSWORD=static -DCLIENT_PLUGIN_CACHING_SHA2_PASSWORD=static -DDEFAULT_SSL_VERIFY_SERVER_CERT=0
+
+      - name: cmake build
+        if: steps.cache-connector.outputs.cache-hit != 'true'
+        shell: cmd
+        working-directory: c:/mariadb-connector-src/build
+        run: |
           cmake --build . -j 8 --config Release
+
+      - name: cmake install
+        if: steps.cache-connector.outputs.cache-hit != 'true'
+        shell: cmd
+        working-directory: c:/mariadb-connector-src/build
+        run: |
           cmake -DCMAKE_INSTALL_PREFIX=c:/mariadb-connector -DCMAKE_INSTALL_COMPONENT=Development -DCMAKE_BUILD_TYPE=Release -P cmake_install.cmake
 
       - name: Checkout mysqlclient
