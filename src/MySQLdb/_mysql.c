@@ -566,6 +566,7 @@ _mysql_ConnectionObject_Initialize(
     } else {
         mysql_optionsv(&(self->connection), MYSQL_OPT_SSL_VERIFY_SERVER_CERT, (void *)&my_false);
     }
+#endif
 
     if (charset) {
         mysql_options(&(self->connection), MYSQL_SET_CHARSET_NAME, charset);
