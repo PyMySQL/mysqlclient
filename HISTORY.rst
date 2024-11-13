@@ -1,4 +1,17 @@
 ======================
+ What's new in 2.2.6
+======================
+
+Release: 2024-11-12
+
+* MariaDB Connector/C 3.4 and MairaDB 11.4 enabled SSL and CA verification by default.
+  It affected 2.2.5 windows wheel. This release disables SSL and CA verification by default. (#731)
+
+* Add ``server_public_key_path`` option. It is needed to connect MySQL server with
+  ``sha256_password`` or ``caching_sha2_password`` authentication plugin without
+  secure connection. (#744)
+
+======================
  What's new in 2.2.5
 ======================
 
