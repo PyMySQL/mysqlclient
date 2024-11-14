@@ -59,7 +59,7 @@ jobs:
         run: |
           pytest --cov=MySQLdb tests
 
-      - uses: codecov/codecov-action@v4
+      - uses: codecov/codecov-action@v5
 
   django-test:
     name: "Run Django LTS test suite"
