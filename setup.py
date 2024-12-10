@@ -109,6 +109,7 @@ def get_config_win32(options):
     ]
     include_dirs = [
         os.path.join(connector, "include", "mariadb"),
+        os.path.join(connector, "include", "mysql"),
         os.path.join(connector, "include"),
     ]
 
