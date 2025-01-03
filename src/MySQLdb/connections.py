@@ -204,6 +204,8 @@ class Connection(_mysql.connection):
             if type(k) is not int  # noqa: E721
         }
 
+        self.database = kwargs2.get("database", "")
+
         self._server_version = tuple(
             [numeric_part(n) for n in self.get_server_info().split(".")[:2]]
         )
