@@ -1,4 +1,13 @@
 ======================
+ What's new in 2.2.7
+======================
+
+Release: 2025-01-10
+
+* Add ``user``, ``host``, ``database``, and ``db`` attributes to ``Connection``.
+  opentelemetry-instrumentation-(dbapi|mysqlclient) use them. (#753)
+
+======================
  What's new in 2.2.6
 ======================
 
