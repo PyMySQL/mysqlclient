@@ -196,20 +196,18 @@ class Connection(_mysql.connection):
         # PEP-249 requires autocommit to be initially off
         autocommit = kwargs2.pop("autocommit", False)
 
+        self._set_attributes(*args, **kwargs2)
         super().__init__(*args, **kwargs2)
+
         self.cursorclass = cursorclass
         self.encoders = {
             k: v
             for k, v in conv.items()
             if type(k) is not int  # noqa: E721
         }
-
-        self.database = kwargs2.get("database", "")
-
         self._server_version = tuple(
             [numeric_part(n) for n in self.get_server_info().split(".")[:2]]
         )
-
         self.encoding = "ascii"  # overridden in set_character_set()
 
         if not charset:
@@ -239,6 +237,21 @@ class Connection(_mysql.connection):
             if autocommit is not None:
                 self.autocommit(autocommit)
         self.messages = []
+
+    def _set_attributes(self, host=None, user=None, password=None, database="", port=3306,
+                        unix_socket=None, **kwargs):
+        """set some attributes for otel"""
+        if unix_socket and not host:
+            host = "localhost"
+        # support opentelemetry-instrumentation-dbapi
+        self.host = host
+        # _mysql.Connection provides self.port
+        self.user = user
+        self.database = database
+        # otel-inst-mysqlclient uses db instead of database.
+        self.db = database
+        # NOTE: We have not supported semantic conventions yet.
+        # https://opentelemetry.io/docs/specs/semconv/database/sql/
 
     def __enter__(self):
         return self
