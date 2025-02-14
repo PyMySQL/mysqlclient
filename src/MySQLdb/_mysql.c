@@ -48,6 +48,10 @@ PERFORMANCE OF THIS SOFTWARE.
 #define HAVE_MYSQL_SERVER_PUBLIC_KEY
 #endif
 
+#if !defined(MARIADB_VERSION_ID) && MYSQL_VERSION_ID >= 80021
+#define HAVE_MYSQL_OPT_LOCAL_INFILE_DIR
+#endif
+
 #define PY_SSIZE_T_CLEAN 1
 #include "Python.h"
 
@@ -436,7 +440,7 @@ _mysql_ConnectionObject_Initialize(
                   "client_flag", "ssl", "ssl_mode",
                   "local_infile",
                   "read_timeout", "write_timeout", "charset",
-                  "auth_plugin", "server_public_key_path",
+                  "auth_plugin", "server_public_key_path", "local_infile_dir",
                   NULL } ;
     int connect_timeout = 0;
     int read_timeout = 0;
@@ -448,14 +452,15 @@ _mysql_ConnectionObject_Initialize(
          *read_default_group=NULL,
          *charset=NULL,
          *auth_plugin=NULL,
-         *server_public_key_path=NULL;
+         *server_public_key_path=NULL,
+         *local_infile_dir=NULL;
 
     self->converter = NULL;
     self->open = false;
     self->reconnect = false;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs,
-                "|ssssisOiiisssiOsiiisss:connect",
+                "|ssssisOiiisssiOsiiissss:connect",
                 kwlist,
                 &host, &user, &passwd, &db,
                 &port, &unix_socket, &conv,
@@ -469,13 +474,21 @@ _mysql_ConnectionObject_Initialize(
                 &write_timeout,
                 &charset,
                 &auth_plugin,
-                &server_public_key_path
+                &server_public_key_path,
+                &local_infile_dir
     ))
         return -1;
 
 #ifndef HAVE_MYSQL_SERVER_PUBLIC_KEY
     if (server_public_key_path) {
         PyErr_SetString(_mysql_NotSupportedError, "server_public_key_path is not supported");
+        return -1;
+    }
+#endif
+
+#ifndef HAVE_MYSQL_OPT_LOCAL_INFILE_DIR
+    if (local_infile_dir) {
+        PyErr_SetString(_mysql_NotSupportedError, "local_infile_dir is not supported");
         return -1;
     }
 #endif
@@ -596,6 +609,12 @@ _mysql_ConnectionObject_Initialize(
 #ifdef HAVE_MYSQL_SERVER_PUBLIC_KEY
     if (server_public_key_path) {
         mysql_options(&(self->connection), MYSQL_SERVER_PUBLIC_KEY, server_public_key_path);
+    }
+#endif
+
+#ifdef HAVE_MYSQL_OPT_LOCAL_INFILE_DIR
+    if (local_infile_dir) {
+        mysql_options(&(self->connection), MYSQL_OPT_LOAD_DATA_LOCAL_DIR, local_infile_dir);
     }
 #endif
 

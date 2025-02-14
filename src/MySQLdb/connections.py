@@ -142,7 +142,13 @@ class Connection(_mysql.connection):
             See https://dev.mysql.com/doc/refman/9.0/en/caching-sha2-pluggable-authentication.html
 
         :param bool local_infile:
-            enables LOAD LOCAL INFILE; zero disables
+            sets ``MYSQL_OPT_LOCAL_INFILE`` in ``mysql_options()`` enabling LOAD LOCAL INFILE from any path; zero disables;
+            
+        :param str local_infile_dir:
+            sets ``MYSQL_OPT_LOAD_DATA_LOCAL_DIR`` in ``mysql_options()`` enabling LOAD LOCAL INFILE from any path; 
+            if ``local_infile`` is set to ``True`` then this is ignored;
+            
+            supported for mysql version >= 8.0.21
 
         :param bool autocommit:
             If False (default), autocommit is disabled.
