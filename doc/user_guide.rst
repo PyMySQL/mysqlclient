@@ -396,6 +396,17 @@ connect(parameters...)
         server_public_key_path
             specifies path to a RSA public key used by caching sha2 password authentication.
             See https://dev.mysql.com/doc/refman/9.0/en/caching-sha2-pluggable-authentication.html
+        
+        local_infile
+            sets ``MYSQL_OPT_LOCAL_INFILE`` in ``mysql_options()`` enabling LOAD LOCAL INFILE from any path; zero disables;
+
+            *This must be a keyword parameter.*
+        
+        local_infile_dir
+            sets ``MYSQL_OPT_LOAD_DATA_LOCAL_DIR`` in ``mysql_options()`` enabling LOAD LOCAL INFILE from any path; 
+            if ``local_infile`` is set to ``True`` then this is ignored;
+
+            *This must be a keyword parameter.*
 
 .. _mysql_ssl_set: http://dev.mysql.com/doc/refman/en/mysql-ssl-set.html
 
