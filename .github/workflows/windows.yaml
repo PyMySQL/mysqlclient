@@ -82,7 +82,7 @@ jobs:
           CIBW_PROJECT_REQUIRES_PYTHON: ">=3.9"
           CIBW_ARCHS: "AMD64"
           CIBW_TEST_COMMAND: 'python -c "import MySQLdb; print(MySQLdb.version_info)" '
-        run: "python -m cibuildwheel --prerelease-pythons --output-dir dist"
+        run: "python -m cibuildwheel --output-dir dist"
 
       - name: Build sdist
         working-directory: mysqlclient
