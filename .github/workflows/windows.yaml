@@ -23,7 +23,7 @@ jobs:
         if: steps.cache-connector.outputs.cache-hit != 'true'
         shell: bash
         run: |
-          curl -LO "https://downloads.mariadb.com/Connectors/c/connector-c-${CONNECTOR_VERSION}/mariadb-connector-c-${CONNECTOR_VERSION}-src.zip"
+          curl -LO "https://dlm.mariadb.com/4516912/Connectors/c/connector-c-${CONNECTOR_VERSION}/mariadb-connector-c-${CONNECTOR_VERSION}-src.zip"
           unzip "mariadb-connector-c-${CONNECTOR_VERSION}-src.zip" -d c:/
           mv "c:/mariadb-connector-c-${CONNECTOR_VERSION}-src" c:/mariadb-connector-src
 
