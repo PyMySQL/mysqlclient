@@ -79,7 +79,7 @@ jobs:
       - name: Build wheels
         working-directory: mysqlclient
         env:
-          CIBW_PROJECT_REQUIRES_PYTHON: ">=3.9"
+          CIBW_PROJECT_REQUIRES_PYTHON: ">=3.10"
           CIBW_ARCHS: "AMD64"
           CIBW_TEST_COMMAND: 'python -c "import MySQLdb; print(MySQLdb.version_info)" '
         run: "python -m cibuildwheel --output-dir dist"
