@@ -87,7 +87,7 @@ def get_config_win32(options):
     connector = os.environ.get("MYSQLCLIENT_CONNECTOR", options.get("connector"))
     if not connector:
         connector = os.path.join(
-            os.environ["ProgramFiles"], "MariaDB", "MariaDB Connector C",
+            os.environ["ProgramFiles"], "MariaDB", "MariaDB Connector C"
         )
 
     extra_objects = []
