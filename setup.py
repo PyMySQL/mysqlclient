@@ -88,7 +88,6 @@ def get_config_win32(options):
     if not connector:
         connector = os.path.join(
             os.environ["ProgramFiles"], "MariaDB", "MariaDB Connector C",
-            os.environ["ProgramFiles"], "MariaDB", "MariaDB Connector C 64-bit",
         )
 
     extra_objects = []
