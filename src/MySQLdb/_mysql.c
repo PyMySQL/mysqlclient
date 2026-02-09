@@ -2911,7 +2911,9 @@ PyInit__mysql(void)
 
     module = PyModule_Create(&_mysqlmodule);
     if (!module) return module; /* this really should never happen */
-
+#ifdef Py_GIL_DISABLED
+    PyUnstable_Module_SetGIL(module, Py_MOD_GIL_NOT_USED);
+#endif
     if (!(dict = PyModule_GetDict(module))) goto error;
     if (PyDict_SetItemString(dict, "version_info",
                    PyRun_String(QUOTE(version_info), Py_eval_input,

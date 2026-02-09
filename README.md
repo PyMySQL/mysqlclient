@@ -21,6 +21,17 @@ Or when you have question about MySQL/MariaDB:
 * [MySQL Support](https://dev.mysql.com/support/)
 * [Getting Help With MariaDB](https://mariadb.com/kb/en/getting-help-with-mariadb/)
 
+## Free threading Python
+
+> [!NOTE]
+> The support for Free threading Python is experimental.
+
+Since v2.2.8, free threading is supported when importing the extension module. Therefore, importing MySQLdb does not acquire GIL.
+
+However, this library does not support simultaneous operations on a single Connection object from multiple threads, regardless of free threading, and the behavior in such cases remains undefined.
+
+> [!WARNING]
+> Do not use a single Connection object from multiple threads simultaneously.
 
 ## Install
 
