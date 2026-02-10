@@ -1,4 +1,18 @@
 ======================
+ What's new in 2.2.8
+======================
+
+Release: 2026-02-10
+
+* Add ``local_infile_dir`` option to restrict LOAD DATA LOCAL INFILE file path. (#755)
+* windows wheel: Update mariadb-connector to 3.4.8 (#773)
+* Add Python 3.14 and drop Python 3.8, 3.9 support. (#774)
+* Experimental support for free threaded Python. Importing ``MySQLdb`` doesn't
+  enable the GIL anymore. This doesn't mean mysqlclient is thread safe.
+  You must not use same connection object from multiple threads concurrently. (#775)
+
+
+======================
  What's new in 2.2.7
 ======================
 
