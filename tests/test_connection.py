@@ -37,7 +37,7 @@ def _assert_thread_id_waits_while(conn, func, min_wait=0.15):
         nonlocal error
         try:
             func()
-        except Exception as exc:  # pragma: no cover - assertion re-raised below
+        except Exception as exc:  # pragma: no cover - error checked below
             error = exc
         finally:
             done.set()
