@@ -29,7 +29,7 @@ def test_multi_statements_false():
     assert rows == ((17,),)
 
 
-def _assert_thread_id_waits_while(conn, func, min_wait=0.15):
+def _assert_thread_id_blocked_during_operation(conn, func, min_wait=0.15):
     error = None
     done = threading.Event()
     thread_id_done = threading.Event()
@@ -77,7 +77,7 @@ def test_connection_methods_are_serialized():
             result = conn.store_result()
             assert result.fetch_row() == ((0,),)
 
-        _assert_thread_id_waits_while(conn, run_query)
+        _assert_thread_id_blocked_during_operation(conn, run_query)
     finally:
         conn.close()
 
@@ -91,6 +91,6 @@ def test_result_methods_share_connection_lock():
         def fetch_all_rows():
             assert result.fetch_row(maxrows=0) == ((1,), (0,))
 
-        _assert_thread_id_waits_while(conn, fetch_all_rows)
+        _assert_thread_id_blocked_during_operation(conn, fetch_all_rows)
     finally:
         conn.close()

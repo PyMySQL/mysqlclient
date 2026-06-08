@@ -2607,12 +2607,13 @@ _mysql_ResultObject_dealloc(
     _mysql_ResultObject *self)
 {
     DECLARE_CONNECTION_GUARD;
+    PyObject *conn = self->conn;
     PyObject_GC_UnTrack((PyObject *)self);
-    if (self->conn != NULL) {
+    if (conn != NULL) {
         BEGIN_RESULT_CONNECTION_LOCK(self);
     }
     mysql_free_result(self->result);
-    if (self->conn != NULL) {
+    if (conn != NULL) {
         END_RESULT_CONNECTION_LOCK(self);
     }
     _mysql_ResultObject_clear(self);
