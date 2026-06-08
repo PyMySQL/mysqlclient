@@ -64,6 +64,7 @@ class BaseCursor:
 
     def __init__(self, connection):
         self.connection = connection
+        self.warning_count = 0
         self.description = None
         self.description_flags = None
         self.rowcount = 0
@@ -140,6 +141,7 @@ class BaseCursor:
             self.description = result.describe()
             self.description_flags = result.field_flags()
 
+        self.warning_count = db.warning_count()
         self.rowcount = db.affected_rows()
         self.rownumber = 0
         self.lastrowid = db.insert_id()
@@ -325,6 +327,7 @@ class BaseCursor:
     def _query(self, q):
         db = self._get_db()
         self._result = None
+        self.warning_count = 0
         self.rowcount = None
         self.lastrowid = None
         db.query(q)
@@ -435,6 +438,7 @@ class CursorUseResultMixIn:
         self._check_executed()
         r = self._fetch_row(1)
         if not r:
+            self.warning_count = self._get_db().warning_count()
             return None
         self.rownumber = self.rownumber + 1
         return r[0]
@@ -443,7 +447,10 @@ class CursorUseResultMixIn:
         """Fetch up to size rows from the cursor. Result set may be smaller
         than size. If size is not defined, cursor.arraysize is used."""
         self._check_executed()
-        r = self._fetch_row(size or self.arraysize)
+        size = size or self.arraysize
+        r = self._fetch_row(size)
+        if len(r) < size:
+            self.warning_count = self._get_db().warning_count()
         self.rownumber = self.rownumber + len(r)
         return r
 
@@ -451,6 +458,7 @@ class CursorUseResultMixIn:
         """Fetches all available rows from the cursor."""
         self._check_executed()
         r = self._fetch_row(0)
+        self.warning_count = self._get_db().warning_count()
         self.rownumber = self.rownumber + len(r)
         return r
 
