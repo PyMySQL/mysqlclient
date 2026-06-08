@@ -32,6 +32,8 @@ def test_multi_statements_false():
 def _assert_thread_id_waits_while(conn, func, min_wait=0.15):
     error = None
     done = threading.Event()
+    thread_id_done = threading.Event()
+    results = {}
 
     def run():
         nonlocal error
@@ -42,19 +44,29 @@ def _assert_thread_id_waits_while(conn, func, min_wait=0.15):
         finally:
             done.set()
 
+    def read_thread_id():
+        try:
+            results["thread_id"] = conn.thread_id()
+        except Exception as exc:  # pragma: no cover - assertion checked below
+            results["error"] = exc
+        finally:
+            thread_id_done.set()
+
     thread = threading.Thread(target=run)
     thread.start()
     time.sleep(0.05)
+    assert not done.is_set()
 
-    started = time.monotonic()
-    thread_id = conn.thread_id()
-    elapsed = time.monotonic() - started
+    blocker = threading.Thread(target=read_thread_id)
+    blocker.start()
 
+    assert not thread_id_done.wait(min_wait)
     thread.join()
+    blocker.join()
     assert error is None
     assert done.is_set()
-    assert isinstance(thread_id, int)
-    assert elapsed >= min_wait
+    assert "error" not in results
+    assert isinstance(results["thread_id"], int)
 
 
 def test_connection_methods_are_serialized():
