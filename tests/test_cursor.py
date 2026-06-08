@@ -1,5 +1,6 @@
 import pytest
 import MySQLdb.cursors
+from MySQLdb.constants import ER
 from configdb import connection_factory
 
 
@@ -243,3 +244,43 @@ CREATE TABLE test_binary_prefix (
         "INSERT INTO test_binary_prefix (id, json) VALUES (%(id)s, %(json)s)",
         ({"id": 1, "json": "{}"}, {"id": 2, "json": "{}"}),
     )
+
+
+def test_warning_count():
+    conn = connect()
+    cursor = conn.cursor()
+
+    cursor.execute("DROP TABLE IF EXISTS `no_exists_table`")
+    assert cursor.warning_count == 1
+
+    cursor.execute("SHOW WARNINGS")
+    warning = cursor.fetchone()
+    assert warning[1] == ER.BAD_TABLE_ERROR
+    assert "no_exists_table" in warning[2]
+
+    cursor.execute("SELECT 1")
+    assert cursor.warning_count == 0
+
+
+def test_sscursor_warning_count():
+    conn = connect()
+    cursor = conn.cursor(MySQLdb.cursors.SSCursor)
+
+    cursor.execute("DROP TABLE IF EXISTS `no_exists_table`")
+    assert cursor.warning_count == 1
+
+    cursor.execute("SHOW WARNINGS")
+    warning = cursor.fetchone()
+    assert warning[1] == ER.BAD_TABLE_ERROR
+    assert "no_exists_table" in warning[2]
+    assert cursor.fetchone() is None
+
+    cursor.execute("SELECT 1")
+    assert cursor.fetchone() == (1,)
+    assert cursor.fetchone() is None
+    assert cursor.warning_count == 0
+
+    cursor.execute("SELECT CAST('abc' AS SIGNED)")
+    rows = cursor.fetchmany(2)
+    assert len(rows) == 1
+    assert cursor.warning_count == 1
