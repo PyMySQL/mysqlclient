@@ -120,7 +120,7 @@ extern PyTypeObject _mysql_ResultObject_Type;
 #else
 #define DECLARE_CONNECTION_GUARD
 static int
-_mysql_ConnectionObject_EnsureLock(_mysql_ConnectionObject *self)
+_mysql_ConnectionObject_AllocateLock(_mysql_ConnectionObject *self)
 {
     self->lock = PyThread_allocate_lock();
     if (self->lock == NULL) {
@@ -545,7 +545,7 @@ _mysql_ConnectionObject_Initialize(
         return -1;
 
 #ifndef Py_GIL_DISABLED
-    if (_mysql_ConnectionObject_EnsureLock(self)) {
+    if (_mysql_ConnectionObject_AllocateLock(self)) {
         return -1;
     }
 #endif
