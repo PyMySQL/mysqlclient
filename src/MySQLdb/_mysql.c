@@ -110,7 +110,6 @@ typedef struct {
 
 extern PyTypeObject _mysql_ResultObject_Type;
 
-#define DECLARE_CONNECTION_GUARD
 static int
 _mysql_ConnectionObject_AllocateLock(_mysql_ConnectionObject *self)
 {
@@ -329,7 +328,6 @@ _mysql_ResultObject_Initialize(
     PyObject *conv=NULL;
     int n, i;
     MYSQL_FIELD *fields;
-    DECLARE_CONNECTION_GUARD;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "O!|iO", kwlist,
                      &_mysql_ConnectionObject_Type, &conn, &use, &conv))
@@ -822,7 +820,6 @@ _mysql_ConnectionObject_close(
     _mysql_ConnectionObject *self,
     PyObject *noargs)
 {
-    DECLARE_CONNECTION_GUARD;
     BEGIN_CONNECTION_OPERATION(self, return _mysql_Exception(self));
     Py_BEGIN_ALLOW_THREADS
     mysql_close(&(self->connection));
@@ -844,7 +841,6 @@ _mysql_ConnectionObject_affected_rows(
     PyObject *noargs)
 {
     my_ulonglong ret;
-    DECLARE_CONNECTION_GUARD;
     BEGIN_CONNECTION_OPERATION(self, return _mysql_Exception(self));
     ret = mysql_affected_rows(&(self->connection));
     END_CONNECTION_LOCK(self);
@@ -882,7 +878,6 @@ _mysql_ConnectionObject_dump_debug_info(
     PyObject *noargs)
 {
     int err;
-    DECLARE_CONNECTION_GUARD;
     BEGIN_CONNECTION_OPERATION(self, return _mysql_Exception(self));
     Py_BEGIN_ALLOW_THREADS
     err = mysql_dump_debug_info(&(self->connection));
@@ -905,7 +900,6 @@ _mysql_ConnectionObject_autocommit(
     PyObject *args)
 {
     int flag, err;
-    DECLARE_CONNECTION_GUARD;
     if (!PyArg_ParseTuple(args, "i", &flag)) return NULL;
     BEGIN_CONNECTION_OPERATION(self, return _mysql_Exception(self));
     Py_BEGIN_ALLOW_THREADS
@@ -928,7 +922,6 @@ _mysql_ConnectionObject_get_autocommit(
     _mysql_ConnectionObject *self,
     PyObject *args)
 {
-    DECLARE_CONNECTION_GUARD;
     BEGIN_CONNECTION_OPERATION(self, return _mysql_Exception(self));
     if (self->connection.server_status & SERVER_STATUS_AUTOCOMMIT) {
         END_CONNECTION_LOCK(self);
@@ -947,7 +940,6 @@ _mysql_ConnectionObject_commit(
     PyObject *noargs)
 {
     int err;
-    DECLARE_CONNECTION_GUARD;
     BEGIN_CONNECTION_OPERATION(self, return _mysql_Exception(self));
     Py_BEGIN_ALLOW_THREADS
     err = mysql_commit(&(self->connection));
@@ -970,7 +962,6 @@ _mysql_ConnectionObject_rollback(
     PyObject *noargs)
 {
     int err;
-    DECLARE_CONNECTION_GUARD;
     BEGIN_CONNECTION_OPERATION(self, return _mysql_Exception(self));
     Py_BEGIN_ALLOW_THREADS
     err = mysql_rollback(&(self->connection));
@@ -1003,7 +994,6 @@ _mysql_ConnectionObject_next_result(
     PyObject *noargs)
 {
     int err;
-    DECLARE_CONNECTION_GUARD;
     BEGIN_CONNECTION_OPERATION(self, return _mysql_Exception(self));
     Py_BEGIN_ALLOW_THREADS
     err = mysql_next_result(&(self->connection));
@@ -1030,7 +1020,6 @@ _mysql_ConnectionObject_set_server_option(
     PyObject *args)
 {
     int err, flags=0;
-    DECLARE_CONNECTION_GUARD;
     if (!PyArg_ParseTuple(args, "i", &flags))
         return NULL;
     BEGIN_CONNECTION_OPERATION(self, return _mysql_Exception(self));
@@ -1064,7 +1053,6 @@ _mysql_ConnectionObject_sqlstate(
     PyObject *noargs)
 {
     PyObject *ret;
-    DECLARE_CONNECTION_GUARD;
     BEGIN_CONNECTION_OPERATION(self, return _mysql_Exception(self));
     ret = PyUnicode_FromString(mysql_sqlstate(&(self->connection)));
     END_CONNECTION_LOCK(self);
@@ -1083,7 +1071,6 @@ _mysql_ConnectionObject_warning_count(
     PyObject *noargs)
 {
     unsigned int count;
-    DECLARE_CONNECTION_GUARD;
     BEGIN_CONNECTION_OPERATION(self, return _mysql_Exception(self));
     count = mysql_warning_count(&(self->connection));
     END_CONNECTION_LOCK(self);
@@ -1102,7 +1089,6 @@ _mysql_ConnectionObject_errno(
     PyObject *noargs)
 {
     unsigned int err;
-    DECLARE_CONNECTION_GUARD;
     BEGIN_CONNECTION_OPERATION(self, return _mysql_Exception(self));
     err = mysql_errno(&(self->connection));
     END_CONNECTION_LOCK(self);
@@ -1121,7 +1107,6 @@ _mysql_ConnectionObject_error(
     PyObject *noargs)
 {
     PyObject *ret;
-    DECLARE_CONNECTION_GUARD;
     BEGIN_CONNECTION_OPERATION(self, return _mysql_Exception(self));
     ret = PyUnicode_FromString(mysql_error(&(self->connection)));
     END_CONNECTION_LOCK(self);
@@ -1146,7 +1131,6 @@ _mysql_escape_string(
     unsigned long len;
     Py_ssize_t size;
     int use_connection = 0;
-    DECLARE_CONNECTION_GUARD;
     if (!PyArg_ParseTuple(args, "s#:escape_string", &in, &size)) return NULL;
     str = PyBytes_FromStringAndSize((char *) NULL, size*2+1);
     if (!str) return PyErr_NoMemory();
@@ -1195,7 +1179,6 @@ _mysql_string_literal(
     PyObject *s; // input string or bytes. need to decref.
     int use_connection = 0;
     PyObject *str = NULL;
-    DECLARE_CONNECTION_GUARD;
 
     if (self && PyModule_Check((PyObject*)self))
         self = NULL;
@@ -1312,7 +1295,6 @@ _mysql_escape(
 {
     PyObject *o=NULL, *d=NULL;
     PyObject *converter = NULL;
-    DECLARE_CONNECTION_GUARD;
     if (!PyArg_ParseTuple(args, "O|O:escape", &o, &d))
         return NULL;
     if (d) {
@@ -1354,7 +1336,6 @@ _mysql_ResultObject_describe(
     PyObject *d;
     MYSQL_FIELD *fields;
     unsigned int i, n;
-    DECLARE_CONNECTION_GUARD;
 
     BEGIN_RESULT_OPERATION(self, return _mysql_Exception(result_connection(self)));
 
@@ -1404,7 +1385,6 @@ _mysql_ResultObject_field_flags(
     PyObject *d;
     MYSQL_FIELD *fields;
     unsigned int i, n;
-    DECLARE_CONNECTION_GUARD;
     BEGIN_RESULT_OPERATION(self, return _mysql_Exception(result_connection(self)));
     n = mysql_num_fields(self->result);
     fields = mysql_fetch_fields(self->result);
@@ -1720,7 +1700,6 @@ _mysql_ResultObject_fetch_row(
     static char *kwlist[] = {"maxrows", "how", NULL };
     int maxrows=1, how=0;
     PyObject *r=NULL;
-    DECLARE_CONNECTION_GUARD;
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs, "|ii:fetch_row", kwlist,
                      &maxrows, &how))
@@ -1764,7 +1743,6 @@ _mysql_ResultObject_discard(
     _mysql_ResultObject *self,
     PyObject *noargs)
 {
-    DECLARE_CONNECTION_GUARD;
     BEGIN_RESULT_OPERATION(self, return _mysql_Exception(result_connection(self)));
 
     MYSQL_ROW row;
@@ -1806,7 +1784,6 @@ _mysql_ConnectionObject_change_user(
     PyObject *args,
     PyObject *kwargs)
 {
-    DECLARE_CONNECTION_GUARD;
     char *user, *pwd=NULL, *db=NULL;
     int r;
     static char *kwlist[] = { "user", "passwd", "db", NULL } ;
@@ -1837,7 +1814,6 @@ _mysql_ConnectionObject_character_set_name(
     _mysql_ConnectionObject *self,
     PyObject *noargs)
 {
-    DECLARE_CONNECTION_GUARD;
     const char *s;
     PyObject *ret;
 
@@ -1858,7 +1834,6 @@ _mysql_ConnectionObject_set_character_set(
     _mysql_ConnectionObject *self,
     PyObject *args)
 {
-    DECLARE_CONNECTION_GUARD;
     const char *s;
     int err;
 
@@ -1903,7 +1878,6 @@ _mysql_ConnectionObject_get_character_set_info(
     _mysql_ConnectionObject *self,
     PyObject *noargs)
 {
-    DECLARE_CONNECTION_GUARD;
     PyObject *result;
     MY_CHARSET_INFO cs;
 
@@ -1943,7 +1917,6 @@ _mysql_ConnectionObject_get_native_connection(
     _mysql_ConnectionObject *self,
     PyObject *noargs)
 {
-    DECLARE_CONNECTION_GUARD;
     PyObject *result;
 
     BEGIN_CONNECTION_OPERATION(self, return _mysql_Exception(self));
@@ -1975,7 +1948,6 @@ _mysql_ConnectionObject_get_host_info(
     _mysql_ConnectionObject *self,
     PyObject *noargs)
 {
-    DECLARE_CONNECTION_GUARD;
     PyObject *ret;
 
     BEGIN_CONNECTION_OPERATION(self, return _mysql_Exception(self));
@@ -1994,7 +1966,6 @@ _mysql_ConnectionObject_get_proto_info(
     _mysql_ConnectionObject *self,
     PyObject *noargs)
 {
-    DECLARE_CONNECTION_GUARD;
     unsigned int proto;
 
     BEGIN_CONNECTION_OPERATION(self, return _mysql_Exception(self));
@@ -2013,7 +1984,6 @@ _mysql_ConnectionObject_get_server_info(
     _mysql_ConnectionObject *self,
     PyObject *noargs)
 {
-    DECLARE_CONNECTION_GUARD;
     PyObject *ret;
 
     BEGIN_CONNECTION_OPERATION(self, return _mysql_Exception(self));
@@ -2033,7 +2003,6 @@ _mysql_ConnectionObject_info(
     _mysql_ConnectionObject *self,
     PyObject *noargs)
 {
-    DECLARE_CONNECTION_GUARD;
     const char *s;
     PyObject *ret;
 
@@ -2074,7 +2043,6 @@ _mysql_ConnectionObject_insert_id(
     _mysql_ConnectionObject *self,
     PyObject *noargs)
 {
-    DECLARE_CONNECTION_GUARD;
     my_ulonglong r;
 
     BEGIN_CONNECTION_OPERATION(self, return _mysql_Exception(self));
@@ -2092,7 +2060,6 @@ _mysql_ConnectionObject_kill(
     _mysql_ConnectionObject *self,
     PyObject *args)
 {
-    DECLARE_CONNECTION_GUARD;
     unsigned long pid;
     int r;
     char query[50];
@@ -2123,7 +2090,6 @@ _mysql_ConnectionObject_field_count(
     _mysql_ConnectionObject *self,
     PyObject *noargs)
 {
-    DECLARE_CONNECTION_GUARD;
     unsigned int count;
 
     BEGIN_CONNECTION_OPERATION(self, return _mysql_Exception(self));
@@ -2142,7 +2108,6 @@ _mysql_ConnectionObject_fileno(
     _mysql_ConnectionObject *self,
     PyObject *noargs)
 {
-    DECLARE_CONNECTION_GUARD;
     int fd;
 
     BEGIN_CONNECTION_OPERATION(self, return _mysql_Exception(self));
@@ -2159,7 +2124,6 @@ _mysql_ResultObject_num_fields(
     _mysql_ResultObject *self,
     PyObject *noargs)
 {
-    DECLARE_CONNECTION_GUARD;
     unsigned int fields;
 
     BEGIN_RESULT_OPERATION(self, return _mysql_Exception(result_connection(self)));
@@ -2179,7 +2143,6 @@ _mysql_ResultObject_num_rows(
     _mysql_ResultObject *self,
     PyObject *noargs)
 {
-    DECLARE_CONNECTION_GUARD;
     my_ulonglong rows;
 
     BEGIN_RESULT_OPERATION(self, return _mysql_Exception(result_connection(self)));
@@ -2212,7 +2175,6 @@ _mysql_ConnectionObject_ping(
     _mysql_ConnectionObject *self,
     PyObject *args)
 {
-    DECLARE_CONNECTION_GUARD;
     int reconnect = 0;
 
     if (!PyArg_ParseTuple(args, "|p", &reconnect)) return NULL;
@@ -2251,7 +2213,6 @@ _mysql_ConnectionObject_query(
     _mysql_ConnectionObject *self,
     PyObject *args)
 {
-    DECLARE_CONNECTION_GUARD;
     char *query;
     Py_ssize_t len;
     int r;
@@ -2281,7 +2242,6 @@ _mysql_ConnectionObject_send_query(
     _mysql_ConnectionObject *self,
     PyObject *args)
 {
-    DECLARE_CONNECTION_GUARD;
     char *query;
     Py_ssize_t len;
     int r;
@@ -2311,7 +2271,6 @@ _mysql_ConnectionObject_read_query_result(
     _mysql_ConnectionObject *self,
     PyObject *noargs)
 {
-    DECLARE_CONNECTION_GUARD;
     int r;
     MYSQL *mysql = &(self->connection);
 
@@ -2346,7 +2305,6 @@ _mysql_ConnectionObject_select_db(
     _mysql_ConnectionObject *self,
     PyObject *args)
 {
-    DECLARE_CONNECTION_GUARD;
     char *db;
     int r;
 
@@ -2374,7 +2332,6 @@ _mysql_ConnectionObject_shutdown(
     _mysql_ConnectionObject *self,
     PyObject *noargs)
 {
-    DECLARE_CONNECTION_GUARD;
     int r;
 
     BEGIN_CONNECTION_OPERATION(self, return _mysql_Exception(self));
@@ -2402,7 +2359,6 @@ _mysql_ConnectionObject_stat(
     _mysql_ConnectionObject *self,
     PyObject *noargs)
 {
-    DECLARE_CONNECTION_GUARD;
     const char *s;
     PyObject *ret;
 
@@ -2431,7 +2387,6 @@ _mysql_ConnectionObject_store_result(
     _mysql_ConnectionObject *self,
     PyObject *noargs)
 {
-    DECLARE_CONNECTION_GUARD;
     PyObject *arglist=NULL, *kwarglist=NULL, *result=NULL;
     _mysql_ResultObject *r=NULL;
 
@@ -2476,7 +2431,6 @@ _mysql_ConnectionObject_thread_id(
     _mysql_ConnectionObject *self,
     PyObject *noargs)
 {
-    DECLARE_CONNECTION_GUARD;
     unsigned long pid;
 
     BEGIN_CONNECTION_OPERATION(self, return _mysql_Exception(self));
@@ -2496,7 +2450,6 @@ _mysql_ConnectionObject_use_result(
     _mysql_ConnectionObject *self,
     PyObject *noargs)
 {
-    DECLARE_CONNECTION_GUARD;
     PyObject *arglist=NULL, *kwarglist=NULL, *result=NULL;
     _mysql_ResultObject *r=NULL;
 
@@ -2534,7 +2487,6 @@ _mysql_ConnectionObject_discard_result(
     _mysql_ConnectionObject *self,
     PyObject *noargs)
 {
-    DECLARE_CONNECTION_GUARD;
     MYSQL_RES *res;
     MYSQL_ROW row;
     int err = 0;
@@ -2600,7 +2552,6 @@ _mysql_ResultObject_data_seek(
      _mysql_ResultObject *self,
      PyObject *args)
 {
-    DECLARE_CONNECTION_GUARD;
     unsigned int row;
 
     if (!PyArg_ParseTuple(args, "i:data_seek", &row)) return NULL;
@@ -2614,7 +2565,6 @@ static void
 _mysql_ResultObject_dealloc(
     _mysql_ResultObject *self)
 {
-    DECLARE_CONNECTION_GUARD;
     PyObject *conn = self->conn;
     PyObject_GC_UnTrack((PyObject *)self);
     if (conn != NULL) {
