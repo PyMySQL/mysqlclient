@@ -84,9 +84,7 @@ typedef struct {
     bool open;
     bool reconnect;
     PyObject *converter;
-#ifndef Py_GIL_DISABLED
     PyThread_type_lock lock;
-#endif
 } _mysql_ConnectionObject;
 
 #define check_connection(c) \
@@ -112,12 +110,6 @@ typedef struct {
 
 extern PyTypeObject _mysql_ResultObject_Type;
 
-#ifdef Py_GIL_DISABLED
-#define DECLARE_CONNECTION_GUARD PyCriticalSection _mysql_cs = {0}
-#define BEGIN_CONNECTION_LOCK(c) \
-    PyCriticalSection_Begin(&_mysql_cs, (PyObject *)(c))
-#define END_CONNECTION_LOCK(c) PyCriticalSection_End(&_mysql_cs)
-#else
 #define DECLARE_CONNECTION_GUARD
 static int
 _mysql_ConnectionObject_AllocateLock(_mysql_ConnectionObject *self)
@@ -146,7 +138,6 @@ _mysql_ConnectionObject_Unlock(_mysql_ConnectionObject *self)
 
 #define BEGIN_CONNECTION_LOCK(c) _mysql_ConnectionObject_Lock(c)
 #define END_CONNECTION_LOCK(c) _mysql_ConnectionObject_Unlock(c)
-#endif
 
 #define BEGIN_RESULT_CONNECTION_LOCK(r) \
     BEGIN_CONNECTION_LOCK(result_connection(r))
@@ -520,9 +511,7 @@ _mysql_ConnectionObject_Initialize(
     self->converter = NULL;
     self->open = false;
     self->reconnect = false;
-#ifndef Py_GIL_DISABLED
     self->lock = NULL;
-#endif
 
     if (!PyArg_ParseTupleAndKeywords(args, kwargs,
                 "|ssssisOiiisssiOsiiissss:connect",
@@ -544,11 +533,9 @@ _mysql_ConnectionObject_Initialize(
     ))
         return -1;
 
-#ifndef Py_GIL_DISABLED
     if (_mysql_ConnectionObject_AllocateLock(self)) {
         return -1;
     }
-#endif
 
 #ifndef HAVE_MYSQL_SERVER_PUBLIC_KEY
     if (server_public_key_path) {
@@ -2563,12 +2550,10 @@ _mysql_ConnectionObject_dealloc(
         self->open = false;
     }
     Py_CLEAR(self->converter);
-#ifndef Py_GIL_DISABLED
     if (self->lock != NULL) {
         PyThread_free_lock(self->lock);
         self->lock = NULL;
     }
-#endif
     MyFree(self);
 }
 
