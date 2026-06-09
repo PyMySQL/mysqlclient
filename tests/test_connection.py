@@ -29,68 +29,78 @@ def test_multi_statements_false():
     assert rows == ((17,),)
 
 
-def _assert_thread_id_blocked_during_operation(conn, func, min_wait=0.15):
-    error = None
-    done = threading.Event()
-    thread_id_done = threading.Event()
-    results = {}
-
-    def run():
-        nonlocal error
-        try:
-            func()
-        except Exception as exc:  # pragma: no cover - error checked below
-            error = exc
-        finally:
-            done.set()
-
-    def read_thread_id():
-        try:
-            results["thread_id"] = conn.thread_id()
-        except Exception as exc:  # pragma: no cover - assertion checked below
-            results["error"] = exc
-        finally:
-            thread_id_done.set()
-
-    thread = threading.Thread(target=run)
-    thread.start()
-    time.sleep(0.05)
-    assert not done.is_set()
-
-    blocker = threading.Thread(target=read_thread_id)
-    blocker.start()
-
-    assert not thread_id_done.wait(min_wait)
-    thread.join()
-    blocker.join()
-    assert error is None
-    assert done.is_set()
-    assert "error" not in results
-    assert isinstance(results["thread_id"], int)
-
-
-def test_connection_methods_are_serialized():
+def test_connection_concurrent_use_raises():
+    """While a slow query holds the connection lock, any other access from
+    a second thread must raise ProgrammingError immediately (not block)."""
     conn = connection_factory()
     try:
-        def run_query():
-            conn.query("SELECT SLEEP(0.2)")
-            result = conn.store_result()
-            assert result.fetch_row() == ((0,),)
+        thread_error = None
+        done = threading.Event()
 
-        _assert_thread_id_blocked_during_operation(conn, run_query)
+        def run_slow_query():
+            nonlocal thread_error
+            try:
+                conn.query("SELECT SLEEP(0.5)")
+                result = conn.store_result()
+                result.fetch_row()
+            except Exception as exc:  # pragma: no cover
+                thread_error = exc
+            finally:
+                done.set()
+
+        thread = threading.Thread(target=run_slow_query)
+        thread.start()
+
+        # Give the background thread time to acquire the lock and enter SLEEP.
+        time.sleep(0.1)
+
+        start = time.monotonic()
+        with pytest.raises(ProgrammingError, match="already in use"):
+            conn.thread_id()
+        # Should fail immediately, not wait for the SLEEP to finish.
+        assert time.monotonic() - start < 0.1
+
+        done.wait()
+        thread.join()
+        assert thread_error is None
     finally:
         conn.close()
 
 
-def test_result_methods_share_connection_lock():
+def test_result_concurrent_use_raises():
+    """While fetch_row holds the connection lock streaming a slow result,
+    any other access from a second thread must raise ProgrammingError immediately."""
     conn = connection_factory()
     try:
-        conn.query("SELECT 1 UNION ALL SELECT SLEEP(0.2)")
+        conn.query("SELECT 1 UNION ALL SELECT SLEEP(0.5)")
         result = conn.use_result()
 
-        def fetch_all_rows():
-            assert result.fetch_row(maxrows=0) == ((1,), (0,))
+        thread_error = None
+        done = threading.Event()
 
-        _assert_thread_id_blocked_during_operation(conn, fetch_all_rows)
+        def fetch_all_rows():
+            nonlocal thread_error
+            try:
+                assert result.fetch_row(maxrows=0) == ((1,), (0,))
+            except Exception as exc:  # pragma: no cover
+                thread_error = exc
+            finally:
+                done.set()
+
+        thread = threading.Thread(target=fetch_all_rows)
+        thread.start()
+
+        # Give the background thread time to acquire the lock and enter SLEEP.
+        time.sleep(0.1)
+
+        start = time.monotonic()
+        with pytest.raises(ProgrammingError, match="already in use"):
+            conn.thread_id()
+        # Should fail immediately, not wait for the SLEEP to finish.
+        assert time.monotonic() - start < 0.1
+
+        done.wait()
+        thread.join()
+        assert thread_error is None
     finally:
         conn.close()

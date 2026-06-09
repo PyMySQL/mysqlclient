@@ -122,8 +122,26 @@ _mysql_ConnectionObject_AllocateLock(_mysql_ConnectionObject *self)
     return 0;
 }
 
-static void
+/* Try to acquire the connection lock without blocking.
+ * Returns 0 on success, -1 if the lock is already held by another thread
+ * (ProgrammingError is set). */
+static int
 _mysql_ConnectionObject_Lock(_mysql_ConnectionObject *self)
+{
+    PyLockStatus status = PyThread_acquire_lock(self->lock, NOWAIT_LOCK);
+    if (status != PY_LOCK_ACQUIRED) {
+        PyErr_SetString(_mysql_ProgrammingError,
+            "This connection is already in use from another thread. "
+            "Do not use the same connection object from multiple threads simultaneously.");
+        return -1;
+    }
+    return 0;
+}
+
+/* Blocking variant used only during deallocation where we must acquire the
+ * lock to call mysql_free_result() even if it means waiting. */
+static void
+_mysql_ConnectionObject_LockWait(_mysql_ConnectionObject *self)
 {
     Py_BEGIN_ALLOW_THREADS
     PyThread_acquire_lock(self->lock, WAIT_LOCK);
@@ -140,12 +158,12 @@ _mysql_ConnectionObject_Unlock(_mysql_ConnectionObject *self)
 #define END_CONNECTION_LOCK(c) _mysql_ConnectionObject_Unlock(c)
 
 #define BEGIN_RESULT_CONNECTION_LOCK(r) \
-    BEGIN_CONNECTION_LOCK(result_connection(r))
+    _mysql_ConnectionObject_LockWait(result_connection(r))
 #define END_RESULT_CONNECTION_LOCK(r) \
     END_CONNECTION_LOCK(result_connection(r))
 #define BEGIN_CONNECTION_OPERATION(c, on_closed) \
     do { \
-        BEGIN_CONNECTION_LOCK(c); \
+        if (_mysql_ConnectionObject_Lock(c) < 0) return NULL; \
         if (!(c)->open) { \
             END_CONNECTION_LOCK(c); \
             on_closed; \
@@ -320,7 +338,9 @@ _mysql_ResultObject_Initialize(
     self->conn = (PyObject *) conn;
     Py_INCREF(conn);
     self->use = use;
-    BEGIN_CONNECTION_LOCK(conn);
+    if (BEGIN_CONNECTION_LOCK(conn) < 0) {
+        return -1;
+    }
     if (!conn->open) {
         END_CONNECTION_LOCK(conn);
         _mysql_Exception(conn);
@@ -1135,7 +1155,10 @@ _mysql_escape_string(
     if (self && PyModule_Check((PyObject*)self))
         self = NULL;
     if (self) {
-        BEGIN_CONNECTION_LOCK(self);
+        if (BEGIN_CONNECTION_LOCK(self) < 0) {
+            Py_DECREF(str);
+            return NULL;
+        }
         use_connection = self->open;
     }
     if (use_connection) {
@@ -1177,7 +1200,7 @@ _mysql_string_literal(
     if (self && PyModule_Check((PyObject*)self))
         self = NULL;
     if (self) {
-        BEGIN_CONNECTION_LOCK(self);
+        if (BEGIN_CONNECTION_LOCK(self) < 0) return NULL;
         use_connection = self->open;
     }
 
@@ -1305,7 +1328,7 @@ _mysql_escape(
                     "argument 2 must be a mapping");
             return NULL;
         }
-        BEGIN_CONNECTION_LOCK((_mysql_ConnectionObject *)self);
+        if (BEGIN_CONNECTION_LOCK((_mysql_ConnectionObject *)self) < 0) return NULL;
         converter = ((_mysql_ConnectionObject *) self)->converter;
         Py_XINCREF(converter);
         END_CONNECTION_LOCK((_mysql_ConnectionObject *)self);
