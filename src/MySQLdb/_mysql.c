@@ -87,13 +87,7 @@ typedef struct {
     PyThread_type_lock lock;
 } _mysql_ConnectionObject;
 
-#define check_connection(c) \
-    if (!(c->open)) { \
-        return _mysql_Exception(c); \
-    };
-
 #define result_connection(r) ((_mysql_ConnectionObject *)r->conn)
-#define check_result_connection(r) check_connection(result_connection(r))
 
 extern PyTypeObject _mysql_ConnectionObject_Type;
 
