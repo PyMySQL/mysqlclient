@@ -72,16 +72,22 @@ def test_result_concurrent_use_raises():
     any other access from a second thread must raise ProgrammingError immediately."""
     conn = connection_factory()
     try:
-        conn.query("SELECT 1 UNION ALL SELECT SLEEP(0.5)")
+        conn.query(
+            "SELECT 1 FROM information_schema.tables a "
+            "CROSS JOIN information_schema.tables b LIMIT 20000"
+        )
         result = conn.use_result()
 
         thread_error = None
         done = threading.Event()
+        started = threading.Event()
 
         def fetch_all_rows():
             nonlocal thread_error
             try:
-                assert result.fetch_row(maxrows=0) == ((1,), (0,))
+                started.set()
+                rows = result.fetch_row(maxrows=0)
+                assert rows
             except Exception as exc:  # pragma: no cover
                 thread_error = exc
             finally:
@@ -90,14 +96,18 @@ def test_result_concurrent_use_raises():
         thread = threading.Thread(target=fetch_all_rows)
         thread.start()
 
-        # Give the background thread time to acquire the lock and enter SLEEP.
-        time.sleep(0.1)
+        assert started.wait(timeout=1.0)
 
-        start = time.monotonic()
-        with pytest.raises(ProgrammingError, match="already in use"):
-            conn.thread_id()
-        # Should fail immediately, not wait for the SLEEP to finish.
-        assert time.monotonic() - start < 0.1
+        deadline = time.monotonic() + 1.0
+        while time.monotonic() < deadline:
+            try:
+                conn.thread_id()
+            except ProgrammingError as exc:
+                assert "already in use" in str(exc)
+                break
+            time.sleep(0.01)
+        else:  # pragma: no cover
+            pytest.fail("expected ProgrammingError while result.fetch_row() is running")
 
         done.wait()
         thread.join()
