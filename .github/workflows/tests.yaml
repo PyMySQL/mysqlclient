@@ -35,10 +35,10 @@ jobs:
           mysql --version
           mysql -uroot -proot -e "CREATE DATABASE mysqldb_test"
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
           cache: "pip"
@@ -59,7 +59,7 @@ jobs:
         run: |
           pytest --cov=MySQLdb tests
 
-      - uses: codecov/codecov-action@v5
+      - uses: codecov/codecov-action@v7
 
   django-test:
     name: "Run Django LTS test suite"
@@ -78,10 +78,10 @@ jobs:
           mysql -uroot -proot -e "CREATE USER 'scott'@'%' IDENTIFIED BY 'tiger'; GRANT ALL ON *.* TO scott;"
           mysql -uroot -proot -e "CREATE DATABASE django_default; CREATE DATABASE django_other;"
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: "pip"
