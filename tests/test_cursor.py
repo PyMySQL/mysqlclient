@@ -3,7 +3,6 @@ import MySQLdb.cursors
 from MySQLdb.constants import ER
 from configdb import connection_factory
 
-
 _conns = []
 _tables = []
 
@@ -57,9 +56,9 @@ def test_executemany():
         "INSERT INTO TEST (ID, NAME) VALUES (%(id_name)s, %(name)s) ON duplicate update"
     )
     assert m is not None, "error parse %(id_name)s"
-    assert m.group(3) == " ON duplicate update", (
-        "group 3 not ON duplicate update, bug in RE_INSERT_VALUES?"
-    )
+    assert (
+        m.group(3) == " ON duplicate update"
+    ), "group 3 not ON duplicate update, bug in RE_INSERT_VALUES?"
 
     # https://github.com/PyMySQL/mysqlclient-python/issues/178
     m = MySQLdb.cursors.RE_INSERT_VALUES.match(
@@ -75,31 +74,29 @@ def test_executemany():
     # list args
     data = [(i,) for i in range(10)]
     cursor.executemany("insert into test (data) values (%s)", data)
-    assert cursor._executed.endswith(b",(7),(8),(9)"), (
-        "execute many with %s not in one query"
-    )
+    assert cursor._executed.endswith(
+        b",(7),(8),(9)"
+    ), "execute many with %s not in one query"
 
     # dict args
     data_dict = [{"data": i} for i in range(10)]
     cursor.executemany("insert into test (data) values (%(data)s)", data_dict)
-    assert cursor._executed.endswith(b",(7),(8),(9)"), (
-        "execute many with %(data)s not in one query"
-    )
+    assert cursor._executed.endswith(
+        b",(7),(8),(9)"
+    ), "execute many with %(data)s not in one query"
 
     # %% in column set
-    cursor.execute(
-        """\
+    cursor.execute("""\
         CREATE TABLE percent_test (
             `A%` INTEGER,
-            `B%` INTEGER)"""
-    )
+            `B%` INTEGER)""")
     try:
         q = "INSERT INTO percent_test (`A%%`, `B%%`) VALUES (%s, %s)"
         assert MySQLdb.cursors.RE_INSERT_VALUES.match(q) is not None
         cursor.executemany(q, [(3, 4), (5, 6)])
-        assert cursor._executed.endswith(b"(3, 4),(5, 6)"), (
-            "executemany with %% not in one query"
-        )
+        assert cursor._executed.endswith(
+            b"(3, 4),(5, 6)"
+        ), "executemany with %% not in one query"
     finally:
         cursor.execute("DROP TABLE IF EXISTS percent_test")
 
@@ -195,13 +192,11 @@ def test_cursor_discard_result(Cursor):
     conn = connect()
     cursor = conn.cursor(Cursor)
 
-    cursor.execute(
-        """\
+    cursor.execute("""\
 CREATE TABLE test_cursor_discard_result (
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
     data VARCHAR(100)
-)"""
-    )
+)""")
     _tables.append("test_cursor_discard_result")
 
     cursor.executemany(
@@ -209,13 +204,11 @@ CREATE TABLE test_cursor_discard_result (
         [(i, f"row {i}") for i in range(1, 101)],
     )
 
-    cursor.execute(
-        """\
+    cursor.execute("""\
 SELECT * FROM test_cursor_discard_result WHERE id <= 10;
 SELECT * FROM test_cursor_discard_result WHERE id BETWEEN 11 AND 20;
 SELECT * FROM test_cursor_discard_result WHERE id BETWEEN 21 AND 30;
-"""
-    )
+""")
     cursor.nextset()
     assert cursor.fetchone() == (11, "row 11")
 
@@ -231,14 +224,12 @@ def test_binary_prefix():
     cursor = conn.cursor()
 
     cursor.execute("DROP TABLE IF EXISTS test_binary_prefix")
-    cursor.execute(
-        """\
+    cursor.execute("""\
 CREATE TABLE test_binary_prefix (
 	id INTEGER NOT NULL AUTO_INCREMENT,
 	json JSON NOT NULL,
 	PRIMARY KEY (id)
-) CHARSET=utf8mb4"""
-    )
+) CHARSET=utf8mb4""")
 
     cursor.executemany(
         "INSERT INTO test_binary_prefix (id, json) VALUES (%(id)s, %(json)s)",
@@ -284,3 +275,27 @@ def test_sscursor_warning_count():
     rows = cursor.fetchmany(2)
     assert len(rows) == 1
     assert cursor.warning_count == 1
+
+
+@pytest.mark.parametrize("Cursor", [MySQLdb.cursors.Cursor, MySQLdb.cursors.SSCursor])
+def test_cursor_is_iterator(Cursor):
+    conn = connect()
+    cursor = conn.cursor(Cursor)
+
+    cursor.execute("DROP TABLE IF EXISTS test_cursor_is_iterator")
+    cursor.execute(
+        "CREATE TABLE test_cursor_is_iterator (id INT PRIMARY KEY, name VARCHAR(20))"
+    )
+    _tables.append("test_cursor_is_iterator")
+    cursor.executemany(
+        "INSERT INTO test_cursor_is_iterator (id, name) VALUES (%s, %s)",
+        [(1, "a"), (2, "b"), (3, "c")],
+    )
+
+    cursor.execute("SELECT name FROM test_cursor_is_iterator ORDER BY id")
+    assert iter(cursor) is cursor
+    assert next(cursor) == ("a",)
+    assert next(cursor) == ("b",)
+    assert next(cursor) == ("c",)
+    with pytest.raises(StopIteration):
+        next(cursor)
