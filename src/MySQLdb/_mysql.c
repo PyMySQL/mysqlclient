@@ -306,7 +306,7 @@ _get_encoding(MYSQL *mysql)
     return cs.csname;
 }
 
-static char _mysql_ResultObject__doc__[] =
+static const char _mysql_ResultObject__doc__[] =
 "result(connection, use=0, converter={}) -- Result set from a query.\n\
 \n\
 Creating instances of this class directly is an excellent way to\n\
@@ -723,7 +723,7 @@ _mysql_ConnectionObject_Initialize(
     return 0;
 }
 
-static char _mysql_connect__doc__[] =
+static const char _mysql_connect__doc__[] =
 "Returns a MYSQL connection object. Exclusive use of\n\
 keyword parameters strongly recommended. Consult the\n\
 MySQL C API documentation for more details.\n\
@@ -812,7 +812,7 @@ static int _mysql_ConnectionObject_clear(
     return 0;
 }
 
-static char _mysql_ConnectionObject_close__doc__[] =
+static const char _mysql_ConnectionObject_close__doc__[] =
 "Close the connection. No further activity possible.";
 
 static PyObject *
@@ -830,7 +830,7 @@ _mysql_ConnectionObject_close(
     Py_RETURN_NONE;
 }
 
-static char _mysql_ConnectionObject_affected_rows__doc__ [] =
+static const char _mysql_ConnectionObject_affected_rows__doc__ [] =
 "Return number of rows affected by the last query.\n\
 Non-standard. Use Cursor.rowcount.\n\
 ";
@@ -849,7 +849,7 @@ _mysql_ConnectionObject_affected_rows(
     return PyLong_FromUnsignedLongLong(ret);
 }
 
-static char _mysql_debug__doc__[] =
+static const char _mysql_debug__doc__[] =
 "Does a DBUG_PUSH with the given string.\n\
 mysql_debug() uses the Fred Fish debug library.\n\
 To use this function, you must compile the client library to\n\
@@ -866,7 +866,7 @@ _mysql_debug(
     Py_RETURN_NONE;
 }
 
-static char _mysql_ConnectionObject_dump_debug_info__doc__[] =
+static const char _mysql_ConnectionObject_dump_debug_info__doc__[] =
 "Instructs the server to write some debug information to the\n\
 log. The connected user must have the process privilege for\n\
 this to work. Non-standard.\n\
@@ -891,7 +891,7 @@ _mysql_ConnectionObject_dump_debug_info(
     Py_RETURN_NONE;
 }
 
-static char _mysql_ConnectionObject_autocommit__doc__[] =
+static const char _mysql_ConnectionObject_autocommit__doc__[] =
 "Set the autocommit mode. True values enable; False value disable.\n\
 ";
 static PyObject *
@@ -914,7 +914,7 @@ _mysql_ConnectionObject_autocommit(
     Py_RETURN_NONE;
 }
 
-static char _mysql_ConnectionObject_get_autocommit__doc__[] =
+static const char _mysql_ConnectionObject_get_autocommit__doc__[] =
 "Get the autocommit mode. True when enable; False when disable.\n";
 
 static PyObject *
@@ -931,7 +931,7 @@ _mysql_ConnectionObject_get_autocommit(
     Py_RETURN_FALSE;
 }
 
-static char _mysql_ConnectionObject_commit__doc__[] =
+static const char _mysql_ConnectionObject_commit__doc__[] =
 "Commits the current transaction\n\
 ";
 static PyObject *
@@ -953,7 +953,7 @@ _mysql_ConnectionObject_commit(
     Py_RETURN_NONE;
 }
 
-static char _mysql_ConnectionObject_rollback__doc__[] =
+static const char _mysql_ConnectionObject_rollback__doc__[] =
 "Rolls back the current transaction\n\
 ";
 static PyObject *
@@ -975,7 +975,7 @@ _mysql_ConnectionObject_rollback(
     Py_RETURN_NONE;
 }
 
-static char _mysql_ConnectionObject_next_result__doc__[] =
+static const char _mysql_ConnectionObject_next_result__doc__[] =
 "If more query results exist, next_result() reads the next query\n\
 results and returns the status back to application.\n\
 \n\
@@ -1008,7 +1008,7 @@ _mysql_ConnectionObject_next_result(
 }
 
 
-static char _mysql_ConnectionObject_set_server_option__doc__[] =
+static const char _mysql_ConnectionObject_set_server_option__doc__[] =
 "set_server_option(option) -- Enables or disables an option\n\
 for the connection.\n\
 \n\
@@ -1035,7 +1035,7 @@ _mysql_ConnectionObject_set_server_option(
     return PyLong_FromLong(err);
 }
 
-static char _mysql_ConnectionObject_sqlstate__doc__[] =
+static const char _mysql_ConnectionObject_sqlstate__doc__[] =
 "Returns a string containing the SQLSTATE error code\n\
 for the last error. The error code consists of five characters.\n\
 '00000' means \"no error.\" The values are specified by ANSI SQL\n\
@@ -1059,7 +1059,7 @@ _mysql_ConnectionObject_sqlstate(
     return ret;
 }
 
-static char _mysql_ConnectionObject_warning_count__doc__[] =
+static const char _mysql_ConnectionObject_warning_count__doc__[] =
 "Returns the number of warnings generated during execution\n\
 of the previous SQL statement.\n\
 \n\
@@ -1077,7 +1077,7 @@ _mysql_ConnectionObject_warning_count(
     return PyLong_FromLong(count);
 }
 
-static char _mysql_ConnectionObject_errno__doc__[] =
+static const char _mysql_ConnectionObject_errno__doc__[] =
 "Returns the error code for the most recently invoked API function\n\
 that can succeed or fail. A return value of zero means that no error\n\
 occurred.\n\
@@ -1095,7 +1095,7 @@ _mysql_ConnectionObject_errno(
     return PyLong_FromLong((long)err);
 }
 
-static char _mysql_ConnectionObject_error__doc__[] =
+static const char _mysql_ConnectionObject_error__doc__[] =
 "Returns the error message for the most recently invoked API function\n\
 that can succeed or fail. An empty string ("") is returned if no error\n\
 occurred.\n\
@@ -1113,7 +1113,7 @@ _mysql_ConnectionObject_error(
     return ret;
 }
 
-static char _mysql_escape_string__doc__[] =
+static const char _mysql_escape_string__doc__[] =
 "escape_string(s) -- quote any SQL-interpreted characters in string s.\n\
 \n\
 Use connection.escape_string(s), if you use it at all.\n\
@@ -1161,7 +1161,7 @@ _mysql_escape_string(
     return (str);
 }
 
-static char _mysql_string_literal__doc__[] =
+static const char _mysql_string_literal__doc__[] =
 "string_literal(obj) -- converts object obj into a SQL string literal.\n\
 This means, any special SQL characters are escaped, and it is enclosed\n\
 within single quotes. In other words, it performs:\n\
@@ -1284,7 +1284,7 @@ _escape_item(
     return quoted;
 }
 
-static char _mysql_escape__doc__[] =
+static const char _mysql_escape__doc__[] =
 "escape(obj, dict) -- escape any special characters in object obj\n\
 using mapping dict to provide quoting functions for each type.\n\
 Returns a SQL literal string.";
@@ -1323,7 +1323,7 @@ _mysql_escape(
     }
 }
 
-static char _mysql_ResultObject_describe__doc__[] =
+static const char _mysql_ResultObject_describe__doc__[] =
 "Returns the sequence of 7-tuples required by the DB-API for\n\
 the Cursor.description attribute.\n\
 ";
@@ -1373,7 +1373,7 @@ _mysql_ResultObject_describe(
     return NULL;
 }
 
-static char _mysql_ResultObject_field_flags__doc__[] =
+static const char _mysql_ResultObject_field_flags__doc__[] =
 "Returns a tuple of field flags, one for each column in the result.\n\
 " ;
 
@@ -1682,7 +1682,7 @@ error:
     return -1;
 }
 
-static char _mysql_ResultObject_fetch_row__doc__[] =
+static const char _mysql_ResultObject_fetch_row__doc__[] =
 "fetch_row([maxrows, how]) -- Fetches up to maxrows as a tuple.\n\
 The rows are formatted according to how:\n\
 \n\
@@ -1761,7 +1761,7 @@ _mysql_ResultObject_discard(
     Py_RETURN_NONE;
 }
 
-static char _mysql_ConnectionObject_change_user__doc__[] =
+static const char _mysql_ConnectionObject_change_user__doc__[] =
 "Changes the user and causes the database specified by db to\n\
 become the default (current) database on the connection\n\
 specified by mysql. In subsequent queries, this database is\n\
@@ -1804,7 +1804,7 @@ _mysql_ConnectionObject_change_user(
     Py_RETURN_NONE;
 }
 
-static char _mysql_ConnectionObject_character_set_name__doc__[] =
+static const char _mysql_ConnectionObject_character_set_name__doc__[] =
 "Returns the default character set for the current connection.\n\
 Non-standard.\n\
 ";
@@ -1824,7 +1824,7 @@ _mysql_ConnectionObject_character_set_name(
     return ret;
 }
 
-static char _mysql_ConnectionObject_set_character_set__doc__[] =
+static const char _mysql_ConnectionObject_set_character_set__doc__[] =
 "Sets the default character set for the current connection.\n\
 Non-standard.\n\
 ";
@@ -1852,7 +1852,7 @@ _mysql_ConnectionObject_set_character_set(
 }
 
 #if MYSQL_VERSION_ID >= 50010
-static char _mysql_ConnectionObject_get_character_set_info__doc__[] =
+static const char _mysql_ConnectionObject_get_character_set_info__doc__[] =
 "Returns a dict with information about the current character set:\n\
 \n\
 collation\n\
@@ -1903,7 +1903,7 @@ _mysql_ConnectionObject_get_character_set_info(
 }
 #endif
 
-static char _mysql_ConnectionObject_get_native_connection__doc__[] =
+static const char _mysql_ConnectionObject_get_native_connection__doc__[] =
 "Return the internal MYSQL* wrapped in a PyCapsule object.\n\
 NOTE: this is a private API introduced ONLY for XTA integration,\n\
       don't use it for different use cases.\n\
@@ -1927,7 +1927,7 @@ _mysql_ConnectionObject_get_native_connection(
 }
 
 
-static char _mysql_get_client_info__doc__[] =
+static const char _mysql_get_client_info__doc__[] =
 "get_client_info() -- Returns a string that represents\n\
 the client library version.";
 static PyObject *
@@ -1938,7 +1938,7 @@ _mysql_get_client_info(
     return PyUnicode_FromString(mysql_get_client_info());
 }
 
-static char _mysql_ConnectionObject_get_host_info__doc__[] =
+static const char _mysql_ConnectionObject_get_host_info__doc__[] =
 "Returns a string that represents the MySQL client library\n\
 version. Non-standard.\n\
 ";
@@ -1956,7 +1956,7 @@ _mysql_ConnectionObject_get_host_info(
     return ret;
 }
 
-static char _mysql_ConnectionObject_get_proto_info__doc__[] =
+static const char _mysql_ConnectionObject_get_proto_info__doc__[] =
 "Returns an unsigned integer representing the protocol version\n\
 used by the current connection. Non-standard.\n\
 ";
@@ -1974,7 +1974,7 @@ _mysql_ConnectionObject_get_proto_info(
     return PyLong_FromLong((long)proto);
 }
 
-static char _mysql_ConnectionObject_get_server_info__doc__[] =
+static const char _mysql_ConnectionObject_get_server_info__doc__[] =
 "Returns a string that represents the server version number.\n\
 Non-standard.\n\
 ";
@@ -1992,7 +1992,7 @@ _mysql_ConnectionObject_get_server_info(
     return ret;
 }
 
-static char _mysql_ConnectionObject_info__doc__[] =
+static const char _mysql_ConnectionObject_info__doc__[] =
 "Retrieves a string providing information about the most\n\
 recently executed query. Non-standard. Use messages or\n\
 Cursor.messages.\n\
@@ -2017,7 +2017,7 @@ _mysql_ConnectionObject_info(
     Py_RETURN_NONE;
 }
 
-static char _mysql_ConnectionObject_insert_id__doc__[] =
+static const char _mysql_ConnectionObject_insert_id__doc__[] =
 "Returns the ID generated for an AUTO_INCREMENT column by the previous\n\
 query. Use this function after you have performed an INSERT query into a\n\
 table that contains an AUTO_INCREMENT field.\n\
@@ -2051,7 +2051,7 @@ _mysql_ConnectionObject_insert_id(
     return PyLong_FromUnsignedLongLong(r);
 }
 
-static char _mysql_ConnectionObject_kill__doc__[] =
+static const char _mysql_ConnectionObject_kill__doc__[] =
 "Asks the server to kill the thread specified by pid.\n\
 Non-standard. Deprecated.";
 
@@ -2079,7 +2079,7 @@ _mysql_ConnectionObject_kill(
     Py_RETURN_NONE;
 }
 
-static char _mysql_ConnectionObject_field_count__doc__[] =
+static const char _mysql_ConnectionObject_field_count__doc__[] =
 "Returns the number of columns for the most recent query on the\n\
 connection. Non-standard. Will probably give you bogus results\n\
 on most cursor classes. Use Cursor.rowcount.\n\
@@ -2098,7 +2098,7 @@ _mysql_ConnectionObject_field_count(
     return PyLong_FromLong((long)count);
 }
 
-static char _mysql_ConnectionObject_fileno__doc__[] =
+static const char _mysql_ConnectionObject_fileno__doc__[] =
 "Return file descriptor of the underlying libmysqlclient connection.\n\
 This provides raw access to the underlying network connection.\n\
 ";
@@ -2116,7 +2116,7 @@ _mysql_ConnectionObject_fileno(
     return PyLong_FromLong(fd);
 }
 
-static char _mysql_ResultObject_num_fields__doc__[] =
+static const char _mysql_ResultObject_num_fields__doc__[] =
 "Returns the number of fields (column) in the result." ;
 
 static PyObject *
@@ -2132,7 +2132,7 @@ _mysql_ResultObject_num_fields(
     return PyLong_FromLong((long)fields);
 }
 
-static char _mysql_ResultObject_num_rows__doc__[] =
+static const char _mysql_ResultObject_num_rows__doc__[] =
 "Returns the number of rows in the result set. Note that if\n\
 use=1, this will not return a valid value until the entire result\n\
 set has been read.\n\
@@ -2151,7 +2151,7 @@ _mysql_ResultObject_num_rows(
     return PyLong_FromUnsignedLongLong(rows);
 }
 
-static char _mysql_ConnectionObject_ping__doc__[] =
+static const char _mysql_ConnectionObject_ping__doc__[] =
 "Checks whether or not the connection to the server is working.\n\
 \n\
 This function can be used by clients that remain idle for a\n\
@@ -2202,7 +2202,7 @@ _mysql_ConnectionObject_ping(
     Py_RETURN_NONE;
 }
 
-static char _mysql_ConnectionObject_query__doc__[] =
+static const char _mysql_ConnectionObject_query__doc__[] =
 "Execute a query. store_result() or use_result() will get the\n\
 result set, if any. Non-standard. Use cursor() to create a cursor,\n\
 then cursor.execute().\n\
@@ -2233,7 +2233,7 @@ _mysql_ConnectionObject_query(
 }
 
 
-static char _mysql_ConnectionObject_send_query__doc__[] =
+static const char _mysql_ConnectionObject_send_query__doc__[] =
 "Send a query. Same to query() except not wait response.\n\n\
 Use read_query_result() before calling store_result() or use_result()\n";
 
@@ -2263,7 +2263,7 @@ _mysql_ConnectionObject_send_query(
 }
 
 
-static char _mysql_ConnectionObject_read_query_result__doc__[] =
+static const char _mysql_ConnectionObject_read_query_result__doc__[] =
 "Read result of query sent by send_query().\n";
 
 static PyObject *
@@ -2288,7 +2288,7 @@ _mysql_ConnectionObject_read_query_result(
     Py_RETURN_NONE;
 }
 
-static char _mysql_ConnectionObject_select_db__doc__[] =
+static const char _mysql_ConnectionObject_select_db__doc__[] =
 "Causes the database specified by db to become the default\n\
 (current) database on the connection specified by mysql. In subsequent\n\
 queries, this database is the default for table references that do not\n\
@@ -2322,7 +2322,7 @@ _mysql_ConnectionObject_select_db(
     Py_RETURN_NONE;
 }
 
-static char _mysql_ConnectionObject_shutdown__doc__[] =
+static const char _mysql_ConnectionObject_shutdown__doc__[] =
 "Asks the database server to shut down. The connected user must\n\
 have shutdown privileges. Non-standard. Deprecated.\n\
 ";
@@ -2347,7 +2347,7 @@ _mysql_ConnectionObject_shutdown(
     Py_RETURN_NONE;
 }
 
-static char _mysql_ConnectionObject_stat__doc__[] =
+static const char _mysql_ConnectionObject_stat__doc__[] =
 "Returns a character string containing information similar to\n\
 that provided by the mysqladmin status command. This includes\n\
 uptime in seconds and the number of running threads,\n\
@@ -2376,7 +2376,7 @@ _mysql_ConnectionObject_stat(
     return ret;
 }
 
-static char _mysql_ConnectionObject_store_result__doc__[] =
+static const char _mysql_ConnectionObject_store_result__doc__[] =
 "Returns a result object acquired by mysql_store_result\n\
 (results stored in the client). If no results are available,\n\
 None is returned. Non-standard.\n\
@@ -2415,7 +2415,7 @@ _mysql_ConnectionObject_store_result(
     return result;
 }
 
-static char _mysql_ConnectionObject_thread_id__doc__[] =
+static const char _mysql_ConnectionObject_thread_id__doc__[] =
 "Returns the thread ID of the current connection. This value\n\
 can be used as an argument to kill() to kill the thread.\n\
 \n\
@@ -2439,7 +2439,7 @@ _mysql_ConnectionObject_thread_id(
     return PyLong_FromLong((long)pid);
 }
 
-static char _mysql_ConnectionObject_use_result__doc__[] =
+static const char _mysql_ConnectionObject_use_result__doc__[] =
 "Returns a result object acquired by mysql_use_result\n\
 (results stored in the server). If no results are available,\n\
 None is returned. Non-standard.\n\
@@ -2545,7 +2545,7 @@ _mysql_ConnectionObject_repr(
     return PyUnicode_FromString(buf);
 }
 
-static char _mysql_ResultObject_data_seek__doc__[] =
+static const char _mysql_ResultObject_data_seek__doc__[] =
 "data_seek(n) -- seek to row n of result set";
 static PyObject *
 _mysql_ResultObject_data_seek(
@@ -3170,7 +3170,7 @@ _mysql_NewException(
 #define QUOTE(X) _QUOTE(X)
 #define _QUOTE(X) #X
 
-static char _mysql___doc__[] =
+static const char _mysql___doc__[] =
 "an adaptation of the MySQL C API (mostly)\n\
 \n\
 You probably are better off using MySQLdb instead of using this\n\
