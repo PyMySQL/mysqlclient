@@ -8,7 +8,6 @@ import re
 
 from ._exceptions import ProgrammingError
 
-
 #: Regular expression for ``Cursor.executemany```.
 #: executemany only supports simple bulk insert.
 #: You can use it to load large dataset.
@@ -329,7 +328,13 @@ class BaseCursor:
         return self._result.fetch_row(size, self._fetch_type)
 
     def __iter__(self):
-        return iter(self.fetchone, None)
+        return self
+
+    def __next__(self):
+        row = self.fetchone()
+        if row is None:
+            raise StopIteration
+        return row
 
     def __getattr__(self, name):
         # DB-API 2.0 optional extension says these errors can be accessed
@@ -419,11 +424,6 @@ class CursorStoreResultMixIn:
             raise IndexError("out of range")
         self.rownumber = r
 
-    def __iter__(self):
-        self._check_executed()
-        result = self.rownumber and self._rows[self.rownumber :] or self._rows
-        return iter(result)
-
 
 class CursorUseResultMixIn:
     """This is a MixIn class which causes the result set to be stored
@@ -463,17 +463,6 @@ class CursorUseResultMixIn:
         self.warning_count = self._get_db().warning_count()
         self.rownumber = self.rownumber + len(r)
         return r
-
-    def __iter__(self):
-        return self
-
-    def next(self):
-        row = self.fetchone()
-        if row is None:
-            raise StopIteration
-        return row
-
-    __next__ = next
 
 
 class CursorTupleRowsMixIn:

@@ -284,3 +284,27 @@ def test_sscursor_warning_count():
     rows = cursor.fetchmany(2)
     assert len(rows) == 1
     assert cursor.warning_count == 1
+
+
+@pytest.mark.parametrize("Cursor", [MySQLdb.cursors.Cursor, MySQLdb.cursors.SSCursor])
+def test_cursor_is_iterator(Cursor):
+    conn = connect()
+    cursor = conn.cursor(Cursor)
+
+    cursor.execute("DROP TABLE IF EXISTS test_cursor_is_iterator")
+    cursor.execute(
+        "CREATE TABLE test_cursor_is_iterator (id INT PRIMARY KEY, name VARCHAR(20))"
+    )
+    _tables.append("test_cursor_is_iterator")
+    cursor.executemany(
+        "INSERT INTO test_cursor_is_iterator (id, name) VALUES (%s, %s)",
+        [(1, "a"), (2, "b"), (3, "c")],
+    )
+
+    cursor.execute("SELECT name FROM test_cursor_is_iterator ORDER BY id")
+    assert iter(cursor) is cursor
+    assert next(cursor) == ("a",)
+    assert next(cursor) == ("b",)
+    assert next(cursor) == ("c",)
+    with pytest.raises(StopIteration):
+        next(cursor)
