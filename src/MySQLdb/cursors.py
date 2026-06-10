@@ -349,7 +349,7 @@ class BaseCursor:
             "ProgrammingError",
             "NotSupportedError",
         ):
-            # Deprecated since v1.1
+            # Deprecated since v2.3. Will be removed in 2027.
             warnings.warn(
                 "errors should be accessed from `MySQLdb` package",
                 DeprecationWarning,
