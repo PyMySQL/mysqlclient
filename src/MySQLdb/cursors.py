@@ -3,6 +3,7 @@
 This module implements Cursors of various types for MySQLdb. By
 default, MySQLdb uses the Cursor class.
 """
+
 import re
 
 from ._exceptions import ProgrammingError
@@ -45,34 +46,6 @@ class BaseCursor:
     #: Max size of allowed statement is max_allowed_packet - packet_header_size.
     #: Default value of max_allowed_packet is 1048576.
     max_stmt_length = 64 * 1024
-
-    def __getattr__(self, name):
-        # DB-API 2.0 optional extension says these errors can be accessed
-        # via Connection object. But MySQLdb had defined them on Cursor object.
-        import warnings
-        import ._exceptions as err
-
-        if name in (
-            "MySQLError",
-            "Warning",
-            "Error",
-            "InterfaceError",
-            "DatabaseError",
-            "DataError",
-            "OperationalError",
-            "IntegrityError",
-            "InternalError",
-            "ProgrammingError",
-            "NotSupportedError",
-        ):
-            # Deprecated since v1.1
-            warnings.warn(
-                "errors should be accessed from `MySQLdb` package",
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            return getattr(err, name)
-        raise AttributeError(name)
 
     connection = None
 
@@ -358,16 +331,32 @@ class BaseCursor:
     def __iter__(self):
         return iter(self.fetchone, None)
 
-    Warning = Warning
-    Error = Error
-    InterfaceError = InterfaceError
-    DatabaseError = DatabaseError
-    DataError = DataError
-    OperationalError = OperationalError
-    IntegrityError = IntegrityError
-    InternalError = InternalError
-    ProgrammingError = ProgrammingError
-    NotSupportedError = NotSupportedError
+    def __getattr__(self, name):
+        # DB-API 2.0 optional extension says these errors can be accessed
+        # via Connection object. But MySQLdb had defined them on Cursor object.
+        import warnings
+        from . import _exceptions as err
+
+        if name in (
+            "Warning",
+            "Error",
+            "InterfaceError",
+            "DatabaseError",
+            "DataError",
+            "OperationalError",
+            "IntegrityError",
+            "InternalError",
+            "ProgrammingError",
+            "NotSupportedError",
+        ):
+            # Deprecated since v1.1
+            warnings.warn(
+                "errors should be accessed from `MySQLdb` package",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            return getattr(err, name)
+        raise AttributeError(name)
 
 
 class CursorStoreResultMixIn:
@@ -437,7 +426,6 @@ class CursorStoreResultMixIn:
 
 
 class CursorUseResultMixIn:
-
     """This is a MixIn class which causes the result set to be stored
     in the server and sent row-by-row to client side, i.e. it uses
     mysql_use_result(). You MUST retrieve the entire result set and
