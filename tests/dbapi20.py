@@ -1,14 +1,14 @@
 #!/usr/bin/env python
-""" Python DB API 2.0 driver compliance unit test suite.
+"""Python DB API 2.0 driver compliance unit test suite.
 
-    This software is Public Domain and may be used without restrictions.
+   This software is Public Domain and may be used without restrictions.
 
- "Now we have booze and barflies entering the discussion, plus rumours of
-  DBAs on drugs... and I won't tell you what flashes through my mind each
-  time I read the subject line with 'Anal Compliance' in it.  All around
-  this is turning out to be a thoroughly unwholesome unit test."
+"Now we have booze and barflies entering the discussion, plus rumours of
+ DBAs on drugs... and I won't tell you what flashes through my mind each
+ time I read the subject line with 'Anal Compliance' in it.  All around
+ this is turning out to be a thoroughly unwholesome unit test."
 
-    -- Ian Bicking
+   -- Ian Bicking
 """
 
 __rcs_id__ = "$Id$"
@@ -300,7 +300,7 @@ class DatabaseAPI20Test(unittest.TestCase):
             self.assertEqual(
                 cur.rowcount,
                 -1,
-                "cursor.rowcount should be -1 after executing no-result " "statements",
+                "cursor.rowcount should be -1 after executing no-result statements",
             )
             cur.execute(
                 "insert into %sbooze values ('Victoria Bitter')" % (self.table_prefix)
@@ -410,12 +410,12 @@ class DatabaseAPI20Test(unittest.TestCase):
         self.assertEqual(
             beers[0],
             "Cooper's",
-            "cursor.fetchall retrieved incorrect data, or data inserted " "incorrectly",
+            "cursor.fetchall retrieved incorrect data, or data inserted incorrectly",
         )
         self.assertEqual(
             beers[1],
             "Victoria Bitter",
-            "cursor.fetchall retrieved incorrect data, or data inserted " "incorrectly",
+            "cursor.fetchall retrieved incorrect data, or data inserted incorrectly",
         )
 
     def test_executemany(self):
@@ -483,7 +483,7 @@ class DatabaseAPI20Test(unittest.TestCase):
             self.assertEqual(
                 cur.fetchone(),
                 None,
-                "cursor.fetchone should return None if a query retrieves " "no rows",
+                "cursor.fetchone should return None if a query retrieves no rows",
             )
             self.assertTrue(cur.rowcount in (-1, 0))
 

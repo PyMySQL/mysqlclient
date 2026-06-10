@@ -1,10 +1,11 @@
 #!/usr/bin/env python -O
-""" Script to test database capabilities and the DB-API interface
-    for functionality and memory leaks.
+"""Script to test database capabilities and the DB-API interface
+for functionality and memory leaks.
 
-    Adapted from a script by M-A Lemburg.
+Adapted from a script by M-A Lemburg.
 
 """
+
 from time import time
 import unittest
 from configdb import connection_factory

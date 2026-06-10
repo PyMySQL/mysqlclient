@@ -4,6 +4,7 @@ only one class: Connection. Others are unlikely. However, you might
 want to make your own subclasses. In most cases, you will probably
 override Connection.default_cursor with a non-standard Cursor class.
 """
+
 import re
 
 from . import cursors, _mysql
@@ -143,11 +144,11 @@ class Connection(_mysql.connection):
 
         :param bool local_infile:
             sets ``MYSQL_OPT_LOCAL_INFILE`` in ``mysql_options()`` enabling LOAD LOCAL INFILE from any path; zero disables;
-            
+
         :param str local_infile_dir:
-            sets ``MYSQL_OPT_LOAD_DATA_LOCAL_DIR`` in ``mysql_options()`` enabling LOAD LOCAL INFILE from any path; 
+            sets ``MYSQL_OPT_LOAD_DATA_LOCAL_DIR`` in ``mysql_options()`` enabling LOAD LOCAL INFILE from any path;
             if ``local_infile`` is set to ``True`` then this is ignored;
-            
+
             supported for mysql version >= 8.0.21
 
         :param bool autocommit:
@@ -244,8 +245,16 @@ class Connection(_mysql.connection):
                 self.autocommit(autocommit)
         self.messages = []
 
-    def _set_attributes(self, host=None, user=None, password=None, database="", port=3306,
-                        unix_socket=None, **kwargs):
+    def _set_attributes(
+        self,
+        host=None,
+        user=None,
+        password=None,
+        database="",
+        port=3306,
+        unix_socket=None,
+        **kwargs,
+    ):
         """set some attributes for otel"""
         if unix_socket and not host:
             host = "localhost"

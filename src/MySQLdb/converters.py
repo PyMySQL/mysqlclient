@@ -30,6 +30,7 @@ Don't modify conversions if you can avoid it. Instead, make copies
 (with the copy() method), modify the copies, and then pass them to
 MySQL.connect().
 """
+
 from decimal import Decimal
 
 from MySQLdb._mysql import string_literal

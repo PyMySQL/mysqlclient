@@ -98,7 +98,7 @@ class test_MySQLdb(dbapi20.DatabaseAPI20Test):
             self.assertEqual(
                 cur.fetchone(),
                 None,
-                "cursor.fetchone should return None if a query retrieves " "no rows",
+                "cursor.fetchone should return None if a query retrieves no rows",
             )
             self.assertTrue(cur.rowcount in (-1, 0))
 
@@ -172,9 +172,7 @@ class test_MySQLdb(dbapi20.DatabaseAPI20Test):
                select count(*) from %(tp)sbooze;
                select name from %(tp)sbooze;
            end
-        """ % dict(
-            tp=self.table_prefix
-        )
+        """ % dict(tp=self.table_prefix)
         cur.execute(sql)
 
     def help_nextset_tearDown(self, cur):
