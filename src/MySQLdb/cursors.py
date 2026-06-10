@@ -46,19 +46,33 @@ class BaseCursor:
     #: Default value of max_allowed_packet is 1048576.
     max_stmt_length = 64 * 1024
 
-    from ._exceptions import (
-        MySQLError,
-        Warning,
-        Error,
-        InterfaceError,
-        DatabaseError,
-        DataError,
-        OperationalError,
-        IntegrityError,
-        InternalError,
-        ProgrammingError,
-        NotSupportedError,
-    )
+    def __getattr__(self, name):
+        # DB-API 2.0 optional extension says these errors can be accessed
+        # via Connection object. But MySQLdb had defined them on Cursor object.
+        import warnings
+        import ._exceptions as err
+
+        if name in (
+            "MySQLError",
+            "Warning",
+            "Error",
+            "InterfaceError",
+            "DatabaseError",
+            "DataError",
+            "OperationalError",
+            "IntegrityError",
+            "InternalError",
+            "ProgrammingError",
+            "NotSupportedError",
+        ):
+            # Deprecated since v1.1
+            warnings.warn(
+                "errors should be accessed from `MySQLdb` package",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            return getattr(err, name)
+        raise AttributeError(name)
 
     connection = None
 
