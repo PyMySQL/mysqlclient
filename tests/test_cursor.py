@@ -327,6 +327,6 @@ def test_callproc_escaping():
         )
 
         cur.callproc("foo.bar", args=(123,))
-        self.assertEqual(cur.fetchone()[0], 246)
+        assert cur.fetchone()[0] == 246
     finally:
         cur.execute("DROP PROCEDURE IF EXISTS `foo.bar`")
