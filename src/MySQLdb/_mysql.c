@@ -2176,6 +2176,8 @@ _mysql_ConnectionObject_ping(
         PyErr_WarnEx(PyExc_DeprecationWarning,
             "The reconnect parameter of ping() is deprecated.",
             1);
+    } else {
+        reconnect = 0;
     }
     BEGIN_CONNECTION_OPERATION(self, return _mysql_Exception(self));
     if (reconnect != (self->reconnect == true)) {
