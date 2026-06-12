@@ -2,6 +2,7 @@ import pytest
 import MySQLdb.cursors
 from MySQLdb.constants import ER
 from configdb import connection_factory
+from textwrap import dedent
 
 
 _conns = []
@@ -308,3 +309,24 @@ def test_cursor_is_iterator(Cursor):
     assert next(cursor) == ("c",)
     with pytest.raises(StopIteration):
         next(cursor)
+
+
+def test_callproc_escaping():
+    conn = connect()
+    cur = conn.cursor()
+
+    cur.execute("DROP PROCEDURE IF EXISTS `foo.bar`")
+    try:
+        cur.execute(
+            dedent("""\
+            create procedure `foo.bar` (arg1 int)
+            begin
+                select arg1*2;
+            end
+        """)
+        )
+
+        cur.callproc("foo.bar", args=(123,))
+        assert cur.fetchone()[0] == 246
+    finally:
+        cur.execute("DROP PROCEDURE IF EXISTS `foo.bar`")
