@@ -2152,7 +2152,7 @@ This function can be used by clients that remain idle for a\n\
 long while, to check whether or not the server has closed the\n\
 connection.\n\
 \n\
-New in 1.2.2: Accepts an optional reconnect parameter. If True,\n\
+DEPRECATED: Accepts an optional `reconnect` parameter. If True,\n\
 then the client will attempt reconnection. Note that this setting\n\
 is persistent. By default, this is on in MySQL<5.0.3, and off\n\
 thereafter.\n\
@@ -2169,16 +2169,18 @@ _mysql_ConnectionObject_ping(
     _mysql_ConnectionObject *self,
     PyObject *args)
 {
-    int reconnect = 0;
+    int reconnect = -1;
 
     if (!PyArg_ParseTuple(args, "|p", &reconnect)) return NULL;
+    if (reconnect != -1) {
+        PyErr_WarnEx(PyExc_DeprecationWarning,
+            "The reconnect parameter of ping() is deprecated.",
+            1);
+    }
     BEGIN_CONNECTION_OPERATION(self, return _mysql_Exception(self));
     if (reconnect != (self->reconnect == true)) {
         // libmysqlclient show warning to stderr when MYSQL_OPT_RECONNECT is used.
         // so we avoid using it as possible for now.
-        // TODO: Warn when reconnect is true.
-        // MySQL 8.0.33 show warning to stderr already.
-        // We will emit Pytohn warning in future.
         my_bool recon = (my_bool)reconnect;
         mysql_options(&self->connection, MYSQL_OPT_RECONNECT, &recon);
         self->reconnect = (bool)reconnect;

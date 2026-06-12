@@ -29,6 +29,13 @@ def test_multi_statements_false():
     assert rows == ((17,),)
 
 
+def test_ping_false_warns():
+    conn = connection_factory()
+    with pytest.warns(DeprecationWarning, match="reconnect parameter"):
+        conn.ping(False)
+    conn.close()
+
+
 def test_connection_concurrent_use_raises():
     """While a slow query holds the connection lock, any other access from
     a second thread must raise ProgrammingError immediately (not block)."""
