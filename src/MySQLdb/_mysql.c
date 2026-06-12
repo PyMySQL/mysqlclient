@@ -2173,9 +2173,11 @@ _mysql_ConnectionObject_ping(
 
     if (!PyArg_ParseTuple(args, "|p", &reconnect)) return NULL;
     if (reconnect != -1) {
-        PyErr_WarnEx(PyExc_DeprecationWarning,
-            "The reconnect parameter of ping() is deprecated.",
-            1);
+        if (PyErr_WarnEx(PyExc_DeprecationWarning,
+                "The reconnect parameter of ping() is deprecated.",
+                1) < 0) {
+            return NULL;
+        }
     } else {
         reconnect = 0;
     }
