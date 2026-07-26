@@ -6,15 +6,16 @@ Adapted from a script by M-A Lemburg.
 
 """
 
-from time import time
 import unittest
+from time import time
+
 from configdb import connection_factory
 
 
 class DatabaseTest(unittest.TestCase):
     db_module = None
     connect_args = ()
-    connect_kwargs = dict()
+    connect_kwargs = {}
     create_table_extra = ""
     rows = 10
     debug = False
@@ -162,7 +163,7 @@ class DatabaseTest(unittest.TestCase):
             pass
         else:
             self.fail(
-                "Over-long column did not generate warnings/exception with single insert"  # noqa: E501
+                "Over-long column did not generate warnings/exception with single insert"
             )
 
         self.connection.rollback()
@@ -177,7 +178,7 @@ class DatabaseTest(unittest.TestCase):
             pass
         else:
             self.fail(
-                "Over-long columns did not generate warnings/exception with execute()"  # noqa: E501
+                "Over-long columns did not generate warnings/exception with execute()"
             )
 
         self.connection.rollback()
@@ -192,7 +193,7 @@ class DatabaseTest(unittest.TestCase):
             pass
         else:
             self.fail(
-                "Over-long columns did not generate warnings/exception with executemany()"  # noqa: E501
+                "Over-long columns did not generate warnings/exception with executemany()"
             )
 
         self.connection.rollback()

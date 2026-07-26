@@ -1,9 +1,10 @@
-import pytest
-import MySQLdb.cursors
-from MySQLdb.constants import ER
-from configdb import connection_factory
 from textwrap import dedent
 
+import pytest
+from configdb import connection_factory
+
+import MySQLdb.cursors
+from MySQLdb.constants import ER
 
 _conns = []
 _tables = []

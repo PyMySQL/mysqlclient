@@ -1,11 +1,10 @@
-from datetime import time, date, datetime, timedelta
-from time import gmtime
 import unittest
-from unittest import mock
 import warnings
+from datetime import date, datetime, time, timedelta
+from time import gmtime
+from unittest import mock
 
 from MySQLdb import times
-
 
 warnings.simplefilter("ignore")
 

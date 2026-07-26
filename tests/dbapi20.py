@@ -15,8 +15,8 @@ __rcs_id__ = "$Id$"
 __version__ = "$Revision$"[11:-2]
 __author__ = "Stuart Bishop <zen@shangri-la.dropbear.id.au>"
 
-import unittest
 import time
+import unittest
 
 # $Log$
 # Revision 1.1.2.1  2006/02/25 03:44:32  adustman
@@ -113,7 +113,6 @@ class DatabaseAPI20Test(unittest.TestCase):
         """self.drivers should override this method to perform required setup
         if any is necessary, such as creating the database.
         """
-        pass
 
     def tearDown(self):
         """self.drivers should override this method to perform required cleanup
@@ -591,7 +590,7 @@ class DatabaseAPI20Test(unittest.TestCase):
             rows.sort()
 
             # Make sure we get the right data back out
-            for i in range(0, 6):
+            for i in range(6):
                 self.assertEqual(
                     rows[i],
                     self.samples[i],
@@ -648,7 +647,7 @@ class DatabaseAPI20Test(unittest.TestCase):
             )
             rows = [r[0] for r in rows]
             rows.sort()
-            for i in range(0, len(self.samples)):
+            for i in range(len(self.samples)):
                 self.assertEqual(
                     rows[i], self.samples[i], "cursor.fetchall retrieved incorrect rows"
                 )
@@ -701,7 +700,7 @@ class DatabaseAPI20Test(unittest.TestCase):
             rows.append(rows4[0])
             rows.extend([rows56[0][0], rows56[1][0]])
             rows.sort()
-            for i in range(0, len(self.samples)):
+            for i in range(len(self.samples)):
                 self.assertEqual(
                     rows[i], self.samples[i], "incorrect data retrieved or inserted"
                 )

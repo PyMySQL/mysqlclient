@@ -2,10 +2,9 @@ import threading
 import time
 
 import pytest
+from configdb import connection_factory
 
 from MySQLdb._exceptions import ProgrammingError
-
-from configdb import connection_factory
 
 
 @pytest.fixture

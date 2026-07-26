@@ -13,8 +13,8 @@ For information on how MySQLdb handles type conversion, see the
 MySQLdb.converters module.
 """
 
-from .release import version_info
 from . import _mysql
+from .release import version_info
 
 if version_info != _mysql.version_info:
     raise ImportError(
@@ -24,30 +24,31 @@ if version_info != _mysql.version_info:
     )
 
 
-from ._mysql import (
-    NotSupportedError,
-    OperationalError,
-    get_client_info,
-    ProgrammingError,
-    Error,
-    InterfaceError,
-    debug,
-    IntegrityError,
-    string_literal,
-    MySQLError,
-    DataError,
-    DatabaseError,
-    InternalError,
-    Warning,
-)
 from MySQLdb.constants import FIELD_TYPE
 from MySQLdb.times import (
     Date,
-    Time,
-    Timestamp,
     DateFromTicks,
+    Time,
     TimeFromTicks,
+    Timestamp,
     TimestampFromTicks,
+)
+
+from ._mysql import (
+    DatabaseError,
+    DataError,
+    Error,
+    IntegrityError,
+    InterfaceError,
+    InternalError,
+    MySQLError,
+    NotSupportedError,
+    OperationalError,
+    ProgrammingError,
+    Warning,
+    debug,
+    get_client_info,
+    string_literal,
 )
 
 threadsafety = 1
@@ -95,7 +96,7 @@ ROWID = DBAPISet()
 
 
 def test_DBAPISet_set_equality():
-    assert STRING == STRING
+    assert STRING == STRING  # noqa
 
 
 def test_DBAPISet_set_inequality():
@@ -125,33 +126,33 @@ connect = Connection = Connect
 
 __all__ = [
     "BINARY",
-    "Binary",
-    "Connect",
-    "Connection",
     "DATE",
-    "Date",
-    "Time",
-    "Timestamp",
-    "DateFromTicks",
-    "TimeFromTicks",
-    "TimestampFromTicks",
-    "DataError",
-    "DatabaseError",
-    "Error",
     "FIELD_TYPE",
-    "IntegrityError",
-    "InterfaceError",
-    "InternalError",
-    "MySQLError",
     "NUMBER",
-    "NotSupportedError",
-    "DBAPISet",
-    "OperationalError",
-    "ProgrammingError",
     "ROWID",
     "STRING",
     "TIME",
     "TIMESTAMP",
+    "Binary",
+    "Connect",
+    "Connection",
+    "DBAPISet",
+    "DataError",
+    "DatabaseError",
+    "Date",
+    "DateFromTicks",
+    "Error",
+    "IntegrityError",
+    "InterfaceError",
+    "InternalError",
+    "MySQLError",
+    "NotSupportedError",
+    "OperationalError",
+    "ProgrammingError",
+    "Time",
+    "TimeFromTicks",
+    "Timestamp",
+    "TimestampFromTicks",
     "Warning",
     "apilevel",
     "connect",

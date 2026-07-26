@@ -7,18 +7,18 @@ override Connection.default_cursor with a non-standard Cursor class.
 
 import re
 
-from . import cursors, _mysql
+from . import _mysql, cursors
 from ._exceptions import (
-    Warning,
-    Error,
-    InterfaceError,
-    DataError,
     DatabaseError,
-    OperationalError,
+    DataError,
+    Error,
     IntegrityError,
+    InterfaceError,
     InternalError,
     NotSupportedError,
+    OperationalError,
     ProgrammingError,
+    Warning,
 )
 
 # Mapping from MySQL charset name to Python codec name
@@ -164,7 +164,7 @@ class Connection(_mysql.connection):
         documentation for the MySQL C API for some hints on what they do.
         """
         from MySQLdb.constants import CLIENT, FIELD_TYPE
-        from MySQLdb.converters import conversions, _bytes_or_str
+        from MySQLdb.converters import _bytes_or_str, conversions
 
         kwargs2 = kwargs.copy()
 
@@ -173,11 +173,7 @@ class Connection(_mysql.connection):
         if "passwd" in kwargs2:
             kwargs2["password"] = kwargs2.pop("passwd")
 
-        if "conv" in kwargs:
-            conv = kwargs["conv"]
-        else:
-            conv = conversions
-
+        conv = kwargs.get("conv", conversions)
         conv2 = {}
         for k, v in conv.items():
             if isinstance(k, int) and isinstance(v, list):
@@ -207,11 +203,7 @@ class Connection(_mysql.connection):
         super().__init__(*args, **kwargs2)
 
         self.cursorclass = cursorclass
-        self.encoders = {
-            k: v
-            for k, v in conv.items()
-            if type(k) is not int  # noqa: E721
-        }
+        self.encoders = {k: v for k, v in conv.items() if type(k) is not int}
         self._server_version = tuple(
             [numeric_part(n) for n in self.get_server_info().split(".")[:2]]
         )
@@ -240,9 +232,8 @@ class Connection(_mysql.connection):
             self.converter[FIELD_TYPE.JSON] = str
 
         self._transactional = self.server_capabilities & CLIENT.TRANSACTIONS
-        if self._transactional:
-            if autocommit is not None:
-                self.autocommit(autocommit)
+        if self._transactional and autocommit is not None:
+            self.autocommit(autocommit)
         self.messages = []
 
     def _set_attributes(
@@ -314,9 +305,7 @@ class Connection(_mysql.connection):
         """
         if isinstance(o, str):
             s = self.string_literal(o.encode(self.encoding))
-        elif isinstance(o, bytearray):
-            s = self._bytes_literal(o)
-        elif isinstance(o, bytes):
+        elif isinstance(o, (bytes, bytearray)):
             s = self._bytes_literal(o)
         elif isinstance(o, (tuple, list)):
             s = self._tuple_literal(o)

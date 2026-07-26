@@ -1,4 +1,5 @@
 import pytest
+
 from MySQLdb import _mysql
 
 
