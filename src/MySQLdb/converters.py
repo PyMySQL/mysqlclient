@@ -31,23 +31,22 @@ Don't modify conversions if you can avoid it. Instead, make copies
 MySQL.connect().
 """
 
+import array
 from decimal import Decimal
 
+from MySQLdb._exceptions import ProgrammingError
 from MySQLdb._mysql import string_literal
 from MySQLdb.constants import FIELD_TYPE, FLAG
 from MySQLdb.times import (
     Date,
-    DateTimeType,
-    DateTime2literal,
-    DateTimeDeltaType,
-    DateTimeDelta2literal,
-    DateTime_or_None,
-    TimeDelta_or_None,
     Date_or_None,
+    DateTime2literal,
+    DateTime_or_None,
+    DateTimeDelta2literal,
+    DateTimeDeltaType,
+    DateTimeType,
+    TimeDelta_or_None,
 )
-from MySQLdb._exceptions import ProgrammingError
-
-import array
 
 NoneType = type(None)
 

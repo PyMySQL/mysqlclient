@@ -2,10 +2,9 @@
 import os
 import subprocess
 import sys
-
-import setuptools
 from configparser import ConfigParser
 
+import setuptools
 
 release_info = {}
 with open("src/MySQLdb/release.py", encoding="utf-8") as f:
@@ -70,11 +69,11 @@ def get_config_posix(options=None):
         ("__version__", release_info["__version__"]),
     ]
 
-    ext_options = dict(
-        extra_compile_args=cflags,
-        extra_link_args=ldflags,
-        define_macros=define_macros,
-    )
+    ext_options = {
+        "extra_compile_args": cflags,
+        "extra_link_args": ldflags,
+        "define_macros": define_macros,
+    }
     # newer versions of gcc require libstdc++ if doing a static build
     if static:
         ext_options["language"] = "c++"
@@ -120,14 +119,14 @@ def get_config_win32(options):
         ("__version__", release_info["__version__"]),
     ]
 
-    ext_options = dict(
-        library_dirs=library_dirs,
-        libraries=libraries,
-        extra_link_args=extra_link_args,
-        include_dirs=include_dirs,
-        extra_objects=extra_objects,
-        define_macros=define_macros,
-    )
+    ext_options = {
+        "library_dirs": library_dirs,
+        "libraries": libraries,
+        "extra_link_args": extra_link_args,
+        "include_dirs": include_dirs,
+        "extra_objects": extra_objects,
+        "define_macros": define_macros,
+    }
     return ext_options
 
 

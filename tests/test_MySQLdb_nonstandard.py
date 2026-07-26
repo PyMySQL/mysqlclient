@@ -1,10 +1,11 @@
 import unittest
-
-from MySQLdb import _mysql
-import MySQLdb
-from MySQLdb.constants import FIELD_TYPE
-from configdb import connection_factory
 import warnings
+
+from configdb import connection_factory
+
+import MySQLdb
+from MySQLdb import _mysql
+from MySQLdb.constants import FIELD_TYPE
 
 warnings.simplefilter("ignore")
 

@@ -18,8 +18,7 @@ if __name__ == "__main__":
         m = re.match(r"^\s*#define\s+((ER|WARN)_[A-Z0-9_]+)\s+(\d+)\s*", line)
         if m:
             name = m.group(1)
-            if name.startswith("ER_"):
-                name = name[3:]
+            name = name.removeprefix("ER_")
             value = int(m.group(3))
             if name == "ERROR_LAST":
                 if error_last is None or error_last < value:

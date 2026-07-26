@@ -1,7 +1,7 @@
 import pytest
-import MySQLdb.cursors
 from configdb import connection_factory
 
+import MySQLdb.cursors
 
 _conns = []
 _tables = []

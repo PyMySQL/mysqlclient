@@ -5,8 +5,9 @@ This module provides some Date and Time classes for dealing with MySQL data.
 Use Python datetime module to handle date and time columns.
 """
 
-from time import localtime
 from datetime import date, datetime, time, timedelta
+from time import localtime
+
 from MySQLdb._mysql import string_literal
 
 Date = date

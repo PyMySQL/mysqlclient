@@ -1,12 +1,13 @@
 #!/usr/bin/env python
-import capabilities
-from datetime import timedelta
-from contextlib import closing
 import unittest
-import MySQLdb
-from configdb import connection_factory
 import warnings
+from contextlib import closing
+from datetime import timedelta
 
+import capabilities
+from configdb import connection_factory
+
+import MySQLdb
 
 warnings.filterwarnings("ignore")
 
@@ -14,9 +15,10 @@ warnings.filterwarnings("ignore")
 class test_MySQLdb(capabilities.DatabaseTest):
     db_module = MySQLdb
     connect_args = ()
-    connect_kwargs = dict(
-        use_unicode=True, sql_mode="ANSI,STRICT_TRANS_TABLES,TRADITIONAL"
-    )
+    connect_kwargs = {
+        "use_unicode": True,
+        "sql_mode": "ANSI,STRICT_TRANS_TABLES,TRADITIONAL",
+    }
     create_table_extra = "ENGINE=INNODB CHARACTER SET UTF8"
     leak_test = False
 
@@ -45,7 +47,7 @@ class test_MySQLdb(capabilities.DatabaseTest):
         self.create_table(("pos INT", "tree CHAR(20)"))
         c.executemany(
             "INSERT INTO %s (pos,tree) VALUES (%%s,%%s)" % self.table,
-            list(enumerate("ash birch cedar Lärche pine".split())),
+            list(enumerate(["ash", "birch", "cedar", "Lärche", "pine"])),
         )
         db.commit()
 
@@ -185,15 +187,17 @@ VALUES      (1,
             if binary_prefix is not None:
                 kwargs["binary_prefix"] = binary_prefix
 
-            with closing(connection_factory(**kwargs)) as conn:
-                with closing(conn.cursor()) as c:
-                    c.execute("SELECT CHARSET(%s)", (MySQLdb.Binary(b"raw bytes"),))
-                    self.assertEqual(
-                        c.fetchall()[0][0], "binary" if binary_prefix else "utf8mb4"
-                    )
-                    # normal strings should not get prefix
-                    c.execute("SELECT CHARSET(%s)", ("str",))
-                    self.assertEqual(c.fetchall()[0][0], "utf8mb4")
+            with (
+                closing(connection_factory(**kwargs)) as conn,
+                closing(conn.cursor()) as c,
+            ):
+                c.execute("SELECT CHARSET(%s)", (MySQLdb.Binary(b"raw bytes"),))
+                self.assertEqual(
+                    c.fetchall()[0][0], "binary" if binary_prefix else "utf8mb4"
+                )
+                # normal strings should not get prefix
+                c.execute("SELECT CHARSET(%s)", ("str",))
+                self.assertEqual(c.fetchall()[0][0], "utf8mb4")
 
 
 if __name__ == "__main__":

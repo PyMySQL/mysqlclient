@@ -345,6 +345,7 @@ class BaseCursor:
         # DB-API 2.0 optional extension says these errors can be accessed
         # via Connection object. But MySQLdb had defined them on Cursor object.
         import warnings
+
         from . import _exceptions as err
 
         if name in (
