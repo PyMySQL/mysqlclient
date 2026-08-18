@@ -120,6 +120,7 @@ class TestToLiteral(unittest.TestCase):
     def test_datetimedelta_to_literal(self):
         d = datetime(2015, 12, 13, 1, 2, 3) - datetime(2015, 12, 13, 1, 2, 2)
         assert times.DateTimeDelta2literal(d, "") == b"'0 0:0:1'"
+        assert times.DateTimeDelta2literal(-timedelta(minutes=30), "") == b"'-0 0:30:0'"
 
 
 class TestFormat(unittest.TestCase):
@@ -131,7 +132,13 @@ class TestFormat(unittest.TestCase):
         assert times.format_TIMEDELTA(d) == "0 2:2:2"
 
         d = datetime(2015, 1, 1, 10, 11, 12) - datetime(2015, 1, 1, 11, 12, 13)
-        assert times.format_TIMEDELTA(d) == "-1 22:58:59"
+        assert times.format_TIMEDELTA(d) == "-0 1:1:1"
+
+        assert times.format_TIMEDELTA(-timedelta(minutes=30)) == "-0 0:30:0"
+        assert times.format_TIMEDELTA(-timedelta(days=1, hours=2)) == "-1 2:0:0"
+        d = timedelta(seconds=83579, microseconds=51000)
+        assert times.format_TIMEDELTA(d) == "0 23:12:59.051000"
+        assert times.format_TIMEDELTA(-d) == "-0 23:12:59.051000"
 
     def test_format_timestamp(self):
         assert times.format_TIMESTAMP(datetime(2015, 2, 3)) == "2015-02-03 00:00:00"

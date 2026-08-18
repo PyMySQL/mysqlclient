@@ -38,10 +38,20 @@ format_TIME = format_DATE = str
 
 
 def format_TIMEDELTA(v):
-    seconds = int(v.seconds) % 60
-    minutes = int(v.seconds // 60) % 60
-    hours = int(v.seconds // 3600) % 24
-    return "%d %d:%d:%d" % (v.days, hours, minutes, seconds)
+    # Negative timedeltas store the sign in days and keep seconds positive.
+    # Format the absolute value so the sign is not applied twice by MySQL.
+    sign = ""
+    if v.days < 0:
+        sign = "-"
+        v = abs(v)
+
+    micros = v.microseconds
+    minutes, seconds = divmod(v.seconds, 60)
+    hours, minutes = divmod(minutes, 60)
+
+    if micros:
+        return f"{sign}{v.days} {hours}:{minutes}:{seconds}.{micros:06d}"
+    return f"{sign}{v.days} {hours}:{minutes}:{seconds}"
 
 
 def format_TIMESTAMP(d):
