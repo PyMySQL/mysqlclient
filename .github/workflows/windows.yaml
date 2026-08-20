@@ -8,7 +8,17 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            cmake_arch: x64
+            cibw_arch: AMD64
+          - os: windows-11-arm
+            cmake_arch: ARM64
+            cibw_arch: ARM64
+    runs-on: ${{ matrix.os }}
     env:
       CONNECTOR_VERSION: "3.4.8"
     steps:
@@ -17,7 +27,7 @@ jobs:
         uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: c:/mariadb-connector
-          key: mariadb-connector-c-${{ env.CONNECTOR_VERSION }}-win-2
+          key: mariadb-connector-c-${{ env.CONNECTOR_VERSION }}-win-${{ matrix.cmake_arch }}-2
 
       - name: Download and Unzip Connector
         if: steps.cache-connector.outputs.cache-hit != 'true'
@@ -39,7 +49,7 @@ jobs:
         shell: cmd
         working-directory: c:/mariadb-connector-src/build
         run: |
-          cmake -A x64 .. -DCMAKE_BUILD_TYPE=Release -DCLIENT_PLUGIN_DIALOG=static -DCLIENT_PLUGIN_SHA256_PASSWORD=static -DCLIENT_PLUGIN_CACHING_SHA2_PASSWORD=static -DDEFAULT_SSL_VERIFY_SERVER_CERT=0
+          cmake -A ${{ matrix.cmake_arch }} .. -DCMAKE_BUILD_TYPE=Release -DCLIENT_PLUGIN_DIALOG=static -DCLIENT_PLUGIN_SHA256_PASSWORD=static -DCLIENT_PLUGIN_CACHING_SHA2_PASSWORD=static -DDEFAULT_SSL_VERIFY_SERVER_CERT=0
 
       - name: cmake build
         if: steps.cache-connector.outputs.cache-hit != 'true'
@@ -80,11 +90,12 @@ jobs:
         working-directory: mysqlclient
         env:
           CIBW_PROJECT_REQUIRES_PYTHON: ">=3.10"
-          CIBW_ARCHS: "AMD64"
+          CIBW_ARCHS: ${{ matrix.cibw_arch }}
           CIBW_TEST_COMMAND: 'python -c "import MySQLdb; print(MySQLdb.version_info)" '
         run: "python -m cibuildwheel --output-dir dist"
 
       - name: Build sdist
+        if: matrix.cibw_arch == 'AMD64'
         working-directory: mysqlclient
         run: |
           python -m pip install build
@@ -93,5 +104,5 @@ jobs:
       - name: Upload Wheel
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: win-wheels
+          name: win-wheels-${{ matrix.cibw_arch }}
           path: mysqlclient/dist/*.*
