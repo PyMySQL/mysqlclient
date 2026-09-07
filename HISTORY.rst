@@ -6,8 +6,7 @@ Release: 2026-09-07
 
 * Concurrent use of the same Connection object from multiple threads now
   raises ``ProgrammingError`` immediately instead of causing undefined
-  behavior. On free-threaded Python, importing MySQLdb does not enable the
-  GIL, so connections need explicit protection against concurrent use.
+  behavior.
   Applications should use separate connections for concurrent operations.
   (#781)
 
