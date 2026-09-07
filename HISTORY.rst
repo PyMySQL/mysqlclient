@@ -1,4 +1,52 @@
 ======================
+ What's new in 2.3.0
+======================
+
+Release: 2026-09-07
+
+* Concurrent use of the same Connection object from multiple threads now
+  raises ``ProgrammingError`` immediately instead of causing undefined
+  behavior. On free-threaded Python, importing MySQLdb does not enable the
+  GIL, so connections need explicit protection against concurrent use.
+  Applications should use separate connections for concurrent operations.
+  (#781)
+
+* Add an optional ``executemany_fallback="multi"`` connection option.
+  When enabled, ``Cursor.executemany()`` can batch eligible INSERT, REPLACE,
+  UPDATE, and DELETE statements into multi-statement queries instead of
+  executing them one at a time. This can significantly improve performance of
+  operations such as SQLAlchemy bulk UPDATEs. The default remains "loop",
+  and the existing multi-row INSERT/REPLACE optimization is unchanged. (#798)
+
+* Add ``Cursor.warning_count`` to expose the warning count for the last
+  statement. (#780)
+
+* Make ``Cursor`` itself an iterator as specified by DB-API 2.0.
+  ``iter(cursor) is cursor`` and ``next(cursor)`` fetches the next row. (#785)
+
+* Quote stored procedure names and user variable names in ``Cursor.callproc()``,
+  allowing names containing reserved words or special characters. (#789)
+
+* Fix conversion of ``datetime.timedelta`` values to support microseconds and
+  negative values correctly. (#795)
+
+* Add Windows ARM64 wheels. (#796)
+
+* Test with Python 3.15 and free-threaded Python 3.15, and update the MariaDB
+  Connector/C used for Windows wheels to 3.4.9. (#797)
+
+* Add ``Connection.more_results()`` for checking whether additional results
+  remain after a multi-statement query. (#798)
+
+* Deprecate accessing exception classes such as ``ProgrammingError`` and
+  ``OperationalError`` as ``Cursor`` attributes. Access them from the
+  ``MySQLdb`` package instead. (#782)
+
+* Deprecate the ``reconnect`` parameter of ``Connection.ping()``. Calling
+  ``ping()`` without the parameter is unchanged. (#790)
+
+
+======================
  What's new in 2.2.8
 ======================
 
