@@ -89,6 +89,32 @@ every major release of GCC changes the ABI in some why, so linking
 code compiled with GCC-3.3 and GCC-4.0, for example, can be
 problematic.
 
+  ImportError: /usr/lib/x86_64-linux-gnu/libstdc++.so.6: cannot allocate memory in static TLS block
+
+This happens when other native extensions already loaded into the
+process (each linking libstdc++) have used up glibc's small static-TLS
+surplus before _mysql gets its turn to dlopen(). It isn't a MySQLdb bug
+or a bad build; it's a general glibc/dlopen interaction, and it recurs
+whenever a new native dependency tips a process over the threshold
+(see `Apache Airflow #17546
+<https://github.com/apache/airflow/issues/17546>`_, and its 2024
+recurrence in `#40503
+<https://github.com/apache/airflow/issues/40503>`_ with a different
+native dependency as the trigger each time).
+
+Workaround, in production use in Apache Airflow's own Docker image
+since 2021 (`airflow#19010
+<https://github.com/apache/airflow/pull/19010>`_): preload libstdc++
+before anything else can claim the surplus.
+
+.. code-block:: sh
+
+    export LD_PRELOAD="/usr/lib/$(uname -m)-linux-gnu/libstdc++.so.6"
+
+On RHEL/CentOS the path is typically ``/lib64/libstdc++.so.6`` instead.
+glibc fixed the equivalent static-TLS waste on aarch64/powerpc64 in
+2.32; on other architectures the small default surplus is intentional,
+so LD_PRELOAD remains the practical fix.
 
 My data disappeared! (or won't go away!)
 ----------------------------------------
