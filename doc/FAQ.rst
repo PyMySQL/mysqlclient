@@ -91,30 +91,31 @@ problematic.
 
   ImportError: /usr/lib/x86_64-linux-gnu/libstdc++.so.6: cannot allocate memory in static TLS block
 
-This happens when other native extensions already loaded into the
-process (each linking libstdc++) have used up glibc's small static-TLS
-surplus before _mysql gets its turn to dlopen(). It isn't a MySQLdb bug
-or a bad build; it's a general glibc/dlopen interaction, and it recurs
-whenever a new native dependency tips a process over the threshold
-(see `Apache Airflow #17546
-<https://github.com/apache/airflow/issues/17546>`_, and its 2024
-recurrence in `#40503
-<https://github.com/apache/airflow/issues/40503>`_ with a different
-native dependency as the trigger each time).
+Previously loaded native extensions can consume glibc's static-TLS
+surplus. The dynamic loader can then fail to load ``MySQLdb._mysql`` or
+one of its dependencies when it needs more static TLS, particularly
+with the initial-exec TLS model. The static allocation cannot grow
+after process startup, so this can occur even with a correct
+mysqlclient build. Examples include `Apache Airflow #17546
+<https://github.com/apache/airflow/issues/17546>`_ and `#40503
+<https://github.com/apache/airflow/issues/40503>`_.
 
-Workaround, in production use in Apache Airflow's own Docker image
-since 2021 (`airflow#19010
-<https://github.com/apache/airflow/pull/19010>`_): preload libstdc++
-before anything else can claim the surplus.
+Preload the library named in the error before Python starts, as in
+`Apache Airflow #19010 <https://github.com/apache/airflow/pull/19010>`_.
+An exported ``LD_PRELOAD`` is inherited by child processes, including
+programs that would not otherwise load that library. Scope it to the
+affected service or container; startup and memory costs depend on the
+program and platform.
+
+On Debian-based systems with ``dpkg-dev`` installed, use the platform's
+multiarch name rather than ``uname -m``:
 
 .. code-block:: sh
 
-    export LD_PRELOAD="/usr/lib/$(uname -m)-linux-gnu/libstdc++.so.6"
+    export LD_PRELOAD="/usr/lib/$(dpkg-architecture -qDEB_HOST_MULTIARCH)/libstdc++.so.6"
 
-On RHEL/CentOS the path is typically ``/lib64/libstdc++.so.6`` instead.
-glibc fixed the equivalent static-TLS waste on aarch64/powerpc64 in
-2.32; on other architectures the small default surplus is intentional,
-so LD_PRELOAD remains the practical fix.
+On other distributions, use the path from the error. For example,
+RHEL/CentOS commonly uses ``/lib64/libstdc++.so.6`` instead.
 
 My data disappeared! (or won't go away!)
 ----------------------------------------
@@ -159,4 +160,3 @@ Other Resources
 * Read `PEP-249`_
 
 .. _`PEP-249`: https://www.python.org/dev/peps/pep-0249/
-
