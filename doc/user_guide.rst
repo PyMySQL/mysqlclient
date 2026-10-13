@@ -552,18 +552,22 @@ reset()
       needed. MariaDB's reset status agrees with its global autocommit value.
 
       The authenticated user, current database and connection ID are unchanged.
-      The current client character set is reapplied with its default collation
-      so that server settings, C-library escaping and Python encoding agree.
-      A custom collation is not preserved. ``init_command`` and other connection
-      initialization settings are not replayed. ``messages`` is cleared;
-      Python conversion and cursor configuration are retained.
+      The current client character set and any collation explicitly configured
+      through ``connect()`` or ``set_character_set()`` are reapplied so that
+      server settings, C-library escaping and Python encoding agree. Calling
+      ``set_character_set()`` without a collation selects the charset's default
+      collation and clears any previously configured collation. Changes made
+      through arbitrary SQL are not tracked or preserved. ``init_command`` and
+      other connection initialization settings are not replayed. ``messages``
+      is cleared; Python conversion and cursor configuration are retained.
 
       Consume every result set and close existing cursors before resetting;
       create new cursors afterwards. Unread results raise ``ProgrammingError``.
       Closed or lost connections raise the usual connection exceptions. Reset
       never reconnects, even after ``ping(True)``, and does not fall back to
       ``change_user()`` or another reset command. If reset succeeds but restoring
-      the charset fails, the connection is closed and the error is raised.
+      the charset or collation fails, the connection is closed and the error
+      is raised.
 
       Requires a server supporting ``COM_RESET_CONNECTION`` and a build using
       MySQL client library 5.7.3+ or MariaDB Connector/C 3.0.0+. Older client

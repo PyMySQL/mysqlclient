@@ -297,11 +297,11 @@ class Connection(_mysql.connection):
         """Reset the session without reconnecting; return None.
 
         Roll back transactions and restore server session defaults, including
-        autocommit. Keep the current client charset with its default collation.
+        autocommit. Keep the current client charset and explicitly set collation.
         Connection initialization commands are not replayed. Consume all results
         and close cursors before calling; create new cursors after the reset.
         """
-        super().reset()
+        super()._reset_with_collation(self._collation)
         self.messages.clear()
 
     def query(self, query):
@@ -352,9 +352,13 @@ class Connection(_mysql.connection):
         """Set the connection character set to charset."""
         super().set_character_set(charset)
         self.encoding = _charset_to_encoding.get(charset, charset)
+        # The native call selected the default collation, even if the optional
+        # collation change below fails.
+        self._collation = None
         if collation:
             self.query(f"SET NAMES {charset} COLLATE {collation}")
             self.store_result()
+            self._collation = collation
 
     def set_sql_mode(self, sql_mode):
         """Set the connection sql_mode. See MySQL documentation for

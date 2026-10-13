@@ -100,12 +100,71 @@ def test_reset_charset(charset, collation, value, use_unicode):
                 client, connection, results, actual_collation = cursor.fetchone()
                 expected_charset = charset if use_unicode else charset.encode()
                 assert client == connection == results == expected_charset
-                assert actual_collation != (
+                assert actual_collation == (
                     collation if use_unicode else collation.encode()
                 )
                 cursor.execute("SELECT %s", (value,))
                 expected = value if use_unicode else value.encode(encoding)
                 assert cursor.fetchone() == (expected,)
+
+
+def test_reset_constructor_collation():
+    with connection_factory(charset="utf8mb4", collation="utf8mb4_bin") as conn:
+        # Raw SQL does not replace the configuration retained by the driver.
+        conn.query("SET NAMES utf8mb4 COLLATE utf8mb4_general_ci")
+        for _ in range(2):
+            assert conn.reset() is None
+            assert scalar(conn, "SELECT @@collation_connection") == "utf8mb4_bin"
+
+
+@pytest.mark.parametrize("collation", [None, ""])
+def test_reset_charset_change_clears_collation(collation):
+    with connection_factory(charset="utf8mb4", collation="utf8mb4_bin") as conn:
+        conn.set_character_set("latin1", "latin1_bin")
+        conn.reset()
+        assert scalar(conn, "SELECT @@collation_connection") == "latin1_bin"
+
+        conn.set_character_set("utf8mb4", collation)
+        default = scalar(conn, "SELECT @@collation_connection")
+        assert default != "utf8mb4_bin"
+        conn.reset()
+        assert scalar(conn, "SELECT @@collation_connection") == default
+        assert conn.character_set_name() == "utf8mb4"
+        assert scalar(conn, "SELECT '雪😀'") == "雪😀"
+
+
+def test_reset_after_failed_collation_change():
+    with connection_factory(charset="utf8mb4", collation="utf8mb4_bin") as conn:
+        # The charset changes before the server rejects the incompatible collation.
+        with pytest.raises(OperationalError) as exc:
+            conn.set_character_set("latin1", "utf8mb4_bin")
+        assert exc.value.args[0] == 1253  # ER_COLLATION_CHARSET_MISMATCH
+        default = scalar(conn, "SELECT @@collation_connection")
+        assert conn.reset() is None
+        assert conn.character_set_name() == "latin1"
+        assert scalar(conn, "SELECT @@collation_connection") == default
+        assert scalar(conn, "SELECT '€é'") == "€é"
+
+
+@pytest.mark.parametrize("reconnect", [False, True])
+def test_reset_collation_restoration_error_closes_connection(reconnect):
+    conn = connection_factory(charset="utf8mb4", collation="utf8mb4_bin")
+    try:
+        if reconnect:
+            with pytest.warns(DeprecationWarning):
+                conn.ping(True)
+        # Simulate the server refusing the retained collation during reset.
+        conn._collation = "mysqlclient_nonexistent_collation"
+        with pytest.raises(OperationalError) as exc:
+            conn.reset()
+        assert exc.value.args[0] == 1273  # ER_UNKNOWN_COLLATION
+        assert conn.closed
+        with pytest.raises(OperationalError) as exc:
+            conn.query("SELECT 1")
+        assert exc.value.args[0] == CR.SERVER_GONE_ERROR
+    finally:
+        if not conn.closed:
+            conn.close()
 
 
 def test_reset_closed():
