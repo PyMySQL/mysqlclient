@@ -1,9 +1,11 @@
 """Connection reset integration tests (requires COM_RESET_CONNECTION)."""
 
-import pytest
-from configdb import connection_factory
+from pathlib import Path
 
-from MySQLdb import OperationalError, ProgrammingError
+import pytest
+from configdb import connection_factory, connection_kwargs
+
+from MySQLdb import OperationalError, ProgrammingError, _mysql
 from MySQLdb.constants import CR
 
 
@@ -121,6 +123,24 @@ def test_reset_lost_connection_does_not_reconnect(reconnect):
         if reconnect:
             with pytest.warns(DeprecationWarning):
                 conn.ping(True)
+        killer.query(f"KILL CONNECTION {conn.thread_id()}")
+        for _ in range(2):
+            with pytest.raises(OperationalError) as exc:
+                conn.reset()
+            assert exc.value.args[0] in (CR.SERVER_GONE_ERROR, CR.SERVER_LOST)
+
+
+def test_reset_option_file_reconnect(tmp_path):
+    if not _mysql.get_client_info().startswith("3."):
+        pytest.skip("Connector/C reconnect option file setting")
+    config = tmp_path / "reconnect.cnf"
+    defaults = connection_kwargs({})["read_default_file"]
+    config.write_text(Path(defaults).read_text() + "\n[MySQLdb-tests]\nreconnect=1\n")
+    with (
+        connection_factory(read_default_file=str(config)) as conn,
+        connection_factory() as killer,
+    ):
+        assert conn.reset() is None
         killer.query(f"KILL CONNECTION {conn.thread_id()}")
         for _ in range(2):
             with pytest.raises(OperationalError) as exc:

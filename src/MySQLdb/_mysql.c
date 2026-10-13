@@ -1004,11 +1004,16 @@ _mysql_ConnectionObject_reset(
 
     const char *charset = mysql_character_set_name(&self->connection);
     int err, charset_error = 0;
+    my_bool reconnect = (my_bool)self->reconnect;
+#ifdef MARIADB_PACKAGE_VERSION_ID
+    /* Connector/C option files can enable reconnect without ping(True). */
+    mysql_get_option(&self->connection, MYSQL_OPT_RECONNECT, &reconnect);
+#endif
     /* ping(True) enables persistent automatic reconnection. Suppress it for
      * both reset and charset restoration, without changing that preference. */
-    if (self->reconnect) {
-        my_bool reconnect = 0;
-        mysql_options(&self->connection, MYSQL_OPT_RECONNECT, &reconnect);
+    if (reconnect) {
+        my_bool disabled = 0;
+        mysql_options(&self->connection, MYSQL_OPT_RECONNECT, &disabled);
     }
     Py_BEGIN_ALLOW_THREADS
     err = mysql_reset_connection(&self->connection);
@@ -1028,8 +1033,7 @@ _mysql_ConnectionObject_reset(
         self->open = false;
         _mysql_ConnectionObject_clear(self);
     }
-    else if (self->reconnect) {
-        my_bool reconnect = 1;
+    else if (reconnect) {
         mysql_options(&self->connection, MYSQL_OPT_RECONNECT, &reconnect);
     }
     END_CONNECTION_LOCK(self);
