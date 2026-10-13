@@ -200,9 +200,7 @@ class Connection(_mysql.connection):
             "executemany_fallback", self.executemany_fallback
         )
         if executemany_fallback not in ("loop", "multi"):
-            raise ValueError(
-                "executemany_fallback must be either 'loop' or 'multi'"
-            )
+            raise ValueError("executemany_fallback must be either 'loop' or 'multi'")
 
         client_flag = kwargs.get("client_flag", 0)
         client_flag |= CLIENT.MULTI_RESULTS
@@ -294,6 +292,17 @@ class Connection(_mysql.connection):
         used.
         """
         return (cursorclass or self.cursorclass)(self)
+
+    def reset(self):
+        """Reset the session without reconnecting; return None.
+
+        Roll back transactions and restore server session defaults, including
+        autocommit. Keep the current client charset with its default collation.
+        Connection initialization commands are not replayed. Consume all results
+        and close cursors before calling; create new cursors after the reset.
+        """
+        super().reset()
+        self.messages.clear()
 
     def query(self, query):
         # Since _mysql releases GIL while querying, we need immutable buffer.

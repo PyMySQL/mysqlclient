@@ -52,6 +52,15 @@ PERFORMANCE OF THIS SOFTWARE.
 #define HAVE_MYSQL_OPT_LOCAL_INFILE_DIR
 #endif
 
+/* MariaDB's MYSQL_VERSION_ID describes the server, not Connector/C. */
+#if defined(MARIADB_PACKAGE_VERSION_ID)
+#if MARIADB_PACKAGE_VERSION_ID >= 30000
+#define HAVE_MYSQL_RESET_CONNECTION
+#endif
+#elif !defined(MARIADB_BASE_VERSION) && !defined(MARIADB_VERSION_ID) && MYSQL_VERSION_ID >= 50703
+#define HAVE_MYSQL_RESET_CONNECTION
+#endif
+
 #define PY_SSIZE_T_CLEAN 1
 #include "Python.h"
 
@@ -967,6 +976,71 @@ _mysql_ConnectionObject_rollback(
     }
     END_CONNECTION_LOCK(self);
     Py_RETURN_NONE;
+}
+
+static const char _mysql_ConnectionObject_reset__doc__[] =
+"Reset session state without reconnecting. Returns None.\n\
+Rolls back transactions and restores server session defaults, including\n\
+autocommit. Preserves the client character set with its default collation.\n\
+Consume pending results before calling. Requires mysql_reset_connection().\n\
+";
+
+static PyObject *
+_mysql_ConnectionObject_reset(
+    _mysql_ConnectionObject *self,
+    PyObject *noargs)
+{
+    BEGIN_CONNECTION_OPERATION(self, return _mysql_Exception(self));
+#ifdef HAVE_MYSQL_RESET_CONNECTION
+    /* Connector/C can discard unread results, unlike libmysqlclient. Do not
+     * invalidate a live streaming result or silently discard result sets. */
+    if (self->connection.status != MYSQL_STATUS_READY ||
+            mysql_more_results(&self->connection)) {
+        END_CONNECTION_LOCK(self);
+        PyErr_SetString(_mysql_ProgrammingError,
+            "Consume all pending results before resetting the connection.");
+        return NULL;
+    }
+
+    const char *charset = mysql_character_set_name(&self->connection);
+    int err, charset_error = 0;
+    /* ping(True) enables persistent automatic reconnection. Suppress it for
+     * both reset and charset restoration, without changing that preference. */
+    if (self->reconnect) {
+        my_bool reconnect = 0;
+        mysql_options(&self->connection, MYSQL_OPT_RECONNECT, &reconnect);
+    }
+    Py_BEGIN_ALLOW_THREADS
+    err = mysql_reset_connection(&self->connection);
+    if (!err) {
+        /* Reset changes server charset variables but leaves the C library's
+         * charset unchanged. Keep escaping and Python encoding coherent. */
+        err = charset_error = mysql_set_character_set(&self->connection, charset);
+    }
+    Py_END_ALLOW_THREADS
+    PyObject *ret = err ? _mysql_Exception(self) : NULL;
+    if (charset_error) {
+        /* The reset succeeded but charset synchronization did not. This
+         * connection must not be reused with mismatched client/server state. */
+        Py_BEGIN_ALLOW_THREADS
+        mysql_close(&self->connection);
+        Py_END_ALLOW_THREADS
+        self->open = false;
+        _mysql_ConnectionObject_clear(self);
+    }
+    else if (self->reconnect) {
+        my_bool reconnect = 1;
+        mysql_options(&self->connection, MYSQL_OPT_RECONNECT, &reconnect);
+    }
+    END_CONNECTION_LOCK(self);
+    if (err) return ret;
+    Py_RETURN_NONE;
+#else
+    END_CONNECTION_LOCK(self);
+    PyErr_SetString(_mysql_NotSupportedError,
+        "reset() requires MySQL client library >= 5.7.3 or MariaDB Connector/C >= 3.0.0");
+    return NULL;
+#endif
 }
 
 static const char _mysql_ConnectionObject_next_result__doc__[] =
@@ -2621,6 +2695,12 @@ static PyMethodDef _mysql_ConnectionObject_methods[] = {
         (PyCFunction)_mysql_ConnectionObject_autocommit,
         METH_VARARGS,
         _mysql_ConnectionObject_autocommit__doc__
+    },
+    {
+        "reset",
+        (PyCFunction)_mysql_ConnectionObject_reset,
+        METH_NOARGS,
+        _mysql_ConnectionObject_reset__doc__
     },
     {
         "get_autocommit",

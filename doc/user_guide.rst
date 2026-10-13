@@ -536,6 +536,43 @@ rollback()
       (cancels) the current transaction; otherwise a
       ``NotSupportedError`` is raised.
 
+reset()
+      Reset the session using ``mysql_reset_connection()``
+      (``COM_RESET_CONNECTION``), returning ``None`` on success. This rolls
+      back active transactions, drops temporary tables, releases locks and
+      prepared statements, and clears user variables. Session system variables,
+      including autocommit and SQL mode, follow the server's reset behavior.
+      Autocommit is **not** restored to the value passed to ``connect()``.
+      ``get_autocommit()`` reads the status returned by the server.
+
+      MySQL 8.4 has a known limitation when global autocommit is OFF: reset
+      restores the session variable to OFF but reports ON in protocol status.
+      This method does not normalize that inconsistent server state. With the
+      usual global autocommit ON, call ``autocommit(False)`` after resetting if
+      needed. MariaDB's reset status agrees with its global autocommit value.
+
+      The authenticated user, current database and connection ID are unchanged.
+      The current client character set is reapplied with its default collation
+      so that server settings, C-library escaping and Python encoding agree.
+      A custom collation is not preserved. ``init_command`` and other connection
+      initialization settings are not replayed. ``messages`` is cleared;
+      Python conversion and cursor configuration are retained.
+
+      Consume every result set and close existing cursors before resetting;
+      create new cursors afterwards. Unread results raise ``ProgrammingError``.
+      Closed or lost connections raise the usual connection exceptions. Reset
+      never reconnects, even after ``ping(True)``, and does not fall back to
+      ``change_user()`` or another reset command. If reset succeeds but restoring
+      the charset fails, the connection is closed and the error is raised.
+
+      Requires a server supporting ``COM_RESET_CONNECTION`` and a build using
+      MySQL client library 5.7.3+ or MariaDB Connector/C 3.0.0+. Older client
+      libraries raise ``NotSupportedError``; server errors are propagated.
+      See the `MySQL reset API documentation
+      <https://dev.mysql.com/doc/c-api/8.4/en/mysql-reset-connection.html>`_
+      and `MariaDB Connector/C reset API documentation
+      <https://mariadb.com/docs/connectors/mariadb-connector-c/api-functions/mysql_reset_connection>`_.
+
 cursor([cursorclass])
       MySQL does not support cursors; however, cursors are easily
       emulated.  You can supply an alternative cursor class as an
