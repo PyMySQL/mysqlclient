@@ -5,6 +5,7 @@ want to make your own subclasses. In most cases, you will probably
 override Connection.default_cursor with a non-standard Cursor class.
 """
 
+import os
 import re
 
 from . import _mysql, cursors
@@ -213,6 +214,23 @@ class Connection(_mysql.connection):
 
         # PEP-249 requires autocommit to be initially off
         autocommit = kwargs2.pop("autocommit", False)
+
+        # Accept path-like objects for C API string options (e.g. pathlib.Path).
+        # See https://github.com/PyMySQL/mysqlclient/issues/319
+        for key in (
+            "read_default_file",
+            "read_default_group",
+            "unix_socket",
+            "ssl_key",
+            "ssl_cert",
+            "ssl_ca",
+            "ssl_capath",
+            "ssl_cipher",
+            "init_command",
+            "local_infile_dir",
+        ):
+            if key in kwargs2 and kwargs2[key] is not None:
+                kwargs2[key] = os.fspath(kwargs2[key])
 
         self._set_attributes(*args, **kwargs2)
         super().__init__(*args, **kwargs2)
