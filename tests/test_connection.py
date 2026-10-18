@@ -4,8 +4,8 @@ import time
 import pytest
 from configdb import connection_factory, connection_kwargs
 
-from MySQLdb.connections import Connection
 from MySQLdb._exceptions import ProgrammingError
+from MySQLdb.connections import Connection
 from MySQLdb.constants import CLIENT
 
 
@@ -63,9 +63,7 @@ def test_executemany_fallback_connection_subclass_default():
     with MultiConnection(**connection_kwargs({})) as conn:
         assert conn.executemany_fallback == "multi"
 
-    with MultiConnection(
-        **connection_kwargs({"executemany_fallback": "loop"})
-    ) as conn:
+    with MultiConnection(**connection_kwargs({"executemany_fallback": "loop"})) as conn:
         assert conn.executemany_fallback == "loop"
 
 
@@ -74,7 +72,8 @@ def test_ping_false_warns(conn):
         conn.ping(False)
 
 
-def test_connection_concurrent_use_raises(conn):
+@pytest.mark.parametrize("method", ["thread_id", "reset"])
+def test_connection_concurrent_use_raises(conn, method):
     """While a slow query holds the connection lock, any other access from
     a second thread must raise ProgrammingError immediately (not block)."""
     thread_error = None
@@ -99,7 +98,7 @@ def test_connection_concurrent_use_raises(conn):
 
     start = time.monotonic()
     with pytest.raises(ProgrammingError, match="already in use"):
-        conn.thread_id()
+        getattr(conn, method)()
     # Should fail immediately, not wait for the SLEEP to finish.
     assert time.monotonic() - start < 0.1
 
