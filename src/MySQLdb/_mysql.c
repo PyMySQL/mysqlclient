@@ -27,6 +27,9 @@ PERFORMANCE OF THIS SOFTWARE.
 */
 #include <stdbool.h>
 #include "mysql.h"
+#ifndef _WIN32
+#include <time.h>
+#endif
 #include "mysqld_error.h"
 
 #if MYSQL_VERSION_ID >= 80000
@@ -132,13 +135,32 @@ _mysql_ConnectionObject_Lock(_mysql_ConnectionObject *self)
 }
 
 /* Blocking variant used only during deallocation where we must acquire the
- * lock to call mysql_free_result() even if it means waiting. */
+ * lock to call mysql_free_result() even if it means waiting.
+ *
+ * Only ever take the lock while holding the GIL. A result can be deallocated
+ * on a thread other than its connection's (the cyclic GC runs wherever it is
+ * triggered). If that thread held the lock while not holding the GIL, even
+ * briefly, the thread that owns the connection could run in the meantime and
+ * its next call would fail with "already in use from another thread". If the
+ * lock is busy, the owner is using the connection with the GIL released:
+ * back off with the GIL released, without taking the lock, and retry. */
 static void
 _mysql_ConnectionObject_LockWait(_mysql_ConnectionObject *self)
 {
-    Py_BEGIN_ALLOW_THREADS
-    PyThread_acquire_lock(self->lock, WAIT_LOCK);
-    Py_END_ALLOW_THREADS
+    unsigned int wait_us = 50;
+    while (PyThread_acquire_lock(self->lock, NOWAIT_LOCK) != PY_LOCK_ACQUIRED) {
+        Py_BEGIN_ALLOW_THREADS
+#ifdef _WIN32
+        Sleep(wait_us >= 1000 ? wait_us / 1000 : 0);
+#else
+        struct timespec delay = {0, (long)wait_us * 1000};
+        nanosleep(&delay, NULL);
+#endif
+        Py_END_ALLOW_THREADS
+        if (wait_us < 1000) {
+            wait_us *= 2;
+        }
+    }
 }
 
 static void
