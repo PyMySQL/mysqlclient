@@ -2968,9 +2968,8 @@ _mysql_ConnectionObject_getattro(
     _mysql_ConnectionObject *self,
     PyObject *name)
 {
-    const char *cname;
-    cname = PyUnicode_AsUTF8(name);
-    if (strcmp(cname, "closed") == 0)
+    if (PyUnicode_Check(name) &&
+            PyUnicode_CompareWithASCIIString(name, "closed") == 0)
         return PyLong_FromLong((long)!(self->open));
 
     return PyObject_GenericGetAttr((PyObject *)self, name);
