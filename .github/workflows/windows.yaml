@@ -3,8 +3,12 @@ name: Build windows wheels
 on:
   push:
     branches: ["main", "ci"]
+    tags: ["v*"]
   pull_request:
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   build:
@@ -107,3 +111,26 @@ jobs:
         with:
           name: win-wheels-${{ matrix.cibw_arch }}
           path: mysqlclient/dist/*.*
+          if-no-files-found: error
+
+  publish:
+    name: Publish to PyPI
+    needs: build
+    if: >-
+      github.event_name == 'push' && github.event.created &&
+      startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - name: Download distributions
+        uses: actions/download-artifact@v8.0.2
+        with:
+          pattern: win-wheels-*
+          path: dist
+          merge-multiple: true
+
+      - name: Publish distributions to PyPI
+        uses: pypa/gh-action-pypi-publish@v1.14.3
+        with:
+          attestations: true

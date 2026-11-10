@@ -1,4 +1,25 @@
 ======================
+ What's new in 2.3.1
+======================
+
+Release: 2026-11-10
+
+* **Security fix:** Escape Python ``set`` query parameters using the connection's
+  character set and SQL mode. This fixes SQL injection when
+  ``NO_BACKSLASH_ESCAPES`` is enabled and an attacker controls a set member.
+  ``frozenset`` parameters now use the same escaping.
+  See `GHSA-m9c3-99x3-77g6 <https://github.com/PyMySQL/mysqlclient/security/advisories/GHSA-m9c3-99x3-77g6>`_.
+
+* Deprecate ``MySQLdb.converters.Set2Str``.
+
+* ``Connection.literal()`` now applies built-in handling only to exact built-in
+  types. Subclasses use the connection's converter mapping.
+
+* Fix crashes when looking up connection attributes with a non-string name or
+  a string containing lone surrogates. (#810)
+
+
+======================
  What's new in 2.3.0
 ======================
 
