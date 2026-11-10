@@ -200,9 +200,7 @@ class Connection(_mysql.connection):
             "executemany_fallback", self.executemany_fallback
         )
         if executemany_fallback not in ("loop", "multi"):
-            raise ValueError(
-                "executemany_fallback must be either 'loop' or 'multi'"
-            )
+            raise ValueError("executemany_fallback must be either 'loop' or 'multi'")
 
         client_flag = kwargs.get("client_flag", 0)
         client_flag |= CLIENT.MULTI_RESULTS
@@ -311,6 +309,12 @@ class Connection(_mysql.connection):
     def _tuple_literal(self, t):
         return b"(%s)" % (b",".join(map(self.literal, t)))
 
+    def _set_literal(self, s):
+        for c in s:
+            if not isinstance(c, str):
+                raise TypeError("set elements must be strings")
+        return self.string_literal(",".join(s))
+
     def literal(self, o):
         """If o is a single object, returns an SQL literal as a string.
         If o is a non-string sequence, the items of the sequence are
@@ -319,12 +323,15 @@ class Connection(_mysql.connection):
         Non-standard. For internal use; do not use this in your
         applications.
         """
-        if isinstance(o, str):
+        t = type(o)
+        if t is str:
             s = self.string_literal(o.encode(self.encoding))
-        elif isinstance(o, (bytes, bytearray)):
+        elif t in (bytes, bytearray):
             s = self._bytes_literal(o)
-        elif isinstance(o, (tuple, list)):
+        elif t in (tuple, list):
             s = self._tuple_literal(o)
+        elif t in (set, frozenset):
+            s = self._set_literal(o)
         else:
             s = self.escape(o, self.encoders)
             if isinstance(s, str):

@@ -62,6 +62,9 @@ def Bool2Str(s, d):
 
 def Set2Str(s, d):
     # Only support ascii string.  Not tested.
+    import warnings
+
+    warnings.warn("Set2Str is deprecated", DeprecationWarning, stacklevel=2)
     return string_literal(",".join(s))
 
 
@@ -112,7 +115,6 @@ conversions = {
     Date: Thing2Literal,
     DateTimeType: DateTime2literal,
     DateTimeDeltaType: DateTimeDelta2literal,
-    set: Set2Str,
     Decimal: Decimal2Literal,
     FIELD_TYPE.TINY: int,
     FIELD_TYPE.SHORT: int,
