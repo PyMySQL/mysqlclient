@@ -1,3 +1,4 @@
+import queue
 import threading
 import time
 
@@ -151,3 +152,60 @@ def test_result_concurrent_use_raises(conn):
     done.wait()
     thread.join()
     assert thread_error is None
+
+
+def _free_results_in_other_thread(run_owner):
+    """Run ``run_owner(hand_off)`` in this thread; every result it passes to
+    ``hand_off`` is deallocated in a second thread, as the cyclic GC can do."""
+    handoff = queue.Queue()
+    stop = threading.Event()
+
+    def free_results():
+        while not (stop.is_set() and handoff.empty()):
+            try:
+                result = handoff.get(timeout=0.05)
+            except queue.Empty:
+                continue
+            del result
+
+    thread = threading.Thread(target=free_results)
+    thread.start()
+    try:
+        run_owner(handoff.put)
+    finally:
+        stop.set()
+        thread.join()
+
+
+def test_result_dealloc_in_other_thread_does_not_fail_owner(conn):
+    """Deallocating a result in another thread must not make the connection's
+    own thread fail with "already in use" while it keeps running Python."""
+
+    def run_owner(hand_off):
+        for i in range(200):
+            conn.query(f"SELECT {i}")
+            result = conn.store_result()
+            assert result.fetch_row() == ((i,),)
+            hand_off(result)
+            del result
+            # Keep the GIL busy, as an application does between queries.
+            end = time.perf_counter() + 0.001
+            while time.perf_counter() < end:
+                pass
+
+    _free_results_in_other_thread(run_owner)
+
+
+def test_result_dealloc_waits_for_owner_query(conn):
+    """A result deallocated in another thread while the owner is inside a
+    query waits for it, and the owner's queries are unaffected."""
+
+    def run_owner(hand_off):
+        for i in range(30):
+            conn.query(f"SELECT SLEEP(0.02), {i}")
+            result = conn.store_result()
+            assert result.fetch_row() == ((0, i),)
+            hand_off(result)
+            del result
+
+    _free_results_in_other_thread(run_owner)
