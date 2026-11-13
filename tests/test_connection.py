@@ -33,9 +33,9 @@ def test_literal_str_enum(conn, sql_mode):
     assert cursor.fetchone() == ("BAR",)
 
 
-@pytest.mark.parametrize("value", ["BAR", b"BAR", ("BAR", "BAZ"), ["BAR", "BAZ"]])
+@pytest.mark.parametrize("value", ["BAR", b"BAR"])
 @pytest.mark.parametrize("binary_prefix", [False, True])
-def test_literal_builtin_subclass(value, binary_prefix):
+def test_literal_string_subclass(value, binary_prefix):
     class Subclass(type(value)):
         pass
 
@@ -43,18 +43,34 @@ def test_literal_builtin_subclass(value, binary_prefix):
         assert conn.literal(Subclass(value)) == conn.literal(value)
 
 
+@pytest.mark.parametrize("binary_prefix", [False, True])
+def test_literal_bytearray_subclass(binary_prefix):
+    class Subclass(bytearray):
+        pass
+
+    value = Subclass(b"BAR")
+    with connection_factory(binary_prefix=binary_prefix) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT %s", (value,))
+        expected = str(value).encode(conn.encoding) if binary_prefix else str(value)
+        assert cursor.fetchone() == (expected,)
+
+
+@pytest.mark.parametrize("container_type", [tuple, list, set, frozenset])
+def test_literal_container_subclass_converter(conn, container_type):
+    class Subclass(container_type):
+        pass
+
+    conn.encoders[Subclass] = lambda value, mapping: b"'custom'"
+    cursor = conn.cursor()
+    cursor.execute("SELECT %s", (Subclass(["BAR"]),))
+    assert cursor.fetchone() == ("custom",)
+
+
 @pytest.mark.parametrize("set_type", [set, frozenset])
-@pytest.mark.parametrize("subclass", [False, True])
 @pytest.mark.parametrize("sql_mode", ["", "NO_BACKSLASH_ESCAPES"])
 @pytest.mark.parametrize("charset", ["utf8mb4", "latin1"])
-def test_literal_set_escaping(set_type, subclass, sql_mode, charset):
-    if subclass:
-
-        class Subclass(set_type):
-            pass
-
-        set_type = Subclass
-
+def test_literal_set_escaping(set_type, sql_mode, charset):
     value = "é' OR 1=1 -- \\"
     with connection_factory(charset=charset, sql_mode=sql_mode) as conn:
         cursor = conn.cursor()
