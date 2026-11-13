@@ -323,14 +323,13 @@ class Connection(_mysql.connection):
         Non-standard. For internal use; do not use this in your
         applications.
         """
-        t = type(o)
-        if t is str:
+        if isinstance(o, str):
             s = self.string_literal(o.encode(self.encoding))
-        elif t in (bytes, bytearray):
+        elif isinstance(o, (bytes, bytearray)):
             s = self._bytes_literal(o)
-        elif t in (tuple, list):
+        elif isinstance(o, (tuple, list)):
             s = self._tuple_literal(o)
-        elif t in (set, frozenset):
+        elif isinstance(o, (set, frozenset)):
             s = self._set_literal(o)
         else:
             s = self.escape(o, self.encoders)
