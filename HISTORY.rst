@@ -1,4 +1,23 @@
 ======================
+ What's new in 2.3.2
+======================
+
+Release: 2026-11-18
+
+* Restore the use of the base type's literal conversion for subclasses of
+  ``str``, ``bytes``, and ``bytearray``. This fixes a regression in 2.3.1 where string-valued
+  ``enum.Enum`` members were serialized using their enum names instead of their
+  string values. (#814)
+
+* Avoid a spurious ``ProgrammingError`` when another thread drops the last
+  reference to a buffered result while the connection is in use. (#815)
+
+* Escape the contents of ``bytearray`` query parameters the same way as
+  ``bytes``. Previously, passing ``bytearray(b'ab')`` sent the Python string
+  representation to the server. This also applies to subclasses. (#817)
+
+
+======================
  What's new in 2.3.1
 ======================
 
