@@ -2587,13 +2587,14 @@ static void
 _mysql_ResultObject_dealloc(
     _mysql_ResultObject *self)
 {
-    PyObject *conn = self->conn;
     PyObject_GC_UnTrack((PyObject *)self);
-    if (conn != NULL) {
+    /* Only an unbuffered result may need to read remaining rows from the connection. */
+    bool lock_connection = self->use && self->result != NULL && self->conn != NULL;
+    if (lock_connection) {
         BEGIN_RESULT_CONNECTION_LOCK(self);
     }
     mysql_free_result(self->result);
-    if (conn != NULL) {
+    if (lock_connection) {
         END_RESULT_CONNECTION_LOCK(self);
     }
     _mysql_ResultObject_clear(self);

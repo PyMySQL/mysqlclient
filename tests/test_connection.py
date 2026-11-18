@@ -1,13 +1,14 @@
 import enum
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 from configdb import connection_factory, connection_kwargs
 
 from MySQLdb._exceptions import ProgrammingError
 from MySQLdb.connections import Connection
-from MySQLdb.constants import CLIENT
+from MySQLdb.constants import CLIENT, FIELD_TYPE
 
 
 @pytest.fixture
@@ -166,6 +167,23 @@ def test_connection_concurrent_use_raises(conn):
     done.wait()
     thread.join()
     assert thread_error is None
+
+
+def test_stored_result_dealloc_while_connection_locked(conn):
+    conn.query("SELECT 1")
+    stored = [conn.store_result()]
+
+    with ThreadPoolExecutor(max_workers=1) as executor:
+
+        def convert(value):
+            # fetch_row holds the connection lock while calling this converter.
+            executor.submit(stored.clear).result(timeout=5)
+            return int(value)
+
+        conn.converter[FIELD_TYPE.NEWDECIMAL] = convert
+        conn.query("SELECT CAST(2 AS DECIMAL(1,0))")
+        assert conn.use_result().fetch_row() == ((2,),)
+        assert not stored
 
 
 def test_result_concurrent_use_raises(conn):
