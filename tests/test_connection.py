@@ -171,7 +171,7 @@ def test_connection_concurrent_use_raises(conn):
 
 @pytest.mark.parametrize("use", [False, True])
 def test_result_rejects_reinitialization(conn, use):
-    conn.query("SELECT 1 UNION ALL SELECT 2")
+    conn.query("SELECT 1 UNION ALL SELECT 2 ORDER BY 1")
     result = conn.use_result() if use else conn.store_result()
     with pytest.raises(ProgrammingError, match="already initialized"):
         result.__init__(conn, not use)
@@ -183,10 +183,15 @@ def test_result_rejects_reinitialization(conn, use):
 
 
 def test_stored_result_dealloc_while_connection_locked(conn):
-    conn.query("SELECT 1")
-    stored = [conn.store_result()]
+    stored = []
+
+    def store_result():
+        conn.query("SELECT 1")
+        stored.append(conn.store_result())
 
     with ThreadPoolExecutor(max_workers=1) as executor:
+        # On free-threaded CPython, drop the last reference on its owning thread.
+        executor.submit(store_result).result()
 
         def convert(value):
             # fetch_row holds the connection lock while calling this converter.
