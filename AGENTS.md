@@ -1,49 +1,67 @@
-## Rule
+## Checks before committing
 
-Do `ruff format` and `ruff check` before commit.
+Run commands from the repository root. Format and lint the source before
+committing:
 
-## Running the MySQL test suite in this container
+```sh
+ruff format src/
+ruff check src/
+git diff --check
+```
 
-1. Install the server and test dependencies if they are not already available:
+## Running the mysqlclient test suite
 
-   ```sh
-   apt-get update
-   DEBIAN_FRONTEND=noninteractive apt-get install -y mysql-server
-   python -m pip install --upgrade -r requirements-dev.txt
-   ```
+The CI configuration is in [.github/workflows/tests.yaml](.github/workflows/tests.yaml).
+The package is in `src/MySQLdb/` and the tests are in `tests/`.
 
-2. Keep MySQL running in a separate, long-lived terminal/session. The container
-   does not run systemd, so start `mysqld` directly instead of using
-   `systemctl`:
+1. Install a C compiler, Python development headers, `pkg-config`, and MySQL or
+   MariaDB client development libraries, as described in [README.md](README.md).
+   A running MySQL or MariaDB server is also required for database tests.
 
-   ```sh
-   install -d -o mysql -g mysql /run/mysqld
-   rm -f /run/mysqld/mysqld.sock /run/mysqld/mysqld.sock.lock \
-     /run/mysqld/mysqlx.sock /run/mysqld/mysqlx.sock.lock \
-     /run/mysqld/mysqld.pid
-   mysqld --user=mysql --local-infile=1 \
-     --socket=/run/mysqld/mysqld.sock \
-     --pid-file=/run/mysqld/mysqld.pid
-   ```
-
-3. In another terminal/session, wait for MySQL and initialize a fresh data
-   directory. The SQL files create databases and users, so only run them when
-   `test1` does not exist:
+2. In a Python virtual environment, install the package and test dependencies:
 
    ```sh
-   until mysqladmin ping --silent; do sleep 1; done
-   if ! mysql -NBe "SHOW DATABASES LIKE 'test1'" | rg -q '^test1$'; then
-     mysql -uroot --comments < ci/docker-entrypoint-initdb.d/init.sql
-     mysql -uroot --comments < ci/docker-entrypoint-initdb.d/mysql.sql
-     mysql -uroot --comments < ci/docker-entrypoint-initdb.d/mariadb.sql
-   fi
-   cp ci/docker.json pymysql/tests/databases.json
+   python -m pip install -v .
+   python -m pip install -r requirements.txt
+   python -m pip install "SQLAlchemy>=2,<3"
    ```
 
-4. Run the same test commands as CI:
+   SQLAlchemy is needed to run `tests/test_sqlalchemy.py`; those tests are
+   skipped if it is not installed.
+
+3. Start the database server using the service manager available in your
+   environment. In containers without a service manager, run `mysqld` in a
+   separate, long-lived terminal with an initialized data directory and writable
+   socket and PID file locations.
+
+   Create a dedicated test database using an administrator connection, for example:
 
    ```sh
-   pytest -v --cov --cov-config .coveragerc pymysql
-   pytest -v --cov-append --cov-config .coveragerc \
-     --doctest-modules pymysql/converters.py
+   mysql -uroot -p -e "CREATE DATABASE IF NOT EXISTS mysqldb_test"
    ```
+
+   Ensure the test user can create, alter, and drop tables, and create, execute,
+   and drop stored procedures in that database.
+   `tests/actions.cnf` uses `127.0.0.1:3306`, user `root`, password `root`, and
+   database `mysqldb_test`. For different credentials, create a separate MySQL
+   option file with a `[MySQLdb-tests]` group, using `tests/actions.cnf` as a
+   template.
+
+4. Run the same pytest command as CI:
+
+   ```sh
+   TESTDB=actions.cnf pytest --cov=MySQLdb tests
+   ```
+
+   `TESTDB` selects a filename under `tests/` or an absolute path to an option
+   file. Without it, `tests/default.cnf` is used. The tests create and drop
+   tables, so use the dedicated test database.
+
+CI also runs the Django test suite in a separate job. Refer to
+`.github/workflows/tests.yaml` for its dependencies, database setup, and
+`test_mysql_executemany_multi` settings.
+
+## Releases
+
+Follow [notes/release.md](notes/release.md) for version updates, release CI,
+tagging, and publication.

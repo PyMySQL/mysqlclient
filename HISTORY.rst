@@ -1,4 +1,20 @@
 ======================
+ What's new in 2.3.2
+======================
+
+Release: 2026-11-18
+
+* Restore string and byte literal handling for subclasses of ``str``, ``bytes``,
+  and ``bytearray``. This fixes a regression in 2.3.1 where string-valued
+  ``enum.Enum`` members were serialized using their enum names instead of their
+  string values. (#814)
+
+* Free buffered results without acquiring the connection lock. This avoids
+  spurious ``ProgrammingError`` exceptions when another thread releases a
+  buffered result while the connection is in use. (#815)
+
+
+======================
  What's new in 2.3.1
 ======================
 
