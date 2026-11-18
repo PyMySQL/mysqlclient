@@ -49,11 +49,13 @@ def test_literal_bytearray_subclass(binary_prefix):
     class Subclass(bytearray):
         pass
 
-    value = Subclass(b"BAR")
+    data = b"A'\x00\\B"
+    value = Subclass(data)
     with connection_factory(binary_prefix=binary_prefix) as conn:
+        assert conn.literal(value) == conn.literal(data)
         cursor = conn.cursor()
         cursor.execute("SELECT %s", (value,))
-        expected = str(value).encode(conn.encoding) if binary_prefix else str(value)
+        expected = data if binary_prefix else data.decode(conn.encoding)
         assert cursor.fetchone() == (expected,)
 
 
