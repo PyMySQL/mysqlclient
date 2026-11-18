@@ -327,8 +327,22 @@ _mysql_ResultObject_Initialize(
                      &_mysql_ConnectionObject_Type, &conn, &use, &conv))
         return -1;
 
-    self->conn = (PyObject *) conn;
-    Py_INCREF(conn);
+    /* A result keeps its original connection and buffering mode until deallocation. */
+    bool already_initialized;
+#ifdef Py_GIL_DISABLED
+    Py_BEGIN_CRITICAL_SECTION(self);
+#endif
+    already_initialized = self->conn != NULL;
+    if (!already_initialized) {
+        self->conn = Py_NewRef(conn);
+    }
+#ifdef Py_GIL_DISABLED
+    Py_END_CRITICAL_SECTION();
+#endif
+    if (already_initialized) {
+        PyErr_SetString(_mysql_ProgrammingError, "Result is already initialized");
+        return -1;
+    }
     self->use = use;
     if (BEGIN_CONNECTION_LOCK(conn) < 0) {
         return -1;
@@ -2587,13 +2601,14 @@ static void
 _mysql_ResultObject_dealloc(
     _mysql_ResultObject *self)
 {
-    PyObject *conn = self->conn;
     PyObject_GC_UnTrack((PyObject *)self);
-    if (conn != NULL) {
+    /* Only an unbuffered result may need to read remaining rows from the connection. */
+    bool lock_connection = self->use && self->result != NULL && self->conn != NULL;
+    if (lock_connection) {
         BEGIN_RESULT_CONNECTION_LOCK(self);
     }
     mysql_free_result(self->result);
-    if (conn != NULL) {
+    if (lock_connection) {
         END_RESULT_CONNECTION_LOCK(self);
     }
     _mysql_ResultObject_clear(self);

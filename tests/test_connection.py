@@ -1,13 +1,14 @@
 import enum
 import threading
 import time
+from concurrent.futures import ThreadPoolExecutor
 
 import pytest
 from configdb import connection_factory, connection_kwargs
 
 from MySQLdb._exceptions import ProgrammingError
 from MySQLdb.connections import Connection
-from MySQLdb.constants import CLIENT
+from MySQLdb.constants import CLIENT, FIELD_TYPE
 
 
 @pytest.fixture
@@ -166,6 +167,41 @@ def test_connection_concurrent_use_raises(conn):
     done.wait()
     thread.join()
     assert thread_error is None
+
+
+@pytest.mark.parametrize("use", [False, True])
+def test_result_rejects_reinitialization(conn, use):
+    conn.query("SELECT 1 UNION ALL SELECT 2 ORDER BY 1")
+    result = conn.use_result() if use else conn.store_result()
+    with pytest.raises(ProgrammingError, match="already initialized"):
+        result.__init__(conn, not use)
+
+    assert result.fetch_row() == ((1,),)
+    del result  # Leave the second row for cleanup.
+    conn.query("SELECT 3")
+    assert conn.store_result().fetch_row() == ((3,),)
+
+
+def test_stored_result_dealloc_while_connection_locked(conn):
+    stored = []
+
+    def store_result():
+        conn.query("SELECT 1")
+        stored.append(conn.store_result())
+
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        # On free-threaded CPython, drop the last reference on its owning thread.
+        executor.submit(store_result).result()
+
+        def convert(value):
+            # fetch_row holds the connection lock while calling this converter.
+            executor.submit(stored.clear).result(timeout=5)
+            return int(value)
+
+        conn.converter[FIELD_TYPE.NEWDECIMAL] = convert
+        conn.query("SELECT CAST(2 AS DECIMAL(1,0))")
+        assert conn.use_result().fetch_row() == ((2,),)
+        assert not stored
 
 
 def test_result_concurrent_use_raises(conn):
