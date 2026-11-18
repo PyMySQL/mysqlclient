@@ -169,6 +169,19 @@ def test_connection_concurrent_use_raises(conn):
     assert thread_error is None
 
 
+@pytest.mark.parametrize("use", [False, True])
+def test_result_rejects_reinitialization(conn, use):
+    conn.query("SELECT 1 UNION ALL SELECT 2")
+    result = conn.use_result() if use else conn.store_result()
+    with pytest.raises(ProgrammingError, match="already initialized"):
+        result.__init__(conn, not use)
+
+    assert result.fetch_row() == ((1,),)
+    del result  # Leave the second row for cleanup.
+    conn.query("SELECT 3")
+    assert conn.store_result().fetch_row() == ((3,),)
+
+
 def test_stored_result_dealloc_while_connection_locked(conn):
     conn.query("SELECT 1")
     stored = [conn.store_result()]
