@@ -40,8 +40,9 @@ The package is in `src/MySQLdb/` and the tests are in `tests/`.
    mysql -uroot -p -e "CREATE DATABASE IF NOT EXISTS mysqldb_test"
    ```
 
-   Ensure the test user can create, alter, and drop tables, and create, execute,
-   and drop stored procedures in that database.
+   The test user needs to create, alter, and drop tables, run `SELECT`,
+   `INSERT`, `UPDATE`, and `DELETE`, and create, execute, and drop stored
+   procedures in that database.
    `tests/actions.cnf` uses `127.0.0.1:3306`, user `root`, password `root`, and
    database `mysqldb_test`. For different credentials, create a separate MySQL
    option file with a `[MySQLdb-tests]` group, using `tests/actions.cnf` as a
