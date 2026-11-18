@@ -1194,9 +1194,8 @@ _mysql_escape_string(
 static const char _mysql_string_literal__doc__[] =
 "string_literal(obj) -- converts object obj into a SQL string literal.\n\
 This means, any special SQL characters are escaped, and it is enclosed\n\
-within single quotes. In other words, it performs:\n\
-\n\
-\"'%s'\" % escape_string(str(obj))\n\
+within single quotes. For bytes and bytearray, the byte contents are\n\
+escaped directly. Other objects are converted to strings first.\n\
 \n\
 Use connection.string_literal(obj), if you use it at all.\n\
 _mysql.string_literal(obj) cannot handle character sets.";
@@ -1220,6 +1219,16 @@ _mysql_string_literal(
     if (PyBytes_Check(o)) {
         s = o;
         Py_INCREF(s);
+    }
+    else if (PyByteArray_Check(o)) {
+#ifdef Py_GIL_DISABLED
+        Py_BEGIN_CRITICAL_SECTION(o);
+#endif
+        s = PyBytes_FromStringAndSize(PyByteArray_AS_STRING(o), PyByteArray_GET_SIZE(o));
+#ifdef Py_GIL_DISABLED
+        Py_END_CRITICAL_SECTION();
+#endif
+        if (!s) goto error;
     }
     else {
         PyObject *t = PyObject_Str(o);

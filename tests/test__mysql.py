@@ -4,6 +4,17 @@ from MySQLdb import _mysql
 from MySQLdb.connections import Connection
 
 
+@pytest.mark.parametrize("data", [b"", b"a'\x00\\\xffb"])
+def test_string_literal_bytearray(data):
+    class Subclass(bytearray):
+        def __str__(self):
+            raise AssertionError("string_literal should use the byte contents")
+
+    expected = _mysql.string_literal(data)
+    assert _mysql.string_literal(bytearray(data)) == expected
+    assert _mysql.string_literal(Subclass(data)) == expected
+
+
 def test_result_type():
     with pytest.raises(TypeError):
         _mysql.result(b"xyz")
